@@ -1,0 +1,31 @@
+plugins {
+    id 'java-library'
+    id 'java'
+}
+
+group 'org.geyser.extension.exampleid'
+version '1.0.0'
+
+repositories {
+    maven {
+        url 'https://repo.opencollab.dev/maven-snapshots'
+        mavenContent {
+            snapshotsOnly()
+        }
+    }
+    maven {
+        url 'https://repo.opencollab.dev/maven-releases'
+        mavenContent {
+            releasesOnly()
+        }
+    }
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    // Geyser API - needed for all extensions
+    compileOnly 'org.geysermc.geyser:api:2.6.0-SNAPSHOT'
+
+    // Include other dependencies here - e.g. for configuration.
+}
