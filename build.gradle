@@ -3,7 +3,7 @@ plugins {
     id 'java'
 }
 
-group 'org.geyser.extension.exampleid'
+group 'io.github.theodoremeyer.SimpleVoiceGeyser'
 version '1.0.0'
 
 repositories {
