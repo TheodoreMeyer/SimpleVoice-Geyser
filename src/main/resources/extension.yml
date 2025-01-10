@@ -1,6 +1,6 @@
-id: exampleid
-name: ExampleExtension
-main: org.geyser.extension.exampleid.ExampleExtension
+id: SVG
+name: SimpleVoice-Geyser
+main: io.github.theodoremeyer.SimpleVoiceGeyser.Main
 api: 2.6.0
 version: 1.0.0
-authors: [ExampleAuthor]
+authors: [TheodoreMeyer]
