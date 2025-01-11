@@ -21,11 +21,12 @@ repositories {
     }
     mavenLocal()
     mavenCentral()
+    maven { url = 'https://maven.maxhenkel.de/repository/public'}
 }
 
 dependencies {
     // Geyser API - needed for all extensions
     compileOnly 'org.geysermc.geyser:api:2.6.0-SNAPSHOT'
-
+    implementation "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
     // Include other dependencies here - e.g. for configuration.
 }
