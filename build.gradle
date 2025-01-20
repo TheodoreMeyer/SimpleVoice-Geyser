@@ -1,10 +1,12 @@
 plugins {
     id 'java-library'
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 group 'io.github.theodoremeyer.SimpleVoiceGeyser'
 version '1.0.0'
+description = 'SimpleVoiceChat for Bedrock'
 
 repositories {
     maven {
@@ -27,6 +29,27 @@ repositories {
 dependencies {
     // Geyser API - needed for all extensions
     compileOnly 'org.geysermc.geyser:api:2.6.0-SNAPSHOT'
+    // Simple Voice Chat API- to use the API
     implementation "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
-    // Include other dependencies here - e.g. for configuration.
+    //    implementation 'org.java-websocket:Java-WebSocket:1.5.2' // Bibliothèque WebSocket
+    implementation 'com.google.code.gson:gson:2.9.0' // Bibliothèque Gson
+    implementation 'org.eclipse.jetty:jetty-server:11.0.16'
+    implementation 'org.eclipse.jetty:jetty-servlet:11.0.16'
+    implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:11.0.16'
+}
+
+tasks {
+    shadowJar {
+        archiveBaseName.set('SimpleVoiceGeyser')
+        archiveVersion.set('')
+        archiveClassifier.set('')
+    }
+}
+
+jar {
+    enabled = false 
+}
+
+build {
+    dependsOn shadowJar 
 }
