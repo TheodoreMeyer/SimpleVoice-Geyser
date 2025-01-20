@@ -1,0 +1,9 @@
+// SimpleVoiceChat-Geyser
+// Config
+
+//address Java server Simplevoicechat runs on. Leave blank to use same ip that geyser uses.
+SimpleVoiceChatIP:
+// port simplevoicechat runs on
+SimpleVoiceChatport: 25566
+// Port Geyser extension runs on
+simpleVoiceGeyserport: 19175
