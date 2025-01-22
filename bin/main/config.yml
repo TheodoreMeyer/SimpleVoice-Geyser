@@ -1,0 +1,10 @@
+# Configuration for SimpleVoiceChat Geyser integration
+webserver:
+  port: 8080 # Port for the web interface
+
+voicechat:
+  server_host: "localhost" # Host of the SimpleVoiceChat server
+  server_port: 25566       # Port for the SimpleVoiceChat server
+
+proximity:
+  default_radius: 50       # Default radius for proximity chat

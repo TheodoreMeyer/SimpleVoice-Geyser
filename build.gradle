@@ -1,12 +1,14 @@
 plugins {
-    id 'java-library'
     id 'java'
+    id 'java-library'
 }
 
-group 'io.github.theodoremeyer.SimpleVoiceGeyser'
-version '1.0.0'
+group = 'io.github.theodoremeyer.SimpleVoiceGeyser'
+version = '1.0-SNAPSHOT'
 
 repositories {
+    mavenCentral()
+    mavenLocal()
     maven {
         url 'https://repo.opencollab.dev/maven-snapshots'
         mavenContent {
@@ -19,13 +21,57 @@ repositories {
             releasesOnly()
         }
     }
-    mavenLocal()
-    mavenCentral()
+    maven {
+        url = "https://repo.opencollab.dev/main/"
+    }
+    maven {
+        url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+    }
+    maven {
+        name = "papermc-repo"
+        url = "https://papermc.io/repo/repository/maven-public/"
+    }
+    maven {
+        name = "henkelmax.public"
+        url = "https://maven.maxhenkel.de/repository/public"
+    }
+    maven { url = "https://oss.sonatype.org/content/repositories/snapshots" }
+    maven { url = "https://oss.sonatype.org/content/repositories/central" }
 }
 
 dependencies {
-    // Geyser API - needed for all extensions
-    compileOnly 'org.geysermc.geyser:api:2.6.0-SNAPSHOT'
+    // Spigot API for Minecraft plugin development
+    compileOnly 'org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT'
 
-    // Include other dependencies here - e.g. for configuration.
+    // GeyserMC extension API
+    implementation 'org.geysermc.geyser:api:2.6.0-SNAPSHOT'
+
+    // SimpleVoiceChat API
+    implementation "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
+
+    // NanoHTTPD (Lightweight HTTP Server for the web interface)
+    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+
+    // Lombok for cleaner code
+    compileOnly 'org.projectlombok:lombok:1.18.28'
+    annotationProcessor 'org.projectlombok:lombok:1.18.28'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17) // Minecraft plugins require Java 17+
+    }
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'io.github.theodoremeyer.SimpleVoiceGeyser.SimpleVoiceChatGeyser',
+                'Plugin-Version': version
+        )
+    }
 }
