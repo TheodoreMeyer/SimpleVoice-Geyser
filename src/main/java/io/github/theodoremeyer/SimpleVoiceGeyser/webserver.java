@@ -1,6 +1,5 @@
 package io.github.theodoremeyer.SimpleVoiceGeyser;
 
-import io.github.theodoremeyer.SimpleVoiceGeyser.VoiceChatHandler;
 import fi.iki.elonen.NanoHTTPD;
 
 import java.io.IOException;
@@ -27,9 +26,10 @@ public class WebServer extends NanoHTTPD {
                     voiceChatHandler.sendAudio(playerId, channel, audioData);
                     return newFixedLengthResponse(Response.Status.OK, MIME_PLAINTEXT, "Audio sent!");
                 }
-            } catch (IOException e) {
+            } 
+            catch (IOException e) {
                 e.printStackTrace();
-                return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error processing audio.");
+                return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Error processing");
             }
         } else if (session.getMethod() == Method.GET && "/".equals(session.getUri())) {
             // Serve the web interface
@@ -81,3 +81,6 @@ public class WebServer extends NanoHTTPD {
         return newFixedLengthResponse(Response.Status.NOT_FOUND, MIME_PLAINTEXT, "Not Found");
     }
 }
+
+            
+        
