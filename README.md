@@ -11,7 +11,7 @@ A Geyser Extension to allow bedrock clients to connect with Simple voice Chat
 - [Introduction to Events](https://wiki.geysermc.org/geyser/events).
 - [Simple Voice Chat Api Guide](https://modrepo.de/minecraft/voicechat/api/overview)
 
-## Using this Extension
+## Using this Plugin
 - Set into the Plugins folder of your Spigot Server directory.
 - Configure it to connect with your server's SimpleVoice chat.
 - update by replacing the old jar with the new one.
@@ -22,10 +22,17 @@ Our [wiki] (https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki) can help!
 ## Coming Soon
 - Inital Release (v 1.0.0)
 
+## Features to be worked on
+- Permissions
+- Finish audio connection
+- Simple Voice Chat group support
+- Admin commands
+- Better Html page
+
 ## Suggestions?
 Reach out through issues!
 
 ## Important Notes
-- `Simple Voice Chat is required to work, It mmust run on the server.
+- `Simple Voice Chat is required to work, It must run on the server.
 - This is built as a Spigot Plugin that requires GeyserMc Spigot to connect bedrock Clients
 
