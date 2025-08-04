@@ -8,6 +8,7 @@
 
 ### First Time Contributors
 - Please make sure that a Maintainer reviews your code
+- Please Note into the Contributor start at [Discussion](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/discussions/3).
 
 ### Issues
 - Please make sure that All issues are well described, and are not closed unless the problem is fixed, as said the issue owner, or we think the problem is fixed, and the owner has not responded (but then
