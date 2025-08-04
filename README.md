@@ -15,6 +15,7 @@ A Geyser Extension to allow bedrock clients to connect with Simple voice Chat
 Our [wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki) can help!
 
 ## Coming Soon
+- Dev Release (v 1.0.0-Dev)
 - Inital Release (v 1.0.0)
 
 ## Features to be worked on
@@ -41,7 +42,6 @@ Reach out through issues!
 
 ## Important Notes
 - `Simple Voice Chat is required to work, It must run on the server.
-- This is built as a Spigot Plugin that requires GeyserMc Spigot to connect bedrock Clients
 - Releases/versions/jars ending with -Dev{version} mean this is a dev/test version and not meant for productional use.
    - you are welcome to test these, but no gurantee they will work.
 
