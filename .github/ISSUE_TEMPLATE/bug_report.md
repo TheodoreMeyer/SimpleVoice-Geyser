@@ -32,9 +32,10 @@ If applicable, add screenshots to help explain your problem.
 - etc (1.21.5)
 
 **Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+ - OS: [e.g. Kubuntu Linux]
+ - Browser [e.g. chrome, firefox]
+ - OS-Version [e.g. 24.01]
+- Java Version: [e.g. 21, only if this is serverside]
 
 **Smartphone (please complete the following information):**
  - Device: [e.g. iPhone6]
