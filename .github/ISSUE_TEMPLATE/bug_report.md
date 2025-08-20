@@ -7,6 +7,11 @@ assignees: ''
 
 ---
 
+Checklist:
+- [ ] I have made sure there are no duplicate issues.
+- [ ] I have provided a clear outline of the error.
+
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
