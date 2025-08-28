@@ -1,12 +1,25 @@
 plugins {
-    id 'java-library'
     id 'java'
+    id 'maven-publish'
+    id 'java-library'
 }
 
-group 'io.github.theodoremeyer.SimpleVoiceGeyser'
-version '1.0.0'
+group = 'io.github.theodoremeyer.spigotmc.simplevoicegeysertoo'
+version = '1.0.0'
+archivesBaseName = 'SimpleVoice-Geyser'
 
 repositories {
+    mavenCentral()
+    gradlePluginPortal()
+    maven {
+        url = uri("https://repo.maven.apache.org/maven2")
+    }
+    maven {
+        url = uri("https://oss.sonatype.org/content/repositories/releases/")
+    }
+    maven {
+        url = uri('https://repo.spigotmc.org/repository/maven-public/')
+    }
     maven {
         url 'https://repo.opencollab.dev/maven-snapshots'
         mavenContent {
@@ -14,19 +27,90 @@ repositories {
         }
     }
     maven {
+        url = "https://maven.maxhenkel.de"
+    }
+    maven {
         url 'https://repo.opencollab.dev/maven-releases'
         mavenContent {
             releasesOnly()
         }
     }
+    maven {
+        url = "https://repo.opencollab.dev/main/"
+    }
     mavenLocal()
-    mavenCentral()
-    maven { url = 'https://maven.maxhenkel.de/repository/public'}
 }
 
 dependencies {
-    // Geyser API - needed for all extensions
-    compileOnly 'org.geysermc.geyser:api:2.6.0-SNAPSHOT'
-    implementation "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
-    // Include other dependencies here - e.g. for configuration.
+    // Spigot API dependency
+    implementation 'org.spigotmc:spigot-api:1.21.4-R0.1-SNAPSHOT'
+    
+    implementation 'org.json:json:20250107'
+    
+    implementation files('libs/json-20250107.jar')
+
+    // GeyserMC API dependency
+    compileOnly "org.geysermc.geyser:api:2.4.1-SNAPSHOT"
+    
+    //jetty server
+    implementation 'org.eclipse.jetty:jetty-security:11.0.25'
+    implementation 'org.eclipse.jetty:jetty-server:11.0.25'
+    implementation 'org.eclipse.jetty:jetty-servlet:11.0.25'
+    //implementation 'org.eclipse.jetty.websocket:websocket-servlet:11.0.25'
+    implementation files('libs/websocket-servlet-11.0.25.jar')
+    implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:11.0.25'
+    implementation 'org.eclipse.jetty.websocket:websocket-core-server:11.0.25'
+    implementation 'org.eclipse.jetty.websocket:websocket-core-common:11.0.25'
+    implementation 'org.eclipse.jetty.websocket:websocket-jetty-common:11.0.25'
+    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.25'
+    implementation 'jakarta.servlet:jakarta.servlet-api:5.0.0'
+    implementation 'org.eclipse.jetty:jetty-util:11.0.25'
+    implementation 'org.eclipse.jetty:jetty-http:11.0.25'
+    implementation 'org.eclipse.jetty:jetty-io:11.0.25'
+    implementation files('libs/websocket-jetty-api-11.0.25.jar')
+    
+    // SimpleVoiceChat API
+    implementation "de.maxhenkel.voicechat:voicechat-api:2.5.27"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+
+tasks.named('jar') {
+    manifest {
+        attributes(
+                'Main-Class': 'io.github.theodoremeyer.spigotmc.simplevoicegeysertoo.SVGPlugin',
+                'Plugin-Version': version
+        )
+    }
+}
+
+tasks.register('downloadDependencies', Copy) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    configurations.compileClasspath.each { file ->
+        from zipTree(file)
+        into 'libs/dependencies'
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = archivesBaseName
+            artifact(tasks.jar.archiveFile) {
+                classifier = null
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url = "file://${project.rootDir}/Build/repo"
+
+        }
+    }
 }

@@ -1,6 +1,0 @@
-id: SVG
-name: SimpleVoice-Geyser
-main: io.github.theodoremeyer.SimpleVoiceGeyser.Main
-api: 2.6.0
-version: 1.0.0
-authors: [TheodoreMeyer]

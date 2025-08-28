@@ -37,11 +37,15 @@ Reach out through issues!
 ## Dependencies docs:
 - [Jetty Server Docs](https://jetty.org/docs/jetty/11/index.html)
 - [Geyser API introduction](https://wiki.geysermc.org/geyser/api/)
-- [Introduction to Events](https://wiki.geysermc.org/geyser/events).
 - [Simple Voice Chat Api Guide](https://modrepo.de/minecraft/voicechat/api/overview)
 
 ## Important Notes
 - `Simple Voice Chat is required to work, It must run on the server.
 - Releases/versions/jars ending with -Dev{version} mean this is a dev/test version and not meant for productional use.
    - you are welcome to test these, but no gurantee they will work.
+
+## Developer Notes
+- # Player Passwords
+   - Copy the `playerpassword.yml.template` as `playerpasswords.yml` and fill-in the values.
+   - Do NOT check that file in. It is presently required to build the project.
 
