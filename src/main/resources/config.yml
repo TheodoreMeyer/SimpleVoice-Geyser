@@ -4,4 +4,4 @@ client:
 server:
   port: 8080 #port server will run on
 
-Debug: false #Do NOT use this in production. This will very quickly fill up your server logs file
+Debug: false #Do NOT use this in production. This will very quickly fill up your server logs
