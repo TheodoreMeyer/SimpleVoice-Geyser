@@ -31,8 +31,8 @@ Our [wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki) can help!
 Reach out through issues!
 
 ## Dependencies used
-- GeyserMc         [GeyserMc.org](geysermc.org)
-- Jetty            [Jetty.org](jetty.org)
+- GeyserMc         [GeyserMc.org](https://geysermc.org)
+- Jetty            [Jetty.org](https://jetty.org)
 - SimpleVoiceChat  [Modrepo.de](https://modrepo.de/minecraft/voicechat/overview)
 
 ## Dependencies docs:
