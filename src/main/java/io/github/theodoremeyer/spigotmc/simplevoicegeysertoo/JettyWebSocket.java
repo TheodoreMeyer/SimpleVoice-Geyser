@@ -21,7 +21,7 @@ public class JettyWebSocket {
     private Player player;
 
     /**
-     * When client connects.
+     * When the client connects.
      * @param session the websocket session associated with this class.
      */
     @OnWebSocketConnect
@@ -79,7 +79,7 @@ public class JettyWebSocket {
                     return;
                 }
 
-                if (!PlayerVcPswd.validatePassword(username, password)) { //validate the players password from form inpuit
+                if (!PlayerVcPswd.validatePassword(username, password)) { //validate the player's password from form input
                     JSONObject errorJson = new JSONObject();
                     errorJson.put("type", "error");
                     errorJson.put("message", "Incorrect password. Try again.");
@@ -163,8 +163,7 @@ public class JettyWebSocket {
 
     /**
      * this copy is to handle audio data from the client.
-     * I Don't really know too much about how to get pcmData from sent byte, all I know
-     * Is that this is how Simple Voice Chat, and research wants me to do it
+     * I Don't really know too much about how to get pcmData from sent byte, all I know is that this is how Simple Voice Chat, and research wants me to do it
      * @param buffer the byte to process
      * @param offset the offset of the byte
      * @param length the int.
@@ -178,7 +177,7 @@ public class JettyWebSocket {
         System.arraycopy(buffer, offset, pcmData, 0, length);
 
         SvgAudioSender sender = SVGPlugin.getBridge().audioSenders.get(uuid);
-        if (sender != null) { //make sure sender is not null
+        if (sender != null) { //make sure the sender is not null
             boolean success = sender.sendOpus(pcmData); //send teh audiodata
             if (!success) {
                 SVGPlugin.log().warning("Failed to send Audio to audioSender for" + uuid);
@@ -212,6 +211,5 @@ public class JettyWebSocket {
         SVGPlugin.log().warning("[Websocket]: An error occurred. code: 2");
         SVGPlugin.getInstance().debug("WebSocket", "websocket error", error);
         SVGPlugin.log().info("Error: " + error.getMessage());
-        error.printStackTrace();
     }
 }

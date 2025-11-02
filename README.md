@@ -10,6 +10,7 @@ A Geyser Extension to allow bedrock clients to connect with Simple voice Chat
 - Configure it to connect with your server's SimpleVoice chat. See [our wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki)
 - Players can now join from the web broswer after using /svg pswd {password} in-game!
 - update by replacing the old jar with the new one.
+     - I Plan on making config options auto update
 
 ## Documentation
 Our [wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki) can help!
@@ -45,7 +46,8 @@ Reach out through issues!
    - you are welcome to test these, but no gurantee they will work.
 
 ## Developer Notes
-- # Player Passwords
+- ### Player Passwords
    - Copy the `playerpassword.yml.template` as `playerpasswords.yml` and fill-in the values.
    - Do NOT check that file in. It is presently required to build the project.
+   - Please see the contributing.md before contributing to this project.
 

@@ -88,7 +88,7 @@ public class SVGPlugin extends JavaPlugin {
         try {
             jettyServer = new JettyServer(jettyServerPort); //start the jetty server
             jettyServer.start();
-            getLogger().info("Jetty server started on port 8080");
+            getLogger().info("Jetty server started on port: " + jettyServerPort);
         } catch (Exception e) {
             getLogger().severe("Failed to start Jetty server: " + e.getMessage());
         }

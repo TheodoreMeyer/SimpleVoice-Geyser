@@ -20,7 +20,11 @@ public class SvgListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
         Player player = e.getPlayer();
-        player.sendMessage(ChatColor.DARK_GREEN + "This Server Uses SimpleVoice-Geyser");
+        if (player.hasPlayedBefore()) {
+            player.sendMessage(ChatColor.DARK_GREEN + "This Server Uses SimpleVoice-Geyser");
+            player.sendMessage(ChatColor.GREEN + "To set it up, run /svg pswd [password]");
+            player.sendMessage(ChatColor.DARK_GREEN + "Then join Via the server's SVG website");
+        }
     }
 
     /**

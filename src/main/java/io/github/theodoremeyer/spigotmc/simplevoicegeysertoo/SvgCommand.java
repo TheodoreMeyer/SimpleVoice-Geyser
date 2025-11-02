@@ -7,7 +7,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
- * Class that controls main command for plugin: /svg
+ * Class that controls the main command for plugin: /svg
  */
 public class SvgCommand implements CommandExecutor {
 

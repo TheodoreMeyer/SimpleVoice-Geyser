@@ -400,11 +400,12 @@ public class JettyHtmlServlet extends HttpServlet {
                         const SILENCE_THRESHOLD = 0.01;
       
                         if (rms < SILENCE_THRESHOLD) {
-                           //console.log("Skipping silent chunk, RMS:", rms.toFixed(5));
+                           console.log("Skipping silent chunk, RMS:", rms.toFixed(5));
                            return; // Don't queue silent buffer
                         }
 
                        const buffer = audioContext.createBuffer(1, float32Data.length, 48000);
+                       console.log("Buffer duration:", buffer.duration);
                        buffer.copyToChannel(float32Data, 0);
         
                         audioQueue.push(buffer);

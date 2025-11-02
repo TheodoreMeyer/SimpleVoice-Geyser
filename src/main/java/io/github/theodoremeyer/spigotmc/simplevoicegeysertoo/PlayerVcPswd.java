@@ -12,7 +12,7 @@ import java.util.UUID;
 
 /**
  * Auth System for Player.
- * the password needs to be more securely saved.
+ * The password needs to be more securely saved.
  */
 public class PlayerVcPswd {
 
@@ -23,7 +23,7 @@ public class PlayerVcPswd {
 
     /**
      * Creating the folder, or registering it to memory.
-     * may be moved to class constructor
+     * May be moved to class constructor
      * @param pluginDataFolder folder to put the file in
      */
     protected static void init(File pluginDataFolder) {
@@ -33,7 +33,7 @@ public class PlayerVcPswd {
                 file.createNewFile();
             } catch (IOException e) {
                 SVGPlugin.log().warning("[PlayerData] Couldn't create playerpasswords.yml");
-                e.printStackTrace();
+                SVGPlugin.log().warning(e.getMessage());
                 return;
             }
         }
@@ -77,7 +77,7 @@ public class PlayerVcPswd {
             config.save(file);
         } catch (IOException e) {
             SVGPlugin.log().warning("[PlayerData] Failed to save password for " + playerName);
-            e.printStackTrace();
+            SVGPlugin.log().warning(e.getMessage());
         }
     }
 

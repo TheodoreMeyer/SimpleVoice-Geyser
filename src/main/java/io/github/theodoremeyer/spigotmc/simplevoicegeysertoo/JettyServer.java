@@ -10,7 +10,7 @@ import java.net.URL;
 import java.time.Duration;
 
 /**
- * Starts and Stops Actual Jetty server for SVG.
+ * Starts and Stops the Jetty server for SVG.
  */
 public class JettyServer {
     private final Server server;
