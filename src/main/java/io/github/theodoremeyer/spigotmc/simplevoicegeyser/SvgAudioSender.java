@@ -1,4 +1,4 @@
-package io.github.theodoremeyer.spigotmc.simplevoicegeysertoo;
+package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;

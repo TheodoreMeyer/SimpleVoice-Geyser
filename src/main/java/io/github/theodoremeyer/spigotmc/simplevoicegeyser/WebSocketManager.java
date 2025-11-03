@@ -1,4 +1,4 @@
-package io.github.theodoremeyer.spigotmc.simplevoicegeysertoo;
+package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
 import org.eclipse.jetty.websocket.api.Session;
 import org.json.JSONObject;

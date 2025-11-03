@@ -1,4 +1,4 @@
-package io.github.theodoremeyer.spigotmc.simplevoicegeysertoo;
+package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;

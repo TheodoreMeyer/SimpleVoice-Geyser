@@ -1,4 +1,4 @@
-package io.github.theodoremeyer.spigotmc.simplevoicegeysertoo;
+package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;

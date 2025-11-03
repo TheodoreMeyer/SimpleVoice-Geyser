@@ -1,6 +1,6 @@
 name: SimpleVoice-Geyser
 version: 1.0.0
-main: io.github.theodoremeyer.spigotmc.simplevoicegeysertoo.SVGPlugin
+main: io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin
 api-version: 1.21.4
 description: Plugin to allow Bedrock clients to join Simple Voice Chat.
 author: TheodoreMeyer

@@ -1,12 +1,10 @@
-package io.github.theodoremeyer.spigotmc.simplevoicegeysertoo;
+package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 
-import java.net.URL;
 import java.time.Duration;
 
 /**

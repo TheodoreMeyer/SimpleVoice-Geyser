@@ -4,7 +4,7 @@ plugins {
     id 'java-library'
 }
 
-group = 'io.github.theodoremeyer.spigotmc.simplevoicegeysertoo'
+group = 'io.github.theodoremeyer.spigotmc.simplevoicegeyser'
 version = '1.0.0'
 archivesBaseName = 'SimpleVoice-Geyser'
 
@@ -83,7 +83,7 @@ java {
 tasks.named('jar') {
     manifest {
         attributes(
-                'Main-Class': 'io.github.theodoremeyer.spigotmc.simplevoicegeysertoo.SVGPlugin',
+                'Main-Class': 'io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin',
                 'Plugin-Version': version
         )
     }
