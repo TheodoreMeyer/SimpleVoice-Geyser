@@ -18,7 +18,7 @@ import java.util.UUID;
 public class SvgAudioListener implements PlayerAudioListener {
 
     private final UUID listenerId;
-    private VoicechatServerApi serverapi;
+    private VoicechatServerApi serverApi;
 
     /**
      * Class constructor to set id
@@ -54,7 +54,7 @@ public class SvgAudioListener implements PlayerAudioListener {
                 decoder = SVGPlugin.getBridge().getVcServerApi().createDecoder();
                 short[] pcm = decoder.decode(opusData);
 
-                byte[] bytes = serverapi.getAudioConverter().shortsToBytes(pcm); //convert audio to a usable type
+                byte[] bytes = serverApi.getAudioConverter().shortsToBytes(pcm); //convert audio to a usable type
 
                 session.getRemote().sendBytes(ByteBuffer.wrap(bytes)); //send the decoded audio
             } catch (Exception e) {
@@ -67,7 +67,7 @@ public class SvgAudioListener implements PlayerAudioListener {
                 }
             }
         } else {
-            SVGPlugin.log().info("Session Not Open");
+            SVGPlugin.getInstance().debug("AudioListener","Session Not Open");
             SVGPlugin.getBridge().unregisterAudioListener(listenerId);
         }
     }
@@ -79,7 +79,7 @@ public class SvgAudioListener implements PlayerAudioListener {
      * @param serverApi Vcs api to register with.
      */
     public void registerListener(VoicechatServerApi serverApi) {
-        this.serverapi = serverApi;
+        this.serverApi = serverApi;
         PlayerAudioListener listener = serverApi.playerAudioListenerBuilder()
                 .setPlayer(listenerId)
                 .setPacketListener(this::onAudioReceived)

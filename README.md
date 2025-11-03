@@ -33,7 +33,7 @@ Reach out through issues!
 ## Dependencies used
 - GeyserMc         [GeyserMc.org](https://geysermc.org)
 - Jetty            [Jetty.org](https://jetty.org)
-- SimpleVoiceChat  [Modrepo.de](https://modrepo.de/minecraft/voicechat/overview)
+- SimpleVoiceChat  [ModRepo.de](https://modrepo.de/minecraft/voicechat/overview)
 
 ## Dependencies docs:
 - [Jetty Server Docs](https://jetty.org/docs/jetty/11/index.html)
@@ -41,7 +41,7 @@ Reach out through issues!
 - [Simple Voice Chat Api Guide](https://modrepo.de/minecraft/voicechat/api/overview)
 
 ## Important Notes
-- `Simple Voice Chat is required to work, It must run on the server.
+- `Simple Voice Chat 2.5.27 or compatible is required to work, It must run on the server.
 - Releases/versions/jars ending with -Dev{version} mean this is a dev/test version and not meant for productional use.
    - you are welcome to test these, but no guarantee they will work.
 

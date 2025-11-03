@@ -11,6 +11,7 @@ import java.time.Duration;
 
 /**
  * Starts and Stops the Jetty server for SVG.
+ * May be moved to a new thread.
  */
 public class JettyServer {
     private final Server server;
