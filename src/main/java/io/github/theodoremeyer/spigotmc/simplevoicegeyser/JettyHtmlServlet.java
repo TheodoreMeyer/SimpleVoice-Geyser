@@ -160,7 +160,7 @@ public class JettyHtmlServlet extends HttpServlet {
                     const SCHEDULE_INTERVAL = 25; //ms, how often scheduler runs
                     const adaptiveInterval = 25;
                     let schedulerInterval = null;
-                    const MIN_QUEUE_SIZE_TO_START = 5;
+                    const MIN_QUEUE_SIZE_TO_START = 5; // Buffer 100ms (5 * 20ms)
                     let incomingChunkCount = 0;
                     let playedChunkCount = 0;
                     let sentChunkCount = 0;
@@ -378,7 +378,7 @@ public class JettyHtmlServlet extends HttpServlet {
 
                     function log(msg) {
                         const time = new Date().toLocaleTimeString();
-                        logEl.textContent += `[${time}] ${msg}`;
+                        logEl.textContent += `/n[${time}] ${msg}`;
                         logEl.scrollTop = logEl.scrollHeight;
                     }
       
@@ -397,7 +397,7 @@ public class JettyHtmlServlet extends HttpServlet {
                         }
        
                         const rms = Math.sqrt(sumSquares / pcmData.length);
-                        const SILENCE_THRESHOLD = 0.01;
+                        const SILENCE_THRESHOLD = 0.00008;
       
                         if (rms < SILENCE_THRESHOLD) {
                            console.log("Skipping silent chunk, RMS:", rms.toFixed(5));
@@ -410,7 +410,6 @@ public class JettyHtmlServlet extends HttpServlet {
         
                         audioQueue.push(buffer);
                         console.log(`New chunk added. Queue length: ${audioQueue.length}`);
-                        const MIN_QUEUE_SIZE_TO_START = 5; // Buffer 100ms (5 * 20ms)
                         if (!isPlaying && audioQueue.length >= MIN_QUEUE_SIZE_TO_START) {
                            nextStartTime = audioContext.currentTime;
                            isPlaying = true;
