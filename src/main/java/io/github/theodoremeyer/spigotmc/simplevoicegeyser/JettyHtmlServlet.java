@@ -152,7 +152,7 @@ public class JettyHtmlServlet extends HttpServlet {
                     document.body.appendChild(audioElement);
         
                     let audioQueue = [];
-                    let isPlaying = false;
+                    let isPlaying = false; //System notifier for whether the scheduler is active
                     let nextStartTime = 0;
                     const bufferDuration = 0.04; //40 ms buffers
                     const targetQueueLength = 3;
@@ -366,7 +366,6 @@ public class JettyHtmlServlet extends HttpServlet {
                         };
                     });
 
-                    //NOTE: this has a problem with creating a new line.
                     function sendMessage() {
                         const msg = inputEl.value.trim();
                         if (ws && ws.readyState === WebSocket.OPEN && msg !== "") {
