@@ -1,0 +1,55 @@
+name: SimpleVoice-Geyser
+version: 1.0.0
+main: io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin
+api-version: 1.21.4
+description: Plugin to allow Bedrock clients to join Simple Voice Chat.
+author: TheodoreMeyer
+website: https://theodoremeyer.github.io
+depend: [voicechat]
+softdepend: [Geyser-Spigot]
+prefix: SVG
+libraries:
+  - org.json:json:20250107
+  - org.nanohttpd:nanohttpd:2.3.1
+  - org.eclipse.jetty:jetty-security:11.0.25
+  - org.eclipse.jetty:jetty-server:11.0.25
+  - org.eclipse.jetty:jetty-servlet:11.0.25
+  - org.eclipse.jetty.websocket:websocket-jetty-server:11.0.25
+  - org.eclipse.jetty.websocket:websocket-core-server:11.0.25
+  - org.eclipse.jetty.websocket:websocket-core-common:11.0.25
+  - org.eclipse.jetty.websocket:websocket-jetty-common:11.0.25
+  - org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.25
+  - jakarta.servlet:jakarta.servlet-api:5.0.0
+  - org.eclipse.jetty:jetty-util:11.0.25
+  - org.eclipse.jetty:jetty-http:11.0.25
+  - org.eclipse.jetty:jetty-io:11.0.25
+
+commands:
+  svg:
+    description: Main SimpleVoiceGeyser command
+    usage: /svg <pswd>
+
+permissions:
+  svg.vc.join:
+    description: Allows player to join voice chat from browser
+    default: true
+
+  svg.vc.creategroup:
+    description: Allows player to use voice chat group creation
+    default: true
+
+  svg.vc.creategroup.create:
+    description: "Allows the player to create voice chat groups"
+    default: true
+
+  svg.vc.creategroup.type:
+    description: "Allows the player to specify the type of the group"
+    default: op
+
+  svg.vc.creategroup.type.isolated:
+    description: "Allows the player to create isolated groups"
+    default: op
+
+  svg.vc.creategroup.setpersistant:
+    description: "Allows the player to set persistent groups"
+    default: op

@@ -1,0 +1,7 @@
+client:
+  vctimeout: 30  # Timeout in seconds (default: 30) WARNING: Developer Has disabled this for right now.
+
+server:
+  port: 8080 #port server will run on
+
+Debug: false #Do NOT use this in production. This will very quickly fill up your server logs
