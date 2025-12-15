@@ -163,7 +163,7 @@ public class SVGPlugin extends JavaPlugin {
      */
     public void debug(String section, String message, Throwable t) {
         if (debug) {
-            log().info( "[Debug][" + section + "] " + message + "," + t);
+            log().info( "[Debug][" + section + "] " + message + ", " + t);
         }
     }
 
