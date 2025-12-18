@@ -1,5 +1,6 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.WebSocketManager;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

@@ -4,7 +4,7 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 
 /**
- * The Class controlling plugin permissions
+ * The Class controlling plugin permissions. Not used yet.
  */
 public class SVGPermissions {
 

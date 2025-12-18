@@ -9,6 +9,8 @@ import de.maxhenkel.voicechat.api.events.CreateGroupEvent;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.RemoveGroupEvent;
 import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioListener;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioSender;
 
 import java.util.Map;
 import java.util.UUID;
@@ -33,7 +35,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
     /**
      * Map Containing all the audioSenders
      */
-    protected final Map<UUID, SvgAudioSender> audioSenders = new ConcurrentHashMap<>();
+    public final Map<UUID, SvgAudioSender> audioSenders = new ConcurrentHashMap<>();
     /**
      * Map containing all the audioListeners
      */

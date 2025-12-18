@@ -1,6 +1,8 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
 import de.maxhenkel.voicechat.api.BukkitVoicechatService;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.JettyServer;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.WebSocketManager;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -115,7 +117,7 @@ public class SVGPlugin extends JavaPlugin {
      * @return SVGPlugin
      * @see SVGPlugin
      */
-    protected static SVGPlugin getInstance() {
+    public static SVGPlugin getInstance() {
         return instance;
     }
 
