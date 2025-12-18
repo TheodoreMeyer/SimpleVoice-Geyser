@@ -18,16 +18,17 @@ repositories {
         url = uri("https://oss.sonatype.org/content/repositories/releases/")
     }
     maven {
-        url = uri('https://repo.spigotmc.org/repository/maven-public/')
+        url = uri('https://hub.spigotmc.org/nexus/content/groups/public/')
+    }
+    maven {
+        name = "henkelmax.public"
+        url = 'https://maven.maxhenkel.de/repository/public'
     }
     maven {
         url 'https://repo.opencollab.dev/maven-snapshots'
         mavenContent {
             snapshotsOnly()
         }
-    }
-    maven {
-        url = "https://maven.maxhenkel.de"
     }
     maven {
         url 'https://repo.opencollab.dev/maven-releases'
@@ -43,7 +44,7 @@ repositories {
 
 dependencies {
     // Spigot API dependency
-    implementation 'org.spigotmc:spigot-api:1.21.4-R0.1-SNAPSHOT'
+    implementation 'org.spigotmc:spigot-api:1.21.8-R0.1-SNAPSHOT'
     
     implementation 'org.json:json:20250107'
     
@@ -70,7 +71,7 @@ dependencies {
     implementation files('libs/websocket-jetty-api-11.0.25.jar')
     
     // SimpleVoiceChat API
-    implementation "de.maxhenkel.voicechat:voicechat-api:2.5.27"
+    implementation "de.maxhenkel.voicechat:voicechat-api:2.6.0"
 }
 
 java {
