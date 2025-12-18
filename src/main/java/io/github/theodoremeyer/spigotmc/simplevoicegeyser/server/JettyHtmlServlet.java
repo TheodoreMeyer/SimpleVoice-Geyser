@@ -1,4 +1,4 @@
-package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
+package io.github.theodoremeyer.spigotmc.simplevoicegeyser.server;
 
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;

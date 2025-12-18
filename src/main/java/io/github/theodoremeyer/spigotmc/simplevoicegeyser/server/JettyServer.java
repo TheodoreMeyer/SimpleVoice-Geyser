@@ -1,4 +1,4 @@
-package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
+package io.github.theodoremeyer.spigotmc.simplevoicegeyser.server;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;

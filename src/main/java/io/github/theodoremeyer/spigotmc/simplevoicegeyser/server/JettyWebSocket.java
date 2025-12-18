@@ -1,5 +1,7 @@
-package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
+package io.github.theodoremeyer.spigotmc.simplevoicegeyser.server;
 
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.*;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioSender;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;

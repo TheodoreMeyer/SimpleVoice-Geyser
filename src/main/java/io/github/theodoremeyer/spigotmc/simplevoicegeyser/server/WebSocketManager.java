@@ -1,5 +1,6 @@
-package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
+package io.github.theodoremeyer.spigotmc.simplevoicegeyser.server;
 
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin;
 import org.eclipse.jetty.websocket.api.Session;
 import org.json.JSONObject;
 
@@ -17,7 +18,7 @@ public class WebSocketManager {
     /**
      * A list of Websockets that are actively connected
      */
-    protected static final Map<UUID, Session> clients = new ConcurrentHashMap<>();
+    public static final Map<UUID, Session> clients = new ConcurrentHashMap<>();
 
     /**
      * Add a Websocket to the list
