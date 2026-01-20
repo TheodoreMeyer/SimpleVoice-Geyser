@@ -3,6 +3,7 @@ package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 import de.maxhenkel.voicechat.api.BukkitVoicechatService;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.JettyServer;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.WebSocketManager;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.thread.AudioThread;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -39,6 +40,10 @@ public class SVGPlugin extends JavaPlugin {
      */
     private WebSocketManager webSocketManager;
     /**
+     * Audio thread to remove lag
+     */
+    private AudioThread audioThread;
+    /**
      * Whether debug is enabled
      */
     private Boolean debug;
@@ -52,7 +57,7 @@ public class SVGPlugin extends JavaPlugin {
         this.debug = getConfig().getBoolean("Debug", false);
 
         if (service != null) { //make sure bukkitvoicechatservice exists
-            VoiceChatBridge voicechatBridge = new VoiceChatBridge();
+            VoiceChatBridge voicechatBridge = new VoiceChatBridge(this);
             service.registerPlugin(voicechatBridge); //register the main api class
             bridge = voicechatBridge;
             getLogger().info("Registered plugin with Simple Voice Chat.");
@@ -73,6 +78,8 @@ public class SVGPlugin extends JavaPlugin {
                     }
                 }
             }
+            getLogger().severe("Disabling due to: no voice chat found.");
+            Bukkit.getPluginManager().disablePlugin(this);
         }
 
         instance = this;
@@ -86,6 +93,7 @@ public class SVGPlugin extends JavaPlugin {
         this.vcTimeout = Math.max(0, Math.min(120, rawTimeout));
         int jettyServerPort = getConfig().getInt("server.port", 8080);
         this.webSocketManager = new WebSocketManager();
+        this.audioThread = new AudioThread(this);
 
         try {
             jettyServer = new JettyServer(jettyServerPort); //start the jetty server

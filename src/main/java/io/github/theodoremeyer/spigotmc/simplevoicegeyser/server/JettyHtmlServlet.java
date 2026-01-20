@@ -160,7 +160,7 @@ public class JettyHtmlServlet extends HttpServlet {
                     const SCHEDULE_INTERVAL = 25; //ms, how often scheduler runs
                     const adaptiveInterval = 25;
                     let schedulerInterval = null;
-                    const MIN_QUEUE_SIZE_TO_START = 5; // Buffer 100ms (5 * 20ms)
+                    const MIN_QUEUE_SIZE_TO_START = 10; // Buffer 200ms (10 * 20ms)
                     let incomingChunkCount = 0;
                     let playedChunkCount = 0;
                     let sentChunkCount = 0;

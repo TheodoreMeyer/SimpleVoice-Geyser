@@ -180,10 +180,7 @@ public class JettyWebSocket {
 
         SvgAudioSender sender = SVGPlugin.getBridge().audioSenders.get(uuid);
         if (sender != null) { //make sure the sender is not null
-            boolean success = sender.sendOpus(pcmData); //send teh audiodata
-            if (!success) {
-                SVGPlugin.log().warning("Failed to send Audio to audioSender for" + uuid);
-            }
+            sender.sendOpus(pcmData); //send the audio data
         }
     }
 
@@ -210,7 +207,6 @@ public class JettyWebSocket {
      */
     @OnWebSocketError
     public void onError(Throwable error) {
-        SVGPlugin.log().warning("[Websocket]: An error occurred. code: 2");
         SVGPlugin.getInstance().debug("WebSocket", "websocket error", error);
         SVGPlugin.log().info("Error: " + error.getMessage());
     }
