@@ -41,6 +41,12 @@ public class VoiceChatBridge implements VoicechatPlugin {
      */
     protected final Map<UUID, PlayerAudioListener> audioListeners = new ConcurrentHashMap<>();
 
+    private final SVGPlugin plugin;
+
+    public VoiceChatBridge(SVGPlugin plugin) {
+        this.plugin = plugin;
+    }
+
     /**
      * The SVC plugin id
      * @return The plugin id: SimpleVoice-Geyser
@@ -137,8 +143,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
             audioSenders.put(uuid, sender);
             SVGPlugin.log().info("[VCBridge] SvgAudioSender created and registered for: " + uuid);
         } catch (RuntimeException e) {
-            SVGPlugin.log().warning("[VCBridge] Failed to register SvgAudioSender for: " + uuid + " - " + e.getMessage());
-            e.printStackTrace();
+            plugin.debug("VCBridge", "Unable to register AudioSender for: " + uuid, e);
         }
     }
 

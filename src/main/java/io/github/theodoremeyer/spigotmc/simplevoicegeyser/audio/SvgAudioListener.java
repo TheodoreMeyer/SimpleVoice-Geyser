@@ -6,6 +6,7 @@ import de.maxhenkel.voicechat.api.opus.OpusDecoder;
 import de.maxhenkel.voicechat.api.packets.SoundPacket;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.WebSocketManager;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.thread.AudioThread;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -21,6 +22,7 @@ public class SvgAudioListener implements PlayerAudioListener {
 
     private final UUID listenerId;
     private VoicechatServerApi serverApi;
+    private final OpusDecoder decoder;
 
     /**
      * Class constructor to set id
@@ -28,6 +30,9 @@ public class SvgAudioListener implements PlayerAudioListener {
      */
     public SvgAudioListener(UUID listenerId) {
         this.listenerId = listenerId;
+
+        // Decoder for opus to raw PCM (16-bit signed, little-endian)
+        decoder = SVGPlugin.getBridge().getVcServerApi().createDecoder();
     }
 
     /**
@@ -46,30 +51,27 @@ public class SvgAudioListener implements PlayerAudioListener {
      * @param soundPacket packet received to send to Client
      */
     public void onAudioReceived(SoundPacket soundPacket) {
-        byte[] opusData = soundPacket.getOpusEncodedData();
-
         Session session = WebSocketManager.clients.get(listenerId);
+
         if (session != null && session.isOpen()) {
-            OpusDecoder decoder = null;
-            try {
-                // Decode opus to raw PCM (16-bit signed, little-endian)
-                decoder = SVGPlugin.getBridge().getVcServerApi().createDecoder();
-                short[] pcm = decoder.decode(opusData);
 
-                byte[] bytes = serverApi.getAudioConverter().shortsToBytes(pcm); //convert audio to a usable type
+            byte[] opusData = soundPacket.getOpusEncodedData();
 
-                session.getRemote().sendBytes(ByteBuffer.wrap(bytes)); //send the decoded audio
-            } catch (Exception e) {
-                SVGPlugin.log().warning("Error sending audio to client" + listenerId);
-                SVGPlugin.getInstance().debug("AudioListener", "Error sending audio to client" + listenerId, e);
-                e.printStackTrace();
-            }  finally {
-                if (decoder != null && !decoder.isClosed()) {
-                    decoder.close();
-                }
-            }
+            AudioThread.getExecutor().execute(() -> {
+                try {
+                    short[] pcm = decoder.decode(opusData);
+                    byte[] bytes = serverApi.getAudioConverter().shortsToBytes(pcm); //convert audio to a usable type
+
+                    session.getRemote().sendBytes(ByteBuffer.wrap(bytes)); //send the decoded audio
+                } catch (Exception e) {
+                    SVGPlugin.log().warning("Error sending audio to client" + listenerId);
+                    SVGPlugin.getInstance().debug("AudioListener", "Error sending audio to client" + listenerId, e);
+                }  //finally {
+                    //decoder.resetState();
+                //}
+            });
         } else {
-            SVGPlugin.getInstance().debug("AudioListener","Session Not Open");
+            SVGPlugin.getInstance().debug("AudioListener","Session Not Open.");
             SVGPlugin.getBridge().unregisterAudioListener(listenerId);
         }
     }
@@ -93,8 +95,13 @@ public class SvgAudioListener implements PlayerAudioListener {
             player.sendMessage(ChatColor.AQUA + "Registered Audio listener!");
         } else {
             SVGPlugin.log().warning("[VCBridge] Failed to register audio listener for: " + listenerId);
-            Bukkit.getPlayer(listenerId).sendMessage(ChatColor.RED + "Failed to register audio listener");
+            Bukkit.getPlayer(listenerId).sendMessage(ChatColor.RED + "Failed to register audio listener.");
         }
+   }
+
+   public void unRegister() {
+        decoder.resetState();
+        decoder.close();
    }
 
     /**

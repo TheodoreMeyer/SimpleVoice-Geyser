@@ -5,6 +5,7 @@ import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import de.maxhenkel.voicechat.api.audiosender.AudioSender;
 import de.maxhenkel.voicechat.api.opus.OpusEncoder;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.thread.AudioThread;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -92,7 +93,9 @@ public class SvgAudioSender {
      * @return true/false whether it failed or not
      */
     public boolean sendOpus(byte[] pcmData) {
+
         SVGPlugin.getInstance().debug( "AudioSender","received audio data from websocket!");
+
         if (player == null || !player.isOnline()) {
             SVGPlugin.log().warning("[AudioSender] Player not found or offline: " + playerUuid);
             return false;
@@ -107,36 +110,28 @@ public class SvgAudioSender {
             return false;
         }
 
-        byte[] encoded;
-        try {
-            short[] pcmShorts = serverApi.getAudioConverter().bytesToShorts(pcmData);
-            encoded = encoder.encode(pcmShorts); // PCM to Opus encoded
-            if (encoded == null || encoded.length == 0) {
-                SVGPlugin.log().warning("[AudioSender] Encoder returned empty data for: " + playerUuid);
-                return false;
-            }
-        } catch (Exception e) {
-            SVGPlugin.log().severe("[AudioSender] Encoding failed for: " + playerUuid + " - " + e.getMessage());
-            SVGPlugin.getInstance().debug("AudioSender", "Encoding failed for " + playerUuid, e);
-            e.printStackTrace();
-            return false;
-        } finally {
-            if (encoder != null) {
-                try {
-                    encoder.resetState();
-                } catch (Exception e) {
-                    SVGPlugin.log().warning("[AudioSender] Failed to clean up encoder: " + e.getMessage());
+        AudioThread.getExecutor().execute(() -> {
+            byte[] encoded;
+            try {
+                short[] pcmShorts = serverApi.getAudioConverter().bytesToShorts(pcmData);
+                encoded = encoder.encode(pcmShorts); // PCM to Opus encoded
+                if (encoded == null || encoded.length == 0) {
+                    SVGPlugin.log().warning("[AudioSender] Encoder returned empty data for: " + playerUuid);
+                    return;
                 }
+            } catch (Exception e) {
+                SVGPlugin.getInstance().debug("AudioSender", "Encoding failed for " + playerUuid, e);
+                return;
             }
-        }
 
-        boolean success = delegate.send(encoded);
-        if (!success) {
-            SVGPlugin.log().warning("[AudioSender] Failed to send audio for: " + playerUuid);
-        } else {
-            SVGPlugin.getInstance().debug("AudioSender","Sent Audio!");
-        }
-        return success;
+            boolean success = delegate.send(encoded);
+            if (!success) {
+                SVGPlugin.log().warning("[AudioSender] Failed to send audio for: " + playerUuid);
+            } else {
+                SVGPlugin.getInstance().debug("AudioSender","Sent Audio!");
+            }
+        });
+        return true;
     }
 
     /**
