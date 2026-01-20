@@ -34,12 +34,13 @@ public class GroupManager {
         VoicechatServerApi api = getApi();
         if (api == null) return false;
 
+        VoicechatConnection connection = api.getConnectionOf(player.getUniqueId());
+
         if (groups.containsKey(groupName)) { //whether the group already exists
             if (!created) { //if we can add the player if the group is already created
                 player.sendMessage(ChatColor.DARK_RED + "Group " + groupName + "already exists.");
                 return false;
             } else {
-                VoicechatConnection connection = api.getConnectionOf(player.getUniqueId()); //if player is null
                 if (connection != null) {
                     connection.setGroup(groups.get(groupName));
                     player.sendMessage(ChatColor.DARK_BLUE + "Successfully Joined Group " + groupName);
@@ -65,7 +66,6 @@ public class GroupManager {
                 .setPersistent(persistent)
                 .build();
 
-        VoicechatConnection connection = api.getConnectionOf(player.getUniqueId());
         if (connection != null) {
             if (connection.getGroup() !=null) {
                 player.sendMessage(ChatColor.RED + "Leaving Group: " + connection.getGroup().getName());
