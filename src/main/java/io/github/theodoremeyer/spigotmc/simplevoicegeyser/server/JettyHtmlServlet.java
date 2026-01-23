@@ -257,12 +257,19 @@ public class JettyHtmlServlet extends HttpServlet {
                         }
                     }
 
-                    form.addEventListener('submit', (event) => {
+                    form.addEventListener('submit', async (event) => {
                         event.preventDefault();
                         if (ws && ws.readyState === WebSocket.OPEN) {
                             log("Already connected.");
                             return;
                         }
+
+                        // CRITICAL: Resume the audio context on user gesture
+                        if (audioContext.state === 'suspended') {
+                           await audioContext.resume();
+                           console.log("AudioContext resumed. Current state:", audioContext.state);
+                        }
+
 
                         const data = { username: form.username.value, password: form.password.value };
                         const protocol = location.protocol === "https:" ? "wss://" : "ws://";
@@ -275,17 +282,11 @@ public class JettyHtmlServlet extends HttpServlet {
                             ws.send(JSON.stringify({ type: "join", ...data }));
                             log("WebSocket connected.");
                             startMicrophone();
-                            audioContext.resume().then(() => {
-                                console.log("AudioContext resumed:", audioContext.state);
-                            });
                         };
 
                         ws.onmessage = (event) => {
                             console.log("c0");
                             console.log("onmessage typeof:", typeof event.data, event.data.constructor.name);
-                            console.log("PCM len:", int16Data.length,
-                                  "min:", Math.min(...int16Data.slice(0, 200)),
-                                  "max:", Math.max(...int16Data.slice(0, 200)));
                             if (typeof event.data === 'string') {
                                 console.log("f1");
                                 try {
@@ -377,7 +378,7 @@ public class JettyHtmlServlet extends HttpServlet {
                         const float32Data = new Float32Array(length);
      
                         for (let i = 0; i < length; i++) {
-                           float32Data[i] = Math.sin(2 * Math.PI * 440 * i / sampleRate) * 0.8; // 80% volume
+                           float32Data[i] = Math.sin(2 * Math.PI * 440 * i / sampleRate) * 0.4; // 80% volume
                         }
 
                         audioWorkletNode.port.postMessage({ type: 'pcm', buffer: float32Data });

@@ -33,27 +33,32 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
 
     process(inputs, outputs) {
         const output = outputs[0][0];
+        const framesNeeded = output.length; // usually 128
 
-        this.port.postMessage({ type: 'log', message: `p1`});
-
-        this.port.postMessage({
-           type: 'log',
-           message: `outputs.length=${outputs.length}, outputs[0].length=${outputs[0].length}, output.length=${output ? output.length : "undefined"}`
-        });
-
-        // Underrun protection
-        if (this.available < output.length) {
-            output.fill(0);
-                    this.port.postMessage({ type: 'log', message: `pf1`});
-            return true;
+        // --- lightweight heartbeat log (rate-limited) ---
+        if ((this._logCounter = (this._logCounter || 0) + 1) % 200 === 0) {
+            this.port.postMessage({
+                type: 'log',
+                message:
+                    `process() frames=${framesNeeded}, available=${this.available}`
+            });
         }
 
-        for (let i = 0; i < output.length; i++) {
+        let i = 0;
+
+        // --- play available buffered audio ---
+        for (; i < framesNeeded && this.available > 0; i++) {
             output[i] = this.buffer[this.readIndex];
             this.readIndex = (this.readIndex + 1) % this.MAX_BUFFER;
             this.available--;
         }
-        return true;
+
+        // --- pad with silence if underrun ---
+        if (i < framesNeeded) {
+            output.fill(0, i);
+        }
+
+        return true; // keep processor alive
     }
 }
 
