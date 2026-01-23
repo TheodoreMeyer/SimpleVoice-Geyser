@@ -285,7 +285,6 @@ public class JettyHtmlServlet extends HttpServlet {
                         };
 
                         ws.onmessage = (event) => {
-                            console.log("c0");
                             console.log("onmessage typeof:", typeof event.data, event.data.constructor.name);
                             if (typeof event.data === 'string') {
                                 console.log("f1");
@@ -302,7 +301,6 @@ public class JettyHtmlServlet extends HttpServlet {
                                 for (let i = 0; i < int16Data.length; i++) {
                                     float32Data[i] = int16Data[i] / 32768;
                                 }
-                                console.log("c1");
                                 if (audioWorkletNode) {
                                     console.log("c2");
                                     audioWorkletNode.port.postMessage({
