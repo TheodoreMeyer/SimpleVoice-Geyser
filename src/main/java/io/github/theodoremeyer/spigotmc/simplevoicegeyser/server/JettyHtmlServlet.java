@@ -125,7 +125,7 @@ public class JettyHtmlServlet extends HttpServlet {
                     <input type="text" id="msgInput" placeholder="Type message..." />
                     <button onclick="sendMessage()">Send</button>
                 </div>
-                <button id="testSchedule" type="button">Test Schedule</button>
+                <button id="testSound" type="button">Test Sound</button>
                 <script>
                     const form = document.getElementById('joinForm');
                     const logEl = document.getElementById('log');
@@ -144,7 +144,26 @@ public class JettyHtmlServlet extends HttpServlet {
                         try {
                             await audioContext.audioWorklet.addModule('/audio-worklet-processor.js');
                             audioWorkletNode = new AudioWorkletNode(audioContext, 'pcm-player');
+
+                            // Bridge node (do NOT play directly)
+                            //const destination = audioContext.createMediaStreamDestination();
+                            //audioWorkletNode.connect(destination);
                             audioWorkletNode.connect(audioContext.destination);
+
+                            // Create hidden audio element for sink selection
+                            window.audioElement = document.createElement("audio");
+                            //audioElement.srcObject = destination.stream;
+                            //audioElement.autoplay = true;
+                            //audioElement.playsInline = true;
+                            //audioElement.style.display = "none";
+                            //document.body.appendChild(audioElement);
+       
+                            audioWorkletNode.port.onmessage = (event) => {
+                                if (event.data.type === 'log') {
+                                    console.log("[AudioWorklet]", event.data.message);
+                                }
+                            };
+    
                             console.log("AudioWorklet initialized and connected.");
                         } catch (e) {
                             console.error("Failed to load AudioWorklet:", e);
@@ -246,7 +265,8 @@ public class JettyHtmlServlet extends HttpServlet {
                         }
 
                         const data = { username: form.username.value, password: form.password.value };
-                        ws = new WebSocket("ws://" + location.host + "/ws");
+                        const protocol = location.protocol === "https:" ? "wss://" : "ws://";
+                        ws = new WebSocket(protocol + location.host + "/ws");
                         ws.binaryType = 'arraybuffer';
         
                         ws.onopen = () => {
@@ -255,11 +275,19 @@ public class JettyHtmlServlet extends HttpServlet {
                             ws.send(JSON.stringify({ type: "join", ...data }));
                             log("WebSocket connected.");
                             startMicrophone();
-                            audioContext.resume();
+                            audioContext.resume().then(() => {
+                                console.log("AudioContext resumed:", audioContext.state);
+                            });
                         };
 
                         ws.onmessage = (event) => {
+                            console.log("c0");
+                            console.log("onmessage typeof:", typeof event.data, event.data.constructor.name);
+                            console.log("PCM len:", int16Data.length,
+                                  "min:", Math.min(...int16Data.slice(0, 200)),
+                                  "max:", Math.max(...int16Data.slice(0, 200)));
                             if (typeof event.data === 'string') {
+                                console.log("f1");
                                 try {
                                     const data = JSON.parse(event.data);
                                     log((data.type || "info") + ": " + (data.message || JSON.stringify(data)));
@@ -273,7 +301,9 @@ public class JettyHtmlServlet extends HttpServlet {
                                 for (let i = 0; i < int16Data.length; i++) {
                                     float32Data[i] = int16Data[i] / 32768;
                                 }
+                                console.log("c1");
                                 if (audioWorkletNode) {
+                                    console.log("c2");
                                     audioWorkletNode.port.postMessage({
                                         type: 'pcm',
                                         buffer: float32Data
@@ -312,20 +342,46 @@ public class JettyHtmlServlet extends HttpServlet {
                     }
 
                     async function setOutputDevice(deviceId) {
-                        const audioEl = document.querySelector('audio');
-                        if (audioEl.setSinkId) {
-                            try {
-                                await audioEl.setSinkId(deviceId);
-                                console.log("Output device set to", deviceId);
-                            } catch (e) {
-                                console.warn("Failed to set output device:", e);
-                            }
+                        if (!window.audioElement) {
+                            console.warn("Audio element not initialized yet");
+                            return;
+                        }
+                        if (!audioElement.setSinkId) {
+                            console.warn("setSinkId not supported in this browser");
+                            return;
+                        }
+
+                        try {
+                            await audioElement.setSinkId(deviceId);
+                         console.log("Output device set to", deviceId);
+                        } catch (e) {
+                            console.warn("Failed to set output device:", e);
                         }
                     }
 
                     window.addEventListener("DOMContentLoaded", () => {
                         populateSpeakers();
                         populateMicrophones();
+                    });
+                    const testButton = document.getElementById("testSound");
+                        testButton.addEventListener("click", () => {
+                           if (!audioWorkletNode) {
+                               console.warn("AudioWorklet not initialized yet.");
+                               return;
+                           }
+
+                        // Generate a 440Hz sine wave for 0.5 seconds at 48kHz
+                        const sampleRate = 48000;
+                        const durationSec = 2.0;
+                        const length = sampleRate * durationSec;
+                        const float32Data = new Float32Array(length);
+     
+                        for (let i = 0; i < length; i++) {
+                           float32Data[i] = Math.sin(2 * Math.PI * 440 * i / sampleRate) * 0.8; // 80% volume
+                        }
+
+                        audioWorkletNode.port.postMessage({ type: 'pcm', buffer: float32Data });
+                        console.log("Test sound sent to AudioWorklet");
                     });
                 </script>
             </body>
