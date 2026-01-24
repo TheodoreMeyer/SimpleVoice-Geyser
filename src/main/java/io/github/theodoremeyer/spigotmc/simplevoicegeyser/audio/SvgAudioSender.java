@@ -128,7 +128,7 @@ public class SvgAudioSender {
             if (!success) {
                 SVGPlugin.log().warning("[AudioSender] Failed to send audio for: " + playerUuid);
             } else {
-                SVGPlugin.getInstance().debug("AudioSender","Sent Audio!");
+                SVGPlugin.getInstance().debug("AudioSender","Sent Audio to SVG server!");
             }
         });
         return true;
@@ -148,7 +148,6 @@ public class SvgAudioSender {
         }
         delegate.reset();
         serverApi.unregisterAudioSender(delegate); //end sender
-        SVGPlugin.log().info("[SvgAudioSender] Unregistered sender for " + playerUuid);
         if (player != null) { player.sendMessage("audioSender unregistered."); }
     }
 }

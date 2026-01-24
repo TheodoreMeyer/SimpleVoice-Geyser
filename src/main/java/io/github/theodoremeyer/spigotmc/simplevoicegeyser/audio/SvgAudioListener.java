@@ -52,6 +52,7 @@ public class SvgAudioListener implements PlayerAudioListener {
      */
     public void onAudioReceived(SoundPacket soundPacket) {
         Session session = WebSocketManager.clients.get(listenerId);
+        SVGPlugin.getInstance().debug("AudioListener", "recieved audio from SVG server!");
 
         if (session != null && session.isOpen()) {
 
@@ -62,7 +63,8 @@ public class SvgAudioListener implements PlayerAudioListener {
                     short[] pcm = decoder.decode(opusData);
                     byte[] bytes = serverApi.getAudioConverter().shortsToBytes(pcm); //convert audio to a usable type
 
-                    session.getRemote().sendBytes(ByteBuffer.wrap(bytes)); //send the decoded audio
+                    session.getRemote().sendBytes(ByteBuffer.wrap(bytes));//send the decoded audio
+                    SVGPlugin.getInstance().debug("AudioListener", "Sent audio to websocket client!");
                 } catch (Exception e) {
                     SVGPlugin.log().warning("Error sending audio to client" + listenerId);
                     SVGPlugin.getInstance().debug("AudioListener", "Error sending audio to client" + listenerId, e);

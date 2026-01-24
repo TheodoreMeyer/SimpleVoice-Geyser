@@ -172,7 +172,6 @@ public class JettyWebSocket {
      */
     @OnWebSocketMessage
     public void onMessage(byte[] buffer, int offset, int length) {
-        SVGPlugin.getInstance().debug("Websocket","Received audio data from client");
         if (!authenticated || uuid == null) return; //make sure they signed in
 
         byte[] pcmData = new byte[length];

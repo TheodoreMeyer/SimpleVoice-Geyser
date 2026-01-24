@@ -34,6 +34,9 @@ public class JettyServer {
         // Add HTML page at root
         context.addServlet(new ServletHolder(new JettyHtmlServlet()), "/");
 
+        //add audio servlet
+        context.addServlet(AudioWorkletServlet.class, "/audio-worklet-processor.js");
+
         // Register WebSocket at /ws
         JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) -> {
             wsContainer.addMapping("/ws", (req, resp) -> new JettyWebSocket());
