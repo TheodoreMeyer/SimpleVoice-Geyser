@@ -122,6 +122,7 @@ public class JettyHtmlServlet extends HttpServlet {
                 <div id="log"></div>
 
                 <div id="inputArea">
+                    <label for="msgInput"></label>
                     <input type="text" id="msgInput" placeholder="Type message..." />
                     <button onclick="sendMessage()">Send</button>
                 </div>
