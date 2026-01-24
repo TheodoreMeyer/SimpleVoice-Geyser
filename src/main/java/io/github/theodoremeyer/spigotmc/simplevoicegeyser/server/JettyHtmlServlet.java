@@ -104,10 +104,10 @@ public class JettyHtmlServlet extends HttpServlet {
                 <h1>Join Simple Voice Chat</h1>
                 <form id="joinForm">
                     <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" required>
+                    <input type="text" id="username" name="username" required autocomplete="username">
 
                     <label for="password">Password:</label>
-                    <input type="password" id="password" name="password">
+                    <input type="password" id="password" name="password" required autocomplete="password">
        
                     <label for="mic">Select Microphone:</label>
                     <select id="mic" name="mic"></select>
@@ -115,7 +115,7 @@ public class JettyHtmlServlet extends HttpServlet {
                     <label for="speaker">Select Speaker:</label>
                     <select id="speaker" name="speaker"></select>
 
-                    <button type="submit">Join</button>
+                    <button type="submit" id="joinbtn">Join</button>
                 </form>
 
                 <div id="status">Waiting to join...</div>
@@ -133,6 +133,7 @@ public class JettyHtmlServlet extends HttpServlet {
                     const inputEl = document.getElementById('msgInput');
                     const speakerSelect = document.getElementById('speaker');
                     const micSelect = document.getElementById('mic');
+                    const joinButton = document.getElementById('joinbtn');
 
                     let audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     let ws = null;
@@ -259,8 +260,20 @@ public class JettyHtmlServlet extends HttpServlet {
 
                     form.addEventListener('submit', async (event) => {
                         event.preventDefault();
+      
                         if (ws && ws.readyState === WebSocket.OPEN) {
-                            log("Already connected.");
+                            ws.close();
+                            ws == null;
+                            statusEl.textContent = "disconnected";
+                            statusEl.style.backgroundColor = "#5f0000";
+                            log("You Left the Voice Chat");
+                            joinButton.textContent = "Join";
+     
+                             micSelect.disabled = false;
+                             speakerSelect.disabled = false;
+     
+                            if (microphoneStream) microphoneStream.getTracks().forEach(track => track.stop());
+      
                             return;
                         }
 
@@ -281,13 +294,15 @@ public class JettyHtmlServlet extends HttpServlet {
                             statusEl.style.backgroundColor = "#005f00";
                             ws.send(JSON.stringify({ type: "join", ...data }));
                             log("WebSocket connected.");
+                            joinButton.textContent = "Leave";
+                            micSelect.disabled = true;
+                            speakerSelect.disabled = true;
                             startMicrophone();
                         };
 
                         ws.onmessage = (event) => {
                             console.log("onmessage typeof:", typeof event.data, event.data.constructor.name);
                             if (typeof event.data === 'string') {
-                                console.log("f1");
                                 try {
                                     const data = JSON.parse(event.data);
                                     log((data.type || "info") + ": " + (data.message || JSON.stringify(data)));
@@ -315,6 +330,8 @@ public class JettyHtmlServlet extends HttpServlet {
                             statusEl.textContent = "Disconnected";
                             statusEl.style.backgroundColor = "#5f0000";
                             log("Disconnected.");
+                            micSelect.disabled = false;
+                            speakerSelect.disabled = false;
                             if (microphoneStream) microphoneStream.getTracks().forEach(track => track.stop());
                         };
 
