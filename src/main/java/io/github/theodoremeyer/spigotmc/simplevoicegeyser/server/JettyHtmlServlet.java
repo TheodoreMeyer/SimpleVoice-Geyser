@@ -7,6 +7,7 @@ import java.io.IOException;
 
 /**
  * Needs to be worked on. Major bug with sound.
+ * Partially Complete now!
  * HTML server page
  */
 public class JettyHtmlServlet extends HttpServlet {
@@ -141,10 +142,15 @@ public class JettyHtmlServlet extends HttpServlet {
                     let microphoneStream = null;
                     let audioWorkletNode = null;
 
+                    let micSendBuffer = new Int16Array(0);
+                    const MIC_PACKET_SIZE = 960;
+
                     // Load the AudioWorklet processor
                     async function initAudioWorklet() {
                         try {
                             await audioContext.audioWorklet.addModule('/audio-worklet-processor.js');
+                            await audioContext.audioWorklet.addModule('/mic-capture-processor.js');
+
                             audioWorkletNode = new AudioWorkletNode(audioContext, 'pcm-player');
 
                             // Bridge node (do NOT play directly)
@@ -163,6 +169,10 @@ public class JettyHtmlServlet extends HttpServlet {
                             audioWorkletNode.port.onmessage = (event) => {
                                 if (event.data.type === 'log') {
                                     console.log("[AudioWorklet]", event.data.message);
+                                } else if (e.data.type === 'stats') {
+                                    console.debug(
+                                        `[PLAYBACK] buffered=${e.data.buffered} underruns=${e.data.underruns}`
+                                    );
                                 }
                             };
     
@@ -189,7 +199,8 @@ public class JettyHtmlServlet extends HttpServlet {
                             });
                             const saved = localStorage.getItem("preferredSpeaker");
                             if (saved) speakerSelect.value = saved;
-                            await setOutputDevice(speakerSelect.value);
+                            //await setOutputDevice(speakerSelect.value);
+                            await audioContextSetOutputDevice(speakerSelect.value);
                         } catch (e) {
                             console.error("Failed to list speakers:", e);
                         }
@@ -224,6 +235,7 @@ public class JettyHtmlServlet extends HttpServlet {
                     });
 
                     async function startMicrophone() {
+                        await audioContext.resume();
                         try {
                             microphoneStream = await navigator.mediaDevices.getUserMedia({
                                 audio: {
@@ -231,28 +243,47 @@ public class JettyHtmlServlet extends HttpServlet {
                                     noiseSuppression: true,
                                     echoCancellation: true,
                                     autoGainControl: true,
-                                    sampleRate: 48000,
                                     channelCount: 1
                                 }
                             });
+
                             const micSource = audioContext.createMediaStreamSource(microphoneStream);
 
-                            // Send microphone audio to server
-                            const processor = audioContext.createScriptProcessor(1024, 1, 1);
-                            micSource.connect(processor);
-                            processor.connect(audioContext.destination);
+                            const micWorkletNode = new AudioWorkletNode(audioContext, 'mic-capture');
 
-                            processor.onaudioprocess = (e) => {
+                            micSource.connect(micWorkletNode);
+
+                            micWorkletNode.port.onmessage = (event) => {
                                 if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
-                                const floatSamples = e.inputBuffer.getChannelData(0);
-                                const int16Samples = new Int16Array(floatSamples.length);
+                                const floatSamples = event.data;
+                                const int16Chunk = new Int16Array(floatSamples.length);
+
+                                // Float32 → Int16
                                 for (let i = 0; i < floatSamples.length; i++) {
                                     const s = Math.max(-1, Math.min(1, floatSamples[i]));
-                                    int16Samples[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                                    int16Chunk[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
                                 }
-                                ws.send(int16Samples.buffer);
+
+                                // ---- append to rolling buffer ----
+                                const merged = new Int16Array(micSendBuffer.length + int16Chunk.length);
+                                merged.set(micSendBuffer, 0);
+                                merged.set(int16Chunk, micSendBuffer.length);
+                                micSendBuffer = merged;
+
+                                if (micSendBuffer.length > 2880) {
+                                    console.warn("Mic backlog growing:", micSendBuffer.length);
+                                }
+
+                                // ---- send fixed 920-sample packets ----
+                                while (micSendBuffer.length >= MIC_PACKET_SIZE) {
+                                    const packet = micSendBuffer.slice(0, MIC_PACKET_SIZE);
+                                    ws.send(packet.buffer);
+
+                                    micSendBuffer = micSendBuffer.slice(MIC_PACKET_SIZE);
+                                }
                             };
+
                         } catch (e) {
                             console.error("Microphone error:", e);
                             alert("Microphone access is required.");
@@ -264,7 +295,7 @@ public class JettyHtmlServlet extends HttpServlet {
       
                         if (ws && ws.readyState === WebSocket.OPEN) {
                             ws.close();
-                            ws == null;
+                            ws = null;
                             statusEl.textContent = "disconnected";
                             statusEl.style.backgroundColor = "#5f0000";
                             log("You Left the Voice Chat");
@@ -281,6 +312,7 @@ public class JettyHtmlServlet extends HttpServlet {
                         // CRITICAL: Resume the audio context on user gesture
                         if (audioContext.state === 'suspended') {
                            await audioContext.resume();
+                           await audioContextSetOutputDevice(speakerSelect.value);
                            console.log("AudioContext resumed. Current state:", audioContext.state);
                         }
 
@@ -331,6 +363,7 @@ public class JettyHtmlServlet extends HttpServlet {
                             statusEl.textContent = "Disconnected";
                             statusEl.style.backgroundColor = "#5f0000";
                             log("Disconnected.");
+                            joinButton.textContent = "Join";
                             micSelect.disabled = false;
                             speakerSelect.disabled = false;
                             if (microphoneStream) microphoneStream.getTracks().forEach(track => track.stop());
@@ -376,16 +409,47 @@ public class JettyHtmlServlet extends HttpServlet {
                         }
                     }
 
+                    async function audioContextSetOutputDevice(deviceId) {
+                        // Try AudioContext first (spec / future)
+                        if (audioContext.setSinkId) {
+                            try {
+                                await audioContext.setSinkId(deviceId);
+                                console.log("AudioContext output device set:", deviceId);
+                                return true;
+                            } catch (e) {
+                                console.warn("AudioContext.setSinkId failed:", e);
+                            }
+                        }
+
+                        // Fallback to HTMLAudioElement (Chrome reality)
+                        if (window.audioElement && audioElement.setSinkId) {
+                            try {
+                                await audioElement.setSinkId(deviceId);
+                                console.log("HTMLAudioElement output device set:", deviceId);
+                                return true;
+                            } catch (e) {
+                                console.warn("audioElement.setSinkId failed:", e);
+                            }
+                        }
+
+                        console.warn("setSinkId not supported");
+                        return false;
+                    }
+
+
                     window.addEventListener("DOMContentLoaded", () => {
                         populateSpeakers();
                         populateMicrophones();
                     });
                     const testButton = document.getElementById("testSound");
-                        testButton.addEventListener("click", () => {
-                           if (!audioWorkletNode) {
-                               console.warn("AudioWorklet not initialized yet.");
-                               return;
-                           }
+
+
+                    testButton.addEventListener("click", () => {
+
+                        if (!audioWorkletNode) {
+                            console.warn("AudioWorklet not initialized yet.");
+                            return;
+                        }
 
                         // Generate a 440Hz sine wave for 0.5 seconds at 48kHz
                         const sampleRate = 48000;
@@ -394,7 +458,7 @@ public class JettyHtmlServlet extends HttpServlet {
                         const float32Data = new Float32Array(length);
      
                         for (let i = 0; i < length; i++) {
-                           float32Data[i] = Math.sin(2 * Math.PI * 440 * i / sampleRate) * 0.4; // 80% volume
+                           float32Data[i] = Math.sin(2 * Math.PI * 440 * i / sampleRate) * 0.4; // 40% volume
                         }
 
                         audioWorkletNode.port.postMessage({ type: 'pcm', buffer: float32Data });

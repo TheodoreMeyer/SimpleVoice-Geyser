@@ -7,14 +7,18 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
         this.readIndex = 0;
         this.available = 0;
 
+        this.started = false;
+
+        //for testing purposes:
+        this.underruns = 0;
+        this._lastStatsTime = 0;
+
         this.MAX_BUFFER = this.buffer.length;
         this.TARGET_BUFFER = 4800; // ~100ms latency
 
         this.port.onmessage = (event) => {
             if (event.data.type === 'pcm') {
                 const input = event.data.buffer;
-
-                this.port.postMessage({ type: 'log', message: `Playback readIndex=${this.readIndex}, available=${this.available}` });
 
                 for (let i = 0; i < input.length; i++) {
                     // Drop oldest audio if buffer is full
@@ -35,6 +39,14 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
         const output = outputs[0][0];
         const framesNeeded = output.length; // usually 128
 
+        if (!this.started) {
+            if (this.available < this.TARGET_BUFFER) {
+                output.fill(0);
+                return true;
+            }
+            this.started = true;
+        }
+
         // --- lightweight heartbeat log (rate-limited) ---
         if ((this._logCounter = (this._logCounter || 0) + 1) % 200 === 0) {
             this.port.postMessage({
@@ -43,7 +55,6 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
                     `process() frames=${framesNeeded}, available=${this.available}`
             });
         }
-
         let i = 0;
 
         // --- play available buffered audio ---
@@ -55,7 +66,20 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
 
         // --- pad with silence if underrun ---
         if (i < framesNeeded) {
+            this.underruns++;
             output.fill(0, i);
+        }
+
+        const now = this.currentTime;
+
+        if (now - this._lastStatsTime > 0.5) { // every ~500ms
+            this.port.postMessage({
+                type: 'stats',
+                buffered: this.available,
+                underruns: this.underruns
+            });
+
+            this._lastStatsTime = now;
         }
 
         return true; // keep processor alive
