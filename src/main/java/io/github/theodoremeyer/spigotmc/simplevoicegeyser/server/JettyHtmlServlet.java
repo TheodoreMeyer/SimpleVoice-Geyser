@@ -6,14 +6,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * Needs to be worked on. Major bug with sound.
- * Partially Complete now!
+ * Almost Complete now!
  * HTML server page
  */
 public class JettyHtmlServlet extends HttpServlet {
     /**
      * HTML Page
-     * Needs to be worked on.
      * @param req request
      * @param resp http-response
      * @throws IOException Exception
