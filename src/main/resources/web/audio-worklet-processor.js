@@ -14,8 +14,8 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
         this._lastStatsTime = 0;
 
         this.MAX_BUFFER = this.buffer.length;
-        this.TARGET_BUFFER = 960 * 5; // ~5 packets = ~100ms, start playback when >= this
-        this.MIN_BUFFER = 960;         // never drop below this while reading
+        this.TARGET_BUFFER = 960 * 6; // ~5 packets = ~100ms, start playback when >= this
+        this.MIN_BUFFER = 960  * 2;         // never drop below this while reading
 
         this.lastSample = 0; // for repeating when underrun
 
@@ -97,8 +97,10 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
                 this.readIndex = (this.readIndex + 1) % this.MAX_BUFFER;
                 this.available--;
             } else {
-                // Buffer too low, repeat last sample to avoid clicks
-                output[i] = this.lastSample;
+                // Simple exponential decay PLC
+                this.lastSample *= 0.995;
+                const noise = (Math.random() * 2 - 1) * 0.00002;
+                output[i] = this.lastSample + noise;
                 this.underruns++;
             }
         }

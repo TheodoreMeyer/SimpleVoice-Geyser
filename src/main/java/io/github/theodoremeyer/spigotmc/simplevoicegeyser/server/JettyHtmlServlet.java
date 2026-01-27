@@ -183,7 +183,9 @@ public class JettyHtmlServlet extends HttpServlet {
 
                     let muted = false;
 
-                    let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    let audioContext = new AudioCtx({ sampleRate: 48000 });
+
                     let ws = null;
                     let microphoneStream = null;
                     let audioWorkletNode = null;
@@ -194,9 +196,16 @@ public class JettyHtmlServlet extends HttpServlet {
                     let micActiveUntil = 0;
                     const MIC_HOLD_MS = 120;
 
+                    let seq = 0;
+
                     // Load the AudioWorklet processor
                     async function initAudioWorklet() {
                         try {
+                            if (audioContext.sampleRate !== 48000) {
+                                console.warn("WRONG SAMPLE RATE: " + audioContext.sampleRate);
+                                //audioContext.sampleRate = 48000;
+                            }
+
                             await audioContext.audioWorklet.addModule('/audio-worklet-processor.js');
                             await audioContext.audioWorklet.addModule('/mic-capture-processor.js');
 

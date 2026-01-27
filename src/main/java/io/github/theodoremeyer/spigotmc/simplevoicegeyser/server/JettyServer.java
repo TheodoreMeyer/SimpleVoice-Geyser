@@ -41,7 +41,7 @@ public class JettyServer {
         // Register WebSocket at /ws
         JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) -> {
             wsContainer.addMapping("/ws", (req, resp) -> new JettyWebSocket());
-            wsContainer.setIdleTimeout(Duration.ofMinutes(4));
+            wsContainer.setIdleTimeout(Duration.ofMinutes(2));
         });
 
         server.start();
