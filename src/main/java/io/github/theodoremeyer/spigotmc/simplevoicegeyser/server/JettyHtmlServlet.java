@@ -196,8 +196,6 @@ public class JettyHtmlServlet extends HttpServlet {
                     let micActiveUntil = 0;
                     const MIC_HOLD_MS = 120;
 
-                    let seq = 0;
-
                     // Load the AudioWorklet processor
                     async function initAudioWorklet() {
                         try {
