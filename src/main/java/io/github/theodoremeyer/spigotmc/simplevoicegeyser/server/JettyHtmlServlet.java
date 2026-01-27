@@ -73,6 +73,40 @@ public class JettyHtmlServlet extends HttpServlet {
                     button:hover {
                         background-color: #00aacc;
                     }
+                    #micControls {
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        margin-bottom: 10px;
+                    }
+
+                    #muteBtn {
+                        padding: 10px 18px;
+                        font-weight: bold;
+                        border-radius: 6px;
+                    }
+
+                    #muteBtn.muted {
+                        background-color: #aa3333;
+                        color: #fff;
+                    }
+
+                    #muteBtn.unmuted {
+                        background-color: #33aa55;
+                        color: #000;
+                    }
+
+                    #micIndicator {
+                        width: 12px;
+                        height: 12px;
+                        border-radius: 50%;
+                        background-color: #444; /* idle */
+                        border: 1px solid #666;
+                    }
+
+                    #micIndicator.active {
+                        background-color: #33ff66;
+                    }
                     #status {
                         margin: 10px;
                         padding: 8px 12px;
@@ -94,8 +128,10 @@ public class JettyHtmlServlet extends HttpServlet {
                     }
                     #inputArea {
                         display: flex;
+                        justify-content: center;   /* center contents */
+                        align-items: center;
                         gap: 10px;
-                        margin-top: 10px;
+                        margin: 10px auto;         /* center container */
                         width: 90%;
                         max-width: 600px;
                     }
@@ -119,6 +155,11 @@ public class JettyHtmlServlet extends HttpServlet {
                     <button type="submit" id="joinbtn">Join</button>
                 </form>
 
+                <div id="micControls">
+                    <button id="muteBtn" class="unmuted">Mute</button>
+                    <span id="micIndicator" title="Mic activity"></span>
+                </div>
+
                 <div id="status">Waiting to join...</div>
                 <div id="log"></div>
 
@@ -137,6 +178,11 @@ public class JettyHtmlServlet extends HttpServlet {
                     const micSelect = document.getElementById('mic');
                     const joinButton = document.getElementById('joinbtn');
 
+                    const muteBtn = document.getElementById('muteBtn');
+                    const micIndicator = document.getElementById('micIndicator');
+
+                    let muted = false;
+
                     let audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     let ws = null;
                     let microphoneStream = null;
@@ -144,6 +190,9 @@ public class JettyHtmlServlet extends HttpServlet {
 
                     let micSendBuffer = new Int16Array(0);
                     const MIC_PACKET_SIZE = 960;
+
+                    let micActiveUntil = 0;
+                    const MIC_HOLD_MS = 120;
 
                     // Load the AudioWorklet processor
                     async function initAudioWorklet() {
@@ -169,9 +218,9 @@ public class JettyHtmlServlet extends HttpServlet {
                             audioWorkletNode.port.onmessage = (event) => {
                                 if (event.data.type === 'log') {
                                     console.log("[AudioWorklet]", event.data.message);
-                                } else if (e.data.type === 'stats') {
+                                } else if (event.data.type === 'stats') {
                                     console.debug(
-                                        `[PLAYBACK] buffered=${e.data.buffered} underruns=${e.data.underruns}`
+                                        `[PLAYBACK] buffered=${event.data.buffered} underruns=${event.data.underruns}`
                                     );
                                 }
                             };
@@ -256,12 +305,27 @@ public class JettyHtmlServlet extends HttpServlet {
                             micWorkletNode.port.onmessage = (event) => {
                                 if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
-                                const floatSamples = event.data;
-                                const int16Chunk = new Int16Array(floatSamples.length);
+                                const { samples, speech } = event.data;
+
+                                // Mic activity indicator
+                                const now = performance.now();
+
+                                if (speech && !muted) {
+                                    micActiveUntil = now + MIC_HOLD_MS;
+                                }
+
+                                if (!muted && now < micActiveUntil) {
+                                    micIndicator.classList.add("active");
+                                } else {
+                                    micIndicator.classList.remove("active");
+                                }
+
+                                if (!speech || muted) return; // silence OR muted/ silence suppressed
 
                                 // Float32 → Int16
-                                for (let i = 0; i < floatSamples.length; i++) {
-                                    const s = Math.max(-1, Math.min(1, floatSamples[i]));
+                                const int16Chunk = new Int16Array(samples.length);
+                                for (let i = 0; i < samples.length; i++) {
+                                    const s = Math.max(-1, Math.min(1, samples[i]));
                                     int16Chunk[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
                                 }
 
@@ -271,11 +335,15 @@ public class JettyHtmlServlet extends HttpServlet {
                                 merged.set(int16Chunk, micSendBuffer.length);
                                 micSendBuffer = merged;
 
-                                if (micSendBuffer.length > 2880) {
-                                    console.warn("Mic backlog growing:", micSendBuffer.length);
+                                if (micSendBuffer.length > MIC_PACKET_SIZE * 3) {
+                                    console.warn(
+                                        "[MIC] Backlog growing:",
+                                        micSendBuffer.length,
+                                        "samples"
+                                    );
                                 }
 
-                                // ---- send fixed 920-sample packets ----
+                                // ---- send fixed 960-sample packets ----
                                 while (micSendBuffer.length >= MIC_PACKET_SIZE) {
                                     const packet = micSendBuffer.slice(0, MIC_PACKET_SIZE);
                                     ws.send(packet.buffer);
@@ -290,6 +358,23 @@ public class JettyHtmlServlet extends HttpServlet {
                         }
                     }
 
+                    muteBtn.addEventListener("click", () => {
+                        muted = !muted;
+
+                        if (muted) {
+                            micActiveUntil = 0;
+                            micIndicator.classList.remove("active");
+
+                            muteBtn.textContent = "Unmute";
+                            muteBtn.classList.remove("unmuted");
+                            muteBtn.classList.add("muted");
+                        } else {
+                            muteBtn.textContent = "Mute";
+                            muteBtn.classList.remove("muted");
+                            muteBtn.classList.add("unmuted");
+                        }
+                    });
+
                     form.addEventListener('submit', async (event) => {
                         event.preventDefault();
       
@@ -298,7 +383,6 @@ public class JettyHtmlServlet extends HttpServlet {
                             ws = null;
                             statusEl.textContent = "disconnected";
                             statusEl.style.backgroundColor = "#5f0000";
-                            log("You Left the Voice Chat");
                             joinButton.textContent = "Join";
      
                              micSelect.disabled = false;
@@ -326,7 +410,7 @@ public class JettyHtmlServlet extends HttpServlet {
                             statusEl.textContent = "Connected as " + data.username;
                             statusEl.style.backgroundColor = "#005f00";
                             ws.send(JSON.stringify({ type: "join", ...data }));
-                            log("WebSocket connected.");
+                            log("Connected.");
                             joinButton.textContent = "Leave";
                             micSelect.disabled = true;
                             speakerSelect.disabled = true;
@@ -334,7 +418,6 @@ public class JettyHtmlServlet extends HttpServlet {
                         };
 
                         ws.onmessage = (event) => {
-                            console.log("onmessage typeof:", typeof event.data, event.data.constructor.name);
                             if (typeof event.data === 'string') {
                                 try {
                                     const data = JSON.parse(event.data);
@@ -350,7 +433,6 @@ public class JettyHtmlServlet extends HttpServlet {
                                     float32Data[i] = int16Data[i] / 32768;
                                 }
                                 if (audioWorkletNode) {
-                                    console.log("c2");
                                     audioWorkletNode.port.postMessage({
                                         type: 'pcm',
                                         buffer: float32Data
@@ -366,7 +448,20 @@ public class JettyHtmlServlet extends HttpServlet {
                             joinButton.textContent = "Join";
                             micSelect.disabled = false;
                             speakerSelect.disabled = false;
+
+                            if (audioWorkletNode) {
+                                audioWorkletNode.port.postMessage({ type: 'reset' });
+                            }
+
                             if (microphoneStream) microphoneStream.getTracks().forEach(track => track.stop());
+
+
+                            micActiveUntil = 0;
+                            micIndicator.classList.remove("active");
+                            muted = false;
+                            muteBtn.textContent = "Mute";
+                            muteBtn.classList.remove("muted");
+                            muteBtn.classList.add("unmuted");
                         };
 
                         ws.onerror = (err) => {
