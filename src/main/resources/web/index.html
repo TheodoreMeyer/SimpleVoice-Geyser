@@ -60,6 +60,7 @@
                 padding: 10px 18px;
                 font-weight: bold;
                 border-radius: 6px;
+                transition: background-color 0.15s ease, color 0.15s ease;
             }
 
             #muteBtn.muted {
@@ -466,24 +467,6 @@
             const time = new Date().toLocaleTimeString();
             logEl.textContent += `\n[${time}] ${msg}`;
             logEl.scrollTop = logEl.scrollHeight;
-        }
-
-        async function setOutputDevice(deviceId) {
-            if (!window.audioElement) {
-                console.warn("Audio element not initialized yet");
-                return;
-            }
-            if (!audioElement.setSinkId) {
-                console.warn("setSinkId not supported in this browser");
-                return;
-            }
-
-            try {
-                await audioElement.setSinkId(deviceId);
-                console.log("Output device set to", deviceId);
-            } catch (e) {
-                console.warn("Failed to set output device:", e);
-            }
         }
 
         async function audioContextSetOutputDevice(deviceId) {
