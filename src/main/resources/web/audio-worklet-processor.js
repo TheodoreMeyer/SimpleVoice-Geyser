@@ -14,8 +14,8 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
         this._lastStatsTime = 0;
 
         this.MAX_BUFFER = this.buffer.length;
-        this.TARGET_BUFFER = 960 * 6; // ~5 packets = ~100ms, start playback when >= this
-        this.MIN_BUFFER = 960  * 2;         // never drop below this while reading
+        this.TARGET_BUFFER = 960 * 7; // ~5 packets = ~100ms, start playback when >= this
+        this.MIN_BUFFER = 960  * 3;         // never drop below this while reading
 
         this.lastSample = 0; // for repeating when underrun
 
