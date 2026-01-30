@@ -2,10 +2,11 @@ plugins {
     id 'java'
     id 'maven-publish'
     id 'java-library'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'io.github.theodoremeyer.spigotmc.simplevoicegeyser'
-version = '0.0.1'
+version = project.version
 archivesBaseName = 'SimpleVoice-Geyser'
 
 repositories {
@@ -44,34 +45,34 @@ repositories {
 
 dependencies {
     // Spigot API dependency
-    implementation 'org.spigotmc:spigot-api:1.21.8-R0.1-SNAPSHOT'
+    implementation "org.spigotmc:spigot-api:${spigot_api_version}-R0.1-SNAPSHOT"
     
     implementation 'org.json:json:20250107'
     
     implementation files('libs/json-20250107.jar')
 
     // GeyserMC API dependency
-    compileOnly "org.geysermc.geyser:api:2.4.1-SNAPSHOT"
+    compileOnly "org.geysermc.geyser:api:${geysermc_api_version}"
     
     //jetty server
-    implementation 'org.eclipse.jetty:jetty-security:11.0.25'
+    //implementation 'org.eclipse.jetty:jetty-security:11.0.25'
     implementation 'org.eclipse.jetty:jetty-server:11.0.25'
     implementation 'org.eclipse.jetty:jetty-servlet:11.0.25'
-    //implementation 'org.eclipse.jetty.websocket:websocket-servlet:11.0.25'
-    implementation files('libs/websocket-servlet-11.0.25.jar')
+    implementation 'org.eclipse.jetty.websocket:websocket-servlet:11.0.25'
+    //implementation files('libs/websocket-servlet-11.0.25.jar')
     implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:11.0.25'
-    implementation 'org.eclipse.jetty.websocket:websocket-core-server:11.0.25'
-    implementation 'org.eclipse.jetty.websocket:websocket-core-common:11.0.25'
-    implementation 'org.eclipse.jetty.websocket:websocket-jetty-common:11.0.25'
-    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.25'
-    implementation 'jakarta.servlet:jakarta.servlet-api:5.0.0'
-    implementation 'org.eclipse.jetty:jetty-util:11.0.25'
-    implementation 'org.eclipse.jetty:jetty-http:11.0.25'
-    implementation 'org.eclipse.jetty:jetty-io:11.0.25'
-    implementation files('libs/websocket-jetty-api-11.0.25.jar')
+    //implementation 'org.eclipse.jetty.websocket:websocket-core-server:11.0.25'
+    //implementation 'org.eclipse.jetty.websocket:websocket-core-common:11.0.25'
+    //implementation 'org.eclipse.jetty.websocket:websocket-jetty-common:11.0.25'
+    //implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.25'
+    //implementation 'jakarta.servlet:jakarta.servlet-api:5.0.0'
+    //implementation 'org.eclipse.jetty:jetty-util:11.0.25'
+    //implementation 'org.eclipse.jetty:jetty-http:11.0.25'
+    //implementation 'org.eclipse.jetty:jetty-io:11.0.25'
+    //implementation files('libs/websocket-jetty-api-11.0.25.jar')
     
     // SimpleVoiceChat API
-    implementation "de.maxhenkel.voicechat:voicechat-api:2.6.0"
+    implementation "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
 }
 
 java {
@@ -89,6 +90,18 @@ tasks.named('jar') {
         )
     }
 }
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching('plugin.yml') {
+        expand(
+                plugin_version: project.version,
+                spigot_version: spigot_api_version
+        )
+    }
+}
+
 
 tasks.register('downloadDependencies', Copy) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
