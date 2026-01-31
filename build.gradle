@@ -2,10 +2,9 @@ plugins {
     id 'java'
     id 'maven-publish'
     id 'java-library'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
-group = 'io.github.theodoremeyer.spigotmc.simplevoicegeyser'
+group = 'io.github.theodoremeyer.spigotmc'
 version = project.version
 archivesBaseName = 'SimpleVoice-Geyser'
 
@@ -55,21 +54,10 @@ dependencies {
     compileOnly "org.geysermc.geyser:api:${geysermc_api_version}"
     
     //jetty server
-    //implementation 'org.eclipse.jetty:jetty-security:11.0.25'
     implementation 'org.eclipse.jetty:jetty-server:11.0.25'
     implementation 'org.eclipse.jetty:jetty-servlet:11.0.25'
     implementation 'org.eclipse.jetty.websocket:websocket-servlet:11.0.25'
-    //implementation files('libs/websocket-servlet-11.0.25.jar')
     implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:11.0.25'
-    //implementation 'org.eclipse.jetty.websocket:websocket-core-server:11.0.25'
-    //implementation 'org.eclipse.jetty.websocket:websocket-core-common:11.0.25'
-    //implementation 'org.eclipse.jetty.websocket:websocket-jetty-common:11.0.25'
-    //implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.25'
-    //implementation 'jakarta.servlet:jakarta.servlet-api:5.0.0'
-    //implementation 'org.eclipse.jetty:jetty-util:11.0.25'
-    //implementation 'org.eclipse.jetty:jetty-http:11.0.25'
-    //implementation 'org.eclipse.jetty:jetty-io:11.0.25'
-    //implementation files('libs/websocket-jetty-api-11.0.25.jar')
     
     // SimpleVoiceChat API
     implementation "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
@@ -102,6 +90,14 @@ processResources {
     }
 }
 
+tasks.named("build") {
+    finalizedBy("publishToMavenLocal")
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
 
 tasks.register('downloadDependencies', Copy) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -114,17 +110,9 @@ tasks.register('downloadDependencies', Copy) {
 publishing {
     publications {
         create("mavenJava", MavenPublication) {
-            artifactId = archivesBaseName
-            artifact(tasks.jar.archiveFile) {
-                classifier = null
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            url = "file://${project.rootDir}/Build/repo"
-
+            from components.java
+            artifactId = "SimpleVoice-Geyser"
         }
     }
 }
+
