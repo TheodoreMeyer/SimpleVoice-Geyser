@@ -39,10 +39,14 @@ public class VoiceChatBridge implements VoicechatPlugin {
     /**
      * Map containing all the audioListeners
      */
-    protected final Map<UUID, PlayerAudioListener> audioListeners = new ConcurrentHashMap<>();
+    protected final Map<UUID, SvgAudioListener> audioListeners = new ConcurrentHashMap<>();
 
     private final SVGPlugin plugin;
 
+    /**
+     * Initalizes the plugin's connection with SVC.
+     * @param plugin SVG plugin
+     */
     public VoiceChatBridge(SVGPlugin plugin) {
         this.plugin = plugin;
     }
@@ -192,10 +196,11 @@ public class VoiceChatBridge implements VoicechatPlugin {
             return;
         }
 
-        PlayerAudioListener listener = audioListeners.remove(uuid); //remove the listener from the map
+        SvgAudioListener listener = audioListeners.remove(uuid); //remove the listener from the map
         if (listener != null) {
             serverApi.unregisterAudioListener(listener); //unregister the listener
             SVGPlugin.log().info("[VCBridge] Unregistered audio listener for: " + uuid);
+            listener.unRegister();
         } else {
             SVGPlugin.log().warning("[VCBridge] No audio listener found for: " + uuid);
         }

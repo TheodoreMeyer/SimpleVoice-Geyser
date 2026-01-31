@@ -101,6 +101,9 @@ public class SvgAudioListener implements PlayerAudioListener {
         }
    }
 
+    /**
+     * Closes the decoder
+     */
    public void unRegister() {
         decoder.resetState();
         decoder.close();

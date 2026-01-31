@@ -20,7 +20,12 @@ import java.util.UUID;
  */
 @WebSocket
 public class JettyWebSocket {
+
+    /**
+     * The Session that is the audio client.
+     */
     protected Session session;
+
     private UUID uuid;
     private boolean authenticated = false;
     private Player player;
