@@ -14,14 +14,14 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
         this._lastStatsTime = 0;
 
         this.MAX_BUFFER = this.buffer.length;
-        this.TARGET_BUFFER = 960 * 7; // ~5 packets = ~100ms, start playback when >= this
-        this.MIN_BUFFER = 960  * 3;         // never drop below this while reading
+        this.TARGET_BUFFER = 960 * 7; // start playback when >= this
+        this.MIN_BUFFER = 960  * 3; // never drop below this while reading
 
         this.lastSample = 0; // for repeating when underrun
 
         //For reseting state
         this.silenceFrames = 0;
-        this.SILENCE_RESET_FRAMES = 128 * 15; // ~40ms
+        this.SILENCE_RESET_FRAMES = 128 * 15;
 
         this.port.onmessage = (event) => {
             if (event.data.type === 'pcm') {

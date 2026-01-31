@@ -110,8 +110,6 @@ public class JettyWebSocket {
                 session.getRemote().sendString(successJson.toString());
                 SVGPlugin.log().info("[WebSocket] " + username + " joined with UUID: " + uuid);
 
-                sendTestAudio(session);
-
                 // Schedule timeout if player never joins. Currently is disabled
                 //Bukkit.getScheduler().runTaskLater(SVGPlugin.getInstance(), () -> {
                 this.player = Bukkit.getPlayer(uuid);
@@ -213,43 +211,5 @@ public class JettyWebSocket {
     public void onError(Throwable error) {
         SVGPlugin.getInstance().debug("WebSocket", "websocket error", error);
         SVGPlugin.log().info("Error: " + error.getMessage());
-    }
-
-    public void sendTestAudio(Session session) throws Exception {
-        List<byte[]> testPackets = generateSineWavePackets(440, 6.0, 48000);
-
-        for (byte[] packet : testPackets) {
-            session.getRemote().sendBytes(ByteBuffer.wrap(packet));
-            Thread.sleep(20);
-        }
-    }
-
-    public List<byte[]> generateSineWavePackets(double freq, double durationSec, int sampleRate) {
-        int totalSamples = (int) (durationSec * sampleRate);
-        int packetSize = 960; // samples per packet
-
-        List<byte[]> packets = new ArrayList<>();
-        short[] samples = new short[totalSamples];
-
-        // Generate full sine wave as shorts
-        for (int i = 0; i < totalSamples; i++) {
-            double t = i / (double) sampleRate;
-            double amplitude = Math.sin(2 * Math.PI * freq * t) * 0.4; // 40% volume
-            samples[i] = (short) (amplitude * Short.MAX_VALUE);
-        }
-
-        // Split into 960-sample packets
-        for (int i = 0; i < totalSamples; i += packetSize) {
-            int len = Math.min(packetSize, totalSamples - i);
-            byte[] packet = new byte[len * 2]; // 2 bytes per sample
-            for (int j = 0; j < len; j++) {
-                short val = samples[i + j];
-                packet[j * 2] = (byte) (val & 0xff);         // low byte
-                packet[j * 2 + 1] = (byte) ((val >> 8) & 0xff); // high byte
-            }
-            packets.add(packet);
-        }
-
-        return packets;
     }
 }
