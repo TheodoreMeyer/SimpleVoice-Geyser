@@ -9,7 +9,10 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import org.json.JSONObject;
 
+import java.nio.ByteBuffer;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -69,7 +72,7 @@ public class JettyWebSocket {
                     return;
                 }
                 this.uuid = storedUuid;
-                SVGPlugin.log().info("[WebSocket] Player found. UUID: " + uuid);
+                SVGPlugin.getInstance().debug("WebSocket", "Player found. UUID: " + uuid);
 
                 //see if the player's password is set.
                 if (!PlayerVcPswd.isPasswordSet(username)) {
@@ -103,7 +106,7 @@ public class JettyWebSocket {
                 authenticated = true;
                 JSONObject successJson = new JSONObject();
                 successJson.put("type", "status");
-                successJson.put("message", "Connected as " + username + ". Make sure to join server within " + timeout + " seconds!");
+                successJson.put("message", "Connected as " + username + "." ); //Make sure to join server within " + timeout + " seconds!");
                 session.getRemote().sendString(successJson.toString());
                 SVGPlugin.log().info("[WebSocket] " + username + " joined with UUID: " + uuid);
 

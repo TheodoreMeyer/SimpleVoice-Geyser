@@ -127,8 +127,6 @@ public class SvgAudioSender {
             boolean success = delegate.send(encoded);
             if (!success) {
                 SVGPlugin.log().warning("[AudioSender] Failed to send audio for: " + playerUuid);
-            } else {
-                SVGPlugin.getInstance().debug("AudioSender","Sent Audio to SVG server!");
             }
         });
         return true;
