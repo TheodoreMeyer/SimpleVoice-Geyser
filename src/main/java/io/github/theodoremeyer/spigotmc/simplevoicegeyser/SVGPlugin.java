@@ -91,12 +91,15 @@ public class SVGPlugin extends JavaPlugin {
         saveDefaultConfig();
         int rawTimeout = getConfig().getInt("client.vctimeout", 30); //get config from config.yml
         this.vcTimeout = Math.max(0, Math.min(120, rawTimeout));
+
         int jettyServerPort = getConfig().getInt("server.port", 8080);
+        String jettyServerHost = getConfig().getString("server.bind-address", "0.0.0.0");
+
         this.webSocketManager = new WebSocketManager();
         this.audioThread = new AudioThread(this);
 
         try {
-            jettyServer = new JettyServer(jettyServerPort); //start the jetty server
+            jettyServer = new JettyServer(jettyServerPort, jettyServerHost); //start the jetty server
             jettyServer.start();
             getLogger().info("Jetty server started on port: " + jettyServerPort);
         } catch (Exception e) {

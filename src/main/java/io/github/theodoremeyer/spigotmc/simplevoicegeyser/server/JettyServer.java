@@ -1,6 +1,7 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser.server;
 
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
@@ -18,8 +19,14 @@ public class JettyServer {
      * set server port
      * @param port port to run server on
      */
-    public JettyServer(int port) {
-        this.server = new Server(port);
+    public JettyServer(int port, String host) {
+        this.server = new Server();
+
+        ServerConnector connector = new ServerConnector(server);
+        connector.setHost(host);
+        connector.setPort(port);
+
+        server.addConnector(connector);
     }
 
     /**
