@@ -9,10 +9,7 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import org.json.JSONObject;
 
-import java.nio.ByteBuffer;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -115,7 +112,7 @@ public class JettyWebSocket {
                 session.getRemote().sendString(successJson.toString());
                 SVGPlugin.log().info("[WebSocket] " + username + " joined with UUID: " + uuid);
 
-                // Schedule timeout if player never joins. Currently is disabled
+                // Schedule timeout if player never joins. Currently disabled.
                 //Bukkit.getScheduler().runTaskLater(SVGPlugin.getInstance(), () -> {
                 this.player = Bukkit.getPlayer(uuid);
                 if (player == null || !player.isOnline()) {
@@ -198,7 +195,10 @@ public class JettyWebSocket {
      */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
-        SVGPlugin.log().info("[WebSocket] WebSocket closed: " + statusCode + " - " + reason);
+        String username = PlayerVcPswd.getUsernameFromUUID(uuid);
+        String displayName = (username != null) ? username : uuid.toString();
+
+        SVGPlugin.log().info("[WebSocket] WebSocket for " + displayName + " closed: " + statusCode + " - " + reason);
         if (uuid != null) { //make sure the uuid for the session is not null, needed to close senders/listeners
             SVGPlugin.getBridge().unregisterAudioSender(uuid);
             SVGPlugin.getBridge().unregisterAudioListener(uuid);

@@ -28,7 +28,7 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
                 const input = event.data.buffer;
 
                 for (let i = 0; i < input.length; i++) {
-                    // Drop oldest audio if buffer is full
+                    // Drop the oldest audio if buffer is full
                     if (this.available >= this.MAX_BUFFER) {
                         this.readIndex = (this.readIndex + 1) % this.MAX_BUFFER;
                         this.available--;

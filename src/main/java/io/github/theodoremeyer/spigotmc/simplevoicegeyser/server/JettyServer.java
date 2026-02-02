@@ -1,5 +1,6 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser.server;
 
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -27,6 +28,7 @@ public class JettyServer {
         connector.setPort(port);
 
         server.addConnector(connector);
+        SVGPlugin.log().info("Protocol: " + connector.getDefaultProtocol());
     }
 
     /**
