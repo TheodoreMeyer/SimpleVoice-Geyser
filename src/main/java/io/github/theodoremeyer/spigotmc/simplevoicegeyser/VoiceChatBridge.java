@@ -4,13 +4,13 @@ import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.VoicechatApi;
 import de.maxhenkel.voicechat.api.VoicechatPlugin;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
-import de.maxhenkel.voicechat.api.audiolistener.PlayerAudioListener;
 import de.maxhenkel.voicechat.api.events.CreateGroupEvent;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.RemoveGroupEvent;
 import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioListener;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioSender;
+import org.bukkit.Bukkit;
 
 import java.util.Map;
 import java.util.UUID;
@@ -161,7 +161,11 @@ public class VoiceChatBridge implements VoicechatPlugin {
             sender.unregister(); //unregister the sender
             SVGPlugin.log().info("[VCBridge] SvgAudioSender unregistered for: " + uuid);
         } else {
-            SVGPlugin.log().warning("[VCBridge] No SvgAudioSender found to unregister for: " + uuid);
+            if (Bukkit.getPlayer(uuid) != null) {
+                SVGPlugin.log().warning("[VCBridge] No SvgAudioSender found to unregister for: " + uuid);
+            } else {
+                SVGPlugin.getInstance().debug("[VCBridge]", "No SvgAudioSender found to unregister for: " + uuid);
+            }
         }
     }
 
@@ -202,7 +206,11 @@ public class VoiceChatBridge implements VoicechatPlugin {
             SVGPlugin.log().info("[VCBridge] Unregistered audio listener for: " + uuid);
             listener.unRegister();
         } else {
-            SVGPlugin.log().warning("[VCBridge] No audio listener found for: " + uuid);
+            if (Bukkit.getPlayer(uuid) != null) {
+                SVGPlugin.log().warning("[VCBridge] No audio listener found for: " + uuid);
+            } else {
+                SVGPlugin.getInstance().debug("[VCBridge]", "No audio listener found for: " + uuid);
+            }
         }
     }
 }
