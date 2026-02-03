@@ -13,7 +13,9 @@ A Geyser Extension to allow bedrock clients to connect with Simple voice Chat
      - I plan on making config options auto update
 
 ## Documentation
-Our [wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki) can help!
+Our [wiki](https://theodoremeyer.github.io/projects/simplevoicegeyser/) can help!
+
+old wiki: [wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki).
 
 ## Coming Soon
 - Dev Release (v 1.0.0-Dev or 0.0.2-Dev)
