@@ -47,10 +47,21 @@ public class JettyServer {
         context.addServlet(AudioWorkletServlet.class, "/audio-worklet-processor.js");
         context.addServlet(MicWorkletServlet.class, "/mic-capture-processor.js");
 
+        double idleTimeoutMinutes =
+                SVGPlugin.getInstance().getConfig().getDouble("client.idletimeout", 2.0);
+
+        idleTimeoutMinutes = Math.max(0.5, Math.min(idleTimeoutMinutes, 10.0));
+
+        SVGPlugin.log().info("Idle timeout: " + idleTimeoutMinutes + " minutes.");
+
+        Duration idleTimeout = Duration.ofSeconds(
+                Math.round(idleTimeoutMinutes * 60)
+        );
+
         // Register WebSocket at /ws
         JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) -> {
             wsContainer.addMapping("/ws", (req, resp) -> new JettyWebSocket());
-            wsContainer.setIdleTimeout(Duration.ofMinutes(2));
+            wsContainer.setIdleTimeout(idleTimeout);
         });
 
         server.start();
