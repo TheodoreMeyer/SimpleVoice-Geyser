@@ -7,7 +7,7 @@ A Geyser Extension to allow bedrock clients to connect with Simple voice Chat
 
 ## Using this Plugin
 - Set into the Plugins folder of your Spigot Server directory.
-- Configure it to connect with your server's SimpleVoice chat. See [our wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki)
+- Configure it to connect with your server's SimpleVoice chat. See [our wiki](https://theodoremeyer.github.io/projects/simplevoicegeyser/)
 - Players can now join from the web browser after using '/svg pswd {password}' in-game!
 - update by replacing the old jar with the new one.
      - I plan on making config options auto update
