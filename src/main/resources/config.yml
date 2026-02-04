@@ -1,8 +1,26 @@
 client:
-  vctimeout: 30  # Timeout in seconds (default: 30) WARNING: Developer Has disabled this for right now.
+
+  # default: 30
+  # Timeout in seconds
+  # WARNING: Developer Has disabled this for right now.
+  vctimeout: 30
+
+  # default: 2
+  # idle websocket timeout in minutes
+  idletimout: 2
 
 server:
-  port: 8080 #port server will run on
-  bind-address: 0.0.0.0 #Address server binds to, use 127.0.0.1 to only connect from host device.
 
-Debug: false #Do NOT use this in production. This will very quickly fill up your server logs
+  # default: 8080
+  # port server will run on.
+  port: 8080
+
+  # default: 0.0.0.0
+  # Address server binds to, use 127.0.0.1 to only connect from host device.
+  # This is suggested to be changed only if you are running a proxy on the same network/device as the server to allow https/wss.
+  bind-address: 0.0.0.0
+
+# default: false
+# Debug logs
+# Do NOT use this in production. This will very quickly fill up your server logs.
+Debug: false
