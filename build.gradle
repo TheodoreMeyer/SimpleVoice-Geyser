@@ -94,10 +94,10 @@ tasks.named("build") {
     finalizedBy("publishToMavenLocal")
 }
 
-java {
-    withJavadocJar()
-    withSourcesJar()
-}
+//java {
+//    withJavadocJar()
+//    withSourcesJar()
+//}
 
 tasks.register('downloadDependencies', Copy) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
