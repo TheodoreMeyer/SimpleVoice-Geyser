@@ -1,5 +1,7 @@
-package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
+package io.github.theodoremeyer.spigotmc.simplevoicegeyser.server;
 
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.*;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioSender;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -15,7 +17,12 @@ import java.util.UUID;
  */
 @WebSocket
 public class JettyWebSocket {
+
+    /**
+     * The Session that is the audio client.
+     */
     protected Session session;
+
     private UUID uuid;
     private boolean authenticated = false;
     private Player player;
@@ -67,7 +74,7 @@ public class JettyWebSocket {
                     return;
                 }
                 this.uuid = storedUuid;
-                SVGPlugin.log().info("[WebSocket] Player found. UUID: " + uuid);
+                SVGPlugin.getInstance().debug("WebSocket", "Player found. UUID: " + uuid);
 
                 //see if the player's password is set.
                 if (!PlayerVcPswd.isPasswordSet(username)) {
@@ -101,11 +108,11 @@ public class JettyWebSocket {
                 authenticated = true;
                 JSONObject successJson = new JSONObject();
                 successJson.put("type", "status");
-                successJson.put("message", "Connected as " + username + ". Make sure to join server within " + timeout + " seconds!");
+                successJson.put("message", "Connected as " + username + "." ); //Make sure to join server within " + timeout + " seconds!");
                 session.getRemote().sendString(successJson.toString());
                 SVGPlugin.log().info("[WebSocket] " + username + " joined with UUID: " + uuid);
 
-                // Schedule timeout if player never joins. Currently is disabled
+                // Schedule timeout if player never joins. Currently disabled.
                 //Bukkit.getScheduler().runTaskLater(SVGPlugin.getInstance(), () -> {
                 this.player = Bukkit.getPlayer(uuid);
                 if (player == null || !player.isOnline()) {
@@ -170,7 +177,6 @@ public class JettyWebSocket {
      */
     @OnWebSocketMessage
     public void onMessage(byte[] buffer, int offset, int length) {
-        SVGPlugin.getInstance().debug("Websocket","Received audio data from client");
         if (!authenticated || uuid == null) return; //make sure they signed in
 
         byte[] pcmData = new byte[length];
@@ -178,10 +184,7 @@ public class JettyWebSocket {
 
         SvgAudioSender sender = SVGPlugin.getBridge().audioSenders.get(uuid);
         if (sender != null) { //make sure the sender is not null
-            boolean success = sender.sendOpus(pcmData); //send teh audiodata
-            if (!success) {
-                SVGPlugin.log().warning("Failed to send Audio to audioSender for" + uuid);
-            }
+            sender.sendOpus(pcmData); //send the audio data
         }
     }
 
@@ -192,7 +195,10 @@ public class JettyWebSocket {
      */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
-        SVGPlugin.log().info("[WebSocket] WebSocket closed: " + statusCode + " - " + reason);
+        String username = PlayerVcPswd.getUsernameFromUUID(uuid);
+        String displayName = (username != null) ? username : uuid.toString();
+
+        SVGPlugin.log().info("[WebSocket] WebSocket for " + displayName + " closed: " + statusCode + " - " + reason);
         if (uuid != null) { //make sure the uuid for the session is not null, needed to close senders/listeners
             SVGPlugin.getBridge().unregisterAudioSender(uuid);
             SVGPlugin.getBridge().unregisterAudioListener(uuid);
@@ -208,7 +214,6 @@ public class JettyWebSocket {
      */
     @OnWebSocketError
     public void onError(Throwable error) {
-        SVGPlugin.log().warning("[Websocket]: An error occurred. code: 2");
         SVGPlugin.getInstance().debug("WebSocket", "websocket error", error);
         SVGPlugin.log().info("Error: " + error.getMessage());
     }

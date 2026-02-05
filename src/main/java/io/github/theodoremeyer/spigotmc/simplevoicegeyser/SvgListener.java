@@ -1,5 +1,6 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.WebSocketManager;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,7 +21,7 @@ public class SvgListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
         Player player = e.getPlayer();
-        if (player.hasPlayedBefore()) {
+        if (!player.hasPlayedBefore()) {
             player.sendMessage(ChatColor.DARK_GREEN + "This Server Uses SimpleVoice-Geyser");
             player.sendMessage(ChatColor.GREEN + "To set it up, run /svg pswd [password]");
             player.sendMessage(ChatColor.DARK_GREEN + "Then join Via the server's SVG website");

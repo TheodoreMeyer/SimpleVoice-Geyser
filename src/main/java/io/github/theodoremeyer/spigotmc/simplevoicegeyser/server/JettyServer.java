@@ -1,6 +1,8 @@
-package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
+package io.github.theodoremeyer.spigotmc.simplevoicegeyser.server;
 
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
@@ -18,8 +20,15 @@ public class JettyServer {
      * set server port
      * @param port port to run server on
      */
-    public JettyServer(int port) {
-        this.server = new Server(port);
+    public JettyServer(int port, String host) {
+        this.server = new Server();
+
+        ServerConnector connector = new ServerConnector(server);
+        connector.setHost(host);
+        connector.setPort(port);
+
+        server.addConnector(connector);
+        SVGPlugin.log().info("Protocol: " + connector.getDefaultProtocol());
     }
 
     /**
@@ -34,10 +43,25 @@ public class JettyServer {
         // Add HTML page at root
         context.addServlet(new ServletHolder(new JettyHtmlServlet()), "/");
 
+        //add audio/mic servlet
+        context.addServlet(AudioWorkletServlet.class, "/audio-worklet-processor.js");
+        context.addServlet(MicWorkletServlet.class, "/mic-capture-processor.js");
+
+        double idleTimeoutMinutes =
+                SVGPlugin.getInstance().getConfig().getDouble("client.idletimeout", 2.0);
+
+        idleTimeoutMinutes = Math.max(0.5, Math.min(idleTimeoutMinutes, 10.0));
+
+        SVGPlugin.log().info("Idle timeout: " + idleTimeoutMinutes + " minutes.");
+
+        Duration idleTimeout = Duration.ofSeconds(
+                Math.round(idleTimeoutMinutes * 60)
+        );
+
         // Register WebSocket at /ws
         JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) -> {
             wsContainer.addMapping("/ws", (req, resp) -> new JettyWebSocket());
-            wsContainer.setIdleTimeout(Duration.ofMinutes(4));
+            wsContainer.setIdleTimeout(idleTimeout);
         });
 
         server.start();

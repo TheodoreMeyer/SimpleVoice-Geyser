@@ -7,16 +7,18 @@ A Geyser Extension to allow bedrock clients to connect with Simple voice Chat
 
 ## Using this Plugin
 - Set into the Plugins folder of your Spigot Server directory.
-- Configure it to connect with your server's SimpleVoice chat. See [our wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki)
-- Players can now join from the web browser after using /svg pswd {password} in-game!
+- Configure it to connect with your server's SimpleVoice chat. See [our wiki](https://theodoremeyer.github.io/projects/simplevoicegeyser/)
+- Players can now join from the web browser after using '/svg pswd {password}' in-game!
 - update by replacing the old jar with the new one.
-     - I Plan on making config options auto update
+     - I plan on making config options auto update
 
 ## Documentation
-Our [wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki) can help!
+Our [wiki](https://theodoremeyer.github.io/projects/simplevoicegeyser/) can help!
+
+old wiki: [wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki).
 
 ## Coming Soon
-- Dev Release (v 1.0.0-Dev)
+- Dev Release (v 1.0.0-Dev or 0.0.2-Dev)
 - Initial Release (v 1.0.0)
 
 ## Features to be worked on
@@ -41,9 +43,10 @@ Reach out through issues!
 - [Simple Voice Chat Api Guide](https://modrepo.de/minecraft/voicechat/api/overview)
 
 ## Important Notes
-- `Simple Voice Chat 2.5.27 or compatible is required to work, It must run on the server.
+- `Simple Voice Chat 2.6.0 or compatible is required to work, It must run on the server.
 - Releases/versions/jars ending with -Dev{version} mean this is a dev/test version and not meant for productional use.
    - you are welcome to test these, but no guarantee they will work.
+- Microphone/Speaker options may or may not work, depending on your browser, as this was built for Google Chrome.
 
 ## Developer Notes
 - ### Player Passwords
