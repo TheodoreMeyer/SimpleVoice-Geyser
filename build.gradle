@@ -6,7 +6,6 @@ plugins {
 
 group = 'io.github.theodoremeyer.spigotmc'
 version = project.version
-archivesBaseName = 'SimpleVoice-Geyser'
 
 repositories {
     mavenCentral()
@@ -43,6 +42,10 @@ repositories {
 }
 
 dependencies {
+
+    // password encryption
+    implementation 'org.mindrot:jbcrypt:0.4'
+
     // Spigot API dependency
     implementation "org.spigotmc:spigot-api:${spigot_api_version}-R0.1-SNAPSHOT"
     
@@ -68,7 +71,6 @@ java {
         languageVersion = JavaLanguageVersion.of(21)
     }
 }
-
 
 tasks.named('jar') {
     manifest {

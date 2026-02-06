@@ -46,7 +46,7 @@ public class SvgCommand implements CommandExecutor {
 
                 String newPassword = args[1];
                 if (!PlayerVcPswd.isPasswordLengthValid(newPassword)) {
-                    sender.sendMessage("§cPassword must be between 5 and 20 characters.");
+                    sender.sendMessage("§cPassword must be between 5 and 25 characters.");
                     return true;
                 }
 

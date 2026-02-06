@@ -3,6 +3,7 @@ package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.File;
 import java.io.IOException;
@@ -92,14 +93,18 @@ public class PlayerVcPswd {
 
     /**
      * sets players password
+     * USES Bcrypt for security.
      * @param player player to set for
      * @param password the password to set
      */
     public static void setPassword(Player player, String password) {
         String key = player.getName().toLowerCase();
-        playerPasswords.put(key, password);
+
+        String hash = BCrypt.hashpw(password, BCrypt.gensalt(12));
+
+        playerPasswords.put(key, hash);
         playerUUIDs.put(key, player.getUniqueId());
-        saveToFile(key, password, player.getUniqueId());
+        saveToFile(key, hash, player.getUniqueId());
     }
 
     /**
@@ -110,7 +115,15 @@ public class PlayerVcPswd {
      */
     public static boolean validatePassword(String playerName, String password) {
         String stored = playerPasswords.get(playerName.toLowerCase());
-        return stored != null && stored.equals(password);
+        if (stored == null) return false; // no password set
+
+        try {
+            return BCrypt.checkpw(password, stored);
+        } catch (IllegalArgumentException e) {
+            // This happens if the stored password is not a valid bcrypt hash
+            SVGPlugin.log().warning("[PlayerData] Invalid bcrypt hash for player " + playerName);
+            return false;
+        }
     }
 
     /**
@@ -119,7 +132,7 @@ public class PlayerVcPswd {
      * @return whether password length is valid
      */
     public static boolean isPasswordLengthValid(String password) {
-        return password.length() >= 5 && password.length() <= 20;
+        return password.length() >= 8 && password.length() <= 32;
     }
 
     /**
