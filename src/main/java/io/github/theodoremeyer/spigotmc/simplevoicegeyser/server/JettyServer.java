@@ -28,7 +28,7 @@ public class JettyServer {
         connector.setPort(port);
 
         server.addConnector(connector);
-        SVGPlugin.log().info("Protocol: " + connector.getDefaultProtocol());
+        SVGPlugin.log().info("Started on: " + connector.getDefaultProtocol() + " " + connector.getHost() + ":" + connector.getPort());
     }
 
     /**

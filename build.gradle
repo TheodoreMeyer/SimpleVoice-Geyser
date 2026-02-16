@@ -96,19 +96,6 @@ tasks.named("build") {
     finalizedBy("publishToMavenLocal")
 }
 
-//java {
-//    withJavadocJar()
-//    withSourcesJar()
-//}
-
-tasks.register('downloadDependencies', Copy) {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    configurations.compileClasspath.each { file ->
-        from zipTree(file)
-        into 'libs/dependencies'
-    }
-}
-
 publishing {
     publications {
         create("mavenJava", MavenPublication) {

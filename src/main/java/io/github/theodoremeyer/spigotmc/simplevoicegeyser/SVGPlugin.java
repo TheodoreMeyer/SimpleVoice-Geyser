@@ -5,9 +5,11 @@ import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.JettyServer;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.WebSocketManager;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.thread.AudioThread;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -88,7 +90,7 @@ public class SVGPlugin extends JavaPlugin {
         Objects.requireNonNull(getCommand("svg")).setExecutor(new SvgCommand());
         saveResource("playerpasswords.yml", false);
 
-        saveDefaultConfig();
+        loadConfigProperly();
         int rawTimeout = getConfig().getInt("client.vctimeout", 30); //get config from config.yml
         this.vcTimeout = Math.max(0, Math.min(120, rawTimeout));
 
@@ -121,6 +123,22 @@ public class SVGPlugin extends JavaPlugin {
         } catch (Exception e) {
             getLogger().severe("Failed to stop Jetty server: " + e.getMessage());
         }
+    }
+
+    /**
+     * Load default configs that are missing.
+     */
+    private void loadConfigProperly() {
+        saveDefaultConfig();
+
+        reloadConfig();
+
+        getConfig().setDefaults(YamlConfiguration.loadConfiguration(
+                new InputStreamReader(Objects.requireNonNull(getResource("config.yml")))
+        ));
+
+        getConfig().options().copyDefaults(true);
+        saveConfig();
     }
 
     /**
