@@ -1,5 +1,6 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser.server;
 
+import de.maxhenkel.voicechat.api.Group;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.*;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioSender;
 import org.bukkit.Bukkit;
@@ -112,7 +113,7 @@ public class JettyWebSocket {
                 session.getRemote().sendString(successJson.toString());
                 SVGPlugin.log().info("[WebSocket] " + username + " joined with UUID: " + uuid);
 
-                // Schedule timeout if player never joins. Currently disabled.
+                // Schedule timeout if player never joins. Currently, disabled.
                 //Bukkit.getScheduler().runTaskLater(SVGPlugin.getInstance(), () -> {
                 this.player = Bukkit.getPlayer(uuid);
                 if (player == null || !player.isOnline()) {
@@ -127,8 +128,11 @@ public class JettyWebSocket {
                     WebSocketManager.sendJson(uuid, "error", "Access denied. You don't have the permission to join, or have been banned.");
                     session.close();
                 }
+                if (SVGPlugin.getInstance().getConfig().getBoolean("server.group.defaultEnabled")) {
+                    GroupManager.createGroup(Bukkit.getPlayer(uuid), "Svg", "1a2b", Group.Type.OPEN, false, true); //add player to a default group
+                }
+
                 SVGPlugin.getBridge().registerAudioListener(uuid); //register the players audio sender
-                GroupManager.createGroup(Bukkit.getPlayer(uuid), "Svg", "1a2b", "open", false, true); //add player to a default group
                 SVGPlugin.getBridge().registerAudioSender(uuid); //register the players audio sender
                 // Currently disabled.
                // }, delayInTicks);

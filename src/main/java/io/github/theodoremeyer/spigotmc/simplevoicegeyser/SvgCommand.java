@@ -1,5 +1,6 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
+import de.maxhenkel.voicechat.api.Group;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -10,6 +11,8 @@ import org.bukkit.entity.Player;
  * Class that controls the main command for plugin: /svg
  */
 public class SvgCommand implements CommandExecutor {
+
+    private static final String PREFIX = ChatColor.GRAY + "[" + ChatColor.AQUA + "SVG" + ChatColor.GRAY + "] " + ChatColor.RESET;
 
     /**
      * When command runs
@@ -23,7 +26,7 @@ public class SvgCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
         if (args.length == 0) {
-            sender.sendMessage("[SVG] §eUsage:");
+            sender.sendMessage(PREFIX + "§eUsage:");
             sender.sendMessage("/svg pswd <new-password>");
             sender.sendMessage("/svg cgroup <group-name> -t[type] -p[password] -ps[setpersistent]");
             return true;
@@ -33,119 +36,182 @@ public class SvgCommand implements CommandExecutor {
 
         switch (subcommand) {
             //command to create pasword for logging into SimpleVoice-Geyser
-            case "pswd":
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage("§cOnly players can set their password.");
-                    return true;
-                }
+            case "pswd": {
+                Player player = requirePlayer(sender, "Only players can set their password.");
+                if (player == null) return true;
 
-                if (args.length < 2) {
-                    sender.sendMessage(ChatColor.DARK_AQUA + "Usage: /svg pswd <new-password>");
+                if (args.length != 2) {
+                    sendUsage(sender, "/svg pswd <new-password>", "Sets your SimpleVoiceChat login password.");
                     return true;
                 }
 
                 String newPassword = args[1];
+
                 if (!PlayerVcPswd.isPasswordLengthValid(newPassword)) {
-                    sender.sendMessage("§cPassword must be between 5 and 25 characters.");
+                    sender.sendMessage(PREFIX + ChatColor.RED + "Password must be between 8 and 32 characters.");
                     return true;
                 }
 
                 PlayerVcPswd.setPassword(player, newPassword);
-                sender.sendMessage("§aYour voice chat password has been set.");
+                sender.sendMessage(PREFIX + ChatColor.GREEN + "Your voice chat password has been set.");
                 return true;
+            }
 
-            case "cgroup":
-                if (!(sender instanceof Player playerSender)) {
-                    sender.sendMessage("§cOnly players can create groups.");
-                    return true;
-                }
+            case "cgroup": {
+                Player player = requirePlayer(sender, "Only players can create groups.");
+                if (player == null) return true;
 
-                if (!playerSender.hasPermission("svg.vc.creategroup.create")) {
-                    sender.sendMessage("§cYou do not have permission to create groups.");
+                if (!player.hasPermission("svg.vc.creategroup.create")) {
+                    sender.sendMessage(PREFIX + ChatColor.RED + "You do not have permission to create groups.");
                     return true;
                 }
 
                 String groupName = null;
-                String groupType = "open"; // Default to open
-                String password = "1a2b"; // Default password
-                boolean persistent = false; // Default persistent false
+                String groupType = "open";
+                String password = null;
+                boolean persistent = false;
 
-                // Parse arguments for group creation
                 for (int i = 1; i < args.length; i++) {
-                    switch (args[i]) {
+                    switch (args[i].toLowerCase()) {
+                        case "-name":
+                            if (i + 1 < args.length) groupName = args[++i];
+                            break;
                         case "-t":
-                            if (i + 1 <= args.length) {
-                                groupType = args[++i].toLowerCase();
-                            }
+                            if (i + 1 < args.length) groupType = args[++i];
                             break;
                         case "-p":
-                            if (i + 1 <= args.length) {
-                                password = args[++i];
-                            }
+                            if (i + 1 < args.length) password = args[++i];
                             break;
                         case "-ps":
                             persistent = true;
                             break;
-                        case "-name":
-                            if (i + 1 <= args.length) {
-                                groupName = args[++i];
-                            }
                     }
                 }
 
-                // Check if the player has permission to create isolated groups. May be moved.
-                if ("isolated".equalsIgnoreCase(groupType) && !playerSender.hasPermission("svg.vc.creategroup.type.isolated")) {
-                    sender.sendMessage("§cYou don't have permission to create an isolated group.");
+                if (groupName == null) {
+                    sendUsage(sender,
+                            "/svg cgroup -name <name> [-t open|normal|isolated] [-p password] [-ps]",
+                            "Creates a new voice group.");
                     return true;
                 }
 
-                // Check if the player has permission to set persistent. May be moved.
-                if (persistent && !playerSender.hasPermission("svg.vc.creategroup.setpersistant")) {
-                    sender.sendMessage("§cYou don't have permission to set persistent for the group.");
+
+                Group.Type type = Group.Type.OPEN; // Default to OPEN if no type specified.
+                if ("isolated".equalsIgnoreCase(groupType)) {
+                    type = Group.Type.ISOLATED;
+                } else if ("normal".equalsIgnoreCase(groupType)) {
+                    type = Group.Type.NORMAL;
+                }
+
+                if (type == Group.Type.ISOLATED &&
+                        !player.hasPermission("svg.vc.creategroup.type.isolated")) {
+                    sender.sendMessage(PREFIX + ChatColor.RED + "You don't have permission to create isolated groups.");
                     return true;
                 }
 
-                //create the group
-                boolean groupCreated = GroupManager.createGroup(playerSender, groupName, password, groupType, persistent, false);
-                if (groupCreated) {
-                    sender.sendMessage("§aGroup '" + groupName + "' created successfully.");
-                } else {
-                    sender.sendMessage("§cFailed to create group.");
+                if (persistent &&
+                        !player.hasPermission("svg.vc.creategroup.setpersistent")) {
+                    sender.sendMessage(PREFIX + ChatColor.RED + "You don't have permission to set groups as persistent.");
+                    return true;
                 }
 
+                boolean created = GroupManager.createGroup(
+                        player, groupName, password, type, persistent, false);
+
+                if (!created) {
+                    sender.sendMessage(PREFIX + ChatColor.RED + "Failed to create group.");
+                    return true;
+                }
+
+                sender.sendMessage(PREFIX + ChatColor.GREEN + "Group '" + groupName + "' created successfully.");
                 return true;
-            case  "jgroup":
-                String groupname = null;
-                String grouppassword = null;
+            }
 
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage("Only Players Can join groups!");
-                    return true;
-                }
+            case "jgroup": {
+                Player player = requirePlayer(sender, "Only players can join groups.");
+                if (player == null) return true;
+
+                String groupName = null;
+                String groupPassword = null;
 
                 for (int i = 1; i < args.length; i++) {
-                    switch (args[i]) {
-                        case "-p":
-                            if (i + 1 < args.length) {
-                                grouppassword = args[++i];
-                            }
-                            break;
+                    switch (args[i].toLowerCase()) {
                         case "-n":
-                            if (i + 1 <= args.length) {
-                                groupname = args[++i];
-                            }
+                            if (i + 1 < args.length) groupName = args[++i];
+                            break;
+                        case "-p":
+                            if (i + 1 < args.length) groupPassword = args[++i];
+                            break;
                     }
                 }
-                boolean success = GroupManager.joinGroup(player, groupname, grouppassword);
-                if (!success) {
-                    SVGPlugin.log().warning("failed to join group for " + player.getName());
-                    player.sendMessage("Failed to join group " + groupname);
-                }
-                return true;
 
-            default:
-                sender.sendMessage("§cUnknown subcommand. Try /svg [pswd | cgroup | jgroup]");
+                if (groupName == null) {
+                    sendUsage(sender, "/svg jgroup -n <name> [-p password]", "Joins an existing voice group.");
+                    return true;
+                }
+
+                boolean success = GroupManager.joinGroup(player, groupName, groupPassword);
+
+                if (!success) {
+                    sender.sendMessage(PREFIX + ChatColor.RED + "Failed to join group. Check name and password.");
+                    return true;
+                }
+
+                sender.sendMessage(PREFIX + ChatColor.GREEN +
+                        "Joined group '" + groupName + "'.");
                 return true;
+            }
+
+            case "lgroup": {
+                Player player = requirePlayer(sender, "Only Players can leave groups!");
+                if (player == null) return true;
+                GroupManager.leaveGroup(player);
+                return true;
+            }
+
+            case "help": {
+                sender.sendMessage(PREFIX + ChatColor.AQUA + " " + ChatColor.BOLD + "Commands");
+                sender.sendMessage(ChatColor.GRAY + "----------------------------------");
+
+                sender.sendMessage(ChatColor.YELLOW + "/svg pswd <password> "
+                        + ChatColor.GRAY + "- Set your voice chat password");
+
+                sender.sendMessage(ChatColor.YELLOW + "/svg cgroup -name <name> [-t type] [-p password] [-ps] "
+                        + ChatColor.GRAY + "- Create a voice chat group");
+
+                sender.sendMessage(ChatColor.YELLOW + "/svg jgroup -n <name> [-p password] "
+                        + ChatColor.GRAY + "- Join a voice chat group");
+
+                sender.sendMessage(ChatColor.YELLOW + "/svg lgroup "
+                        + ChatColor.GRAY + "- Leave your current group");
+
+                sender.sendMessage(ChatColor.YELLOW + "/svg help "
+                        + ChatColor.GRAY + "- Show this help menu");
+
+                return true;
+            }
+
+
+            default: {
+                sender.sendMessage("§cUnknown subcommand. Try /svg [pswd | cgroup | jgroup | lgroup | help]");
+                return true;
+            }
         }
     }
+
+    private Player requirePlayer(CommandSender sender, String errorMessage) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(PREFIX + ChatColor.RED + errorMessage);
+            return null;
+        }
+        return player;
+    }
+
+    private void sendUsage(CommandSender sender, String usage, String description) {
+        sender.sendMessage(PREFIX + ChatColor.YELLOW + "Usage: " + ChatColor.WHITE + usage);
+        if (description != null && !description.isBlank()) {
+            sender.sendMessage(ChatColor.GRAY + description);
+        }
+    }
+
 }
