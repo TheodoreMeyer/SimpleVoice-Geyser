@@ -24,13 +24,13 @@ repositories {
         url = 'https://maven.maxhenkel.de/repository/public'
     }
     maven {
-        url 'https://repo.opencollab.dev/maven-snapshots'
+        url = "https://repo.opencollab.dev/maven-snapshots"
         mavenContent {
             snapshotsOnly()
         }
     }
     maven {
-        url 'https://repo.opencollab.dev/maven-releases'
+        url = "https://repo.opencollab.dev/maven-releases"
         mavenContent {
             releasesOnly()
         }
