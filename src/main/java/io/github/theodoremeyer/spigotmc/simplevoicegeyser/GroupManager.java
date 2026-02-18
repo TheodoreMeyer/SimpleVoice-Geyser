@@ -144,7 +144,7 @@ public class GroupManager {
             }
 
             if (!groupPassword.equals(password)) {
-                SVGPlugin.log().info("[SVG] Incorrect password for group '"
+                SVGPlugin.getInstance().debug("[SVG]","Incorrect password for group '"
                         + groupName + "' by " + player.getName());
                 return false;
             }

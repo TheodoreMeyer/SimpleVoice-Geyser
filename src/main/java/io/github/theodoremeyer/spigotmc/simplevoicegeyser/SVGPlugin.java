@@ -5,6 +5,7 @@ import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.JettyServer;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.WebSocketManager;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.thread.AudioThread;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -55,8 +56,12 @@ public class SVGPlugin extends JavaPlugin {
      */
     @Override
     public void onEnable() {
-        BukkitVoicechatService service = Bukkit.getServicesManager().load(BukkitVoicechatService.class);
+        instance = this;
+
+        loadConfigProperly();
         this.debug = getConfig().getBoolean("Debug", false);
+
+        BukkitVoicechatService service = Bukkit.getServicesManager().load(BukkitVoicechatService.class);
 
         if (service != null) { //make sure bukkitvoicechatservice exists
             VoiceChatBridge voicechatBridge = new VoiceChatBridge(this);
@@ -84,13 +89,11 @@ public class SVGPlugin extends JavaPlugin {
             Bukkit.getPluginManager().disablePlugin(this);
         }
 
-        instance = this;
         Bukkit.getPluginManager().registerEvents(new SvgListener(), this);
         PlayerVcPswd.init(this.getDataFolder());
         Objects.requireNonNull(getCommand("svg")).setExecutor(new SvgCommand());
         saveResource("playerpasswords.yml", false);
 
-        loadConfigProperly();
         int rawTimeout = getConfig().getInt("client.vctimeout", 30); //get config from config.yml
         this.vcTimeout = Math.max(0, Math.min(120, rawTimeout));
 
@@ -125,18 +128,14 @@ public class SVGPlugin extends JavaPlugin {
         }
     }
 
-    /**
-     * Load default configs that are missing.
-     */
     private void loadConfigProperly() {
-        saveDefaultConfig();
+        saveDefaultConfig(); // create if missing
 
-        reloadConfig();
-
-        getConfig().setDefaults(YamlConfiguration.loadConfiguration(
+        FileConfiguration defaults = YamlConfiguration.loadConfiguration(
                 new InputStreamReader(Objects.requireNonNull(getResource("config.yml")))
-        ));
+        );
 
+        getConfig().setDefaults(defaults);
         getConfig().options().copyDefaults(true);
         saveConfig();
     }

@@ -128,8 +128,10 @@ public class JettyWebSocket {
                     WebSocketManager.sendJson(uuid, "error", "Access denied. You don't have the permission to join, or have been banned.");
                     session.close();
                 }
-                if (SVGPlugin.getInstance().getConfig().getBoolean("server.group.defaultEnabled")) {
-                    GroupManager.createGroup(Bukkit.getPlayer(uuid), "Svg", "1a2b", Group.Type.OPEN, false, true); //add player to a default group
+                if (SVGPlugin.getInstance().getConfig().getBoolean("server.group.default.enabled")) {
+                    String gPswd = SVGPlugin.getInstance().getConfig().getString("server.group.default.password", "1a2b");
+
+                    GroupManager.createGroup(Bukkit.getPlayer(uuid), "Svg", gPswd, Group.Type.OPEN, false, true); //add player to a default group
                 }
 
                 SVGPlugin.getBridge().registerAudioListener(uuid); //register the players audio sender
