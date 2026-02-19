@@ -81,7 +81,7 @@ tasks.named('jar') {
     }
 }
 
-processResources {
+tasks.processResources {
     inputs.property "version", project.version
 
     filesMatching('plugin.yml') {
