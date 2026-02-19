@@ -52,7 +52,7 @@ public class SvgAudioListener implements PlayerAudioListener {
      */
     public void onAudioReceived(SoundPacket soundPacket) {
         Session session = WebSocketManager.clients.get(listenerId);
-        SVGPlugin.getInstance().debug("AudioListener", "recieved audio from SVG server!");
+        SVGPlugin.debug("AudioListener", "recieved audio from SVG server!");
 
         if (session != null && session.isOpen()) {
 
@@ -64,16 +64,14 @@ public class SvgAudioListener implements PlayerAudioListener {
                     byte[] bytes = serverApi.getAudioConverter().shortsToBytes(pcm); //convert audio to a usable type
 
                     session.getRemote().sendBytes(ByteBuffer.wrap(bytes));//send the decoded audio
-                    SVGPlugin.getInstance().debug("AudioListener", "Sent audio to websocket client!");
+                    SVGPlugin.debug("AudioListener", "Sent audio to websocket client!");
                 } catch (Exception e) {
                     SVGPlugin.log().warning("Error sending audio to client" + listenerId);
-                    SVGPlugin.getInstance().debug("AudioListener", "Error sending audio to client" + listenerId, e);
-                }  //finally {
-                    //decoder.resetState();
-                //}
+                    SVGPlugin.debug("AudioListener", "Error sending audio to client" + listenerId, e);
+                }
             });
         } else {
-            SVGPlugin.getInstance().debug("AudioListener","Session Not Open.");
+            SVGPlugin.debug("AudioListener","Session Not Open.");
             SVGPlugin.getBridge().unregisterAudioListener(listenerId);
         }
     }
@@ -94,10 +92,10 @@ public class SvgAudioListener implements PlayerAudioListener {
         if (serverApi.registerAudioListener(listener)) { //make sure SVC successfully registered
             SVGPlugin.log().info("[VCBridge] Registered audio listener for: " + listenerId);
             Player player = Bukkit.getPlayer(listenerId);
-            player.sendMessage(ChatColor.AQUA + "Registered Audio listener!");
+            player.sendMessage(SVGPlugin.PREFIX + ChatColor.AQUA + "Registered Audio listener!");
         } else {
             SVGPlugin.log().warning("[VCBridge] Failed to register audio listener for: " + listenerId);
-            Bukkit.getPlayer(listenerId).sendMessage(ChatColor.RED + "Failed to register audio listener.");
+            Bukkit.getPlayer(listenerId).sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Failed to register Audio Listener.");
         }
    }
 

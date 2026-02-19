@@ -5,6 +5,7 @@ import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.JettyServer;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.WebSocketManager;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.thread.AudioThread;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -49,7 +50,12 @@ public class SVGPlugin extends JavaPlugin {
     /**
      * Whether debug is enabled
      */
-    private Boolean debug;
+    private Boolean debug = false;
+
+    /**
+     * Universal Svg Prefix
+     */
+    public static final String PREFIX = ChatColor.GRAY + "[" + ChatColor.AQUA + "SVG" + ChatColor.GRAY + "] " + ChatColor.RESET;
 
     /**
      * When the plugin loads
@@ -179,9 +185,11 @@ public class SVGPlugin extends JavaPlugin {
      * @param section the part of plugin debugging
      * @param message the message
      */
-    public void debug(String section, String message) {
-        if (debug) {
-            log().info("[Debug][" + section + "] " + message);
+    public static void debug(String section, String message) {
+        if (instance != null) {
+            if (instance.debug) {
+                log().info("[Debug][" + section + "] " + message);
+            }
         }
     }
 
@@ -191,9 +199,11 @@ public class SVGPlugin extends JavaPlugin {
      * @param message the message
      * @param t the throwable/error thrown
      */
-    public void debug(String section, String message, Throwable t) {
-        if (debug) {
-            log().info( "[Debug][" + section + "] " + message + ", " + t);
+    public static void debug(String section, String message, Throwable t) {
+        if (instance != null) {
+            if (instance.debug) {
+                log().info("[Debug][" + section + "] " + message + ", " + t);
+            }
         }
     }
 

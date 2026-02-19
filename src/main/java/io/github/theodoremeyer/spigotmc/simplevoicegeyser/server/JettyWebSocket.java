@@ -75,7 +75,7 @@ public class JettyWebSocket {
                     return;
                 }
                 this.uuid = storedUuid;
-                SVGPlugin.getInstance().debug("WebSocket", "Player found. UUID: " + uuid);
+                SVGPlugin.debug("WebSocket", "Player found. UUID: " + uuid);
 
                 //see if the player's password is set.
                 if (!PlayerVcPswd.isPasswordSet(username)) {
@@ -169,7 +169,7 @@ public class JettyWebSocket {
 
         } catch (Exception e) {
                 SVGPlugin.log().severe("[VCBridge] code: 1, Exception: " + e.getMessage());
-                SVGPlugin.getInstance().debug("VCBridge", "error reading client data", e);
+                SVGPlugin.debug("VCBridge", "error reading client data", e);
         }
 
     }
@@ -220,7 +220,7 @@ public class JettyWebSocket {
      */
     @OnWebSocketError
     public void onError(Throwable error) {
-        SVGPlugin.getInstance().debug("WebSocket", "websocket error", error);
+        SVGPlugin.debug("WebSocket", "websocket error", error);
         SVGPlugin.log().info("Error: " + error.getMessage());
     }
 }

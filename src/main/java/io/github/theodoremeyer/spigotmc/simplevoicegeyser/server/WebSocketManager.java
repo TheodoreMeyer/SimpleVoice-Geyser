@@ -75,6 +75,7 @@ public class WebSocketManager {
                 count++;
             }
         }
+        SVGPlugin.log().info("Disconnected " + count + " clients");
     }
 
     /**

@@ -147,7 +147,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
             audioSenders.put(uuid, sender);
             SVGPlugin.log().info("[VCBridge] SvgAudioSender created and registered for: " + uuid);
         } catch (RuntimeException e) {
-            plugin.debug("VCBridge", "Unable to register AudioSender for: " + uuid, e);
+            SVGPlugin.debug("VCBridge", "Unable to register AudioSender for: " + uuid, e);
         }
     }
 
@@ -164,7 +164,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
             if (Bukkit.getPlayer(uuid) != null) {
                 SVGPlugin.log().warning("[VCBridge] No SvgAudioSender found to unregister for: " + uuid);
             } else {
-                SVGPlugin.getInstance().debug("[VCBridge]", "No SvgAudioSender found to unregister for: " + uuid);
+                SVGPlugin.debug("[VCBridge]", "No SvgAudioSender found to unregister for: " + uuid);
             }
         }
     }
@@ -209,7 +209,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
             if (Bukkit.getPlayer(uuid) != null) {
                 SVGPlugin.log().warning("[VCBridge] No audio listener found for: " + uuid);
             } else {
-                SVGPlugin.getInstance().debug("[VCBridge]", "No audio listener found for: " + uuid);
+                SVGPlugin.debug("[VCBridge]", "No audio listener found for: " + uuid);
             }
         }
     }

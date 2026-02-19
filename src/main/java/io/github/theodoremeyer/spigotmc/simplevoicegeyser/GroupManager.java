@@ -39,15 +39,15 @@ public class GroupManager {
 
         if (groups.containsKey(groupName)) { //whether the group already exists
             if (!created) { //if we can add the player if the group is already created
-                player.sendMessage(ChatColor.DARK_RED + "Group " + groupName + "already exists.");
+                player.sendMessage(SVGPlugin.PREFIX + ChatColor.DARK_RED + "Group " + groupName + "already exists.");
                 return false;
             } else {
                 if (connection != null) {
                     connection.setGroup(groups.get(groupName));
-                    player.sendMessage(ChatColor.DARK_BLUE + "Successfully Joined Group " + groupName);
+                    player.sendMessage(SVGPlugin.PREFIX + ChatColor.DARK_BLUE + "joined Group " + groupName);
                     return true;
                 } else {
-                    player.sendMessage(ChatColor.DARK_RED + "Vc connection is null");
+                    player.sendMessage(SVGPlugin.PREFIX + ChatColor.DARK_RED + "Vc connection is null");
                     return false;
                 }
             }
@@ -64,10 +64,10 @@ public class GroupManager {
 
         if (connection != null) {
             if (connection.getGroup() !=null) {
-                player.sendMessage(ChatColor.RED + "Leaving Group: " + connection.getGroup().getName());
+                player.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Leaving Group: " + connection.getGroup().getName());
             }
             connection.setGroup(group);
-            player.sendMessage(ChatColor.BLUE + "Joined Group: " + group.getName());
+            player.sendMessage(SVGPlugin.PREFIX + ChatColor.BLUE + "Joined Group: " + group.getName());
             return true;
         } else {
             player.sendMessage("Connection is null!");
@@ -128,7 +128,7 @@ public class GroupManager {
         }
 
         // Debug log password state
-        SVGPlugin.getInstance().debug("[GROUPS]", "Player: " + player.getName()
+        SVGPlugin.debug("[GROUPS]", "Player: " + player.getName()
                 + " | Group: " + groupName
                 + " | Provided Password: " + password
                 + " | Actual Password: " + groupPassword);
@@ -137,14 +137,14 @@ public class GroupManager {
         if (groupPassword != null) {
 
             if (password == null) {
-                SVGPlugin.getInstance().debug("[SVG]", "Player " + player.getName()
+                SVGPlugin.debug("[SVG]", "Player " + player.getName()
                         + " tried to join password-protected group '"
                         + groupName + "' without providing a password.");
                 return false;
             }
 
             if (!groupPassword.equals(password)) {
-                SVGPlugin.getInstance().debug("[SVG]","Incorrect password for group '"
+                SVGPlugin.debug("[SVG]","Incorrect password for group '"
                         + groupName + "' by " + player.getName());
                 return false;
             }
@@ -152,7 +152,7 @@ public class GroupManager {
 
         // Leave previous group
         if (connection.isInGroup()) {
-            SVGPlugin.getInstance().debug("[SVG] ", player.getName()
+            SVGPlugin.debug("[SVG] ", player.getName()
                     + " left group " + connection.getGroup().getName());
             player.sendMessage("You left group: "
                     + connection.getGroup().getName());
@@ -160,7 +160,7 @@ public class GroupManager {
 
         connection.setGroup(group);
 
-        SVGPlugin.getInstance().debug("[SVG]", player.getName()
+        SVGPlugin.debug("[SVG]", player.getName()
                 + " successfully joined group '" + groupName + "'");
 
         return true;

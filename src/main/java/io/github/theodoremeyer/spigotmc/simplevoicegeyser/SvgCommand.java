@@ -12,8 +12,6 @@ import org.bukkit.entity.Player;
  */
 public class SvgCommand implements CommandExecutor {
 
-    private static final String PREFIX = ChatColor.GRAY + "[" + ChatColor.AQUA + "SVG" + ChatColor.GRAY + "] " + ChatColor.RESET;
-
     /**
      * When command runs
      * @param sender who ran the command
@@ -26,7 +24,7 @@ public class SvgCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
         if (args.length == 0) {
-            sender.sendMessage(PREFIX + "§eUsage:");
+            sender.sendMessage(SVGPlugin.PREFIX + "§eUsage:");
             sender.sendMessage("/svg pswd <new-password>");
             sender.sendMessage("/svg cgroup <group-name> -t[type] -p[password] -ps[setpersistent]");
             return true;
@@ -48,12 +46,12 @@ public class SvgCommand implements CommandExecutor {
                 String newPassword = args[1];
 
                 if (!PlayerVcPswd.isPasswordLengthValid(newPassword)) {
-                    sender.sendMessage(PREFIX + ChatColor.RED + "Password must be between 8 and 32 characters.");
+                    sender.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Password must be between 8 and 32 characters.");
                     return true;
                 }
 
                 PlayerVcPswd.setPassword(player, newPassword);
-                sender.sendMessage(PREFIX + ChatColor.GREEN + "Your voice chat password has been set.");
+                sender.sendMessage(SVGPlugin.PREFIX + ChatColor.GREEN + "Your voice chat password has been set.");
                 return true;
             }
 
@@ -62,7 +60,7 @@ public class SvgCommand implements CommandExecutor {
                 if (player == null) return true;
 
                 if (!player.hasPermission("svg.vc.creategroup.create")) {
-                    sender.sendMessage(PREFIX + ChatColor.RED + "You do not have permission to create groups.");
+                    sender.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "You do not have permission to create groups.");
                     return true;
                 }
 
@@ -105,13 +103,13 @@ public class SvgCommand implements CommandExecutor {
 
                 if (type == Group.Type.ISOLATED &&
                         !player.hasPermission("svg.vc.creategroup.type.isolated")) {
-                    sender.sendMessage(PREFIX + ChatColor.RED + "You don't have permission to create isolated groups.");
+                    sender.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "You don't have permission to create isolated groups.");
                     return true;
                 }
 
                 if (persistent &&
                         !player.hasPermission("svg.vc.creategroup.setpersistent")) {
-                    sender.sendMessage(PREFIX + ChatColor.RED + "You don't have permission to set groups as persistent.");
+                    sender.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "You don't have permission to set groups as persistent.");
                     return true;
                 }
 
@@ -119,11 +117,11 @@ public class SvgCommand implements CommandExecutor {
                         player, groupName, password, type, persistent, false);
 
                 if (!created) {
-                    sender.sendMessage(PREFIX + ChatColor.RED + "Failed to create group.");
+                    sender.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Failed to create group.");
                     return true;
                 }
 
-                sender.sendMessage(PREFIX + ChatColor.GREEN + "Group '" + groupName + "' created successfully.");
+                sender.sendMessage(SVGPlugin.PREFIX + ChatColor.GREEN + "Group '" + groupName + "' created successfully.");
                 return true;
             }
 
@@ -153,11 +151,11 @@ public class SvgCommand implements CommandExecutor {
                 boolean success = GroupManager.joinGroup(player, groupName, groupPassword);
 
                 if (!success) {
-                    sender.sendMessage(PREFIX + ChatColor.RED + "Failed to join group. Check name and password.");
+                    sender.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Failed to join group. Check name and password.");
                     return true;
                 }
 
-                sender.sendMessage(PREFIX + ChatColor.GREEN +
+                sender.sendMessage(SVGPlugin.PREFIX + ChatColor.GREEN +
                         "Joined group '" + groupName + "'.");
                 return true;
             }
@@ -170,7 +168,7 @@ public class SvgCommand implements CommandExecutor {
             }
 
             case "help": {
-                sender.sendMessage(PREFIX + ChatColor.AQUA + " " + ChatColor.BOLD + "Commands");
+                sender.sendMessage(SVGPlugin.PREFIX + ChatColor.AQUA + " " + ChatColor.BOLD + "Commands");
                 sender.sendMessage(ChatColor.GRAY + "----------------------------------");
 
                 sender.sendMessage(ChatColor.YELLOW + "/svg pswd <password> "
@@ -201,14 +199,14 @@ public class SvgCommand implements CommandExecutor {
 
     private Player requirePlayer(CommandSender sender, String errorMessage) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(PREFIX + ChatColor.RED + errorMessage);
+            sender.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + errorMessage);
             return null;
         }
         return player;
     }
 
     private void sendUsage(CommandSender sender, String usage, String description) {
-        sender.sendMessage(PREFIX + ChatColor.YELLOW + "Usage: " + ChatColor.WHITE + usage);
+        sender.sendMessage(SVGPlugin.PREFIX + ChatColor.YELLOW + "Usage: " + ChatColor.WHITE + usage);
         if (description != null && !description.isBlank()) {
             sender.sendMessage(ChatColor.GRAY + description);
         }

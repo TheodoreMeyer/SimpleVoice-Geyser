@@ -78,11 +78,11 @@ public class SvgAudioSender {
 
         if (success) {
             connection.setConnected(true);
-            player.sendMessage(ChatColor.AQUA + "AudioSender Registered!");
+            player.sendMessage(SVGPlugin.PREFIX + ChatColor.AQUA + "AudioSender Registered!");
             connection.setDisabled(false);
         } else {
             SVGPlugin.log().info("Failed to register SvgAudioSender for UUID: " + playerUuid);
-            player.sendMessage(ChatColor.RED + "Failed to register AudioSender");
+            player.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Failed to register AudioSender");
 
         }
     }
@@ -94,7 +94,7 @@ public class SvgAudioSender {
      */
     public boolean sendOpus(byte[] pcmData) {
 
-        SVGPlugin.getInstance().debug( "AudioSender","received audio data from websocket!");
+        SVGPlugin.debug( "AudioSender","received audio data from websocket!");
 
         if (player == null || !player.isOnline()) {
             SVGPlugin.log().warning("[AudioSender] Player not found or offline: " + playerUuid);
@@ -120,7 +120,7 @@ public class SvgAudioSender {
                     return;
                 }
             } catch (Exception e) {
-                SVGPlugin.getInstance().debug("AudioSender", "Encoding failed for " + playerUuid, e);
+                SVGPlugin.debug("AudioSender", "Encoding failed for " + playerUuid, e);
                 return;
             }
 
@@ -146,6 +146,6 @@ public class SvgAudioSender {
         }
         delegate.reset();
         serverApi.unregisterAudioSender(delegate); //end sender
-        if (player != null) { player.sendMessage("audioSender unregistered."); }
+        if (player != null) { player.sendMessage(SVGPlugin.PREFIX + "audioSender unregistered."); }
     }
 }
