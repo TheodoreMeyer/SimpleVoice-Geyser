@@ -98,7 +98,6 @@ public class SVGPlugin extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new SvgListener(), this);
         PlayerVcPswd.init(this.getDataFolder());
         Objects.requireNonNull(getCommand("svg")).setExecutor(new SvgCommand());
-        saveResource("playerpasswords.yml", false);
 
         int rawTimeout = getConfig().getInt("client.vctimeout", 30); //get config from config.yml
         this.vcTimeout = Math.max(0, Math.min(120, rawTimeout));
