@@ -25,11 +25,17 @@ public class SvgAudioListener implements PlayerAudioListener {
     private final OpusDecoder decoder;
 
     /**
+     * Session, used for less method checks
+     */
+    private final Session session;
+
+    /**
      * Class constructor to set id
      * @param listenerId the id of this listener
      */
     public SvgAudioListener(UUID listenerId) {
         this.listenerId = listenerId;
+        this.session = WebSocketManager.clients.get(listenerId);
 
         // Decoder for opus to raw PCM (16-bit signed, little-endian)
         decoder = SVGPlugin.getBridge().getVcServerApi().createDecoder();
@@ -51,7 +57,6 @@ public class SvgAudioListener implements PlayerAudioListener {
      * @param soundPacket packet received to send to Client
      */
     public void onAudioReceived(SoundPacket soundPacket) {
-        Session session = WebSocketManager.clients.get(listenerId);
         SVGPlugin.debug("AudioListener", "recieved audio from SVG server!");
 
         if (session != null && session.isOpen()) {
@@ -62,11 +67,9 @@ public class SvgAudioListener implements PlayerAudioListener {
                 try {
                     short[] pcm = decoder.decode(opusData);
                     byte[] bytes = serverApi.getAudioConverter().shortsToBytes(pcm); //convert audio to a usable type
-
                     session.getRemote().sendBytes(ByteBuffer.wrap(bytes));//send the decoded audio
                     SVGPlugin.debug("AudioListener", "Sent audio to websocket client!");
                 } catch (Exception e) {
-                    SVGPlugin.log().warning("Error sending audio to client" + listenerId);
                     SVGPlugin.debug("AudioListener", "Error sending audio to client" + listenerId, e);
                 }
             });

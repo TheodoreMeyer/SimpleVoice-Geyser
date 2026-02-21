@@ -39,6 +39,11 @@ public class SvgAudioSender {
     private final OpusEncoder encoder;
 
     /**
+     * COnnection, Centralized for less Latency and less checks
+     */
+    private final VoicechatConnection connection;
+
+    /**
      * Class Constructor. Creates and registers the audio sender
      * @param serverApi voicechat server api
      * @param playerUuid uuid of player registering sender for.
@@ -49,7 +54,7 @@ public class SvgAudioSender {
         this.player = Bukkit.getPlayer(playerUuid);
         this.encoder = serverApi.createEncoder();
 
-        VoicechatConnection connection = serverApi.getConnectionOf(playerUuid);
+        this.connection = serverApi.getConnectionOf(playerUuid);
 
         if (player == null || !player.isOnline()) {
             SVGPlugin.log().warning("Player is offline: " + playerUuid);
@@ -59,12 +64,6 @@ public class SvgAudioSender {
 
         if (connection == null) {
             SVGPlugin.log().warning("no svc connection for uuid: " + playerUuid);
-            return;
-        }
-
-        if (connection.isInstalled()) {
-            SVGPlugin.log().warning("Player: " + player.getName() + " has the mod installed." );
-            player.sendMessage(ChatColor.RED + "You Can't Join SVG With The Mod Installed.");
             return;
         }
 
@@ -101,16 +100,8 @@ public class SvgAudioSender {
             return false;
         }
 
-        VoicechatConnection connection = serverApi.getConnectionOf(playerUuid);
-        if (connection == null) { //make sure player is online for SVC
-            SVGPlugin.log().warning("[AudioSender] No voice chat connection for: " + player.getName());
-            return false;
-        } else if (connection.isInstalled()) {
-            player.sendMessage(ChatColor.DARK_RED + "You have the mod Installed!");
-            return false;
-        }
-
         AudioThread.getExecutor().execute(() -> {
+
             byte[] encoded;
             try {
                 short[] pcmShorts = serverApi.getAudioConverter().bytesToShorts(pcmData);
