@@ -1,8 +1,8 @@
 # Simple Voice Geyser
 [![Spigot](https://img.shields.io/badge/Available%20on-Spigot-orange?logo=spigotmc&logoColor=white)](https://www.spigotmc.org/resources/132386)
 ![Minecraft](https://img.shields.io/badge/Minecraft-1.21.8--1.21.11-blue)
-![GitHub release](https://img.shields.io/github/v/release/TheodoreMeyer/SimpleVoice-Geyser?include_prereleases)
-![License](https://img.shields.io/github/license/TheodoreMeyer/SimpleVoice-Geyser)
+[![GitHub release](https://img.shields.io/github/v/release/TheodoreMeyer/SimpleVoice-Geyser?include_prereleases)](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/releases)
+[![License](https://img.shields.io/github/license/TheodoreMeyer/SimpleVoice-Geyser)](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/blob/master/LICENSE)
 
 A Geyser Extension to allow Bedrock Clients to connect with Simple voice Chat.
 
