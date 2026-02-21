@@ -1,6 +1,10 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser.server;
 
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.servlets.AudioWorkletServlet;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.servlets.ClientWorkletServlet;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.servlets.JettyHtmlServlet;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.servlets.MicWorkletServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -42,6 +46,9 @@ public class JettyServer {
 
         // Add HTML page at root
         context.addServlet(new ServletHolder(new JettyHtmlServlet()), "/");
+
+        // Add driving javascript
+        context.addServlet(ClientWorkletServlet.class, "/client.js");
 
         //add audio/mic servlet
         context.addServlet(AudioWorkletServlet.class, "/audio-worklet-processor.js");
