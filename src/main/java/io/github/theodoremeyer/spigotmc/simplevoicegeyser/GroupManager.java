@@ -8,6 +8,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -137,15 +139,10 @@ public class GroupManager {
         if (groupPassword != null) {
 
             if (password == null) {
-                SVGPlugin.debug("[SVG]", "Player " + player.getName()
-                        + " tried to join password-protected group '"
-                        + groupName + "' without providing a password.");
                 return false;
             }
 
             if (!groupPassword.equals(password)) {
-                SVGPlugin.debug("[SVG]","Incorrect password for group '"
-                        + groupName + "' by " + player.getName());
                 return false;
             }
         }
@@ -166,6 +163,14 @@ public class GroupManager {
         return true;
     }
 
+    public static List<String> getGroupNames() {
+        List<String> names = new ArrayList<>();
+
+        for (Group group : groups.values()) {
+            names.add(group.getName());
+        }
+        return names;
+    }
 
     /**
      * Removes player from any group
@@ -188,5 +193,23 @@ public class GroupManager {
      */
     private static VoicechatServerApi getApi() {
         return SVGPlugin.getBridge().getVcServerApi();
+    }
+
+    /**
+     * Easy way to see if a player can create the group type
+     */
+    public static boolean canCreate(Player player, String type, boolean persistent) {
+
+        if (type.equalsIgnoreCase("isolated")
+                && !player.hasPermission("svg.vc.group.type.isolated")) {
+            return false;
+
+        } else if (persistent
+                && !player.hasPermission("svg.vc.creategroup.setpersistent")) {
+
+            return false;
+        }
+
+        return true;
     }
 }
