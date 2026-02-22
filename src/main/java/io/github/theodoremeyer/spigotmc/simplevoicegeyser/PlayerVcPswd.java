@@ -1,5 +1,6 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -98,6 +99,11 @@ public class PlayerVcPswd {
      * @param password the password to set
      */
     public static void setPassword(Player player, String password) {
+        if (!isPasswordLengthValid(password)) {
+            player.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Password must be between 8 and 32 characters.");
+            return;
+        }
+
         String key = player.getName().toLowerCase();
 
         String hash = BCrypt.hashpw(password, BCrypt.gensalt(12));
@@ -105,6 +111,7 @@ public class PlayerVcPswd {
         playerPasswords.put(key, hash);
         playerUUIDs.put(key, player.getUniqueId());
         saveToFile(key, hash, player.getUniqueId());
+        return;
     }
 
     /**
