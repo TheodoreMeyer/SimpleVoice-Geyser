@@ -44,26 +44,28 @@ repositories {
 dependencies {
 
     // password encryption
-    implementation 'org.mindrot:jbcrypt:0.4'
+    implementation('org.mindrot:jbcrypt:0.4')
 
     // Spigot API dependency
-    implementation "org.spigotmc:spigot-api:${spigot_api_version}-R0.1-SNAPSHOT"
+    implementation("org.spigotmc:spigot-api:${spigot_api_version}-R0.1-SNAPSHOT")
     
-    implementation 'org.json:json:20250107'
+    implementation('org.json:json:20250107')
     
     implementation files('libs/json-20250107.jar')
 
     // GeyserMC API dependency
-    compileOnly "org.geysermc.geyser:api:${geysermc_api_version}"
+    compileOnly("org.geysermc.geyser:api:${geysermc_api_version}")
+
+    compileOnly("org.geysermc.floodgate:api:${floodgate_api_version}")
     
     //jetty server
-    implementation 'org.eclipse.jetty:jetty-server:11.0.25'
-    implementation 'org.eclipse.jetty:jetty-servlet:11.0.25'
-    implementation 'org.eclipse.jetty.websocket:websocket-servlet:11.0.25'
-    implementation 'org.eclipse.jetty.websocket:websocket-jetty-server:11.0.25'
+    implementation('org.eclipse.jetty:jetty-server:11.0.25')
+    implementation('org.eclipse.jetty:jetty-servlet:11.0.25')
+    implementation('org.eclipse.jetty.websocket:websocket-servlet:11.0.25')
+    implementation('org.eclipse.jetty.websocket:websocket-jetty-server:11.0.25')
     
     // SimpleVoiceChat API
-    implementation "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
+    implementation("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
 }
 
 java {
@@ -82,11 +84,12 @@ tasks.named('jar') {
 }
 
 tasks.processResources {
-    inputs.property "version", project.version
+    inputs.property("version", version)
+    inputs.property("spigot_version", spigot_api_version)
 
     filesMatching('plugin.yml') {
         expand(
-                plugin_version: project.version,
+                plugin_version: version,
                 spigot_version: spigot_api_version
         )
     }
