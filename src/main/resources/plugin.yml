@@ -6,7 +6,7 @@ description: Plugin to allow Bedrock clients to join Simple Voice Chat.
 author: TheodoreMeyer
 website: https://theodoremeyer.github.io
 depend: [voicechat]
-softdepend: [Geyser-Spigot]
+softdepend: [Geyser-Spigot, floodgate]
 prefix: SVG
 libraries:
   - org.json:json:20250107

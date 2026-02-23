@@ -9,6 +9,10 @@ client:
   # idle websocket timeout in minutes
   idletimout: 2
 
+  # default: false
+  # Only allow bedrock players to join the chat
+  requireBedrock: false
+
 server:
 
   group:

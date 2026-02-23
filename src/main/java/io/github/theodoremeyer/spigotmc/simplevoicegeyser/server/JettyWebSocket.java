@@ -4,6 +4,7 @@ import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.*;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioSender;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.geyser.GeyserHook;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -11,6 +12,7 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -58,7 +60,7 @@ public class JettyWebSocket {
 
         //reject non JSON messages early
         if (!message.startsWith("{")) {
-            WebSocketManager.sendJson(uuid, "error", "Invalid input. Expected a JSON object.");
+            sendMessage("error", "Invalid input. Expected a JSON object.", false);
             return;
         }
 
@@ -150,6 +152,21 @@ public class JettyWebSocket {
         }
         this.uuid = storedUuid;
 
+
+        Boolean bedrock = GeyserHook.isBedrock(storedUuid);
+        if (bedrock == null) {
+            // Geyser/Floodgate not installed
+            if (SVGPlugin.getInstance().getConfig().getBoolean("client.requireBedrock", false)) {
+                SVGPlugin.log().warning("Unable to enforce: client.requireBedrock. Please install floodgate or geyser");
+                return;
+            }
+        } else if (!bedrock) {
+            if (SVGPlugin.getInstance().getConfig().getBoolean("client.requireBedrock", false)) {
+                closeOnError("You must be a Bedrock player to join!", false);
+                return;
+            }
+        }
+
         //see if the player's password is set.
         if (!PlayerVcPswd.isPasswordSet(username)) {
             closeOnError("Password not set. Use /svg pswd [password] in-game.", false);
@@ -208,23 +225,33 @@ public class JettyWebSocket {
     private void chat(JSONObject json) {
         String chatMessage = json.optString("message", "").trim();
         if (!authenticated) { //if they are signed in
-            WebSocketManager.sendJson(uuid, "error", "You must be authenticated.");
+            sendMessage("error", "You must be authenticated.", false);
             return;
         }
 
         if (!chatMessage.isEmpty()) {
             String name = PlayerVcPswd.getUsernameFromUUID(uuid);
             if (player != null) {
-                WebSocketManager.sendJson(uuid, "chat", "You" + chatMessage);
+                sendMessage("chat", "You" + chatMessage, false);
                 player.chat("[Web Chat] " + (name != null ? name : uuid) + ": " + ChatColor.BLUE + chatMessage);
             } else {
-                WebSocketManager.sendJson(uuid, "error", "You are Not in Game");
+                sendMessage("error", "You are Not in Game", false);
             }
         }
     }
 
     private void sendMessage(String type, String message, Boolean log) {
-        WebSocketManager.sendJson(uuid, type, message);
+
+        JSONObject json = new JSONObject();
+        json.put("type", type);
+        json.put("message", message);
+        try {
+            session.getRemote().sendString(json.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
         if (player != null) {
             player.sendMessage(SVGPlugin.PREFIX + ChatColor.translateAlternateColorCodes('&', message));
         }
