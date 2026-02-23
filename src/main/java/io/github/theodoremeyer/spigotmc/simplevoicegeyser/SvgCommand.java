@@ -1,11 +1,16 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
 import de.maxhenkel.voicechat.api.Group;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.geyser.FormHandler;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.geyser.GeyserHook;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.geysermc.geyser.api.GeyserApi;
+
 
 /**
  * Class that controls the main command for plugin: /svg
@@ -45,12 +50,8 @@ public class SvgCommand implements CommandExecutor {
 
                 String newPassword = args[1];
 
-                if (!PlayerVcPswd.isPasswordLengthValid(newPassword)) {
-                    sender.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Password must be between 8 and 32 characters.");
-                    return true;
-                }
-
                 PlayerVcPswd.setPassword(player, newPassword);
+
                 sender.sendMessage(SVGPlugin.PREFIX + ChatColor.GREEN + "Your voice chat password has been set.");
                 return true;
             }
@@ -93,28 +94,8 @@ public class SvgCommand implements CommandExecutor {
                     return true;
                 }
 
-
-                Group.Type type = Group.Type.OPEN; // Default to OPEN if no type specified.
-                if ("isolated".equalsIgnoreCase(groupType)) {
-                    type = Group.Type.ISOLATED;
-                } else if ("normal".equalsIgnoreCase(groupType)) {
-                    type = Group.Type.NORMAL;
-                }
-
-                if (type == Group.Type.ISOLATED &&
-                        !player.hasPermission("svg.vc.creategroup.type.isolated")) {
-                    sender.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "You don't have permission to create isolated groups.");
-                    return true;
-                }
-
-                if (persistent &&
-                        !player.hasPermission("svg.vc.creategroup.setpersistent")) {
-                    sender.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "You don't have permission to set groups as persistent.");
-                    return true;
-                }
-
-                boolean created = GroupManager.createGroup(
-                        player, groupName, password, type, persistent, false);
+                boolean created = createGroup(
+                        player, groupName, password, groupType, persistent);
 
                 if (!created) {
                     sender.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Failed to create group.");
@@ -189,13 +170,43 @@ public class SvgCommand implements CommandExecutor {
                 return true;
             }
 
-
             default: {
-                sender.sendMessage("§cUnknown subcommand. Try /svg [pswd | cgroup | jgroup | lgroup | help]");
+
+                if (sender instanceof Player player) {
+                    Boolean isBedrock = GeyserHook.isBedrock(player.getUniqueId());
+
+                    if (isBedrock != null && isBedrock) {
+                        return FormHandler.openCommand(player);
+                    } else {
+                        sender.sendMessage("§cUnknown subcommand. Try /svg help");
+                    }
+                    return true;
+                }
+
+                sender.sendMessage("§cUnknown subcommand. Try /svg help");
                 return true;
             }
         }
     }
+
+    public static boolean createGroup(Player p, String gName, String type, String pswd, Boolean persistent) {
+
+        if (!GroupManager.canCreate(p, type, persistent)) {
+            p.sendMessage(ChatColor.RED + "Cannot create a Group! No access to this type.");
+            return false;
+        }
+
+        Group.Type groupType = Group.Type.OPEN; // Default to OPEN if no type specified.
+        if ("isolated".equalsIgnoreCase(type)) {
+            groupType = Group.Type.ISOLATED;
+        } else if ("normal".equalsIgnoreCase(type)) {
+            groupType = Group.Type.NORMAL;
+        }
+
+        GroupManager.createGroup(p, gName, pswd, groupType, persistent, false);
+        return true;
+    }
+
 
     private Player requirePlayer(CommandSender sender, String errorMessage) {
         if (!(sender instanceof Player player)) {
@@ -211,5 +222,4 @@ public class SvgCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.GRAY + description);
         }
     }
-
 }
