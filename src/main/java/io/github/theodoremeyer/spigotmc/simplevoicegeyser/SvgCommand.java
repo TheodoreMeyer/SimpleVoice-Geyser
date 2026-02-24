@@ -44,9 +44,7 @@ public class SvgCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
         if (args.length == 0) {
-            sender.sendMessage(SVGPlugin.PREFIX + "§eUsage:");
-            sender.sendMessage("/svg pswd <new-password>");
-            sender.sendMessage("/svg cgroup <group-name> -t[type] -p[password] -ps[setpersistent]");
+            sender.sendMessage(SVGPlugin.PREFIX + "§eUsage: /svg help");
             return true;
         }
 
@@ -203,25 +201,6 @@ public class SvgCommand implements CommandExecutor {
             }
         }
     }
-
-    public static boolean createGroup(Player p, String gName, String type, String pswd, Boolean persistent) {
-
-        if (!SVGPlugin.getGroupManager().canCreate(p, type, persistent)) {
-            p.sendMessage(ChatColor.RED + "Cannot create a Group! No access to this type.");
-            return false;
-        }
-
-        Group.Type groupType = Group.Type.OPEN; // Default to OPEN if no type specified.
-        if ("isolated".equalsIgnoreCase(type)) {
-            groupType = Group.Type.ISOLATED;
-        } else if ("normal".equalsIgnoreCase(type)) {
-            groupType = Group.Type.NORMAL;
-        }
-
-        SVGPlugin.getGroupManager().createGroup(p, gName, pswd, groupType, persistent, false);
-        return true;
-    }
-
 
     private Player requirePlayer(CommandSender sender, String errorMessage) {
         if (!(sender instanceof Player player)) {
