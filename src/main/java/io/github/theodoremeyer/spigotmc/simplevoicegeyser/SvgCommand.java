@@ -18,6 +18,21 @@ import org.geysermc.geyser.api.GeyserApi;
 public class SvgCommand implements CommandExecutor {
 
     /**
+     * Interface to Group System
+     */
+    private final GroupManager groupManager;
+
+    /**
+     * Cumulus forms
+     */
+    private final FormHandler formHandler;
+
+    protected SvgCommand(GroupManager groupManager) {
+        this.groupManager = groupManager;
+        this.formHandler = new FormHandler(groupManager);
+    }
+
+    /**
      * When command runs
      * @param sender who ran the command
      * @param cmd the command
@@ -94,8 +109,8 @@ public class SvgCommand implements CommandExecutor {
                     return true;
                 }
 
-                boolean created = createGroup(
-                        player, groupName, password, groupType, persistent);
+                Group.Type type = groupManager.stringToType(groupType);
+                boolean created = groupManager.createGroup(player, groupName, password, type, persistent, false);
 
                 if (!created) {
                     sender.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Failed to create group.");
@@ -129,7 +144,7 @@ public class SvgCommand implements CommandExecutor {
                     return true;
                 }
 
-                boolean success = GroupManager.joinGroup(player, groupName, groupPassword);
+                boolean success = groupManager.joinGroup(player, groupName, groupPassword);
 
                 if (!success) {
                     sender.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Failed to join group. Check name and password.");
@@ -144,7 +159,7 @@ public class SvgCommand implements CommandExecutor {
             case "lgroup": {
                 Player player = requirePlayer(sender, "Only Players can leave groups!");
                 if (player == null) return true;
-                GroupManager.leaveGroup(player);
+                groupManager.leaveGroup(player);
                 return true;
             }
 
@@ -176,7 +191,7 @@ public class SvgCommand implements CommandExecutor {
                     Boolean isBedrock = GeyserHook.isBedrock(player.getUniqueId());
 
                     if (isBedrock != null && isBedrock) {
-                        return FormHandler.openCommand(player);
+                        return formHandler.openCommand(player);
                     } else {
                         sender.sendMessage("§cUnknown subcommand. Try /svg help");
                     }
@@ -191,7 +206,7 @@ public class SvgCommand implements CommandExecutor {
 
     public static boolean createGroup(Player p, String gName, String type, String pswd, Boolean persistent) {
 
-        if (!GroupManager.canCreate(p, type, persistent)) {
+        if (!SVGPlugin.getGroupManager().canCreate(p, type, persistent)) {
             p.sendMessage(ChatColor.RED + "Cannot create a Group! No access to this type.");
             return false;
         }
@@ -203,7 +218,7 @@ public class SvgCommand implements CommandExecutor {
             groupType = Group.Type.NORMAL;
         }
 
-        GroupManager.createGroup(p, gName, pswd, groupType, persistent, false);
+        SVGPlugin.getGroupManager().createGroup(p, gName, pswd, groupType, persistent, false);
         return true;
     }
 

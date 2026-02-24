@@ -19,9 +19,18 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GroupManager {
 
     /**
+     * Interface to group system
+     */
+    private final VoiceChatBridge bridge;
+
+    /**
      * Groups that are listed/Available
      */
-    protected static final Map<String, Group> groups = new ConcurrentHashMap<>(); //list of active groups
+    protected final Map<String, Group> groups = new ConcurrentHashMap<>(); //list of active groups
+
+    protected GroupManager(VoiceChatBridge api) {
+        this.bridge = api;
+    }
 
     /**
      * Create an SVC Group for Player
@@ -33,7 +42,7 @@ public class GroupManager {
      * @param created whether to allow join already created groups
      * @return True/False
      */
-    public static boolean createGroup(Player player, String groupName, String password, Type groupType, boolean persistent, boolean created) {
+    public boolean createGroup(Player player, String groupName, String password, Type groupType, boolean persistent, boolean created) {
         VoicechatServerApi api = getApi();
         if (api == null) return false;
 
@@ -80,13 +89,28 @@ public class GroupManager {
     }
 
     /**
+     * Translate a String to Group Type
+     * NOTE: Returns A default group type: OPEN
+     * @param string the translatable String
+     */
+    public Type stringToType(String string) {
+        if ("isolated".equalsIgnoreCase(string)) {
+            return Type.ISOLATED;
+        } else if ("normal".equalsIgnoreCase(string)) {
+            return Type.NORMAL;
+        } else {
+            return Type.OPEN; // Default to OPEN if no type specified.
+        }
+    }
+
+    /**
      * Set Player Group
      * @param player player affected
      * @param groupName uuid of the group, fetched by group.getName or by groups
      * @param password password of the group
      * @return True/False
      */
-    public static boolean joinGroup(Player player, String groupName, String password) {
+    public boolean joinGroup(Player player, String groupName, String password) {
 
         VoicechatServerApi api = getApi();
         VoicechatConnection connection = api.getConnectionOf(player.getUniqueId());
@@ -163,7 +187,7 @@ public class GroupManager {
         return true;
     }
 
-    public static List<String> getGroupNames() {
+    public List<String> getGroupNames() {
         List<String> names = new ArrayList<>();
 
         for (Group group : groups.values()) {
@@ -176,7 +200,7 @@ public class GroupManager {
      * Removes player from any group
      * @param player player to leave a group
      */
-    public static void leaveGroup(Player player) {
+    public void leaveGroup(Player player) {
         VoicechatServerApi api = getApi();
         if (api == null) return;
 
@@ -191,14 +215,14 @@ public class GroupManager {
      * Easy way to get the SVC Api.
      * @return VoicechatServerApi the SimpleVoiceChat api
      */
-    private static VoicechatServerApi getApi() {
-        return SVGPlugin.getBridge().getVcServerApi();
+    private VoicechatServerApi getApi() {
+        return bridge.getVcServerApi();
     }
 
     /**
      * Easy way to see if a player can create the group type
      */
-    public static boolean canCreate(Player player, String type, boolean persistent) {
+    public boolean canCreate(Player player, String type, boolean persistent) {
 
         if (type.equalsIgnoreCase("isolated")
                 && !player.hasPermission("svg.vc.group.type.isolated")) {
@@ -211,5 +235,17 @@ public class GroupManager {
         }
 
         return true;
+    }
+
+    /**
+     * Add a known Group
+     * @param group the group to add
+     */
+    public void addGroup(Group group) {
+        groups.put(group.getName(), group);
+    }
+
+    public void removeGroup(Group group) {
+        groups.remove(group.getName());
     }
 }

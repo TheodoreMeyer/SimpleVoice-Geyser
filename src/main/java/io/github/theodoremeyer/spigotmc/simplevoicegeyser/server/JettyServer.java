@@ -17,15 +17,24 @@ import java.time.Duration;
  * Starts and Stops the Jetty server for SVG.
  * May be moved to a new thread.
  */
-public class JettyServer {
+public final class JettyServer {
+
+    /**
+     * The Server
+     */
     private final Server server;
+    /**
+     * The Plugin
+     */
+    private final SVGPlugin plugin;
 
     /**
      * set server port
      * @param port port to run server on
      */
-    public JettyServer(int port, String host) {
+    public JettyServer(SVGPlugin plugin, int port, String host) {
         this.server = new Server();
+        this.plugin = plugin;
 
         ServerConnector connector = new ServerConnector(server);
         connector.setHost(host);
@@ -47,7 +56,7 @@ public class JettyServer {
         // Add HTML page at root
         context.addServlet(new ServletHolder(new JettyHtmlServlet()), "/");
 
-        // Add driving javascript
+        // Add driving JavaScript
         context.addServlet(ClientWorkletServlet.class, "/client.js");
 
         //add audio/mic servlet
@@ -55,7 +64,7 @@ public class JettyServer {
         context.addServlet(MicWorkletServlet.class, "/mic-capture-processor.js");
 
         double idleTimeoutMinutes =
-                SVGPlugin.getInstance().getConfig().getDouble("client.idletimeout", 2.0);
+                plugin.getConfig().getDouble("client.idletimeout", 2.0);
 
         idleTimeoutMinutes = Math.max(0.5, Math.min(idleTimeoutMinutes, 10.0));
 
@@ -67,7 +76,7 @@ public class JettyServer {
 
         // Register WebSocket at /ws
         JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) -> {
-            wsContainer.addMapping("/ws", (req, resp) -> new JettyWebSocket());
+            wsContainer.addMapping("/ws", (req, resp) -> new JettyWebSocket(plugin));
             wsContainer.setIdleTimeout(idleTimeout);
         });
 

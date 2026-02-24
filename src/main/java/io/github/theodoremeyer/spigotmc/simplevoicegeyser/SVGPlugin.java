@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 /**
  * Main Class of Plugin
  */
-public class SVGPlugin extends JavaPlugin {
+public final class SVGPlugin extends JavaPlugin {
     /**
      * The jetty server
      */
@@ -29,6 +29,14 @@ public class SVGPlugin extends JavaPlugin {
      * @see VoiceChatBridge
      */
     private static VoiceChatBridge bridge;
+    /**
+     * Class: Group system
+     */
+    private GroupManager groupManager;
+    /**
+     * AudioThread
+     */
+    private AudioThread thread;
     /**
      * This class
      */
@@ -44,13 +52,9 @@ public class SVGPlugin extends JavaPlugin {
      */
     private WebSocketManager webSocketManager;
     /**
-     * Audio thread to remove lag
-     */
-    private AudioThread audioThread;
-    /**
      * Whether debug is enabled
      */
-    private Boolean debug = false;
+    private boolean debug = false;
 
     /**
      * Universal Svg Prefix
@@ -63,9 +67,15 @@ public class SVGPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        this.thread = new AudioThread();
 
         loadConfigProperly();
         this.debug = getConfig().getBoolean("Debug", false);
+
+        int rawTimeout = getConfig().getInt("client.vctimeout", 30); //get config from config.yml
+        this.vcTimeout = Math.max(0, Math.min(120, rawTimeout));
+        int jettyServerPort = getConfig().getInt("server.port", 8080);
+        String jettyServerHost = getConfig().getString("server.bind-address", "0.0.0.0");
 
         BukkitVoicechatService service = Bukkit.getServicesManager().load(BukkitVoicechatService.class);
 
@@ -78,7 +88,7 @@ public class SVGPlugin extends JavaPlugin {
             //added this because of some early problems with registering the plugin
             getLogger().severe("Failed to register with Simple Voice Chat: service not found.");
             Collection<Class<?>> knownServices = Bukkit.getServicesManager().getKnownServices();
-            if (debug == true) {
+            if (debug) {
                 if (knownServices.isEmpty()) {
                     getLogger().warning("No services registered yet.");
                 } else {
@@ -95,21 +105,16 @@ public class SVGPlugin extends JavaPlugin {
             Bukkit.getPluginManager().disablePlugin(this);
         }
 
+        this.groupManager = new GroupManager(bridge);
+
         Bukkit.getPluginManager().registerEvents(new SvgListener(), this);
         PlayerVcPswd.init(this.getDataFolder());
-        Objects.requireNonNull(getCommand("svg")).setExecutor(new SvgCommand());
-
-        int rawTimeout = getConfig().getInt("client.vctimeout", 30); //get config from config.yml
-        this.vcTimeout = Math.max(0, Math.min(120, rawTimeout));
-
-        int jettyServerPort = getConfig().getInt("server.port", 8080);
-        String jettyServerHost = getConfig().getString("server.bind-address", "0.0.0.0");
+        Objects.requireNonNull(getCommand("svg")).setExecutor(new SvgCommand(groupManager));
 
         this.webSocketManager = new WebSocketManager();
-        this.audioThread = new AudioThread(this);
 
         try {
-            jettyServer = new JettyServer(jettyServerPort, jettyServerHost); //start the jetty server
+            jettyServer = new JettyServer(this, jettyServerPort, jettyServerHost); //start the jetty server
             jettyServer.start();
             getLogger().info("Jetty server started on port: " + jettyServerPort);
         } catch (Exception e) {
@@ -131,6 +136,7 @@ public class SVGPlugin extends JavaPlugin {
         } catch (Exception e) {
             getLogger().severe("Failed to stop Jetty server: " + e.getMessage());
         }
+        thread.shutdown();
     }
 
     private void loadConfigProperly() {
@@ -146,15 +152,6 @@ public class SVGPlugin extends JavaPlugin {
     }
 
     /**
-     * create an easy way for other classes to access what they need to work.
-     * @return SVGPlugin
-     * @see SVGPlugin
-     */
-    public static SVGPlugin getInstance() {
-        return instance;
-    }
-
-    /**
      * the timeout config
      * @return vcTimeout
      */
@@ -167,7 +164,7 @@ public class SVGPlugin extends JavaPlugin {
      * @return The Logger
      */
     public static Logger log() {
-        return getInstance().getLogger();
+        return instance.getLogger();
     }
 
     /**
@@ -180,15 +177,19 @@ public class SVGPlugin extends JavaPlugin {
     }
 
     /**
+     * Get The Group System
+     * @return GroupManager
+     */
+    public  static GroupManager getGroupManager() { return instance.groupManager;}
+
+    /**
      * debug option with no throwable
      * @param section the part of plugin debugging
      * @param message the message
      */
     public static void debug(String section, String message) {
-        if (instance != null) {
-            if (instance.debug) {
-                log().info("[Debug][" + section + "] " + message);
-            }
+        if (instance != null && instance.debug) {
+            log().info("[Debug][" + section + "] " + message);
         }
     }
 
@@ -199,10 +200,8 @@ public class SVGPlugin extends JavaPlugin {
      * @param t the throwable/error thrown
      */
     public static void debug(String section, String message, Throwable t) {
-        if (instance != null) {
-            if (instance.debug) {
-                log().info("[Debug][" + section + "] " + message + ", " + t);
-            }
+        if (instance != null && instance.debug) {
+            log().info("[Debug][" + section + "] " + message + ", " + t);
         }
     }
 

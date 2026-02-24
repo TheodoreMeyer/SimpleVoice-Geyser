@@ -2,6 +2,7 @@ package io.github.theodoremeyer.spigotmc.simplevoicegeyser.server;
 
 import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
+import de.maxhenkel.voicechat.api.audiosender.AudioSender;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.*;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioSender;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.geyser.GeyserHook;
@@ -20,18 +21,38 @@ import java.util.UUID;
  * Websocket session Class.
  */
 @WebSocket
-public class JettyWebSocket {
+public final class JettyWebSocket {
 
     /**
      * The Session that is the audio client.
      */
-    protected Session session;
+    private Session session;
 
+    /**
+     * UUID associated with this websocket/user
+     */
     private UUID uuid;
-
+    /**
+     * Player that this websocket does audio for
+     */
     private Player player;
-
+    /**
+     * Whether the user has logged in
+     */
     private boolean authenticated = false;
+    /**
+     * AudioSender associated with this.
+     */
+    private SvgAudioSender audioSender;
+    /**
+     * The Main Class.
+     */
+    private final SVGPlugin plugin;
+
+    protected JettyWebSocket(SVGPlugin p) {
+        this.plugin = p;
+    }
+
 
     /**
      * When the client connects.
@@ -40,7 +61,7 @@ public class JettyWebSocket {
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
-        session.setIdleTimeout(Duration.ofMinutes(SVGPlugin.getInstance().getConfig().getInt("client.idletimeout", 4)));
+        session.setIdleTimeout(Duration.ofMinutes(plugin.getConfig().getInt("client.idletimeout", 4)));
         SVGPlugin.log().info("[Websocket] WebSocket connected: " + session.getRemoteAddress());
     }
 
@@ -105,9 +126,8 @@ public class JettyWebSocket {
         byte[] pcmData = new byte[length];
         System.arraycopy(buffer, offset, pcmData, 0, length);
 
-        SvgAudioSender sender = SVGPlugin.getBridge().audioSenders.get(uuid);
-        if (sender != null) { //make sure the sender is not null
-            sender.sendOpus(pcmData); //send the audio data
+        if (audioSender != null) { //make sure the sender is not null
+            audioSender.sendOpus(pcmData); //send the audio data
         }
     }
 
@@ -152,16 +172,15 @@ public class JettyWebSocket {
         }
         this.uuid = storedUuid;
 
-
         Boolean bedrock = GeyserHook.isBedrock(storedUuid);
         if (bedrock == null) {
             // Geyser/Floodgate not installed
-            if (SVGPlugin.getInstance().getConfig().getBoolean("client.requireBedrock", false)) {
+            if (plugin.getConfig().getBoolean("client.requireBedrock", false)) {
                 SVGPlugin.log().warning("Unable to enforce: client.requireBedrock. Please install floodgate or geyser");
                 return;
             }
         } else if (!bedrock) {
-            if (SVGPlugin.getInstance().getConfig().getBoolean("client.requireBedrock", false)) {
+            if (plugin.getConfig().getBoolean("client.requireBedrock", false)) {
                 closeOnError("You must be a Bedrock player to join!", false);
                 return;
             }
@@ -184,7 +203,7 @@ public class JettyWebSocket {
         }
 
         //get timeout numbers for the message.
-        int timeout = SVGPlugin.getInstance().getVcTimeout();
+        int timeout = plugin.getVcTimeout();
         long delayInTicks = timeout * 20L;
 
         authenticated = true;
@@ -193,7 +212,7 @@ public class JettyWebSocket {
         SVGPlugin.log().info("[WebSocket] " + username + " joined with UUID: " + uuid);
 
         // Schedule timeout if player never joins. Currently, disabled.
-        //Bukkit.getScheduler().runTaskLater(SVGPlugin.getInstance(), () -> {
+        //Bukkit.getScheduler().runTaskLater(plugin, () -> {
         this.player = Bukkit.getPlayer(uuid);
         if (player == null || !player.isOnline()) {
             closeOnError("Timeout: You didn’t join the server in time.", false);
@@ -210,14 +229,14 @@ public class JettyWebSocket {
             return;
         }
 
-        if (SVGPlugin.getInstance().getConfig().getBoolean("server.group.default.enabled")) {
-            String gPswd = SVGPlugin.getInstance().getConfig().getString("server.group.default.password", "1a2b");
+        if (plugin.getConfig().getBoolean("server.group.default.enabled")) {
+            String gPswd = plugin.getConfig().getString("server.group.default.password", "1a2b");
 
-            GroupManager.createGroup(Bukkit.getPlayer(uuid), "Svg", gPswd, Group.Type.OPEN, false, true); //add player to a default group
+            SVGPlugin.getGroupManager().createGroup(player, "Svg", gPswd, Group.Type.OPEN, false, true); //add player to a default group
         }
 
         SVGPlugin.getBridge().registerAudioListener(uuid); //register the players audio sender
-        SVGPlugin.getBridge().registerAudioSender(uuid); //register the players audio sender
+        this.audioSender = SVGPlugin.getBridge().registerAudioSender(uuid); //register the players audio sender
         // Currently disabled.
         // }, delayInTicks);
     }
@@ -240,7 +259,7 @@ public class JettyWebSocket {
         }
     }
 
-    private void sendMessage(String type, String message, Boolean log) {
+    private void sendMessage(String type, String message, boolean log) {
 
         JSONObject json = new JSONObject();
         json.put("type", type);
@@ -260,7 +279,7 @@ public class JettyWebSocket {
         }
     }
 
-    private void closeOnError(String message, Boolean log) {
+    private void closeOnError(String message, boolean log) {
         sendMessage("error", message, log);
         session.close();
     }

@@ -15,7 +15,7 @@ import java.util.UUID;
 /**
  * Audio Sender to send Clients Audio to server
  */
-public class SvgAudioSender {
+public final class SvgAudioSender {
 
     /**
      * The simple voice chat api
@@ -39,13 +39,13 @@ public class SvgAudioSender {
     private final OpusEncoder encoder;
 
     /**
-     * COnnection, Centralized for less Latency and less checks
+     * Connection, Centralized for less Latency and fewer checks
      */
     private final VoicechatConnection connection;
 
     /**
      * Class Constructor. Creates and registers the audio sender
-     * @param serverApi voicechat server api
+     * @param serverApi voice chat server api
      * @param playerUuid uuid of player registering sender for.
      */
     public SvgAudioSender(VoicechatServerApi serverApi, UUID playerUuid) {
@@ -67,11 +67,6 @@ public class SvgAudioSender {
             return;
         }
 
-        if (SVGPlugin.getBridge().audioSenders.containsKey(playerUuid)) {
-            SVGPlugin.log().warning("[VCBridge] SvgAudioSender already registered for: " + playerUuid);
-            return;
-        }
-
         this.delegate = serverApi.createAudioSender(connection); //create the sender itself
         boolean success = serverApi.registerAudioSender(delegate);
 
@@ -89,18 +84,17 @@ public class SvgAudioSender {
     /**
      * Sends Opus-encoded audio to the player if conditions are met.
      * @param pcmData data to send for player
-     * @return true/false whether it failed or not
      */
-    public boolean sendOpus(byte[] pcmData) {
+    public void sendOpus(byte[] pcmData) {
 
         SVGPlugin.debug( "AudioSender","received audio data from websocket!");
 
         if (player == null || !player.isOnline()) {
             SVGPlugin.log().warning("[AudioSender] Player not found or offline: " + playerUuid);
-            return false;
+            return;
         }
 
-        AudioThread.getExecutor().execute(() -> {
+        AudioThread.execute(() -> {
 
             byte[] encoded;
             try {
@@ -120,7 +114,6 @@ public class SvgAudioSender {
                 SVGPlugin.log().warning("[AudioSender] Failed to send audio for: " + playerUuid);
             }
         });
-        return true;
     }
 
     /**

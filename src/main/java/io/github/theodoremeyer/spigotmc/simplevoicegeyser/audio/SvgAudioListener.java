@@ -18,7 +18,7 @@ import java.util.UUID;
 /**
  * The Class Sending Audio to Client
  */
-public class SvgAudioListener implements PlayerAudioListener {
+public final class SvgAudioListener implements PlayerAudioListener {
 
     private final UUID listenerId;
     private VoicechatServerApi serverApi;
@@ -63,7 +63,7 @@ public class SvgAudioListener implements PlayerAudioListener {
 
             byte[] opusData = soundPacket.getOpusEncodedData();
 
-            AudioThread.getExecutor().execute(() -> {
+            AudioThread.execute(() -> {
                 try {
                     short[] pcm = decoder.decode(opusData);
                     byte[] bytes = serverApi.getAudioConverter().shortsToBytes(pcm); //convert audio to a usable type

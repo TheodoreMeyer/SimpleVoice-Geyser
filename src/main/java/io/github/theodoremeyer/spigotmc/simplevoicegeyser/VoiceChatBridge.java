@@ -39,7 +39,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
     /**
      * Map containing all the audioListeners
      */
-    protected final Map<UUID, SvgAudioListener> audioListeners = new ConcurrentHashMap<>();
+    private final Map<UUID, SvgAudioListener> audioListeners = new ConcurrentHashMap<>();
 
     private final SVGPlugin plugin;
 
@@ -92,7 +92,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
         serverApi = event.getVoicechat(); //get the SVC api
         SVGPlugin.log().info("[VCBridge] Voice chat server started: " + serverApi);
         for (Group group : serverApi.getGroups()) {
-            GroupManager.groups.putIfAbsent(group.getName(), group);
+            SVGPlugin.getGroupManager().addGroup(group);
             SVGPlugin.log().info("[VCBridge] Loaded group: " + group.getName());
         }
     }
@@ -104,7 +104,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
     private void onGroupCreated(CreateGroupEvent event) {
         Group group = event.getGroup();
         if (group != null) {
-            GroupManager.groups.put(group.getName(), group); //save the group to GroupManager
+            SVGPlugin.getGroupManager().addGroup(group); //save the group to GroupManager
         }
     }
 
@@ -115,7 +115,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
     private void onGroupRemoved(RemoveGroupEvent event) {
         Group group = event.getGroup();
         if (group != null) {
-            GroupManager.groups.remove(group.getName(), group); //remove the non-existent group from the group manager
+            SVGPlugin.getGroupManager().removeGroup(group); //remove the non-existent group from the group manager
         }
     }
 
@@ -131,24 +131,27 @@ public class VoiceChatBridge implements VoicechatPlugin {
      * Creates an AudioSender
      * @param uuid uuid to link sender too
      */
-    public void registerAudioSender(UUID uuid) {
+    public SvgAudioSender registerAudioSender(UUID uuid) {
         if (serverApi == null) {
             SVGPlugin.log().warning("[VCBridge] Cannot register SvgAudioSender: Server API is null");
-            return;
+            return null;
         }
 
         if (audioSenders.containsKey(uuid)) {
             SVGPlugin.log().warning("[VCBridge] SvgAudioSender already registered for: " + uuid);
-            return;
+            return null;
         }
 
         try {
             SvgAudioSender sender = new SvgAudioSender(serverApi, uuid); //create the sender
             audioSenders.put(uuid, sender);
             SVGPlugin.log().info("[VCBridge] SvgAudioSender created and registered for: " + uuid);
+
+            return sender;
         } catch (RuntimeException e) {
             SVGPlugin.debug("VCBridge", "Unable to register AudioSender for: " + uuid, e);
         }
+        return null;
     }
 
     /**
