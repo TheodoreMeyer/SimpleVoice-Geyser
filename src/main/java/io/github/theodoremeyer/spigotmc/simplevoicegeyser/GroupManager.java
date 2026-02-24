@@ -195,6 +195,25 @@ public class GroupManager {
         }
         return names;
     }
+    /**
+     * Returns the name of the current group the player is in
+     * @param player
+     * @return
+     */
+    public String getJoinedGroupName(Player player) {
+        VoicechatServerApi api = getApi();
+        assert api != null;
+
+        VoicechatConnection connection = api.getConnectionOf(player.getUniqueId());
+        assert connection != null;
+
+        if (!connection.isInGroup()) return null;
+
+        Group group = connection.getGroup();
+        assert group != null;
+
+        return group.getName();
+    }
 
     /**
      * Removes player from any group
@@ -209,6 +228,20 @@ public class GroupManager {
 
         connection.setGroup(null); //set the players group to a group that doesn't exist
         player.sendMessage("[SVG] You left your group.");
+    }
+
+    /**
+     * Simply return whether the player is in a group
+     * @param player player is/isn't in group
+     */
+    public boolean isInGroup(Player player) {
+        VoicechatServerApi api = getApi();
+        assert api != null;
+
+        VoicechatConnection connection = api.getConnectionOf(player.getUniqueId());
+        assert connection != null;
+
+        return connection.isInGroup();
     }
 
     /**
