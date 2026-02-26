@@ -13,7 +13,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
  * is in Beta
  */
 public class SvgListener implements Listener {
-
     /**
      * When a player joins
      * @param e the event

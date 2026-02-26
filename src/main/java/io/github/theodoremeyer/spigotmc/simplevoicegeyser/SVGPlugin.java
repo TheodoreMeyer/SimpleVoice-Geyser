@@ -1,6 +1,7 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
 import de.maxhenkel.voicechat.api.BukkitVoicechatService;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.geyser.FormHandler;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.JettyServer;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.WebSocketManager;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.thread.AudioThread;
@@ -8,18 +9,29 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.geysermc.geyser.api.event.EventRegistrar;
+
+import org.geysermc.event.subscribe.Subscribe;
+import org.geysermc.event.Event;
+import org.geysermc.floodgate.api.FloodgateApi;
+import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.event.bedrock.ClientEmoteEvent;
 
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
 /**
  * Main Class of Plugin
  */
-public final class SVGPlugin extends JavaPlugin {
+public final class SVGPlugin extends JavaPlugin implements EventRegistrar {
     /**
      * The jetty server
      */
@@ -33,6 +45,10 @@ public final class SVGPlugin extends JavaPlugin {
      * Class: Group system
      */
     private GroupManager groupManager;
+    /**
+     * Form Handler
+     */
+    private FormHandler formHandler;
     /**
      * AudioThread
      */
@@ -106,6 +122,16 @@ public final class SVGPlugin extends JavaPlugin {
         }
 
         this.groupManager = new GroupManager(bridge);
+        this.formHandler = new FormHandler(groupManager);
+
+        // Geyser Emote Event register
+        if (getConfig().getBoolean("client.useEmoteForSVG", true)) {
+            GeyserApi.api().eventBus().subscribe(
+                    this,
+                    ClientEmoteEvent.class,
+                    this::onEmote
+            );
+        }
 
         Bukkit.getPluginManager().registerEvents(new SvgListener(), this);
         PlayerVcPswd.init(this.getDataFolder());
@@ -137,6 +163,30 @@ public final class SVGPlugin extends JavaPlugin {
             getLogger().severe("Failed to stop Jetty server: " + e.getMessage());
         }
         thread.shutdown();
+    }
+
+    /**
+     * Used to check for emote event
+     * @param event
+     */
+    public void onEmote(ClientEmoteEvent event) {
+        UUID uuid = event.connection().playerUuid();
+        String playerName = event.connection().name();
+
+        log().info("UUID for Emote: " + uuid);
+        if (uuid == null) {
+            log().warning("Could not resolve UUID for: " + playerName);
+            return;
+        }
+        Player player = Bukkit.getPlayer(uuid);
+        if (player == null) {
+            log().warning("Player not online for:" + playerName + " UUID: " + uuid);
+        }
+
+        debug("[Emote]", "Bedrock player used emote: " + event.emoteId()); // idk
+
+        assert player != null;
+        formHandler.openCommand(player);
     }
 
     private void loadConfigProperly() {
@@ -204,5 +254,4 @@ public final class SVGPlugin extends JavaPlugin {
             log().info("[Debug][" + section + "] " + message + ", " + t);
         }
     }
-
 }

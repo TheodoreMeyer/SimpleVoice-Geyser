@@ -72,7 +72,13 @@ public final class FormHandler {
                     .validResultHandler(response -> {
                         switch (response.clickedButtonId()) {
                             case 0 -> {
-                                return; // TODO
+                                // TODO needs to be in a new function
+                                // Temporary
+                                Form tempform = SimpleForm.builder()
+                                        .title("Invite")
+                                        .content("Work in progress")
+                                        .build();
+                                GeyserHook.sendForm(player.getUniqueId(), tempform);
                             }
                             case 1 -> groupManager.leaveGroup(player);
                         }
@@ -102,6 +108,11 @@ public final class FormHandler {
         // TODO
         // Do stuff like mute and turn up and down volume
         // Player information
+        Form form = SimpleForm.builder()
+                .title("Options")
+                .content("Work in progress")
+                .build();
+        GeyserHook.sendForm(player.getUniqueId(), form);
     };
 
     /**
@@ -110,22 +121,26 @@ public final class FormHandler {
      */
     private void createGroup(Player player) {
 
-        List<String> groupTypes = List.of("Open", "Normal", "Isolated");
-        List<String> isPersistent = List.of("false", "true");
+        List<String> groupTypes = List.of("Normal", "Open", "Isolated");
 
         Form form = CustomForm.builder()
                 .title("Create a Group")
                 .input("Group Name", "name")
                 .input("password", "password")
                 .dropdown("Group Type", groupTypes, 0)
-                .dropdown("Persistent", isPersistent, 0)
+                .toggle("Persistent")
                 .validResultHandler((s, e) -> {
                     String gName = e.next();
                     String pswd = e.next();
-                    Group.Type type = e.next();
-                    boolean persistent = "true".equalsIgnoreCase(e.next());
+                    int typeIndex = e.next();
+                    Group.Type[] groupArray = {
+                            Group.Type.NORMAL,
+                            Group.Type.OPEN,
+                            Group.Type.ISOLATED
+                    };
+                    boolean persistent = e.next();
 
-                    groupManager.createGroup(player, gName, pswd, type, persistent, false);
+                    groupManager.createGroup(player, gName, pswd, groupArray[typeIndex], persistent, false);
                 })
                 .build();
 
