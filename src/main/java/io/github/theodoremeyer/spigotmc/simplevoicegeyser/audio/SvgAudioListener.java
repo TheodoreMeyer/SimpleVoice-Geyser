@@ -5,13 +5,13 @@ import de.maxhenkel.voicechat.api.audiolistener.PlayerAudioListener;
 import de.maxhenkel.voicechat.api.opus.OpusDecoder;
 import de.maxhenkel.voicechat.api.packets.SoundPacket;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin;
-import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.WebSocketManager;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.thread.AudioThread;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.eclipse.jetty.websocket.api.Session;
 
+import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
@@ -21,7 +21,7 @@ import java.util.UUID;
 public final class SvgAudioListener implements PlayerAudioListener {
 
     private final UUID listenerId;
-    private VoicechatServerApi serverApi;
+    private final VoicechatServerApi serverApi;
     private final OpusDecoder decoder;
 
     /**
@@ -33,12 +33,13 @@ public final class SvgAudioListener implements PlayerAudioListener {
      * Class constructor to set id
      * @param listenerId the id of this listener
      */
-    public SvgAudioListener(UUID listenerId) {
+    public SvgAudioListener(UUID listenerId, @Nonnull Session session, VoicechatServerApi serverApi) {
         this.listenerId = listenerId;
-        this.session = SVGPlugin.getWsManager().getClient(listenerId);
+        this.session = session;
+        this.serverApi = serverApi;
 
         // Decoder for opus to raw PCM (16-bit signed, little-endian)
-        decoder = SVGPlugin.getBridge().getVcServerApi().createDecoder();
+        decoder = serverApi.createDecoder();
     }
 
     /**
@@ -59,7 +60,7 @@ public final class SvgAudioListener implements PlayerAudioListener {
     public void onAudioReceived(SoundPacket soundPacket) {
         SVGPlugin.debug("AudioListener", "recieved audio from SVG server!");
 
-        if (session != null && session.isOpen()) {
+        if (session.isOpen()) {
 
             byte[] opusData = soundPacket.getOpusEncodedData();
 
@@ -83,22 +84,24 @@ public final class SvgAudioListener implements PlayerAudioListener {
     /**
      * Registers the listener with the VoiceChat server.
      * May be moved to class constructor
-     * @param serverApi Vcs api to register with.
      */
-    public void registerListener(VoicechatServerApi serverApi) {
-        this.serverApi = serverApi;
+    public void registerListener() {
         PlayerAudioListener listener = serverApi.playerAudioListenerBuilder()
                 .setPlayer(listenerId)
                 .setPacketListener(this::onAudioReceived)
                 .build();
 
+        Player player = Bukkit.getPlayer(listenerId);
         if (serverApi.registerAudioListener(listener)) { //make sure SVC successfully registered
             SVGPlugin.log().info("[VCBridge] Registered audio listener for: " + listenerId);
-            Player player = Bukkit.getPlayer(listenerId);
-            player.sendMessage(SVGPlugin.PREFIX + ChatColor.AQUA + "Registered Audio listener!");
+            if (player != null) {
+                player.sendMessage(SVGPlugin.PREFIX + ChatColor.AQUA + "Registered Audio listener!");
+            }
         } else {
             SVGPlugin.log().warning("[VCBridge] Failed to register audio listener for: " + listenerId);
-            Bukkit.getPlayer(listenerId).sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Failed to register Audio Listener.");
+            if (player != null) {
+                player.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Failed to register Audio Listener.");
+            }
         }
    }
 

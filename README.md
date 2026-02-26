@@ -46,7 +46,6 @@ Reach out through issues!
 
 ## Important Notes
 - `Simple Voice Chat 2.6.0 or compatible is required to work, It must run on the server.
-- 
 - Releases/versions/jars ending with -Dev{version} mean this is a dev/test version and not meant for productional use.
    - you are welcome to test these, but no guarantee they will work.
    - 
@@ -54,4 +53,3 @@ Reach out through issues!
 
 ## Developer Notes
 - Please see the contributing.md before contributing to this project.
-

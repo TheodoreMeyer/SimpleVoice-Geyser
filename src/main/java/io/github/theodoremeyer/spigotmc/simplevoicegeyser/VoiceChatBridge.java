@@ -1,9 +1,6 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
-import de.maxhenkel.voicechat.api.Group;
-import de.maxhenkel.voicechat.api.VoicechatApi;
-import de.maxhenkel.voicechat.api.VoicechatPlugin;
-import de.maxhenkel.voicechat.api.VoicechatServerApi;
+import de.maxhenkel.voicechat.api.*;
 import de.maxhenkel.voicechat.api.events.CreateGroupEvent;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.RemoveGroupEvent;
@@ -11,6 +8,9 @@ import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioListener;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioSender;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+import org.eclipse.jetty.websocket.api.Session;
 
 import java.util.Map;
 import java.util.UUID;
@@ -142,14 +142,19 @@ public class VoiceChatBridge implements VoicechatPlugin {
             return null;
         }
 
+        Player player = Bukkit.getPlayer(uuid);
+        if (player == null || !player.isOnline()) throw  new IllegalStateException("Player not found: " + uuid);
+
         try {
             SvgAudioSender sender = new SvgAudioSender(serverApi, uuid); //create the sender
             audioSenders.put(uuid, sender);
             SVGPlugin.log().info("[VCBridge] SvgAudioSender created and registered for: " + uuid);
+            player.sendMessage(SVGPlugin.PREFIX + ChatColor.AQUA + "AudioSender Registered!");
 
             return sender;
         } catch (RuntimeException e) {
             SVGPlugin.debug("VCBridge", "Unable to register AudioSender for: " + uuid, e);
+            player.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Failed to register AudioSender");
         }
         return null;
     }
@@ -160,11 +165,15 @@ public class VoiceChatBridge implements VoicechatPlugin {
      */
     public void unregisterAudioSender(UUID uuid) {
         SvgAudioSender sender = audioSenders.remove(uuid); //remove the sender from the map
+
+        Player player = Bukkit.getPlayer(uuid);
+
         if (sender != null) {
             sender.unregister(); //unregister the sender
             SVGPlugin.log().info("[VCBridge] SvgAudioSender unregistered for: " + uuid);
+            if (player != null) { player.sendMessage(SVGPlugin.PREFIX + "audioSender unregistered."); }
         } else {
-            if (Bukkit.getPlayer(uuid) != null) {
+            if (player != null) {
                 SVGPlugin.log().warning("[VCBridge] No SvgAudioSender found to unregister for: " + uuid);
             } else {
                 SVGPlugin.debug("[VCBridge]", "No SvgAudioSender found to unregister for: " + uuid);
@@ -176,7 +185,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
      * Creates an AudioListener
      * @param uuid uuid to associate listener to
      */
-    public void registerAudioListener(UUID uuid) {
+    public void registerAudioListener(UUID uuid, Session session) {
         if (serverApi == null) {
             SVGPlugin.log().warning("[VCBridge] Cannot register listener: Server API is null");
             return;
@@ -187,8 +196,8 @@ public class VoiceChatBridge implements VoicechatPlugin {
             return;
         }
 
-        SvgAudioListener listener = new SvgAudioListener(uuid); //create a new audio listener
-        listener.registerListener(serverApi);
+        SvgAudioListener listener = new SvgAudioListener(uuid, session, serverApi); //create a new audio listener
+        listener.registerListener();
         audioListeners.put(uuid, listener); //add it to the listener map
         SVGPlugin.log().info("[VCBridge] Registered audio listener for: " + uuid);
     }

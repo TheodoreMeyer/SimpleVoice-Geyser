@@ -6,9 +6,6 @@ import de.maxhenkel.voicechat.api.audiosender.AudioSender;
 import de.maxhenkel.voicechat.api.opus.OpusEncoder;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.thread.AudioThread;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
@@ -28,11 +25,7 @@ public final class SvgAudioSender {
     /**
      * The audio sender itself
      */
-    private AudioSender delegate;
-    /**
-     * The player the audio sender is associated with
-     */
-    private final Player player;
+    private final AudioSender delegate;
     /**
      * Audio Encoder to encode the audio for svc
      */
@@ -51,20 +44,11 @@ public final class SvgAudioSender {
     public SvgAudioSender(VoicechatServerApi serverApi, UUID playerUuid) {
         this.serverApi = serverApi;
         this.playerUuid = playerUuid;
-        this.player = Bukkit.getPlayer(playerUuid);
         this.encoder = serverApi.createEncoder();
-
         this.connection = serverApi.getConnectionOf(playerUuid);
 
-        if (player == null || !player.isOnline()) {
-            SVGPlugin.log().warning("Player is offline: " + playerUuid);
-            return;
-
-        }
-
         if (connection == null) {
-            SVGPlugin.log().warning("no svc connection for uuid: " + playerUuid);
-            return;
+            throw new RuntimeException("no svc connection for uuid: " + playerUuid);
         }
 
         this.delegate = serverApi.createAudioSender(connection); //create the sender itself
@@ -72,12 +56,9 @@ public final class SvgAudioSender {
 
         if (success) {
             connection.setConnected(true);
-            player.sendMessage(SVGPlugin.PREFIX + ChatColor.AQUA + "AudioSender Registered!");
             connection.setDisabled(false);
         } else {
             SVGPlugin.log().info("Failed to register SvgAudioSender for UUID: " + playerUuid);
-            player.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Failed to register AudioSender");
-
         }
     }
 
@@ -88,11 +69,6 @@ public final class SvgAudioSender {
     public void sendOpus(byte[] pcmData) {
 
         SVGPlugin.debug( "AudioSender","received audio data from websocket!");
-
-        if (player == null || !player.isOnline()) {
-            SVGPlugin.log().warning("[AudioSender] Player not found or offline: " + playerUuid);
-            return;
-        }
 
         AudioThread.execute(() -> {
 
@@ -130,6 +106,5 @@ public final class SvgAudioSender {
         }
         delegate.reset();
         serverApi.unregisterAudioSender(delegate); //end sender
-        if (player != null) { player.sendMessage(SVGPlugin.PREFIX + "audioSender unregistered."); }
     }
 }

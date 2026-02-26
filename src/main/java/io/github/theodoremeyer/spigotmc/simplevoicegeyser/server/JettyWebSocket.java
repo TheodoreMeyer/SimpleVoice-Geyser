@@ -2,7 +2,6 @@ package io.github.theodoremeyer.spigotmc.simplevoicegeyser.server;
 
 import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
-import de.maxhenkel.voicechat.api.audiosender.AudioSender;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.*;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioSender;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.geyser.GeyserHook;
@@ -49,7 +48,7 @@ public final class JettyWebSocket {
      */
     private final SVGPlugin plugin;
 
-    protected JettyWebSocket(SVGPlugin p) {
+    public JettyWebSocket(SVGPlugin p) {
         this.plugin = p;
     }
 
@@ -235,7 +234,7 @@ public final class JettyWebSocket {
             SVGPlugin.getGroupManager().createGroup(player, "Svg", gPswd, Group.Type.OPEN, false, true); //add player to a default group
         }
 
-        SVGPlugin.getBridge().registerAudioListener(uuid); //register the players audio sender
+        SVGPlugin.getBridge().registerAudioListener(uuid, session); //register the players audio sender
         this.audioSender = SVGPlugin.getBridge().registerAudioSender(uuid); //register the players audio sender
         // Currently disabled.
         // }, delayInTicks);
