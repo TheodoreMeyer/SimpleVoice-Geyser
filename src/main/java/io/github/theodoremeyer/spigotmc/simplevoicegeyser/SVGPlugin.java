@@ -177,6 +177,14 @@ public final class SVGPlugin extends JavaPlugin {
     }
 
     /**
+     * Getter for wsManager
+     * @return WebsocketManager
+     */
+    public static WebSocketManager getWsManager() {
+        return instance.webSocketManager;
+    }
+
+    /**
      * Get The Group System
      * @return GroupManager
      */

@@ -148,7 +148,7 @@ public final class JettyWebSocket {
         } else {
             SVGPlugin.log().warning("[WebSocket] Disconnected: unknown client (" + reason + ")");
         }
-        WebSocketManager.removeClient(uuid);
+        SVGPlugin.getWsManager().removeClient(uuid);
     }
 
     /**
@@ -197,7 +197,7 @@ public final class JettyWebSocket {
             return;
         }
 
-        if (!WebSocketManager.addClient(uuid, this.session)) { //add this session to the list of active sessions
+        if (!SVGPlugin.getWsManager().addClient(uuid, this.session)) { //add this session to the list of active sessions
             closeOnError("Incorrect password!", false);
             return;
         }

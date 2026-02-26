@@ -35,6 +35,6 @@ public class SvgListener implements Listener {
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent e) {
         Player player = e.getPlayer();
-        WebSocketManager.disconnectClient(player.getUniqueId()); //make sure the client is disconnected because they left minecraft
+        SVGPlugin.getWsManager().disconnectClient(player.getUniqueId()); //make sure the client is disconnected because they left minecraft
     }
 }

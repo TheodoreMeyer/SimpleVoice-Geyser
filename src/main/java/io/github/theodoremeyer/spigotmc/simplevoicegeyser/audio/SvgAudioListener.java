@@ -35,7 +35,7 @@ public final class SvgAudioListener implements PlayerAudioListener {
      */
     public SvgAudioListener(UUID listenerId) {
         this.listenerId = listenerId;
-        this.session = WebSocketManager.clients.get(listenerId);
+        this.session = SVGPlugin.getWsManager().getClient(listenerId);
 
         // Decoder for opus to raw PCM (16-bit signed, little-endian)
         decoder = SVGPlugin.getBridge().getVcServerApi().createDecoder();
