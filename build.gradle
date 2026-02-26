@@ -74,7 +74,11 @@ java {
     }
 }
 
-tasks.named('jar') {
+tasks.jar {
+    from("LICENSE") {
+        into("")
+    }
+
     manifest {
         attributes(
                 'Main-Class': 'io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin',
@@ -104,6 +108,17 @@ publishing {
         create("mavenJava", MavenPublication) {
             from components.java
             artifactId = "SimpleVoice-Geyser"
+
+            pom {
+                name = "SimpleVoice-Geyser"
+                description = "Plugin to allow Bedrock clients to join Simple Voice Chat."
+                licenses {
+                    license {
+                        name = "MIT License"
+                        url = "https://github.com/TheodoreMeyer/SimpleVoice-Geyser/blob/master/LICENSE"
+                    }
+                }
+            }
         }
     }
 }
