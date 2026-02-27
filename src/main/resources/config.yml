@@ -13,6 +13,12 @@ client:
   # Only allow bedrock players to join the chat
   requireBedrock: false
 
+  # default: true
+  # Allows for the bedrock client to open a menu just by opening the emotes menu
+  # WARNING: Make sure you have off-hand-emote turned off in geyser or there may
+  #          be conflict
+  useEmoteForSVG: true
+
 server:
 
   group:

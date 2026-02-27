@@ -3,13 +3,11 @@ package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 import de.maxhenkel.voicechat.api.Group;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.geyser.FormHandler;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.geyser.GeyserHook;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.geysermc.geyser.api.GeyserApi;
 
 
 /**
@@ -44,8 +42,7 @@ public class SvgCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 
         if (args.length == 0) {
-            sender.sendMessage(SVGPlugin.PREFIX + "§eUsage: /svg help");
-            return true;
+            return formOrHelp(sender);
         }
 
         String subcommand = args[0].toLowerCase();
@@ -64,8 +61,6 @@ public class SvgCommand implements CommandExecutor {
                 String newPassword = args[1];
 
                 PlayerVcPswd.setPassword(player, newPassword);
-
-                sender.sendMessage(SVGPlugin.PREFIX + ChatColor.GREEN + "Your voice chat password has been set.");
                 return true;
             }
 
@@ -183,23 +178,26 @@ public class SvgCommand implements CommandExecutor {
                 return true;
             }
 
-            default: {
-
-                if (sender instanceof Player player) {
-                    Boolean isBedrock = GeyserHook.isBedrock(player.getUniqueId());
-
-                    if (isBedrock != null && isBedrock) {
-                        return formHandler.openCommand(player);
-                    } else {
-                        sender.sendMessage("§cUnknown subcommand. Try /svg help");
-                    }
-                    return true;
-                }
-
-                sender.sendMessage("§cUnknown subcommand. Try /svg help");
-                return true;
+            case null, default: {
+                return formOrHelp(sender);
             }
         }
+    }
+
+    private boolean formOrHelp(CommandSender sender) {
+        if (sender instanceof Player player) {
+            Boolean isBedrock = GeyserHook.isBedrock(player.getUniqueId());
+
+            if (isBedrock != null && isBedrock) {
+                return formHandler.openCommand(player);
+            } else {
+                sender.sendMessage(SVGPlugin.PREFIX + "§cUnknown subcommand. Try /svg help");
+            }
+            return true;
+        }
+
+        sender.sendMessage(SVGPlugin.PREFIX + "§cUnknown subcommand. Try /svg help");
+        return true;
     }
 
     private Player requirePlayer(CommandSender sender, String errorMessage) {

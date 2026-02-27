@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'maven-publish'
     id 'java-library'
+    id "xyz.jpenilla.run-paper" version "2.3.0"
 }
 
 group = 'io.github.theodoremeyer.spigotmc'
@@ -48,22 +49,22 @@ dependencies {
 
     // Spigot API dependency
     implementation("org.spigotmc:spigot-api:${spigot_api_version}-R0.1-SNAPSHOT")
-    
+
     implementation('org.json:json:20250107')
-    
+
     implementation files('libs/json-20250107.jar')
 
     // GeyserMC API dependency
     compileOnly("org.geysermc.geyser:api:${geysermc_api_version}")
 
     compileOnly("org.geysermc.floodgate:api:${floodgate_api_version}")
-    
+
     //jetty server
     implementation('org.eclipse.jetty:jetty-server:11.0.25')
     implementation('org.eclipse.jetty:jetty-servlet:11.0.25')
     implementation('org.eclipse.jetty.websocket:websocket-servlet:11.0.25')
     implementation('org.eclipse.jetty.websocket:websocket-jetty-server:11.0.25')
-    
+
     // SimpleVoiceChat API
     implementation("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
 }
@@ -101,6 +102,19 @@ tasks.processResources {
 
 tasks.named("build") {
     finalizedBy("publishToMavenLocal")
+}
+
+runServer { // https://github.com/jpenilla/run-task/wiki
+    minecraftVersion("1.21.11")
+    downloadPlugins {
+        // Simple Voice Chat //
+        url("https://cdn.modrinth.com/data/9eGKb6K1/versions/FeJRj2X0/voicechat-bukkit-2.6.12.jar")
+
+        // Geyser //
+        url("https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot")
+        // Floodgate //
+        url("https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot")
+    }
 }
 
 publishing {

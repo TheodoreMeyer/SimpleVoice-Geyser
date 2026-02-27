@@ -4,16 +4,13 @@ import de.maxhenkel.voicechat.api.Group;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.GroupManager;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.PlayerVcPswd;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin;
-import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SvgCommand;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.cumulus.component.DropdownComponent;
 import org.geysermc.cumulus.form.CustomForm;
 import org.geysermc.cumulus.form.Form;
-import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.cumulus.form.SimpleForm;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public final class FormHandler {
@@ -33,81 +30,123 @@ public final class FormHandler {
 
     /**
      * Group System
-     * @param p the player
+     * @param player the player
      * @return whether it successfully opened
      */
-    public boolean openCommand(Player p){
-        List<String> commands = new ArrayList<>();
-        commands.add("password");
-        commands.add("cgroup");
-        commands.add("jgroup");
-        commands.add("lgroup");
-
-        Form form = CustomForm.builder()
-                .title("Command System")
-                .dropdown("Commands", commands, 0)
-                .validResultHandler((response) -> {
-                    if (response.hasNext()) {
-                        String command = response.next();
-                        switch (command) {
-                            case "password": {
-                                setPassword(p);
-                            }
-                            case "cgroup": {
-                                createGroup(p);
-                                return;
-                            }
-                            case "jgroup": {
-                                JoinGroup(p);
-                                return;
-                            }
-                            case "lgroup": {
-                                SVGPlugin.getGroupManager().leaveGroup(p);
-                            }
-                            case null, default:
-                               p.sendMessage(ChatColor.RED + "Invalid Command");
-                        }
+    public boolean openCommand(Player player) {
+        Form form = SimpleForm.builder()
+                .title("Simple Voice Chat (SVG)")
+                .button("Groups")
+                .button("Set Password")
+                .button("Options")
+                .validResultHandler(response -> {
+                    switch (response.clickedButtonId()) {
+                        case 0 -> groups(player);
+                        case 1 -> setPassword(player);
+                        case 2 -> options(player);
                     }
                 })
                 .build();
-
-        GeyserHook.sendForm(p.getUniqueId(), form);
+        GeyserHook.sendForm(player.getUniqueId(), form);
         return true;
     }
 
     /**
-     * Allow a bedrock player to create Groups using forms
-     * @param p the player
+     * Creates a window for the player to easily join and create groups with desired parms
+     * @param player the player to open for.
      */
-    private void createGroup(Player p) {
+    private void groups(Player player) {
+        String title = "Groups";
+        Form form;
+        if (groupManager.isInGroup(player)) {
+            form = SimpleForm.builder()
+                    .title(title)
+                    .content("Group Name: " + groupManager.getJoinedGroupName(player).orElse("Player Not in Group"))
+                    .button("Invite")
+                    .button("Leave")
+                    .validResultHandler(response -> {
+                        switch (response.clickedButtonId()) {
+                            case 0 -> {
+                                // TODO needs to be in a new function
+                                // Temporary
+                                Form tempform = SimpleForm.builder()
+                                        .title("Invite")
+                                        .content("Work in progress")
+                                        .build();
+                                GeyserHook.sendForm(player.getUniqueId(), tempform);
+                            }
+                            case 1 -> groupManager.leaveGroup(player);
+                        }
+                    })
+                    .build();
+        } else {
+            form = SimpleForm.builder()
+                    .title(title)
+                    .button("Join")
+                    .button("Create")
+                    .validResultHandler(response -> {
+                        switch (response.clickedButtonId()) {
+                            case 0 -> joinGroup(player);
+                            case 1 -> createGroup(player);
+                        }
+                    })
+                    .build();
+        }
+        GeyserHook.sendForm(player.getUniqueId(), form);
+    }
 
-        List<String> groupTypes = List.of("Open", "Normal", "Isolated");
-        List<String> isPersistent = List.of("false", "true");
+    /**
+     * Will allow user to change setting in game instead of the webserver
+     * @param player the player to open for.
+     */
+    private static void options(Player player) {
+        // TODO
+        // Do stuff like mute and turn up and down volume
+        // Player information
+        Form form = SimpleForm.builder()
+                .title("Options")
+                .content("Work in progress")
+                .build();
+        GeyserHook.sendForm(player.getUniqueId(), form);
+    }
+
+    /**
+     * Allow a bedrock player to create Groups using forms
+     * @param player the player
+     */
+    private void createGroup(Player player) {
+
+        List<String> groupTypes = List.of("Normal", "Open", "Isolated");
 
         Form form = CustomForm.builder()
                 .title("Create a Group")
                 .input("Group Name", "name")
-                .input("password", "pswd")
+                .input("password", "password (Optional)")
                 .dropdown("Group Type", groupTypes, 0)
-                .dropdown("Persistent", isPersistent, 0)
+                .toggle("Persistent")
                 .validResultHandler((s, e) -> {
                     String gName = e.next();
                     String pswd = e.next();
-                    Group.Type type = e.next();
-                    boolean persistent = "true".equalsIgnoreCase(e.next());
+                    int typeIndex = e.next();
+                    Group.Type[] groupArray = {
+                            Group.Type.NORMAL,
+                            Group.Type.OPEN,
+                            Group.Type.ISOLATED
+                    };
+                    boolean persistent = e.next();
 
-                    groupManager.createGroup(p, gName, pswd, type, persistent, false);
+                    groupManager.createGroup(player, gName, pswd, groupArray[typeIndex], persistent, false);
                 })
                 .build();
 
-        GeyserHook.sendForm(p.getUniqueId(), form);
+        GeyserHook.sendForm(player.getUniqueId(), form);
     }
 
     /**
      * Allow a bedrock player to join Groups using forms
-     * @param p the player
+     * @param player the player
      */
-    private void JoinGroup(Player p) {
+    private void joinGroup(Player player) {
 
         DropdownComponent.@NonNull Builder dropdown = DropdownComponent.builder("Group Name");
         for (String string : SVGPlugin.getGroupManager().getGroupNames()) {
@@ -117,15 +156,16 @@ public final class FormHandler {
         Form form = CustomForm.builder()
                 .title("Join Group")
                 .dropdown(dropdown)
-                .input("password", "pswd")
-                .validResultHandler((s, e) -> {
-                    String gName = e.next();
-                    String pswd = e.next();
-                    SVGPlugin.getGroupManager().joinGroup(p, gName, pswd);
+                .input("password", "password")
+                .validResultHandler(response -> {
+                    int dropdownIndex = response.next();
+                    String gName = groupManager.getGroupNames().get(dropdownIndex);
+                    String pswd = response.asInput(1);
+                    SVGPlugin.getGroupManager().joinGroup(player, gName, pswd);
                 })
                 .build();
 
-        GeyserHook.sendForm(p.getUniqueId(), form);
+        GeyserHook.sendForm(player.getUniqueId(), form);
     }
 
     /**
@@ -135,7 +175,7 @@ public final class FormHandler {
     private void setPassword(Player p) {
         Form form = CustomForm.builder()
                 .title("Set SVG Password")
-                .input("Password (between 8-32 characters)", "pswd")
+                .input("Password (between 8-32 characters)", "password")
                 .validResultHandler((e) -> {
                     String password = e.next();
 

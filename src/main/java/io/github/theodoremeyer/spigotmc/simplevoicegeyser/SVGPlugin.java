@@ -8,8 +8,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.geysermc.geyser.api.event.EventRegistrar;
+
+import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.event.bedrock.ClientEmoteEvent;
 
 import java.io.InputStreamReader;
 import java.util.Collection;
@@ -19,7 +24,7 @@ import java.util.logging.Logger;
 /**
  * Main Class of Plugin
  */
-public final class SVGPlugin extends JavaPlugin {
+public final class SVGPlugin extends JavaPlugin implements EventRegistrar {
     /**
      * The jetty server
      */
@@ -107,9 +112,22 @@ public final class SVGPlugin extends JavaPlugin {
 
         this.groupManager = new GroupManager(bridge);
 
-        Bukkit.getPluginManager().registerEvents(new SvgListener(), this);
+        SvgListener listener = new SvgListener(this, groupManager);
+        Bukkit.getPluginManager().registerEvents(listener, this);
         PlayerVcPswd.init(this.getDataFolder());
         Objects.requireNonNull(getCommand("svg")).setExecutor(new SvgCommand(groupManager));
+
+        // Check to see if geyser is installed
+        Plugin geyser = Bukkit.getPluginManager().getPlugin("Geyser-Spigot");
+        if (geyser != null && geyser.isEnabled()) {
+            GeyserApi.api().eventBus().subscribe(
+                    this,
+                    ClientEmoteEvent.class,
+                    listener::onEmote
+            );
+        } else {
+            log().warning("Geyser is not installed. Skipping Bedrock Events");
+        }
 
         this.webSocketManager = new WebSocketManager();
 
@@ -212,5 +230,4 @@ public final class SVGPlugin extends JavaPlugin {
             log().info("[Debug][" + section + "] " + message + ", " + t);
         }
     }
-
 }

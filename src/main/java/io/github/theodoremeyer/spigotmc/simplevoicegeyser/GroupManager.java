@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -66,12 +67,21 @@ public class GroupManager {
 
         if (groupType == null) groupType = Type.NORMAL;
 
-        Group group = api.groupBuilder() //build the group
-                .setName(groupName)
-                .setPassword(password)
-                .setType(groupType)
-                .setPersistent(persistent)
-                .build();
+        Group group;
+        if (password.isEmpty()) { //build the group
+            group = api.groupBuilder()
+                    .setName(groupName)
+                    .setType(groupType)
+                    .setPersistent(persistent)
+                    .build();
+        } else {
+            group = api.groupBuilder()
+                    .setName(groupName)
+                    .setPassword(password)
+                    .setType(groupType)
+                    .setPersistent(persistent)
+                    .build();
+        }
 
         if (connection != null) {
             if (connection.getGroup() !=null) {
@@ -195,7 +205,23 @@ public class GroupManager {
         }
         return names;
     }
+    /**
+     * Returns the name of the current group the player is in
+     * @param player
+     * @return
+     */
+    public Optional<String> getJoinedGroupName(Player player) {
+        VoicechatServerApi api = getApi();
+        if (api == null) return Optional.empty();
 
+        VoicechatConnection connection = api.getConnectionOf(player.getUniqueId());
+        if (connection == null || !connection.isInGroup()) Optional.empty();
+
+        Group group = connection.getGroup();
+        if (group == null) return Optional.empty();
+
+        return Optional.ofNullable(group.getName());
+    }
     /**
      * Removes player from any group
      * @param player player to leave a group
@@ -209,6 +235,20 @@ public class GroupManager {
 
         connection.setGroup(null); //set the players group to a group that doesn't exist
         player.sendMessage("[SVG] You left your group.");
+    }
+
+    /**
+     * Simply return whether the player is in a group
+     * @param player player is/isn't in group
+     */
+    public boolean isInGroup(Player player) {
+        VoicechatServerApi api = getApi();
+        if (api == null) return false;
+
+        VoicechatConnection connection = api.getConnectionOf(player.getUniqueId());
+        if (connection == null) return false;
+
+        return connection.isInGroup();
     }
 
     /**
