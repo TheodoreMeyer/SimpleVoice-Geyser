@@ -1,7 +1,6 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.geyser.FormHandler;
-import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.WebSocketManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -29,7 +28,7 @@ public class SvgListener implements Listener {
     private final GroupManager groupManager;
     /**
      * Constructor
-     * @param groupManager
+     * @param groupManager the group Manager
      */
     public SvgListener(JavaPlugin plugin, GroupManager groupManager) {
         this.plugin = plugin;

@@ -207,8 +207,8 @@ public class GroupManager {
     }
     /**
      * Returns the name of the current group the player is in
-     * @param player
-     * @return
+     * @param player the player to get for
+     * @return the group's name
      */
     public Optional<String> getJoinedGroupName(Player player) {
         VoicechatServerApi api = getApi();
