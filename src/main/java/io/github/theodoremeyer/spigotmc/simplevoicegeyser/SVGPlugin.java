@@ -10,6 +10,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.geysermc.geyser.api.event.EventRegistrar;
@@ -121,11 +122,17 @@ public final class SVGPlugin extends JavaPlugin implements EventRegistrar {
         PlayerVcPswd.init(this.getDataFolder());
         Objects.requireNonNull(getCommand("svg")).setExecutor(new SvgCommand(groupManager));
 
-        GeyserApi.api().eventBus().subscribe(
-                this,
-                ClientEmoteEvent.class,
-                listener::onEmote
-        );
+        // Check to see if geyser is installed
+        Plugin geyser = Bukkit.getPluginManager().getPlugin("Geyser-Spigot");
+        if (geyser != null && geyser.isEnabled()) {
+            GeyserApi.api().eventBus().subscribe(
+                    this,
+                    ClientEmoteEvent.class,
+                    listener::onEmote
+            );
+        } else {
+            log().warning("Geyser is not installed. Skipping Bedrock Events");
+        }
 
         this.webSocketManager = new WebSocketManager();
 
