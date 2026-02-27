@@ -23,9 +23,6 @@ import org.geysermc.geyser.api.event.bedrock.ClientEmoteEvent;
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
 /**
@@ -45,10 +42,6 @@ public final class SVGPlugin extends JavaPlugin implements EventRegistrar {
      * Class: Group system
      */
     private GroupManager groupManager;
-    /**
-     * Form Handler
-     */
-    private FormHandler formHandler;
     /**
      * AudioThread
      */
@@ -122,20 +115,17 @@ public final class SVGPlugin extends JavaPlugin implements EventRegistrar {
         }
 
         this.groupManager = new GroupManager(bridge);
-        this.formHandler = new FormHandler(groupManager);
 
-        // Geyser Emote Event register
-        if (getConfig().getBoolean("client.useEmoteForSVG", true)) {
-            GeyserApi.api().eventBus().subscribe(
-                    this,
-                    ClientEmoteEvent.class,
-                    this::onEmote
-            );
-        }
-
-        Bukkit.getPluginManager().registerEvents(new SvgListener(), this);
+        SvgListener listener = new SvgListener(this, groupManager);
+        Bukkit.getPluginManager().registerEvents(listener, this);
         PlayerVcPswd.init(this.getDataFolder());
         Objects.requireNonNull(getCommand("svg")).setExecutor(new SvgCommand(groupManager));
+
+        GeyserApi.api().eventBus().subscribe(
+                this,
+                ClientEmoteEvent.class,
+                listener::onEmote
+        );
 
         this.webSocketManager = new WebSocketManager();
 
@@ -163,30 +153,6 @@ public final class SVGPlugin extends JavaPlugin implements EventRegistrar {
             getLogger().severe("Failed to stop Jetty server: " + e.getMessage());
         }
         thread.shutdown();
-    }
-
-    /**
-     * Used to check for emote event
-     * @param event
-     */
-    public void onEmote(ClientEmoteEvent event) {
-        UUID uuid = event.connection().playerUuid();
-        String playerName = event.connection().name();
-
-        log().info("UUID for Emote: " + uuid);
-        if (uuid == null) {
-            log().warning("Could not resolve UUID for: " + playerName);
-            return;
-        }
-        Player player = Bukkit.getPlayer(uuid);
-        if (player == null) {
-            log().warning("Player not online for:" + playerName + " UUID: " + uuid);
-        }
-
-        debug("[Emote]", "Bedrock player used emote: " + event.emoteId()); // idk
-
-        assert player != null;
-        formHandler.openCommand(player);
     }
 
     private void loadConfigProperly() {

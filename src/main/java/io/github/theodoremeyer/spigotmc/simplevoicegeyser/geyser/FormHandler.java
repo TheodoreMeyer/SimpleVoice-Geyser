@@ -66,7 +66,7 @@ public final class FormHandler {
         if (groupManager.isInGroup(player)) {
             form = SimpleForm.builder()
                     .title(title)
-                    .content("Group Name: " + Objects.requireNonNull(groupManager.getJoinedGroupName(player)))
+                    .content("Group Name: " + groupManager.getJoinedGroupName(player).orElse("Player Not in Group"))
                     .button("Invite")
                     .button("Leave")
                     .validResultHandler(response -> {
@@ -126,7 +126,7 @@ public final class FormHandler {
         Form form = CustomForm.builder()
                 .title("Create a Group")
                 .input("Group Name", "name")
-                .input("password", "password")
+                .input("password", "password (Optional)")
                 .dropdown("Group Type", groupTypes, 0)
                 .toggle("Persistent")
                 .validResultHandler((s, e) -> {
