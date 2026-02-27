@@ -111,7 +111,8 @@ public class PlayerVcPswd {
         playerPasswords.put(key, hash);
         playerUUIDs.put(key, player.getUniqueId());
         saveToFile(key, hash, player.getUniqueId());
-        return;
+
+        player.sendMessage(SVGPlugin.PREFIX + ChatColor.GREEN + "Set password: " + password);
     }
 
     /**

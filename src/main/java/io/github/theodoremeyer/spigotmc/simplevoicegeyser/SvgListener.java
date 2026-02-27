@@ -61,7 +61,7 @@ public class SvgListener implements Listener {
 
     /**
      * Used to check for emote event
-     * @param event
+     * @param event the EmoteEvent
      */
     public void onEmote(ClientEmoteEvent event) {
         UUID uuid = event.connection().playerUuid();

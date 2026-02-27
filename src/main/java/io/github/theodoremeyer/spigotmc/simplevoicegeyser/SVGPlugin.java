@@ -1,7 +1,6 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
 import de.maxhenkel.voicechat.api.BukkitVoicechatService;
-import io.github.theodoremeyer.spigotmc.simplevoicegeyser.geyser.FormHandler;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.JettyServer;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.WebSocketManager;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.thread.AudioThread;
@@ -9,15 +8,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.geysermc.geyser.api.event.EventRegistrar;
 
-import org.geysermc.event.subscribe.Subscribe;
-import org.geysermc.event.Event;
-import org.geysermc.floodgate.api.FloodgateApi;
 import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.event.bedrock.ClientEmoteEvent;
 

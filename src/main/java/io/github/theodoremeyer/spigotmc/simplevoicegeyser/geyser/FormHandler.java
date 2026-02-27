@@ -4,19 +4,14 @@ import de.maxhenkel.voicechat.api.Group;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.GroupManager;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.PlayerVcPswd;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin;
-import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SvgCommand;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.cumulus.component.DropdownComponent;
 import org.geysermc.cumulus.form.CustomForm;
 import org.geysermc.cumulus.form.Form;
 import org.geysermc.cumulus.form.SimpleForm;
-import org.geysermc.geyser.api.GeyserApi;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public final class FormHandler {
 
@@ -58,7 +53,7 @@ public final class FormHandler {
 
     /**
      * Creates a window for the player to easily join and create groups with desired parms
-     * @param player
+     * @param player the player to open for.
      */
     private void groups(Player player) {
         String title = "Groups";
@@ -102,7 +97,7 @@ public final class FormHandler {
 
     /**
      * Will allow user to change setting in game instead of the webserver
-     * @param player
+     * @param player the player to open for.
      */
     private static void options(Player player) {
         // TODO
@@ -113,7 +108,7 @@ public final class FormHandler {
                 .content("Work in progress")
                 .build();
         GeyserHook.sendForm(player.getUniqueId(), form);
-    };
+    }
 
     /**
      * Allow a bedrock player to create Groups using forms
