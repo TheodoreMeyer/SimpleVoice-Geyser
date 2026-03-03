@@ -39,6 +39,10 @@ public final class SVGPlugin extends JavaPlugin implements EventRegistrar {
      */
     private GroupManager groupManager;
     /**
+     * Password System
+     */
+    private PlayerVcPswd passwordManager;
+    /**
      * AudioThread
      */
     private AudioThread thread;
@@ -114,7 +118,9 @@ public final class SVGPlugin extends JavaPlugin implements EventRegistrar {
 
         SvgListener listener = new SvgListener(this, groupManager);
         Bukkit.getPluginManager().registerEvents(listener, this);
-        PlayerVcPswd.init(this.getDataFolder());
+
+        this.passwordManager = new PlayerVcPswd(getDataFolder());
+
         Objects.requireNonNull(getCommand("svg")).setExecutor(new SvgCommand(groupManager));
 
         // Check to see if geyser is installed
@@ -207,6 +213,12 @@ public final class SVGPlugin extends JavaPlugin implements EventRegistrar {
      * @return GroupManager
      */
     public  static GroupManager getGroupManager() { return instance.groupManager;}
+
+    /**
+     * Get the Password System
+     * @return PlayerVcPassword
+     */
+    public static PlayerVcPswd getPlayerVcPswd() { return instance.passwordManager; }
 
     /**
      * debug option with no throwable

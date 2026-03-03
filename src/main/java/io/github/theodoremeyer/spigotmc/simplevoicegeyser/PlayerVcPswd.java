@@ -24,11 +24,10 @@ public class PlayerVcPswd {
     private static FileConfiguration config;
 
     /**
-     * Creating the folder, or registering it to memory.
-     * May be moved to class constructor
+     * Creating the file, or registering it to memory.
      * @param pluginDataFolder folder to put the file in
      */
-    protected static void init(File pluginDataFolder) {
+    protected PlayerVcPswd(File pluginDataFolder) {
         file = new File(pluginDataFolder, "playerpasswords.yml");
         if (!file.exists()) { //make sure the file exists for later use
             try {
@@ -47,7 +46,7 @@ public class PlayerVcPswd {
     /**
      * load from YAML
      */
-    private static void loadPasswords() {
+    private void loadPasswords() {
         for (String key : config.getKeys(false)) {
             String password = config.getString(key + ".password");
             String uuidStr = config.getString(key + ".uuid");
@@ -71,7 +70,7 @@ public class PlayerVcPswd {
      * @param password password to save
      * @param uuid players uuid
      */
-    private static void saveToFile(String playerName, String password, UUID uuid) {
+    private void saveToFile(String playerName, String password, UUID uuid) {
         String key = playerName.toLowerCase();
         config.set(key + ".password", password);
         config.set(key + ".uuid", uuid.toString());
@@ -88,7 +87,7 @@ public class PlayerVcPswd {
      * @param playerName player's name
      * @return whether password is set
      */
-    public static boolean isPasswordSet(String playerName) {
+    public boolean isPasswordSet(String playerName) {
         return playerPasswords.containsKey(playerName.toLowerCase());
     }
 
@@ -98,7 +97,7 @@ public class PlayerVcPswd {
      * @param player player to set for
      * @param password the password to set
      */
-    public static void setPassword(Player player, String password) {
+    public void setPassword(Player player, String password) {
         if (!isPasswordLengthValid(password)) {
             player.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Password must be between 8 and 32 characters.");
             return;
@@ -121,7 +120,7 @@ public class PlayerVcPswd {
      * @param password the password to check against
      * @return whether it is correct or not
      */
-    public static boolean validatePassword(String playerName, String password) {
+    public boolean validatePassword(String playerName, String password) {
         String stored = playerPasswords.get(playerName.toLowerCase());
         if (stored == null) return false; // no password set
 
@@ -139,7 +138,7 @@ public class PlayerVcPswd {
      * @param password password to check
      * @return whether password length is valid
      */
-    public static boolean isPasswordLengthValid(String password) {
+    public boolean isPasswordLengthValid(String password) {
         return password.length() >= 8 && password.length() <= 32;
     }
 
@@ -148,7 +147,7 @@ public class PlayerVcPswd {
      * @param playerName the player name to get uuid from
      * @return the Players uuid
      */
-    public static UUID getStoredUUID(String playerName) {
+    public UUID getStoredUUID(String playerName) {
         String uuidStr = config.getString(playerName.toLowerCase() + ".uuid");
         if (uuidStr != null) {
             try {
@@ -165,7 +164,7 @@ public class PlayerVcPswd {
      * @param playerName player to check for
      * @return whether uuid is linked for player
      */
-    public static boolean isUUIDLinked(String playerName) {
+    public boolean isUUIDLinked(String playerName) {
         return playerUUIDs.containsKey(playerName.toLowerCase());
     }
 
@@ -174,7 +173,7 @@ public class PlayerVcPswd {
      * @param uuid players uuid
      * @return The player's name
      */
-    public static String getUsernameFromUUID(UUID uuid) {
+    public String getUsernameFromUUID(UUID uuid) {
         for (Map.Entry<String, UUID> entry : playerUUIDs.entrySet()) {
             if (entry.getValue().equals(uuid)) {
                 return entry.getKey();

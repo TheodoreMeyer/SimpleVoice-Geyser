@@ -137,7 +137,7 @@ public final class JettyWebSocket {
      */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
-        String username = PlayerVcPswd.getUsernameFromUUID(uuid);
+        String username = SVGPlugin.getPlayerVcPswd().getUsernameFromUUID(uuid);
         String displayName = (username != null) ? username : uuid.toString();
 
         SVGPlugin.log().info("[WebSocket] WebSocket for " + displayName + " closed: " + statusCode + " - " + reason);
@@ -161,9 +161,11 @@ public final class JettyWebSocket {
     }
 
     private void join(JSONObject json) {
+        PlayerVcPswd playerVcPswd = SVGPlugin.getPlayerVcPswd();
+
         String username = json.getString("username");
         String password = json.optString("password", "");
-        UUID storedUuid = PlayerVcPswd.getStoredUUID(username); //get the uuid to associate with this session
+        UUID storedUuid = playerVcPswd.getStoredUUID(username); //get the uuid to associate with this session
 
         if (storedUuid == null) {
             closeOnError("Player " + username + " not found. Use /svg pswd [password] in-game to register.", false);
@@ -176,7 +178,6 @@ public final class JettyWebSocket {
             // Geyser/Floodgate not installed
             if (plugin.getConfig().getBoolean("client.requireBedrock", false)) {
                 SVGPlugin.log().warning("Unable to enforce: client.requireBedrock. Please install floodgate or geyser");
-                return;
             }
         } else if (!bedrock) {
             if (plugin.getConfig().getBoolean("client.requireBedrock", false)) {
@@ -186,12 +187,12 @@ public final class JettyWebSocket {
         }
 
         //see if the player's password is set.
-        if (!PlayerVcPswd.isPasswordSet(username)) {
+        if (!playerVcPswd.isPasswordSet(username)) {
             closeOnError("Password not set. Use /svg pswd [password] in-game.", false);
             return;
         }
 
-        if (!PlayerVcPswd.validatePassword(username, password)) { //validate the player's password from form input
+        if (!playerVcPswd.validatePassword(username, password)) { //validate the player's password from form input
             closeOnError("Incorrect password!", false);
             return;
         }
@@ -248,7 +249,7 @@ public final class JettyWebSocket {
         }
 
         if (!chatMessage.isEmpty()) {
-            String name = PlayerVcPswd.getUsernameFromUUID(uuid);
+            String name = SVGPlugin.getPlayerVcPswd().getUsernameFromUUID(uuid);
             if (player != null) {
                 sendMessage("chat", "You" + chatMessage, false);
                 player.chat("[Web Chat] " + (name != null ? name : uuid) + ": " + ChatColor.BLUE + chatMessage);
@@ -266,7 +267,7 @@ public final class JettyWebSocket {
         try {
             session.getRemote().sendString(json.toString());
         } catch (IOException e) {
-            e.printStackTrace();
+            SVGPlugin.log().severe(e.toString());
         }
 
 

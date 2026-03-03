@@ -2,7 +2,6 @@ package io.github.theodoremeyer.spigotmc.simplevoicegeyser.geyser;
 
 import de.maxhenkel.voicechat.api.Group;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.GroupManager;
-import io.github.theodoremeyer.spigotmc.simplevoicegeyser.PlayerVcPswd;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin;
 import org.bukkit.entity.Player;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -179,7 +178,7 @@ public final class FormHandler {
                 .validResultHandler((e) -> {
                     String password = e.next();
 
-                    PlayerVcPswd.setPassword(p, password);
+                    SVGPlugin.getPlayerVcPswd().setPassword(p, password);
                 })
                 .build();
         GeyserHook.sendForm(p.getUniqueId(), form);

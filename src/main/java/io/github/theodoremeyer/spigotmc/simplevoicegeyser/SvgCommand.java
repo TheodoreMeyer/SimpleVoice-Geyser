@@ -60,7 +60,7 @@ public class SvgCommand implements CommandExecutor {
 
                 String newPassword = args[1];
 
-                PlayerVcPswd.setPassword(player, newPassword);
+                SVGPlugin.getPlayerVcPswd().setPassword(player, newPassword);
                 return true;
             }
 
