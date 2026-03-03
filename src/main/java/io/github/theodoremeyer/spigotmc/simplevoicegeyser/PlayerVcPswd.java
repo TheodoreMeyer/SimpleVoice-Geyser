@@ -30,11 +30,15 @@ public class PlayerVcPswd {
     protected PlayerVcPswd(File pluginDataFolder) {
         file = new File(pluginDataFolder, "playerpasswords.yml");
         if (!file.exists()) { //make sure the file exists for later use
+            boolean created;
             try {
-                file.createNewFile();
+                created = file.createNewFile();
             } catch (IOException e) {
-                SVGPlugin.log().warning("[PlayerData] Couldn't create playerpasswords.yml");
+                created = false;
                 SVGPlugin.log().warning(e.getMessage());
+            }
+            if (!created) {
+                SVGPlugin.log().warning("[PlayerData] Couldn't create playerpasswords.yml");
                 return;
             }
         }
