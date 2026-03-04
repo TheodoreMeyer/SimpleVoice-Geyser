@@ -48,7 +48,7 @@ public class SvgCommand implements CommandExecutor {
         String subcommand = args[0].toLowerCase();
 
         switch (subcommand) {
-            //command to create pasword for logging into SimpleVoice-Geyser
+            //command to create password for logging into SimpleVoice-Geyser
             case "pswd": {
                 Player player = requirePlayer(sender, "Only players can set their password.");
                 if (player == null) return true;

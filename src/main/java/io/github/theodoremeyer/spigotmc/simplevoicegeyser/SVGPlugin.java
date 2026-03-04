@@ -11,9 +11,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.geysermc.geyser.api.event.EventRegistrar;
-
 import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.event.EventRegistrar;
 import org.geysermc.geyser.api.event.bedrock.ClientEmoteEvent;
 
 import java.io.InputStreamReader;
@@ -88,7 +87,7 @@ public final class SVGPlugin extends JavaPlugin implements EventRegistrar {
 
         BukkitVoicechatService service = Bukkit.getServicesManager().load(BukkitVoicechatService.class);
 
-        if (service != null) { //make sure bukkitvoicechatservice exists
+        if (service != null) { //make sure BukkitVoicechatService exists
             VoiceChatBridge voicechatBridge = new VoiceChatBridge(this);
             service.registerPlugin(voicechatBridge); //register the main api class
             bridge = voicechatBridge;

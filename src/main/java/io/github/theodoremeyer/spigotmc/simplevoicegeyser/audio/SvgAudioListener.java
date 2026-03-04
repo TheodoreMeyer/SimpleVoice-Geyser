@@ -58,7 +58,7 @@ public final class SvgAudioListener implements PlayerAudioListener {
      * @param soundPacket packet received to send to Client
      */
     public void onAudioReceived(SoundPacket soundPacket) {
-        SVGPlugin.debug("AudioListener", "recieved audio from SVG server!");
+        SVGPlugin.debug("AudioListener", "received audio from SVG server!");
 
         if (session.isOpen()) {
 

@@ -19,7 +19,7 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
 
         this.lastSample = 0; // for repeating when underrun
 
-        //For reseting state
+        //For resetting state
         this.silenceFrames = 0;
         this.SILENCE_RESET_FRAMES = 128 * 15;
 

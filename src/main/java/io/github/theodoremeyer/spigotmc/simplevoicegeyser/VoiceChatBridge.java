@@ -1,6 +1,9 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser;
 
-import de.maxhenkel.voicechat.api.*;
+import de.maxhenkel.voicechat.api.Group;
+import de.maxhenkel.voicechat.api.VoicechatApi;
+import de.maxhenkel.voicechat.api.VoicechatPlugin;
+import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import de.maxhenkel.voicechat.api.events.CreateGroupEvent;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.RemoveGroupEvent;
@@ -44,7 +47,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
     private final SVGPlugin plugin;
 
     /**
-     * Initalizes the plugin's connection with SVC.
+     * Initializes the plugin's connection with SVC.
      * @param plugin SVG plugin
      */
     public VoiceChatBridge(SVGPlugin plugin) {
@@ -75,7 +78,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
 
     /**
      * Runs when SVC initializes this plugin
-     * @param api the voicechatapi
+     * @param api the VoicechatApi
      */
     @Override
     public void initialize(VoicechatApi api) {
