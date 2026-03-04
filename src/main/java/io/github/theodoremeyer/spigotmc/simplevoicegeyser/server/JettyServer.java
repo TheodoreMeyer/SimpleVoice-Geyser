@@ -1,6 +1,10 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser.server;
 
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.servlets.AudioWorkletServlet;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.servlets.ClientWorkletServlet;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.servlets.JettyHtmlServlet;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.servlets.MicWorkletServlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -13,22 +17,31 @@ import java.time.Duration;
  * Starts and Stops the Jetty server for SVG.
  * May be moved to a new thread.
  */
-public class JettyServer {
+public final class JettyServer {
+
+    /**
+     * The Server
+     */
     private final Server server;
+    /**
+     * The Plugin
+     */
+    private final SVGPlugin plugin;
 
     /**
      * set server port
      * @param port port to run server on
      */
-    public JettyServer(int port, String host) {
+    public JettyServer(SVGPlugin plugin, int port, String host) {
         this.server = new Server();
+        this.plugin = plugin;
 
         ServerConnector connector = new ServerConnector(server);
         connector.setHost(host);
         connector.setPort(port);
 
         server.addConnector(connector);
-        SVGPlugin.log().info("Protocol: " + connector.getDefaultProtocol());
+        SVGPlugin.log().info("Started on: " + connector.getDefaultProtocol() + " " + connector.getHost() + ":" + connector.getPort());
     }
 
     /**
@@ -43,12 +56,15 @@ public class JettyServer {
         // Add HTML page at root
         context.addServlet(new ServletHolder(new JettyHtmlServlet()), "/");
 
+        // Add driving JavaScript
+        context.addServlet(ClientWorkletServlet.class, "/client.js");
+
         //add audio/mic servlet
         context.addServlet(AudioWorkletServlet.class, "/audio-worklet-processor.js");
         context.addServlet(MicWorkletServlet.class, "/mic-capture-processor.js");
 
         double idleTimeoutMinutes =
-                SVGPlugin.getInstance().getConfig().getDouble("client.idletimeout", 2.0);
+                plugin.getConfig().getDouble("client.idletimeout", 2.0);
 
         idleTimeoutMinutes = Math.max(0.5, Math.min(idleTimeoutMinutes, 10.0));
 
@@ -60,7 +76,7 @@ public class JettyServer {
 
         // Register WebSocket at /ws
         JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) -> {
-            wsContainer.addMapping("/ws", (req, resp) -> new JettyWebSocket());
+            wsContainer.addMapping("/ws", (req, resp) -> new JettyWebSocket(plugin));
             wsContainer.setIdleTimeout(idleTimeout);
         });
 

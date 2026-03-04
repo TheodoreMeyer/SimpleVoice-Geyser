@@ -1,7 +1,10 @@
 package io.github.theodoremeyer.spigotmc.simplevoicegeyser.server;
 
+import de.maxhenkel.voicechat.api.Group;
+import de.maxhenkel.voicechat.api.VoicechatConnection;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.*;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioSender;
+import io.github.theodoremeyer.spigotmc.simplevoicegeyser.geyser.GeyserHook;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -9,6 +12,7 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -16,16 +20,38 @@ import java.util.UUID;
  * Websocket session Class.
  */
 @WebSocket
-public class JettyWebSocket {
+public final class JettyWebSocket {
 
     /**
      * The Session that is the audio client.
      */
-    protected Session session;
+    private Session session;
 
+    /**
+     * UUID associated with this websocket/user
+     */
     private UUID uuid;
-    private boolean authenticated = false;
+    /**
+     * Player that this websocket does audio for
+     */
     private Player player;
+    /**
+     * Whether the user has logged in
+     */
+    private boolean authenticated = false;
+    /**
+     * AudioSender associated with this.
+     */
+    private SvgAudioSender audioSender;
+    /**
+     * The Main Class.
+     */
+    private final SVGPlugin plugin;
+
+    public JettyWebSocket(SVGPlugin p) {
+        this.plugin = p;
+    }
+
 
     /**
      * When the client connects.
@@ -34,7 +60,7 @@ public class JettyWebSocket {
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
-        session.setIdleTimeout(Duration.ofMinutes(4)); //set timeout to a high value, so it doesn't quickly kick the client for inactivity
+        session.setIdleTimeout(Duration.ofMinutes(plugin.getConfig().getInt("client.idletimeout", 4)));
         SVGPlugin.log().info("[Websocket] WebSocket connected: " + session.getRemoteAddress());
     }
 
@@ -50,11 +76,11 @@ public class JettyWebSocket {
             return;
         }
 
-        message = message.trim();
+        message = message.trim().toLowerCase();
 
         //reject non JSON messages early
         if (!message.startsWith("{")) {
-            WebSocketManager.sendJson(uuid, "error", "Invalid input. Expected a JSON object.");
+            sendMessage("error", "Invalid input. Expected a JSON object.", false);
             return;
         }
 
@@ -62,108 +88,25 @@ public class JettyWebSocket {
             JSONObject json = new JSONObject(message);
             String type = json.getString("type");
 
-            //have player join vc
-            if ("join".equalsIgnoreCase(type)) { //handle the join form
-                String username = json.getString("username");
-                String password = json.optString("password", "");
-                UUID storedUuid = PlayerVcPswd.getStoredUUID(username); //get the uuid to associate with this session
-                if (storedUuid == null) {
-                    WebSocketManager.sendJson(uuid, "error", "Player '" + username + "' not found. Use /svg pswd [password] in-game to register.");
-                    SVGPlugin.log().warning("[WebSocket] Player '" + username + "' not found in stored data.");
-                    session.close();
-                    return;
-                }
-                this.uuid = storedUuid;
-                SVGPlugin.getInstance().debug("WebSocket", "Player found. UUID: " + uuid);
-
-                //see if the player's password is set.
-                if (!PlayerVcPswd.isPasswordSet(username)) {
-                    JSONObject errorJson = new JSONObject();
-                    errorJson.put("type", "error");
-                    errorJson.put("message", "Password not set. Use /svg pswd [password] in-game.");
-                    session.getRemote().sendString(errorJson.toString());
-                    session.close();
+            switch (type) {
+                case "join": { //handle the join form
+                    join(json);
                     return;
                 }
 
-                if (!PlayerVcPswd.validatePassword(username, password)) { //validate the player's password from form input
-                    JSONObject errorJson = new JSONObject();
-                    errorJson.put("type", "error");
-                    errorJson.put("message", "Incorrect password. Try again.");
-                    session.getRemote().sendString(errorJson.toString());
-                    session.close();
+                case "chat": { //handle chat inputs.
+                    chat(json);
                     return;
                 }
 
-                if (!WebSocketManager.addClient(uuid, this.session)) { //add this session to the list of active sessions
-                    WebSocketManager.sendJson(uuid, "error", "Already connected");
-                    session.close();
-                    return;
-                }
-
-                //get timeout numbers for the message.
-                int timeout = SVGPlugin.getInstance().getVcTimeout();
-                long delayInTicks = timeout * 20L;
-
-                authenticated = true;
-                JSONObject successJson = new JSONObject();
-                successJson.put("type", "status");
-                successJson.put("message", "Connected as " + username + "." ); //Make sure to join server within " + timeout + " seconds!");
-                session.getRemote().sendString(successJson.toString());
-                SVGPlugin.log().info("[WebSocket] " + username + " joined with UUID: " + uuid);
-
-                // Schedule timeout if player never joins. Currently disabled.
-                //Bukkit.getScheduler().runTaskLater(SVGPlugin.getInstance(), () -> {
-                this.player = Bukkit.getPlayer(uuid);
-                if (player == null || !player.isOnline()) {
-                    SVGPlugin.log().info("[WebSocket] " + username + " did not join in time. Disconnecting.");
-                    WebSocketManager.removeClient(uuid);
-                    WebSocketManager.sendJson(uuid, "error", "Timeout: You didn’t join the server in time.");
-                    session.close();
-                    return;
-                }
-                if (!player.hasPermission("svg.vc.join")) { //make sure they are allowed to join the vc
-                    SVGPlugin.log().info("[WebSocket] " + username + " did not have permissions to join VC");
-                    WebSocketManager.sendJson(uuid, "error", "Access denied. You don't have the permission to join, or have been banned.");
-                    session.close();
-                }
-                SVGPlugin.getBridge().registerAudioListener(uuid); //register the players audio sender
-                GroupManager.createGroup(Bukkit.getPlayer(uuid), "Svg", "1a2b", "open", false, true); //add player to a default group
-                SVGPlugin.getBridge().registerAudioSender(uuid); //register the players audio sender
-                // Currently disabled.
-               // }, delayInTicks);
-            }
-
-            //handle chat inputs.
-            else if ("chat".equalsIgnoreCase(type)) {
-                String chatMessage = json.optString("message", "").trim();
-                if (!authenticated) { //if they are signed in
-                   WebSocketManager.sendJson(uuid, "error", "You must be authenticated.");
-                   SVGPlugin.log().info(chatMessage);
-                   return;
-                }
-
-                if (!chatMessage.isEmpty()) {
-                    String name = PlayerVcPswd.getUsernameFromUUID(uuid);
-                    if (player != null) {
-                        WebSocketManager.sendJson(uuid, "chat", "You" + chatMessage);
-                        player.chat("[Web Chat] " + (name != null ? name : uuid) + ": " + ChatColor.BLUE + chatMessage);
-                    } else {
-                        WebSocketManager.sendJson(uuid, "error", "You are Not in Game");
-                    }
-                }
-            }
-
-            //handle unknown types
-            else {
-                session.getRemote().sendString(new JSONObject()
-                    .put("type", "error")
-                    .put("message", "Unknown type: " + type).toString());
+                //handle unknown types
+                case null, default:
+                    sendMessage("error", "unknown type: " + type, false);
             }
 
         } catch (Exception e) {
                 SVGPlugin.log().severe("[VCBridge] code: 1, Exception: " + e.getMessage());
-                SVGPlugin.getInstance().debug("VCBridge", "error reading client data", e);
+                SVGPlugin.debug("VCBridge", "error reading client data", e);
         }
 
     }
@@ -182,9 +125,8 @@ public class JettyWebSocket {
         byte[] pcmData = new byte[length];
         System.arraycopy(buffer, offset, pcmData, 0, length);
 
-        SvgAudioSender sender = SVGPlugin.getBridge().audioSenders.get(uuid);
-        if (sender != null) { //make sure the sender is not null
-            sender.sendOpus(pcmData); //send the audio data
+        if (audioSender != null) { //make sure the sender is not null
+            audioSender.sendOpus(pcmData); //send the audio data
         }
     }
 
@@ -195,7 +137,7 @@ public class JettyWebSocket {
      */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
-        String username = PlayerVcPswd.getUsernameFromUUID(uuid);
+        String username = SVGPlugin.getPlayerVcPswd().getUsernameFromUUID(uuid);
         String displayName = (username != null) ? username : uuid.toString();
 
         SVGPlugin.log().info("[WebSocket] WebSocket for " + displayName + " closed: " + statusCode + " - " + reason);
@@ -205,7 +147,7 @@ public class JettyWebSocket {
         } else {
             SVGPlugin.log().warning("[WebSocket] Disconnected: unknown client (" + reason + ")");
         }
-        WebSocketManager.removeClient(uuid);
+        SVGPlugin.getWsManager().removeClient(uuid);
     }
 
     /**
@@ -214,7 +156,131 @@ public class JettyWebSocket {
      */
     @OnWebSocketError
     public void onError(Throwable error) {
-        SVGPlugin.getInstance().debug("WebSocket", "websocket error", error);
+        SVGPlugin.debug("WebSocket", "websocket error", error);
         SVGPlugin.log().info("Error: " + error.getMessage());
+    }
+
+    private void join(JSONObject json) {
+        PlayerVcPswd playerVcPswd = SVGPlugin.getPlayerVcPswd();
+
+        String username = json.getString("username");
+        String password = json.optString("password", "");
+        UUID storedUuid = playerVcPswd.getStoredUUID(username); //get the uuid to associate with this session
+
+        if (storedUuid == null) {
+            closeOnError("Player " + username + " not found. Use /svg pswd [password] in-game to register.", false);
+            return;
+        }
+        this.uuid = storedUuid;
+
+        Boolean bedrock = GeyserHook.isBedrock(storedUuid);
+        if (bedrock == null) {
+            // Geyser/Floodgate not installed
+            if (plugin.getConfig().getBoolean("client.requireBedrock", false)) {
+                SVGPlugin.log().warning("Unable to enforce: client.requireBedrock. Please install floodgate or geyser");
+            }
+        } else if (!bedrock) {
+            if (plugin.getConfig().getBoolean("client.requireBedrock", false)) {
+                closeOnError("You must be a Bedrock player to join!", false);
+                return;
+            }
+        }
+
+        //see if the player's password is set.
+        if (!playerVcPswd.isPasswordSet(username)) {
+            closeOnError("Password not set. Use /svg pswd [password] in-game.", false);
+            return;
+        }
+
+        if (!playerVcPswd.validatePassword(username, password)) { //validate the player's password from form input
+            closeOnError("Incorrect password!", false);
+            return;
+        }
+
+        if (!SVGPlugin.getWsManager().addClient(uuid, this.session)) { //add this session to the list of active sessions
+            closeOnError("Incorrect password!", false);
+            return;
+        }
+
+        //get timeout numbers for the message.
+        int timeout = plugin.getVcTimeout();
+        long delayInTicks = timeout * 20L;
+
+        authenticated = true;
+        sendMessage("status", "Connected as " + username + ".", false); //Make sure to join server within " + timeout + " seconds!");
+
+        SVGPlugin.log().info("[WebSocket] " + username + " joined with UUID: " + uuid);
+
+        // Schedule timeout if player never joins. Currently, disabled.
+        //Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        this.player = Bukkit.getPlayer(uuid);
+        if (player == null || !player.isOnline()) {
+            closeOnError("Timeout: You didn’t join the server in time.", false);
+            return;
+        }
+        if (!player.hasPermission("svg.vc.join")) { //make sure they are allowed to join the vc
+            closeOnError("Access Denied. You may have been banned from vc.", true);
+            return;
+        }
+
+        VoicechatConnection connection = SVGPlugin.getBridge().getVcServerApi().getConnectionOf(uuid);
+        if (connection == null || connection.isInstalled()) {
+            closeOnError("Can't Join server with mod installed or Connection is Null", false);
+            return;
+        }
+
+        if (plugin.getConfig().getBoolean("server.group.default.enabled")) {
+            String gPswd = plugin.getConfig().getString("server.group.default.password", "1a2b");
+
+            SVGPlugin.getGroupManager().createGroup(player, "Svg", gPswd, Group.Type.OPEN, false, true); //add player to a default group
+        }
+
+        SVGPlugin.getBridge().registerAudioListener(uuid, session); //register the players audio sender
+        this.audioSender = SVGPlugin.getBridge().registerAudioSender(uuid); //register the players audio sender
+        // Currently disabled.
+        // }, delayInTicks);
+    }
+
+    private void chat(JSONObject json) {
+        String chatMessage = json.optString("message", "").trim();
+        if (!authenticated) { //if they are signed in
+            sendMessage("error", "You must be authenticated.", false);
+            return;
+        }
+
+        if (!chatMessage.isEmpty()) {
+            String name = SVGPlugin.getPlayerVcPswd().getUsernameFromUUID(uuid);
+            if (player != null) {
+                sendMessage("chat", "You" + chatMessage, false);
+                player.chat("[Web Chat] " + (name != null ? name : uuid) + ": " + ChatColor.BLUE + chatMessage);
+            } else {
+                sendMessage("error", "You are Not in Game", false);
+            }
+        }
+    }
+
+    private void sendMessage(String type, String message, boolean log) {
+
+        JSONObject json = new JSONObject();
+        json.put("type", type);
+        json.put("message", message);
+        try {
+            session.getRemote().sendString(json.toString());
+        } catch (IOException e) {
+            SVGPlugin.log().severe(e.toString());
+        }
+
+
+        if (player != null) {
+            player.sendMessage(SVGPlugin.PREFIX + ChatColor.translateAlternateColorCodes('&', message));
+        }
+        if (log) {
+            SVGPlugin.log().info("[WebSocket] " + type + ": " + uuid + ": " + message);
+        }
+    }
+
+    private void closeOnError(String message, boolean log) {
+        sendMessage("error", message, log);
+        session.close();
     }
 }

@@ -6,16 +6,13 @@ import de.maxhenkel.voicechat.api.audiosender.AudioSender;
 import de.maxhenkel.voicechat.api.opus.OpusEncoder;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.thread.AudioThread;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
 /**
  * Audio Sender to send Clients Audio to server
  */
-public class SvgAudioSender {
+public final class SvgAudioSender {
 
     /**
      * The simple voice chat api
@@ -28,49 +25,30 @@ public class SvgAudioSender {
     /**
      * The audio sender itself
      */
-    private AudioSender delegate;
-    /**
-     * The player the audio sender is associated with
-     */
-    private final Player player;
+    private final AudioSender delegate;
     /**
      * Audio Encoder to encode the audio for svc
      */
     private final OpusEncoder encoder;
 
     /**
+     * Connection, Centralized for less Latency and fewer checks
+     */
+    private final VoicechatConnection connection;
+
+    /**
      * Class Constructor. Creates and registers the audio sender
-     * @param serverApi voicechat server api
+     * @param serverApi voice chat server api
      * @param playerUuid uuid of player registering sender for.
      */
     public SvgAudioSender(VoicechatServerApi serverApi, UUID playerUuid) {
         this.serverApi = serverApi;
         this.playerUuid = playerUuid;
-        this.player = Bukkit.getPlayer(playerUuid);
         this.encoder = serverApi.createEncoder();
-
-        VoicechatConnection connection = serverApi.getConnectionOf(playerUuid);
-
-        if (player == null || !player.isOnline()) {
-            SVGPlugin.log().warning("Player is offline: " + playerUuid);
-            return;
-
-        }
+        this.connection = serverApi.getConnectionOf(playerUuid);
 
         if (connection == null) {
-            SVGPlugin.log().warning("no svc connection for uuid: " + playerUuid);
-            return;
-        }
-
-        if (connection.isInstalled()) {
-            SVGPlugin.log().warning("Player: " + player.getName() + " has the mod installed." );
-            player.sendMessage(ChatColor.RED + "You Can't Join SVG With The Mod Installed.");
-            return;
-        }
-
-        if (SVGPlugin.getBridge().audioSenders.containsKey(playerUuid)) {
-            SVGPlugin.log().warning("[VCBridge] SvgAudioSender already registered for: " + playerUuid);
-            return;
+            throw new RuntimeException("no svc connection for uuid: " + playerUuid);
         }
 
         this.delegate = serverApi.createAudioSender(connection); //create the sender itself
@@ -78,39 +56,22 @@ public class SvgAudioSender {
 
         if (success) {
             connection.setConnected(true);
-            player.sendMessage(ChatColor.AQUA + "AudioSender Registered!");
             connection.setDisabled(false);
         } else {
             SVGPlugin.log().info("Failed to register SvgAudioSender for UUID: " + playerUuid);
-            player.sendMessage(ChatColor.RED + "Failed to register AudioSender");
-
         }
     }
 
     /**
      * Sends Opus-encoded audio to the player if conditions are met.
      * @param pcmData data to send for player
-     * @return true/false whether it failed or not
      */
-    public boolean sendOpus(byte[] pcmData) {
+    public void sendOpus(byte[] pcmData) {
 
-        SVGPlugin.getInstance().debug( "AudioSender","received audio data from websocket!");
+        SVGPlugin.debug( "AudioSender","received audio data from websocket!");
 
-        if (player == null || !player.isOnline()) {
-            SVGPlugin.log().warning("[AudioSender] Player not found or offline: " + playerUuid);
-            return false;
-        }
+        AudioThread.execute(() -> {
 
-        VoicechatConnection connection = serverApi.getConnectionOf(playerUuid);
-        if (connection == null) { //make sure player is online for SVC
-            SVGPlugin.log().warning("[AudioSender] No voice chat connection for: " + player.getName());
-            return false;
-        } else if (connection.isInstalled()) {
-            player.sendMessage(ChatColor.DARK_RED + "You have the mod Installed!");
-            return false;
-        }
-
-        AudioThread.getExecutor().execute(() -> {
             byte[] encoded;
             try {
                 short[] pcmShorts = serverApi.getAudioConverter().bytesToShorts(pcmData);
@@ -120,7 +81,7 @@ public class SvgAudioSender {
                     return;
                 }
             } catch (Exception e) {
-                SVGPlugin.getInstance().debug("AudioSender", "Encoding failed for " + playerUuid, e);
+                SVGPlugin.debug("AudioSender", "Encoding failed for " + playerUuid, e);
                 return;
             }
 
@@ -129,7 +90,6 @@ public class SvgAudioSender {
                 SVGPlugin.log().warning("[AudioSender] Failed to send audio for: " + playerUuid);
             }
         });
-        return true;
     }
 
     /**
@@ -146,6 +106,5 @@ public class SvgAudioSender {
         }
         delegate.reset();
         serverApi.unregisterAudioSender(delegate); //end sender
-        if (player != null) { player.sendMessage("audioSender unregistered."); }
     }
 }

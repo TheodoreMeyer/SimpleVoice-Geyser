@@ -18,7 +18,7 @@ public class WebSocketManager {
     /**
      * A list of Websockets that are actively connected
      */
-    public static final Map<UUID, Session> clients = new ConcurrentHashMap<>();
+    private final Map<UUID, Session> clients = new ConcurrentHashMap<>();
 
     /**
      * Add a Websocket to the list
@@ -26,7 +26,7 @@ public class WebSocketManager {
      * @param session session/websocket of the client
      * @return true/false whether it did it successfully.
      */
-    public static boolean addClient(UUID uuid, Session session) {
+    public boolean addClient(UUID uuid, Session session) {
         if (clients.containsKey(uuid)) {
             return false; // already connected
         }
@@ -34,12 +34,16 @@ public class WebSocketManager {
         return true;
     }
 
+    public Session getClient(UUID uuid) {
+        return clients.get(uuid);
+    }
+
     /**
      * Removes closed voice chat player session to prevent problems
      * This method needs to be fixed
      * @param uuid uuid of websocket to disconnect
      */
-    public static void removeClient(UUID uuid) {
+    public void removeClient(UUID uuid) {
         if (uuid == null) {
             SVGPlugin.log().warning("-[WebSocketManager] Tried to remove null UUID");
             return;
@@ -56,7 +60,7 @@ public class WebSocketManager {
      * @param uuid uuid of websocket to disconnect
      * @return whether is successfully disconnected or not
      */
-    public static boolean disconnectClient(UUID uuid) {
+    public boolean disconnectClient(UUID uuid) {
         Session session = clients.remove(uuid);
         if (session != null && session.isOpen()) { //make sure the session exists
             session.close(); //close session
@@ -75,6 +79,7 @@ public class WebSocketManager {
                 count++;
             }
         }
+        SVGPlugin.log().info("Disconnected " + count + " clients");
     }
 
     /**
@@ -83,7 +88,7 @@ public class WebSocketManager {
      * @param type the type of message to send, can be: error, message, chat.
      * @param message the message to send.
      */
-    public static void sendJson(UUID uuid, String type, String message) {
+    public void sendJson(UUID uuid, String type, String message) {
         Session session = clients.get(uuid); // get session to send to
         JSONObject json = new JSONObject();
         json.put("type", type);
@@ -91,6 +96,22 @@ public class WebSocketManager {
         try {
             session.getRemote().sendString(json.toString()); //send the message
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Send A JSON message to the Websocket Client
+     * @apiNote To be worked on.
+     * @apiNote This allows custom messages to be sent to client other than status data
+     * @param json the Data to send
+     */
+    public void sendJson(UUID uuid, JSONObject json) {
+        Session session = clients.get(uuid);
+
+        try {
+            session.getRemote().sendString(json.toString());
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

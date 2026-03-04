@@ -1,33 +1,39 @@
 # Simple Voice Geyser
-A Geyser Extension to allow bedrock clients to connect with Simple voice Chat
+[![Spigot](https://img.shields.io/badge/Available%20on-Spigot-orange?logo=spigotmc&logoColor=white)](https://www.spigotmc.org/resources/132386)
+![Minecraft](https://img.shields.io/badge/Minecraft-1.21.8--1.21.11-blue)
+[![GitHub release](https://img.shields.io/github/v/release/TheodoreMeyer/SimpleVoice-Geyser?include_prereleases)](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/releases)
+[![License](https://img.shields.io/github/license/TheodoreMeyer/SimpleVoice-Geyser)](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/blob/master/LICENSE)
+
+A Geyser Extension to allow Bedrock Clients to connect with Simple voice Chat.
 
 ## What can the Plugin/extension do?
-- Allow Bedrock Players to voice chat with Java Players through a web interface
+- Allow Bedrock Players to voice chat with Java Players through a web interface.
 - Configured to also allow Java Players without the SVC Mod to join the chat.
 
 ## Using this Plugin
-- Set into the Plugins folder of your Spigot Server directory.
-- Configure it to connect with your server's SimpleVoice chat. See [our wiki](https://theodoremeyer.github.io/projects/simplevoicegeyser/)
-- Players can now join from the web browser after using '/svg pswd {password}' in-game!
-- update by replacing the old jar with the new one.
-     - I plan on making config options auto update
+- Set the '.jar' file into your server's plugin directory.
+- Configure it to connect with your server's SimpleVoice chat. See [Installation](https://theodoremeyer.github.io/projects/simplevoicegeyser/install)
+
+### Updating
+- Replacing the old jar with the new one.
+     - I plan on making config options auto update.
 
 ## Documentation
-Our [wiki](https://theodoremeyer.github.io/projects/simplevoicegeyser/) can help!
+- Our [wiki](https://theodoremeyer.github.io/projects/simplevoicegeyser/) can help!
 
-old wiki: [wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki).
+- old wiki: [wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki).
 
 ## Coming Soon
-- Dev Release (v 1.0.0-Dev or 0.0.2-Dev)
+- Dev Release (v 1.0.0-Dev or 0.0.4-Dev)
 - Initial Release (v 1.0.0)
 
 ## Features to be worked on
 - Permissions
-- Finish audio connection
-- Simple Voice Chat group support
-- Admin commands
 - Better HTML page
 - External Webserver (you host the vc connection at your website)
+- Support
+  - Fabric
+  - Velocity
 
 ## Suggestions?
 Reach out through issues!
@@ -36,21 +42,14 @@ Reach out through issues!
 - GeyserMc         [GeyserMc.org](https://geysermc.org)
 - Jetty            [Jetty.org](https://jetty.org)
 - SimpleVoiceChat  [ModRepo.de](https://modrepo.de/minecraft/voicechat/overview)
-
-## Dependencies docs:
-- [Jetty Server Docs](https://jetty.org/docs/jetty/11/index.html)
-- [Geyser API introduction](https://wiki.geysermc.org/geyser/api/)
-- [Simple Voice Chat Api Guide](https://modrepo.de/minecraft/voicechat/api/overview)
+- Bcrypt           [Mindrot.org](https://www.mindrot.org/projects/jBCrypt/)
 
 ## Important Notes
 - `Simple Voice Chat 2.6.0 or compatible is required to work, It must run on the server.
 - Releases/versions/jars ending with -Dev{version} mean this is a dev/test version and not meant for productional use.
    - you are welcome to test these, but no guarantee they will work.
+   - 
 - Microphone/Speaker options may or may not work, depending on your browser, as this was built for Google Chrome.
 
 ## Developer Notes
-- ### Player Passwords
-   - Copy the `playerpassword.yml.template` as `playerpasswords.yml` and fill-in the values.
-   - Do NOT check that file in. It is presently required to build the project.
-   - Please see the contributing.md before contributing to this project.
-
+- Please see the contributing.md before contributing to this project.

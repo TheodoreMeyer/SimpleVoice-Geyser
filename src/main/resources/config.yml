@@ -9,7 +9,30 @@ client:
   # idle websocket timeout in minutes
   idletimout: 2
 
+  # default: false
+  # Only allow bedrock players to join the chat
+  requireBedrock: false
+
+  # default: true
+  # Allows for the bedrock client to open a menu just by opening the emotes menu
+  # WARNING: Make sure you have off-hand-emote turned off in geyser or there may
+  #          be conflict
+  useEmoteForSVG: true
+
 server:
+
+  group:
+
+    # Settings for the default group for Svg players.
+    default:
+
+      # default: true
+      # This decides whether the Svg group is created for players who use the website
+      enabled: true
+
+      # default: 1a2b
+      # This control's the default groups's password.
+      password: 1a2b
 
   # default: 8080
   # port server will run on.

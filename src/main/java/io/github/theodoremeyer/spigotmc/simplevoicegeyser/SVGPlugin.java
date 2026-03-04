@@ -5,9 +5,17 @@ import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.JettyServer;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.server.WebSocketManager;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.thread.AudioThread;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.event.EventRegistrar;
+import org.geysermc.geyser.api.event.bedrock.ClientEmoteEvent;
 
+import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -15,7 +23,7 @@ import java.util.logging.Logger;
 /**
  * Main Class of Plugin
  */
-public class SVGPlugin extends JavaPlugin {
+public final class SVGPlugin extends JavaPlugin implements EventRegistrar {
     /**
      * The jetty server
      */
@@ -25,6 +33,18 @@ public class SVGPlugin extends JavaPlugin {
      * @see VoiceChatBridge
      */
     private static VoiceChatBridge bridge;
+    /**
+     * Class: Group system
+     */
+    private GroupManager groupManager;
+    /**
+     * Password System
+     */
+    private PlayerVcPswd passwordManager;
+    /**
+     * AudioThread
+     */
+    private AudioThread thread;
     /**
      * This class
      */
@@ -40,23 +60,34 @@ public class SVGPlugin extends JavaPlugin {
      */
     private WebSocketManager webSocketManager;
     /**
-     * Audio thread to remove lag
-     */
-    private AudioThread audioThread;
-    /**
      * Whether debug is enabled
      */
-    private Boolean debug;
+    private boolean debug = false;
+
+    /**
+     * Universal Svg Prefix
+     */
+    public static final String PREFIX = ChatColor.GRAY + "[" + ChatColor.AQUA + "SVG" + ChatColor.GRAY + "] " + ChatColor.RESET;
 
     /**
      * When the plugin loads
      */
     @Override
     public void onEnable() {
-        BukkitVoicechatService service = Bukkit.getServicesManager().load(BukkitVoicechatService.class);
+        instance = this;
+        this.thread = new AudioThread();
+
+        loadConfigProperly();
         this.debug = getConfig().getBoolean("Debug", false);
 
-        if (service != null) { //make sure bukkitvoicechatservice exists
+        int rawTimeout = getConfig().getInt("client.vctimeout", 30); //get config from config.yml
+        this.vcTimeout = Math.max(0, Math.min(120, rawTimeout));
+        int jettyServerPort = getConfig().getInt("server.port", 8080);
+        String jettyServerHost = getConfig().getString("server.bind-address", "0.0.0.0");
+
+        BukkitVoicechatService service = Bukkit.getServicesManager().load(BukkitVoicechatService.class);
+
+        if (service != null) { //make sure BukkitVoicechatService exists
             VoiceChatBridge voicechatBridge = new VoiceChatBridge(this);
             service.registerPlugin(voicechatBridge); //register the main api class
             bridge = voicechatBridge;
@@ -65,7 +96,7 @@ public class SVGPlugin extends JavaPlugin {
             //added this because of some early problems with registering the plugin
             getLogger().severe("Failed to register with Simple Voice Chat: service not found.");
             Collection<Class<?>> knownServices = Bukkit.getServicesManager().getKnownServices();
-            if (debug == true) {
+            if (debug) {
                 if (knownServices.isEmpty()) {
                     getLogger().warning("No services registered yet.");
                 } else {
@@ -82,24 +113,31 @@ public class SVGPlugin extends JavaPlugin {
             Bukkit.getPluginManager().disablePlugin(this);
         }
 
-        instance = this;
-        Bukkit.getPluginManager().registerEvents(new SvgListener(), this);
-        PlayerVcPswd.init(this.getDataFolder());
-        Objects.requireNonNull(getCommand("svg")).setExecutor(new SvgCommand());
-        saveResource("playerpasswords.yml", false);
+        this.groupManager = new GroupManager(bridge);
 
-        saveDefaultConfig();
-        int rawTimeout = getConfig().getInt("client.vctimeout", 30); //get config from config.yml
-        this.vcTimeout = Math.max(0, Math.min(120, rawTimeout));
+        SvgListener listener = new SvgListener(this, groupManager);
+        Bukkit.getPluginManager().registerEvents(listener, this);
 
-        int jettyServerPort = getConfig().getInt("server.port", 8080);
-        String jettyServerHost = getConfig().getString("server.bind-address", "0.0.0.0");
+        this.passwordManager = new PlayerVcPswd(getDataFolder());
+
+        Objects.requireNonNull(getCommand("svg")).setExecutor(new SvgCommand(groupManager));
+
+        // Check to see if geyser is installed
+        Plugin geyser = Bukkit.getPluginManager().getPlugin("Geyser-Spigot");
+        if (geyser != null && geyser.isEnabled()) {
+            GeyserApi.api().eventBus().subscribe(
+                    this,
+                    ClientEmoteEvent.class,
+                    listener::onEmote
+            );
+        } else {
+            log().warning("Geyser is not installed. Skipping Bedrock Events");
+        }
 
         this.webSocketManager = new WebSocketManager();
-        this.audioThread = new AudioThread(this);
 
         try {
-            jettyServer = new JettyServer(jettyServerPort, jettyServerHost); //start the jetty server
+            jettyServer = new JettyServer(this, jettyServerPort, jettyServerHost); //start the jetty server
             jettyServer.start();
             getLogger().info("Jetty server started on port: " + jettyServerPort);
         } catch (Exception e) {
@@ -121,15 +159,19 @@ public class SVGPlugin extends JavaPlugin {
         } catch (Exception e) {
             getLogger().severe("Failed to stop Jetty server: " + e.getMessage());
         }
+        thread.shutdown();
     }
 
-    /**
-     * create an easy way for other classes to access what they need to work.
-     * @return SVGPlugin
-     * @see SVGPlugin
-     */
-    public static SVGPlugin getInstance() {
-        return instance;
+    private void loadConfigProperly() {
+        saveDefaultConfig(); // create if missing
+
+        FileConfiguration defaults = YamlConfiguration.loadConfiguration(
+                new InputStreamReader(Objects.requireNonNull(getResource("config.yml")))
+        );
+
+        getConfig().setDefaults(defaults);
+        getConfig().options().copyDefaults(true);
+        saveConfig();
     }
 
     /**
@@ -145,7 +187,7 @@ public class SVGPlugin extends JavaPlugin {
      * @return The Logger
      */
     public static Logger log() {
-        return getInstance().getLogger();
+        return instance.getLogger();
     }
 
     /**
@@ -158,12 +200,32 @@ public class SVGPlugin extends JavaPlugin {
     }
 
     /**
+     * Getter for wsManager
+     * @return WebsocketManager
+     */
+    public static WebSocketManager getWsManager() {
+        return instance.webSocketManager;
+    }
+
+    /**
+     * Get The Group System
+     * @return GroupManager
+     */
+    public  static GroupManager getGroupManager() { return instance.groupManager;}
+
+    /**
+     * Get the Password System
+     * @return PlayerVcPassword
+     */
+    public static PlayerVcPswd getPlayerVcPswd() { return instance.passwordManager; }
+
+    /**
      * debug option with no throwable
      * @param section the part of plugin debugging
      * @param message the message
      */
-    public void debug(String section, String message) {
-        if (debug) {
+    public static void debug(String section, String message) {
+        if (instance != null && instance.debug) {
             log().info("[Debug][" + section + "] " + message);
         }
     }
@@ -174,10 +236,9 @@ public class SVGPlugin extends JavaPlugin {
      * @param message the message
      * @param t the throwable/error thrown
      */
-    public void debug(String section, String message, Throwable t) {
-        if (debug) {
-            log().info( "[Debug][" + section + "] " + message + ", " + t);
+    public static void debug(String section, String message, Throwable t) {
+        if (instance != null && instance.debug) {
+            log().info("[Debug][" + section + "] " + message + ", " + t);
         }
     }
-
 }

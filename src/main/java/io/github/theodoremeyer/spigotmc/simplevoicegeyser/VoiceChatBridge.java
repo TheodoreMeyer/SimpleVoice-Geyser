@@ -11,6 +11,9 @@ import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioListener;
 import io.github.theodoremeyer.spigotmc.simplevoicegeyser.audio.SvgAudioSender;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+import org.eclipse.jetty.websocket.api.Session;
 
 import java.util.Map;
 import java.util.UUID;
@@ -39,12 +42,12 @@ public class VoiceChatBridge implements VoicechatPlugin {
     /**
      * Map containing all the audioListeners
      */
-    protected final Map<UUID, SvgAudioListener> audioListeners = new ConcurrentHashMap<>();
+    private final Map<UUID, SvgAudioListener> audioListeners = new ConcurrentHashMap<>();
 
     private final SVGPlugin plugin;
 
     /**
-     * Initalizes the plugin's connection with SVC.
+     * Initializes the plugin's connection with SVC.
      * @param plugin SVG plugin
      */
     public VoiceChatBridge(SVGPlugin plugin) {
@@ -75,7 +78,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
 
     /**
      * Runs when SVC initializes this plugin
-     * @param api the voicechatapi
+     * @param api the VoicechatApi
      */
     @Override
     public void initialize(VoicechatApi api) {
@@ -92,7 +95,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
         serverApi = event.getVoicechat(); //get the SVC api
         SVGPlugin.log().info("[VCBridge] Voice chat server started: " + serverApi);
         for (Group group : serverApi.getGroups()) {
-            GroupManager.groups.putIfAbsent(group.getName(), group);
+            SVGPlugin.getGroupManager().addGroup(group);
             SVGPlugin.log().info("[VCBridge] Loaded group: " + group.getName());
         }
     }
@@ -104,7 +107,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
     private void onGroupCreated(CreateGroupEvent event) {
         Group group = event.getGroup();
         if (group != null) {
-            GroupManager.groups.put(group.getName(), group); //save the group to GroupManager
+            SVGPlugin.getGroupManager().addGroup(group); //save the group to GroupManager
         }
     }
 
@@ -115,7 +118,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
     private void onGroupRemoved(RemoveGroupEvent event) {
         Group group = event.getGroup();
         if (group != null) {
-            GroupManager.groups.remove(group.getName(), group); //remove the non-existent group from the group manager
+            SVGPlugin.getGroupManager().removeGroup(group); //remove the non-existent group from the group manager
         }
     }
 
@@ -131,24 +134,32 @@ public class VoiceChatBridge implements VoicechatPlugin {
      * Creates an AudioSender
      * @param uuid uuid to link sender too
      */
-    public void registerAudioSender(UUID uuid) {
+    public SvgAudioSender registerAudioSender(UUID uuid) {
         if (serverApi == null) {
             SVGPlugin.log().warning("[VCBridge] Cannot register SvgAudioSender: Server API is null");
-            return;
+            return null;
         }
 
         if (audioSenders.containsKey(uuid)) {
             SVGPlugin.log().warning("[VCBridge] SvgAudioSender already registered for: " + uuid);
-            return;
+            return null;
         }
+
+        Player player = Bukkit.getPlayer(uuid);
+        if (player == null || !player.isOnline()) throw  new IllegalStateException("Player not found: " + uuid);
 
         try {
             SvgAudioSender sender = new SvgAudioSender(serverApi, uuid); //create the sender
             audioSenders.put(uuid, sender);
-            SVGPlugin.log().info("[VCBridge] SvgAudioSender created and registered for: " + uuid);
+            SVGPlugin.debug("VCBridge", "SvgAudioSender created and registered for: " + uuid);
+            player.sendMessage(SVGPlugin.PREFIX + ChatColor.AQUA + "AudioSender Registered!");
+
+            return sender;
         } catch (RuntimeException e) {
-            plugin.debug("VCBridge", "Unable to register AudioSender for: " + uuid, e);
+            SVGPlugin.debug("VCBridge", "Unable to register AudioSender for: " + uuid, e);
+            player.sendMessage(SVGPlugin.PREFIX + ChatColor.RED + "Failed to register AudioSender");
         }
+        return null;
     }
 
     /**
@@ -157,14 +168,18 @@ public class VoiceChatBridge implements VoicechatPlugin {
      */
     public void unregisterAudioSender(UUID uuid) {
         SvgAudioSender sender = audioSenders.remove(uuid); //remove the sender from the map
+
+        Player player = Bukkit.getPlayer(uuid);
+
         if (sender != null) {
             sender.unregister(); //unregister the sender
-            SVGPlugin.log().info("[VCBridge] SvgAudioSender unregistered for: " + uuid);
+            SVGPlugin.debug("VCBridge", "SvgAudioSender unregistered for: " + uuid);
+            if (player != null) { player.sendMessage(SVGPlugin.PREFIX + "audioSender unregistered."); }
         } else {
-            if (Bukkit.getPlayer(uuid) != null) {
+            if (player != null) {
                 SVGPlugin.log().warning("[VCBridge] No SvgAudioSender found to unregister for: " + uuid);
             } else {
-                SVGPlugin.getInstance().debug("[VCBridge]", "No SvgAudioSender found to unregister for: " + uuid);
+                SVGPlugin.debug("VCBridge", "No SvgAudioSender found to unregister for: " + uuid);
             }
         }
     }
@@ -173,7 +188,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
      * Creates an AudioListener
      * @param uuid uuid to associate listener to
      */
-    public void registerAudioListener(UUID uuid) {
+    public void registerAudioListener(UUID uuid, Session session) {
         if (serverApi == null) {
             SVGPlugin.log().warning("[VCBridge] Cannot register listener: Server API is null");
             return;
@@ -184,10 +199,10 @@ public class VoiceChatBridge implements VoicechatPlugin {
             return;
         }
 
-        SvgAudioListener listener = new SvgAudioListener(uuid); //create a new audio listener
-        listener.registerListener(serverApi);
+        SvgAudioListener listener = new SvgAudioListener(uuid, session, serverApi); //create a new audio listener
+        listener.registerListener();
         audioListeners.put(uuid, listener); //add it to the listener map
-        SVGPlugin.log().info("[VCBridge] Registered audio listener for: " + uuid);
+        SVGPlugin.debug("VCBridge", "Registered audio listener for: " + uuid);
     }
 
     /**
@@ -203,13 +218,13 @@ public class VoiceChatBridge implements VoicechatPlugin {
         SvgAudioListener listener = audioListeners.remove(uuid); //remove the listener from the map
         if (listener != null) {
             serverApi.unregisterAudioListener(listener); //unregister the listener
-            SVGPlugin.log().info("[VCBridge] Unregistered audio listener for: " + uuid);
+            SVGPlugin.debug("VCBridge", "Unregistered audio listener for: " + uuid);
             listener.unRegister();
         } else {
             if (Bukkit.getPlayer(uuid) != null) {
                 SVGPlugin.log().warning("[VCBridge] No audio listener found for: " + uuid);
             } else {
-                SVGPlugin.getInstance().debug("[VCBridge]", "No audio listener found for: " + uuid);
+                SVGPlugin.debug("VCBridge", "No audio listener found for: " + uuid);
             }
         }
     }
