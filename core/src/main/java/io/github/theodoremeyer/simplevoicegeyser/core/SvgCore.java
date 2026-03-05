@@ -5,6 +5,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.PlayerManager;
+import io.github.theodoremeyer.simplevoicegeyser.core.managers.SvgLibraryLoader;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.WebSocketManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
 import io.github.theodoremeyer.simplevoicegeyser.core.thread.AudioThread;
@@ -37,6 +38,8 @@ public class SvgCore implements EventRegistrar {
 
     private final WebSocketManager webSocketManager;
 
+    private Command command;
+
     /**
      * Whether debug is enabled
      */
@@ -46,6 +49,8 @@ public class SvgCore implements EventRegistrar {
         this.platform = platform;
         instance = this;
         new AudioThread();
+
+        new SvgLibraryLoader().loadDependencies();
 
         //Managers
         this.playerManager = new PlayerManager();
@@ -60,6 +65,8 @@ public class SvgCore implements EventRegistrar {
         this.vcBridge = platform.registerVcBridge();
 
         this.groupManager = new GroupManager(vcBridge);
+
+        this.command = new Command(groupManager);
     }
 
     public SvgFile getConfig() {
@@ -133,4 +140,5 @@ public class SvgCore implements EventRegistrar {
         return instance.webSocketManager;
     }
 
+    public static Command getCommand() { return instance.command; }
 }

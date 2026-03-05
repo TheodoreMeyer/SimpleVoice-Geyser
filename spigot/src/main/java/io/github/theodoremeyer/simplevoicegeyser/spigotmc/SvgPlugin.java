@@ -6,23 +6,72 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.Platform;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
+import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.SvgCommand;
+import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.SvgListener;
+import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.ConfigFile;
+import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.PasswordFile;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.event.EventRegistrar;
+import org.geysermc.geyser.api.event.bedrock.ClientEmoteEvent;
 
-public class SvgPlugin extends JavaPlugin implements Platform {
+import java.io.File;
+
+public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
 
     private SvgCore core;
+
+    private ConfigFile configFile;
+
+    private PasswordFile passwordFile;
 
     //JAVA PLUGIN
     @Override
     public void onLoad() {
+
+        // Ensure plugin folder exists
+        if (!getDataFolder().exists()) {
+            getDataFolder().mkdirs();
+        }
+
+        // Define config file location
+        File file = new File(getDataFolder(), "config.yml");
+
+        // If the config file doesn't exist yet, copy defaults from resources
+        if (!file.exists()) {
+            saveResource("config.yml", false);
+        }
+
+        // Initialize your ConfigFile wrapper
+        this.configFile = new ConfigFile(getConfig(), file);
+        this.passwordFile = new PasswordFile(new File(getDataFolder(), "playerpasswords.yml"));
+
         this.core = new SvgCore(this);
     }
 
     @Override
     public void onEnable() {
         core.init();
+
+        getCommand("svg").setExecutor(new SvgCommand());
+
+
+        SvgListener listener = new SvgListener();
+        Bukkit.getPluginManager().registerEvents(listener, this);
+
+        Plugin geyser = Bukkit.getPluginManager().getPlugin("Geyser-Spigot");
+        if (geyser != null && geyser.isEnabled()) {
+            GeyserApi.api().eventBus().subscribe(
+                    this,
+                    ClientEmoteEvent.class,
+                    listener::onEmote
+            );
+        } else {
+            getLogger().warning("Geyser is not installed. Skipping Bedrock Events");
+        }
     }
 
     @Override
@@ -46,7 +95,7 @@ public class SvgPlugin extends JavaPlugin implements Platform {
         VoiceChatBridge bridge = null;
 
         if (service != null) { //make sure BukkitVoicechatService exists
-            VoiceChatBridge voicechatBridge = new VoiceChatBridge(this);
+            VoiceChatBridge voicechatBridge = new VoiceChatBridge(core);
             service.registerPlugin(voicechatBridge); //register the main api class
             bridge = voicechatBridge;
             getLogger().info("Registered plugin with Simple Voice Chat.");

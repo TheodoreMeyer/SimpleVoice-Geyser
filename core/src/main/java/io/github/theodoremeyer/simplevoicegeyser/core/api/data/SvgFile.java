@@ -7,27 +7,27 @@ import java.util.Set;
  * The DataStore fow holding passwords
  * Can be JSON, yml, sqlite, etc
  */
-public interface SvgFile {
+public abstract class SvgFile {
 
     /**
      * All keys in datastore
      * @return keys/values
      */
-    Set<String> getKeys();
+    public abstract Set<String> getKeys();
 
     /**
      * Set a value
      * @param path path to set
      * @param value the value to set
      */
-    void set(String path, String value);
+    public abstract void set(String path, String value);
 
     /**
      * Get a String from store
      * @param path the path of value
      * @return String value
      */
-    String getString(String path);
+    public abstract String getString(String path);
 
     /**
      * Get a String from store
@@ -35,7 +35,7 @@ public interface SvgFile {
      * @param def the default value
      * @return String value
      */
-    String getString(String path, String def);
+    public abstract String getString(String path, String def);
 
     /**
      * get a boolean in store
@@ -43,7 +43,7 @@ public interface SvgFile {
      * @param def default
      * @return the value
      */
-    boolean getBoolean(String path, boolean def);
+    public abstract boolean getBoolean(String path, boolean def);
 
     /**
      * get an int in store
@@ -51,18 +51,18 @@ public interface SvgFile {
      * @param def default
      * @return the value
      */
-    int getInt(String path, int def);
+    public abstract int getInt(String path, int def);
 
     /**
      * Save datastore
      */
-    void save();
+    public abstract void save();
 
     /**
      * The file the DataStore represents
      * @return File
      */
-    File getFile();
+    public abstract File getFile();
 
     /**
      * Get a double
@@ -70,5 +70,5 @@ public interface SvgFile {
      * @param def the default
      * @return the value
      */
-    double getDouble(String path, double def);
+    public abstract double getDouble(String path, double def);
 }

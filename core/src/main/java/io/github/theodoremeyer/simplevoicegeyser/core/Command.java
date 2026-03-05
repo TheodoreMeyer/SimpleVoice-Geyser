@@ -31,12 +31,10 @@ public class Command {
     /**
      * When command runs
      * @param sender who ran the command
-     * @param cmd the command
-     * @param label the label
      * @param args the args used in the command
      * @return whether it successfully ran or not
      */
-    public boolean onCommand(Sender sender, Command cmd, String label, String[] args) {
+    public boolean onCommand(Sender sender, String[] args) {
 
         if (args.length == 0) {
             return formOrHelp(sender);

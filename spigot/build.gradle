@@ -10,6 +10,12 @@ dependencies {
     // CORE MODULE
     implementation(project(":core"))
 
+    implementation('com.saicone.ezlib:ezlib:1.3.3')
+
+    // GeyserMC API (provided by platform)
+    compileOnly("org.geysermc.geyser:api:${geysermc_api_version}")
+    compileOnly("org.geysermc.floodgate:api:${floodgate_api_version}")
+
     // Simple Voice Chat API
     compileOnly("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
 }
@@ -24,6 +30,18 @@ tasks.processResources {
                 spigot_version: spigot_api_version
         )
     }
+}
+
+tasks.jar {
+    dependsOn(":core:jar") // make sure core is built first
+
+    from(project(":core").sourceSets.main.output) // include compiled classes
+    from(project(":core").sourceSets.main.resources) // include core resources
+
+    // Include Ezlib (and any other runtime dependencies you explicitly want)
+    from({
+        configurations.runtimeClasspath.filter { it.name.contains("ezlib") }.collect { zipTree(it) }
+    })
 }
 
 runServer { // https://github.com/jpenilla/run-task/wiki
