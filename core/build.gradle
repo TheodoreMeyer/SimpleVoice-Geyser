@@ -24,6 +24,16 @@ dependencies {
     compileOnly("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
 }
 
+tasks.processResources {
+    // include all normal resources
+    from(sourceSets.main.resources.srcDirs)
+
+    // include web/ folder into the JAR under "web/"
+    from("web") {
+        into("web")
+    }
+}
+
 publishing {
     publications {
         create("mavenJava", MavenPublication) {

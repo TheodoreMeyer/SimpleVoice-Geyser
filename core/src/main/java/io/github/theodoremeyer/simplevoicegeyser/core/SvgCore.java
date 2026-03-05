@@ -53,6 +53,8 @@ public class SvgCore implements EventRegistrar {
     }
 
     public void init() {
+        this.debug = platform.getFile(DataType.CONFIG).getBoolean("debug", false);
+
         this.playerVcPswd = new PlayerVcPswd(platform.getFile(DataType.PASSWORD));
 
         this.vcBridge = platform.registerVcBridge();
