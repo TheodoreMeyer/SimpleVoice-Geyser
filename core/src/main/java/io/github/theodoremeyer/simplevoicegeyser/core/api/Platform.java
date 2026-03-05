@@ -2,6 +2,7 @@ package io.github.theodoremeyer.simplevoicegeyser.core.api;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
+import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
 
 import java.util.logging.Logger;
 
@@ -11,6 +12,16 @@ public interface Platform {
      * Disable in case of error
      */
     void disable();
+
+    /**
+     * The Prefix for Logging
+     */
+    String getPrefix();
+
+    /**
+     * Register VoiceChatBridge
+     */
+    VoiceChatBridge registerVcBridge();
 
     /**
      * Logger

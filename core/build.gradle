@@ -1,4 +1,5 @@
 plugins {
+    id 'java'
     id 'java-library'
     id 'maven-publish'
 }
@@ -11,6 +12,7 @@ dependencies {
 
     // GeyserMC API (provided by platform)
     compileOnly("org.geysermc.geyser:api:${geysermc_api_version}")
+    compileOnly("org.geysermc.floodgate:api:${floodgate_api_version}")
 
     // Jetty (embedded server)
     implementation("org.eclipse.jetty:jetty-server:11.0.25")
