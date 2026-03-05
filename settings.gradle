@@ -1,0 +1,14 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        mavenLocal()
+    }
+    plugins {
+        id("com.gradleup.shadow") version "9.3.1"
+    }
+}
+
+rootProject.name = "SimpleVoice-Geyser"
+
+include("core", "spigot")

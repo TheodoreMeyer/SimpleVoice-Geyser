@@ -1,0 +1,40 @@
+plugins {
+    id 'java'
+    id 'java-library'
+    id "xyz.jpenilla.run-paper" version "2.3.0"
+}
+
+dependencies {
+    compileOnly("org.spigotmc:spigot-api:${spigot_api_version}-R0.1-SNAPSHOT")
+
+    // CORE MODULE
+    implementation(project(":core"))
+
+    // Simple Voice Chat API
+    compileOnly("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
+}
+
+tasks.processResources {
+    inputs.property("version", version)
+    inputs.property("spigot_version", spigot_api_version)
+
+    filesMatching('plugin.yml') {
+        expand(
+                plugin_version: version,
+                spigot_version: spigot_api_version
+        )
+    }
+}
+
+runServer { // https://github.com/jpenilla/run-task/wiki
+    minecraftVersion("1.21.11")
+    downloadPlugins {
+        // Simple Voice Chat //
+        url("https://cdn.modrinth.com/data/9eGKb6K1/versions/FeJRj2X0/voicechat-bukkit-2.6.12.jar")
+
+        // Geyser //
+        url("https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot")
+        // Floodgate //
+        url("https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot")
+    }
+}

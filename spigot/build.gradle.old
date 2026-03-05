@@ -1,0 +1,139 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'java-library'
+    id "xyz.jpenilla.run-paper" version "2.3.0"
+}
+
+group = 'io.github.theodoremeyer.spigotmc'
+version = project.version
+
+repositories {
+    mavenCentral()
+    gradlePluginPortal()
+    maven {
+        url = uri("https://repo.maven.apache.org/maven2")
+    }
+    maven {
+        url = uri("https://oss.sonatype.org/content/repositories/releases/")
+    }
+    maven {
+        url = uri('https://hub.spigotmc.org/nexus/content/groups/public/')
+    }
+    maven {
+        name = "henkelmax.public"
+        url = 'https://maven.maxhenkel.de/repository/public'
+    }
+    maven {
+        url = "https://repo.opencollab.dev/maven-snapshots"
+        mavenContent {
+            snapshotsOnly()
+        }
+    }
+    maven {
+        url = "https://repo.opencollab.dev/maven-releases"
+        mavenContent {
+            releasesOnly()
+        }
+    }
+    maven {
+        url = "https://repo.opencollab.dev/main/"
+    }
+    mavenLocal()
+}
+
+dependencies {
+
+    // password encryption
+    implementation('org.mindrot:jbcrypt:0.4')
+
+    // Spigot API dependency
+    implementation("org.spigotmc:spigot-api:${spigot_api_version}-R0.1-SNAPSHOT")
+
+    implementation('org.json:json:20250107')
+
+    implementation files('libs/json-20250107.jar')
+
+    // GeyserMC API dependency
+    compileOnly("org.geysermc.geyser:api:${geysermc_api_version}")
+
+    compileOnly("org.geysermc.floodgate:api:${floodgate_api_version}")
+
+    //jetty server
+    implementation('org.eclipse.jetty:jetty-server:11.0.25')
+    implementation('org.eclipse.jetty:jetty-servlet:11.0.25')
+    implementation('org.eclipse.jetty.websocket:websocket-servlet:11.0.25')
+    implementation('org.eclipse.jetty.websocket:websocket-jetty-server:11.0.25')
+
+    // SimpleVoiceChat API
+    implementation("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.jar {
+    from("LICENSE") {
+        into("")
+    }
+
+    manifest {
+        attributes(
+                'Main-Class': 'io.github.theodoremeyer.spigotmc.simplevoicegeyser.SVGPlugin',
+                'Plugin-Version': version
+        )
+    }
+}
+
+tasks.processResources {
+    inputs.property("version", version)
+    inputs.property("spigot_version", spigot_api_version)
+
+    filesMatching('plugin.yml') {
+        expand(
+                plugin_version: version,
+                spigot_version: spigot_api_version
+        )
+    }
+}
+
+tasks.named("build") {
+    finalizedBy("publishToMavenLocal")
+}
+
+runServer { // https://github.com/jpenilla/run-task/wiki
+    minecraftVersion("1.21.11")
+    downloadPlugins {
+        // Simple Voice Chat //
+        url("https://cdn.modrinth.com/data/9eGKb6K1/versions/FeJRj2X0/voicechat-bukkit-2.6.12.jar")
+
+        // Geyser //
+        url("https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot")
+        // Floodgate //
+        url("https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot")
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            from components.java
+            artifactId = "SimpleVoice-Geyser"
+
+            pom {
+                name = "SimpleVoice-Geyser"
+                description = "Plugin to allow Bedrock clients to join Simple Voice Chat."
+                licenses {
+                    license {
+                        name = "MIT License"
+                        url = "https://github.com/TheodoreMeyer/SimpleVoice-Geyser/blob/master/LICENSE"
+                    }
+                }
+            }
+        }
+    }
+}
+
