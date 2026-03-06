@@ -8,12 +8,6 @@ website: https://theodoremeyer.github.io
 depend: [voicechat]
 softdepend: [Geyser-Spigot, floodgate]
 prefix: SVG
-libraries:
-  - org.json:json:20250107
-  - org.eclipse.jetty:jetty-server:11.0.25
-  - org.eclipse.jetty:jetty-servlet:11.0.25
-  - org.eclipse.jetty.websocket:websocket-jetty-server:11.0.25
-  - org.mindrot:jbcrypt:0.4
 
 commands:
   svg:

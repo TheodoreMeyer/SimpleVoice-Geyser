@@ -62,8 +62,8 @@ subprojects {\
         options.release.set(21)
     }
 
-    tasks.jar {
-        from("LICENSE") {
+    tasks.withType(Jar).configureEach {
+        from(rootProject.layout.projectDirectory.file("LICENSE")) {
             into("")
         }
     }

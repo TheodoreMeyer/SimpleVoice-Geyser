@@ -8,6 +8,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioSender;
 import io.github.theodoremeyer.simplevoicegeyser.core.chat.SvgColor;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import org.json.JSONObject;
@@ -160,7 +161,7 @@ public final class JettyWebSocket {
         SvgCore.getLogger().info("Error: " + error.getMessage());
     }
 
-    private void join(JSONObject json) {
+    private void join(@NonNull JSONObject json) {
         PlayerVcPswd playerVcPswd = SvgCore.getPasswordManager();
 
         String username = json.getString("username");

@@ -6,6 +6,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.PlayerManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.SvgLibraryLoader;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.JettyServer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.WebSocketManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
 import io.github.theodoremeyer.simplevoicegeyser.core.thread.AudioThread;
@@ -29,6 +30,11 @@ public class SvgCore implements EventRegistrar {
      */
     private VoiceChatBridge vcBridge;
 
+    /**
+     * Server
+     */
+    private JettyServer jettyServer;
+
     //MANAGERS
     private final PlayerManager playerManager;
 
@@ -46,11 +52,12 @@ public class SvgCore implements EventRegistrar {
     private boolean debug = false;
 
     public SvgCore(Platform platform) {
+
+        new SvgLibraryLoader().loadDependencies();
+
         this.platform = platform;
         instance = this;
         new AudioThread();
-
-        new SvgLibraryLoader().loadDependencies();
 
         //Managers
         this.playerManager = new PlayerManager();
@@ -67,6 +74,17 @@ public class SvgCore implements EventRegistrar {
         this.groupManager = new GroupManager(vcBridge);
 
         this.command = new Command(groupManager);
+
+        int port = platform.getFile(DataType.CONFIG).getInt("server.port", 8080);
+        String host = platform.getFile(DataType.CONFIG).getString("server.bind-address", "0.0.0.0");
+
+        try {
+            jettyServer = new JettyServer(this, port, host); //start the jetty server
+            jettyServer.start();
+            getLogger().info("Jetty server started on port: " + port);
+        } catch (Exception e) {
+            getLogger().severe("Failed to start Jetty server: " + e.getMessage());
+        }
     }
 
     public SvgFile getConfig() {

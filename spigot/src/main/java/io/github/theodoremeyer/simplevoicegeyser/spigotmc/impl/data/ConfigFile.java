@@ -14,7 +14,7 @@ public class ConfigFile extends SvgFile {
 
     private final File configFile;
 
-    public ConfigFile(FileConfiguration config, File configFile) {
+    public ConfigFile(File configFile) {
         this.configFile = configFile;
         this.config = YamlConfiguration.loadConfiguration(configFile);
     }

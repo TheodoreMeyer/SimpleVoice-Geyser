@@ -17,13 +17,11 @@ public class SvgCommand implements CommandExecutor {
         if (commandSender instanceof Player p) {
             SvgPlayer player = SvgCore.getPlayerManager().getPlayer(p.getUniqueId());
 
-            SvgCore.getCommand().onCommand(player, strings);
+            return SvgCore.getCommand().onCommand(player, strings);
         } else if (commandSender instanceof ConsoleCommandSender) {
-            SvgCore.getCommand().onCommand(new BukkitConsole(), strings);
+            return SvgCore.getCommand().onCommand(new BukkitConsole(), strings);
         } else {
             return false;
         }
-
-        return true;
     }
 }

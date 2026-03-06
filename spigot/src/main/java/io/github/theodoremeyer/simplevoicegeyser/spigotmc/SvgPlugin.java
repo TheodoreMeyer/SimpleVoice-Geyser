@@ -46,10 +46,11 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
         }
 
         // Initialize your ConfigFile wrapper
-        this.configFile = new ConfigFile(getConfig(), file);
+        this.configFile = new ConfigFile(file);
         this.passwordFile = new PasswordFile(new File(getDataFolder(), "playerpasswords.yml"));
 
         this.core = new SvgCore(this);
+
     }
 
     @Override
@@ -109,6 +110,11 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
 
     @Override
     public SvgFile getFile(DataType type) {
+        if (type == DataType.CONFIG) {
+            return configFile;
+        } else if (type == DataType.PASSWORD) {
+            return passwordFile;
+        }
         return null;
     }
 
