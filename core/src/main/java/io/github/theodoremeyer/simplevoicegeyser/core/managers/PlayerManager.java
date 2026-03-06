@@ -1,5 +1,6 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.managers;
 
+import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -54,7 +55,7 @@ public final class PlayerManager {
         return Collections.unmodifiableCollection(players.values());
     }
 
-    //Add/Remove Players
+    // Add/Remove Players
     /**
      * Add a player
      * @param player the player to add
@@ -72,6 +73,8 @@ public final class PlayerManager {
     public void removePlayer(SvgPlayer player) {
         players.remove(player.getUniqueId());
         playersByName.remove(player.getName());
+
+        SvgCore.getWsManager().disconnectClient(player.getUniqueId());
     }
 
     // Is Player Online
