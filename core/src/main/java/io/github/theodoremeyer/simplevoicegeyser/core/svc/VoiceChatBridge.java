@@ -9,10 +9,10 @@ import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.RemoveGroupEvent;
 import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioListener;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioSender;
-import io.github.theodoremeyer.simplevoicegeyser.core.chat.SvgColor;
 import org.eclipse.jetty.websocket.api.Session;
 
 import java.util.Map;

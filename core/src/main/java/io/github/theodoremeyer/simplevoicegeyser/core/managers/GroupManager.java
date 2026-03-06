@@ -5,8 +5,8 @@ import de.maxhenkel.voicechat.api.Group.Type;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
-import io.github.theodoremeyer.simplevoicegeyser.core.chat.SvgColor;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
 
 import java.lang.reflect.Field;

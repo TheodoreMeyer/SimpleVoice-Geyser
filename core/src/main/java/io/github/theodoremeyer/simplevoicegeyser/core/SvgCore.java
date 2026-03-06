@@ -84,6 +84,7 @@ public class SvgCore implements EventRegistrar {
             getLogger().info("Jetty server started on port: " + port);
         } catch (Exception e) {
             getLogger().severe("Failed to start Jetty server: " + e.getMessage());
+            platform.disable();
         }
     }
 

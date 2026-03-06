@@ -45,12 +45,11 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
             saveResource("config.yml", false);
         }
 
-        // Initialize your ConfigFile wrapper
+        // Initialize ConfigFile wrapper
         this.configFile = new ConfigFile(file);
         this.passwordFile = new PasswordFile(new File(getDataFolder(), "playerpasswords.yml"));
 
         this.core = new SvgCore(this);
-
     }
 
     @Override
@@ -58,7 +57,6 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
         core.init();
 
         getCommand("svg").setExecutor(new SvgCommand());
-
 
         SvgListener listener = new SvgListener();
         Bukkit.getPluginManager().registerEvents(listener, this);
@@ -77,12 +75,12 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
 
     @Override
     public void onDisable() {
-
+        GeyserApi.api().eventBus().unregisterAll(this);
     }
 
     @Override
     public void disable() {
-
+        Bukkit.getPluginManager().disablePlugin(this);
     }
 
     @Override

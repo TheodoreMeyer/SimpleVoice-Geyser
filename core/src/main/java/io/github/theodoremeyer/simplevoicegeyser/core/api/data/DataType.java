@@ -1,5 +1,8 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.api.data;
 
+/**
+ * Easier recognition for different files
+ */
 public enum DataType {
 
     /**

@@ -1,4 +1,4 @@
-package io.github.theodoremeyer.simplevoicegeyser.core.chat;
+package io.github.theodoremeyer.simplevoicegeyser.core.api.chat;
 
 /**
  * Cross-platform color & formatting enum using legacy § codes.
@@ -31,11 +31,20 @@ public enum SvgColor {
     UNDERLINE("§n"),
     ITALIC("§o"),
 
-    // Reset
+    /**
+     * Resets the color
+     */
     RESET("§r");
 
+    /**
+     * The color code
+     */
     private final String code;
 
+    /**
+     * Creates an enum for a color
+     * @param code the color code
+     */
     SvgColor(String code) {
         this.code = code;
     }

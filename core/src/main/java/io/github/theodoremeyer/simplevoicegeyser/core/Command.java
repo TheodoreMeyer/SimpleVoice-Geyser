@@ -1,9 +1,9 @@
 package io.github.theodoremeyer.simplevoicegeyser.core;
 
 import de.maxhenkel.voicechat.api.Group;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.Sender;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
-import io.github.theodoremeyer.simplevoicegeyser.core.chat.SvgColor;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.FormHandler;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;

@@ -36,6 +36,11 @@ public class BukkitPlayer extends SvgPlayer {
     }
 
     @Override
+    public Object getPlayer() {
+        return player;
+    }
+
+    @Override
     public void sendMessage(String message) {
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
     }
