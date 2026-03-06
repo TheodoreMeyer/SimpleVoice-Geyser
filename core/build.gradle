@@ -39,6 +39,15 @@ tasks.processResources {
     }
 }
 
+tasks.withType(Jar).configureEach {
+    archiveBaseName.set("Svg-Core")
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 

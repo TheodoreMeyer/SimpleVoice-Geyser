@@ -102,8 +102,7 @@ public class WebSocketManager {
 
     /**
      * Send A JSON message to the Websocket Client
-     * @apiNote To be worked on.
-     * @apiNote This allows custom messages to be sent to client other than status data
+     * This allows custom messages to be sent to client other than status data
      * @param json the Data to send
      */
     public void sendJson(UUID uuid, JSONObject json) {

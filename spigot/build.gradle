@@ -33,6 +33,11 @@ tasks.processResources {
     }
 }
 
+tasks.withType(Jar).configureEach {
+    archiveBaseName.set("Svg-Spigot")
+}
+
+
 tasks.jar {
     dependsOn(":core:jar") // make sure core is built first
 

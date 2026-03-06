@@ -1,7 +1,7 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.api.chat;
 
 /**
- * Cross-platform color & formatting enum using legacy § codes.
+ * Cross-platform color and formatting enum using legacy § codes.
  * Works on all Minecraft platforms.
  */
 public enum SvgColor {
