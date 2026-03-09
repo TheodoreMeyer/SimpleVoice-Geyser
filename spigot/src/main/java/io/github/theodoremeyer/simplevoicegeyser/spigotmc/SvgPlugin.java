@@ -76,6 +76,7 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
     @Override
     public void onDisable() {
         GeyserApi.api().eventBus().unregisterAll(this);
+        SvgCore.getWsManager().disconnectAllClients();
     }
 
     @Override
