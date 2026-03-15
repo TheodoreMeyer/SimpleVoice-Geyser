@@ -1,1 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8">
+    <title>SimpleVoice-Geyser</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+    <h1>Join Simple Voice Chat</h1>
+    <div id="form-container">
+        <form id="joinForm">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required autocomplete="username">
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+
+            <label for="mic">Select Microphone:</label>
+            <select id="mic" name="mic">
+                <option disabled checked hidden>Select</option>
+            </select>
+
+            <label for="speaker">Select Speaker:</label>
+            <select id="speaker" name="speaker">
+                <option disabled checked hidden>Select</option>
+            </select>
+
+            <button type="submit" id="joinbtn">Join</button>
+        </form>
+    </div>
+    <div id="main-vc-container">
+        <div id="micControls">
+            <button id="muteBtn" class="unmuted">Mute</button>
+            <span id="micIndicator" title="Mic activity"></span>
+        </div>
+        <br>
+        <div id="status">Waiting to join...</div>
+        <div id="log"></div>
+        <br>
+        <div id="inputArea">
+            <input type="text" id="msgInput" placeholder="Type a message..." />
+            <button id="messageButton">Send</button>
+        </div>
+        <br>
+        <button id="testSound" type="button">Test Sound</button>
+    </div>
+    <div>
+        <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank"><img src="images/github.svg"alt="Github Link" class="githubicon"></a>
+    </div>
+    <noscript>HEY IDIOT GO TURN ON JAVASCRIPT ON YOUR BROSWER</noscript>
+    <script type="module">
+        import { start } from '/client.js';
+        start(); // manually triggers it
+    </script>
+
+</body>
+
+</html>
