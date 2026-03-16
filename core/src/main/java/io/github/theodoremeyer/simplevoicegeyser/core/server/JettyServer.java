@@ -51,9 +51,6 @@ public final class JettyServer {
         context.setContextPath("/");
         server.setHandler(context);
 
-        String htmlType = "text/html";
-        String jSType = "application/javascript";
-
         // Serve all static resources from /web
         context.addServlet(new ServletHolder(new ResourceServlet()), "/*");
 

@@ -36,8 +36,8 @@ export function start() {
                 console.warn("WRONG SAMPLE RATE: " + audioContext.sampleRate);
             }
 
-            await audioContext.audioWorklet.addModule('/audio-worklet-processor.js');
-            await audioContext.audioWorklet.addModule('/mic-capture-processor.js');
+            await audioContext.audioWorklet.addModule('/js/audio-worklet-processor.js');
+            await audioContext.audioWorklet.addModule('/js/mic-capture-processor.js');
 
             audioWorkletNode = new AudioWorkletNode(audioContext, 'pcm-player');
 
