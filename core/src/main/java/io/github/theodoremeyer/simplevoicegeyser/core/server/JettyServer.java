@@ -54,24 +54,8 @@ public final class JettyServer {
         String htmlType = "text/html";
         String jSType = "application/javascript";
 
-        // Add HTML page at root
-        context.addServlet(new ServletHolder(new ResourceServlet(
-                "/web/index.html", htmlType)), "/");
-
-        // Add driving JavaScript
-        context.addServlet(new ServletHolder(new ResourceServlet(
-                "/web/js/client.js", jSType)), "/client.js");
-
-        //add audio servlet
-        context.addServlet(new ServletHolder(new ResourceServlet(
-                "/web/js/audio-worklet-processor.js", jSType)), "/audio-worklet-processor.js");
-
-        // add mic servlet
-        context.addServlet(new ServletHolder(new ResourceServlet(
-                "/web/js/mic-capture-processor.js", jSType)), "/mic-capture-processor.js");
-
-
-
+        // Serve all static resources from /web
+        context.addServlet(new ServletHolder(new ResourceServlet()), "/*");
 
         double idleTimeoutMinutes =
                 core.getConfig().getDouble("client.idletimeout", 2.0);
