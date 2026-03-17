@@ -6,13 +6,36 @@ export function start() {
     const speakerSelect = document.getElementById('speaker');
     const micSelect = document.getElementById('mic');
     const joinButton = document.getElementById('joinbtn');
+    const transmitModeSelect = document.getElementById('transmitMode');
+    const pttBindingControls = document.getElementById('pttBindingControls');
+    const bindPttBtn = document.getElementById('bindPttBtn');
+    const clearPttBtn = document.getElementById('clearPttBtn');
+    const pttBindingLabel = document.getElementById('pttBindingLabel');
 
     const muteBtn = document.getElementById('muteBtn');
     const micIndicator = document.getElementById('micIndicator');
+    const pttControls = document.getElementById('pttControls');
+    const pushToTalkBtn = document.getElementById('pushToTalkBtn');
+    const fullscreenPttBtn = document.getElementById('fullscreenPttBtn');
+    const pttFullscreenOverlay = document.getElementById('pttFullscreenOverlay');
+    const pushToTalkFullscreenBtn = document.getElementById('pushToTalkFullscreenBtn');
+    const exitFullscreenPttBtn = document.getElementById('exitFullscreenPttBtn');
 
     const sendMessageBtn = document.getElementById("messageButton")
 
     let muted = false;
+    let bindingCaptureActive = false;
+    let gamepadPollHandle = null;
+    let fullscreenPttActive = false;
+
+    const TRANSMIT_MODE_KEY = "svgTransmitMode";
+    const PTT_BINDING_KEY = "svgPttBinding";
+    const pttSources = new Set();
+    const touchDevice = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+
+    let pttBinding = loadPttBinding();
+
+    transmitModeSelect.value = localStorage.getItem(TRANSMIT_MODE_KEY) || "voice";
 
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     let audioContext = new AudioCtx({ sampleRate: 48000 });
@@ -27,7 +50,369 @@ export function start() {
     let micActiveUntil = 0;
     const MIC_HOLD_MS = 120;
 
+    const GAMEPAD_BUTTON_NAMES = {
+        generic: [
+            "Face Bottom (A / Cross / B)",
+            "Face Right (B / Circle / A)",
+            "Face Left (X / Square / Y)",
+            "Face Top (Y / Triangle / X)",
+            "Left Bumper",
+            "Right Bumper",
+            "Left Trigger",
+            "Right Trigger",
+            "View / Share",
+            "Menu / Options",
+            "Left Stick",
+            "Right Stick",
+            "D-Pad Up",
+            "D-Pad Down",
+            "D-Pad Left",
+            "D-Pad Right",
+            "Home",
+            "Touchpad"
+        ],
+        xbox: [
+            "A",
+            "B",
+            "X",
+            "Y",
+            "Left Bumper",
+            "Right Bumper",
+            "Left Trigger",
+            "Right Trigger",
+            "View",
+            "Menu",
+            "Left Stick",
+            "Right Stick",
+            "D-Pad Up",
+            "D-Pad Down",
+            "D-Pad Left",
+            "D-Pad Right",
+            "Xbox",
+            "Share"
+        ],
+        playstation: [
+            "Cross",
+            "Circle",
+            "Square",
+            "Triangle",
+            "L1",
+            "R1",
+            "L2",
+            "R2",
+            "Create",
+            "Options",
+            "L3",
+            "R3",
+            "D-Pad Up",
+            "D-Pad Down",
+            "D-Pad Left",
+            "D-Pad Right",
+            "PS",
+            "Touchpad"
+        ],
+        nintendo: [
+            "B",
+            "A",
+            "Y",
+            "X",
+            "L",
+            "R",
+            "ZL",
+            "ZR",
+            "Minus",
+            "Plus",
+            "Left Stick",
+            "Right Stick",
+            "D-Pad Up",
+            "D-Pad Down",
+            "D-Pad Left",
+            "D-Pad Right",
+            "Home",
+            "Capture"
+        ]
+    };
+
     console.log("CLIENT.JS loaded!");
+
+    function loadPttBinding() {
+        try {
+            const raw = localStorage.getItem(PTT_BINDING_KEY);
+            if (!raw) return null;
+
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== "object") return null;
+
+            if (parsed.type === "keyboard" && typeof parsed.code === "string") return parsed;
+            if (parsed.type === "mouse" && Number.isInteger(parsed.button)) return parsed;
+            if (parsed.type === "gamepad" && Number.isInteger(parsed.buttonIndex)) return parsed;
+        } catch (error) {
+            console.warn("Failed to load PTT binding:", error);
+        }
+
+        return null;
+    }
+
+    function savePttBinding(binding) {
+        pttBinding = binding;
+
+        if (binding) {
+            localStorage.setItem(PTT_BINDING_KEY, JSON.stringify(binding));
+        } else {
+            localStorage.removeItem(PTT_BINDING_KEY);
+        }
+
+        updatePttBindingLabel();
+    }
+
+    function getTransmitMode() {
+        return transmitModeSelect.value === "ptt" ? "ptt" : "voice";
+    }
+
+    function isPttMode() {
+        return getTransmitMode() === "ptt";
+    }
+
+    function isPttActive() {
+        return !muted && pttSources.size > 0;
+    }
+
+    function addPttSource(sourceId) {
+        pttSources.add(sourceId);
+        updatePttButtons();
+    }
+
+    function removePttSource(sourceId) {
+        pttSources.delete(sourceId);
+        updatePttButtons();
+    }
+
+    function clearPttSources() {
+        pttSources.clear();
+        updatePttButtons();
+    }
+
+    function updatePttButtons() {
+        const active = isPttActive();
+        pushToTalkBtn.classList.toggle("active", active);
+        pushToTalkFullscreenBtn.classList.toggle("active", active);
+        pushToTalkBtn.textContent = active ? "Talking..." : "Hold to Talk";
+        pushToTalkFullscreenBtn.textContent = active ? "Talking..." : "Hold to Talk";
+    }
+
+    function setBindingCaptureState(active) {
+        bindingCaptureActive = active;
+        bindPttBtn.textContent = active ? "Press a key, mouse button, or controller button..." : "Bind Push-to-Talk";
+        bindPttBtn.disabled = active;
+        clearPttBtn.disabled = active;
+
+        if (active) {
+            pttBindingLabel.textContent = "Waiting for input... press Escape to cancel.";
+        } else {
+            updatePttBindingLabel();
+        }
+    }
+
+    function detectGamepadFamily(gamepadId = "") {
+        const id = gamepadId.toLowerCase();
+        if (id.includes("xbox") || id.includes("xinput")) return "xbox";
+        if (id.includes("playstation") || id.includes("dualshock") || id.includes("dualsense") || id.includes("wireless controller")) return "playstation";
+        if (id.includes("nintendo") || id.includes("switch") || id.includes("joy-con")) return "nintendo";
+        return "generic";
+    }
+
+    function getGamepadButtonName(buttonIndex, gamepadId = "") {
+        const family = detectGamepadFamily(gamepadId);
+        return GAMEPAD_BUTTON_NAMES[family][buttonIndex] || GAMEPAD_BUTTON_NAMES.generic[buttonIndex] || `Button ${buttonIndex}`;
+    }
+
+    function getConnectedGamepad() {
+        const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+        return Array.from(gamepads).find(Boolean) || null;
+    }
+
+    function formatMouseButton(button) {
+        if (button === 0) return "Mouse Left Button";
+        if (button === 1) return "Mouse Middle Button";
+        if (button === 2) return "Mouse Right Button";
+        if (button === 3) return "Mouse Back Button";
+        if (button === 4) return "Mouse Forward Button";
+        return `Mouse Button ${button}`;
+    }
+
+    function formatKeyboardCode(code) {
+        const aliases = {
+            Space: "Space",
+            Escape: "Escape",
+            ShiftLeft: "Left Shift",
+            ShiftRight: "Right Shift",
+            ControlLeft: "Left Ctrl",
+            ControlRight: "Right Ctrl",
+            AltLeft: "Left Alt",
+            AltRight: "Right Alt",
+            MetaLeft: "Left Meta",
+            MetaRight: "Right Meta"
+        };
+
+        if (aliases[code]) return aliases[code];
+        return code
+            .replace(/^Key/, "")
+            .replace(/^Digit/, "")
+            .replace(/([a-z])([A-Z])/g, "$1 $2");
+    }
+
+    function formatPttBinding(binding) {
+        if (!binding) {
+            return "No binding set. Use the hold button or add a binding.";
+        }
+
+        if (binding.type === "keyboard") {
+            return `Bound to ${formatKeyboardCode(binding.code)}`;
+        }
+
+        if (binding.type === "mouse") {
+            return `Bound to ${formatMouseButton(binding.button)}`;
+        }
+
+        if (binding.type === "gamepad") {
+            const connectedGamepad = getConnectedGamepad();
+            const buttonName = getGamepadButtonName(binding.buttonIndex, connectedGamepad ? connectedGamepad.id : "");
+            return `Bound to Controller ${buttonName}`;
+        }
+
+        return "No binding set. Use the hold button or add a binding.";
+    }
+
+    function updatePttBindingLabel() {
+        pttBindingLabel.textContent = formatPttBinding(pttBinding);
+    }
+
+    function updateTransmitModeUi() {
+        const pttMode = isPttMode();
+        pttBindingControls.hidden = !pttMode;
+        pttControls.hidden = !pttMode;
+        fullscreenPttBtn.hidden = !pttMode || !touchDevice;
+
+        if (!pttMode) {
+            clearPttSources();
+            exitFullscreenPtt();
+        }
+    }
+
+    function isEditableTarget(target) {
+        if (!(target instanceof HTMLElement)) return false;
+        if (target.isContentEditable) return true;
+
+        const tagName = target.tagName;
+        return tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT";
+    }
+
+    function bindingMatchesKeyboard(event) {
+        return pttBinding && pttBinding.type === "keyboard" && event.code === pttBinding.code;
+    }
+
+    function bindingMatchesMouse(event) {
+        return pttBinding && pttBinding.type === "mouse" && event.button === pttBinding.button;
+    }
+
+    function setFullscreenPtt(active) {
+        fullscreenPttActive = active;
+        document.body.classList.toggle("fullscreen-ptt-active", active);
+        pttFullscreenOverlay.classList.toggle("visible", active);
+        pttFullscreenOverlay.setAttribute("aria-hidden", active ? "false" : "true");
+    }
+
+    async function requestFullscreenPtt() {
+        if (!isPttMode()) return;
+
+        setFullscreenPtt(true);
+
+        if (pttFullscreenOverlay.requestFullscreen && document.fullscreenElement !== pttFullscreenOverlay) {
+            try {
+                await pttFullscreenOverlay.requestFullscreen();
+            } catch (error) {
+                console.warn("Fullscreen request failed:", error);
+            }
+        }
+    }
+
+    async function exitFullscreenPtt() {
+        if (document.fullscreenElement === pttFullscreenOverlay && document.exitFullscreen) {
+            try {
+                await document.exitFullscreen();
+            } catch (error) {
+                console.warn("Exiting fullscreen failed:", error);
+            }
+        }
+
+        setFullscreenPtt(false);
+    }
+
+    function capturePttBinding(binding) {
+        savePttBinding(binding);
+        setBindingCaptureState(false);
+        log(`Push-to-talk binding saved: ${formatPttBinding(binding)}`);
+    }
+
+    function registerHoldButton(button, sourcePrefix) {
+        const activePointers = new Set();
+
+        button.addEventListener("pointerdown", (event) => {
+            if (!isPttMode()) return;
+
+            event.preventDefault();
+            const sourceId = `${sourcePrefix}:${event.pointerId}`;
+            activePointers.add(sourceId);
+            addPttSource(sourceId);
+
+            if (button.setPointerCapture) {
+                button.setPointerCapture(event.pointerId);
+            }
+        });
+
+        const releasePointer = (event) => {
+            const sourceId = `${sourcePrefix}:${event.pointerId}`;
+            activePointers.delete(sourceId);
+            removePttSource(sourceId);
+        };
+
+        button.addEventListener("pointerup", releasePointer);
+        button.addEventListener("pointercancel", releasePointer);
+        button.addEventListener("lostpointercapture", releasePointer);
+        button.addEventListener("contextmenu", (event) => event.preventDefault());
+    }
+
+    function pollGamepads() {
+        const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+
+        if (bindingCaptureActive) {
+            for (const gamepad of gamepads) {
+                if (!gamepad) continue;
+
+                const pressedIndex = gamepad.buttons.findIndex((button) => button.pressed || button.value > 0.5);
+                if (pressedIndex !== -1) {
+                    capturePttBinding({ type: "gamepad", buttonIndex: pressedIndex });
+                    break;
+                }
+            }
+        }
+
+        if (pttBinding && pttBinding.type === "gamepad") {
+            for (const gamepad of gamepads) {
+                if (!gamepad) continue;
+
+                const button = gamepad.buttons[pttBinding.buttonIndex];
+                const sourceId = `gamepad:${gamepad.index}:${pttBinding.buttonIndex}`;
+                if (button && (button.pressed || button.value > 0.5)) {
+                    addPttSource(sourceId);
+                } else {
+                    removePttSource(sourceId);
+                }
+            }
+        }
+
+        gamepadPollHandle = window.requestAnimationFrame(pollGamepads);
+    }
 
     // Load the AudioWorklet processor
     async function initAudioWorklet() {
@@ -140,17 +525,19 @@ export function start() {
                 // Mic activity indicator
                 const now = performance.now();
 
-                if (speech && !muted) {
+                const transmitting = isPttMode() ? isPttActive() : (speech && !muted);
+
+                if (transmitting) {
                     micActiveUntil = now + MIC_HOLD_MS;
                 }
 
-                if (!muted && now < micActiveUntil) {
+                if (!muted && (isPttMode() ? transmitting : now < micActiveUntil)) {
                     micIndicator.classList.add("active");
                 } else {
                     micIndicator.classList.remove("active");
                 }
 
-                if (!speech || muted) return; // silence OR muted
+                if (!transmitting) return;
 
                 // Float32 → Int16
                 const int16Chunk = new Int16Array(samples.length);
@@ -192,6 +579,7 @@ export function start() {
         muted = !muted;
 
         if (muted) {
+            clearPttSources();
             micActiveUntil = 0;
             micIndicator.classList.remove("active");
 
@@ -203,6 +591,116 @@ export function start() {
             muteBtn.classList.remove("muted");
             muteBtn.classList.add("unmuted");
         }
+
+        updatePttButtons();
+    });
+
+    transmitModeSelect.addEventListener("change", () => {
+        localStorage.setItem(TRANSMIT_MODE_KEY, getTransmitMode());
+        updateTransmitModeUi();
+    });
+
+    bindPttBtn.addEventListener("click", () => {
+        setBindingCaptureState(true);
+    });
+
+    clearPttBtn.addEventListener("click", () => {
+        savePttBinding(null);
+        log("Push-to-talk binding cleared.");
+    });
+
+    fullscreenPttBtn.addEventListener("click", () => {
+        requestFullscreenPtt();
+    });
+
+    exitFullscreenPttBtn.addEventListener("click", () => {
+        exitFullscreenPtt();
+    });
+
+    registerHoldButton(pushToTalkBtn, "button");
+    registerHoldButton(pushToTalkFullscreenBtn, "fullscreen");
+
+    window.addEventListener("keydown", (event) => {
+        if (bindingCaptureActive) {
+            event.preventDefault();
+
+            if (event.code === "Escape") {
+                setBindingCaptureState(false);
+                return;
+            }
+
+            capturePttBinding({ type: "keyboard", code: event.code });
+            return;
+        }
+
+        if (!isPttMode() || !bindingMatchesKeyboard(event) || event.repeat) return;
+        if (isEditableTarget(event.target)) return;
+
+        event.preventDefault();
+        addPttSource(`keyboard:${pttBinding.code}`);
+    });
+
+    window.addEventListener("keyup", (event) => {
+        if (!isPttMode() || !bindingMatchesKeyboard(event)) return;
+
+        event.preventDefault();
+        removePttSource(`keyboard:${pttBinding.code}`);
+    });
+
+    window.addEventListener("mousedown", (event) => {
+        if (bindingCaptureActive) {
+            event.preventDefault();
+            capturePttBinding({ type: "mouse", button: event.button });
+            return;
+        }
+
+        if (!isPttMode() || !bindingMatchesMouse(event)) return;
+
+        event.preventDefault();
+        addPttSource(`mouse:${pttBinding.button}`);
+    });
+
+    window.addEventListener("mouseup", (event) => {
+        if (!isPttMode() || !bindingMatchesMouse(event)) return;
+
+        event.preventDefault();
+        removePttSource(`mouse:${pttBinding.button}`);
+    });
+
+    window.addEventListener("auxclick", (event) => {
+        if ((bindingCaptureActive || (isPttMode() && bindingMatchesMouse(event))) && event.cancelable) {
+            event.preventDefault();
+        }
+    });
+
+    window.addEventListener("contextmenu", (event) => {
+        if ((bindingCaptureActive || (isPttMode() && bindingMatchesMouse(event))) && event.cancelable) {
+            event.preventDefault();
+        }
+    });
+
+    window.addEventListener("blur", () => {
+        clearPttSources();
+    });
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            clearPttSources();
+        }
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+        setFullscreenPtt(document.fullscreenElement === pttFullscreenOverlay);
+    });
+
+    window.addEventListener("gamepadconnected", (event) => {
+        log(`Controller connected: ${event.gamepad.id}`);
+        updatePttBindingLabel();
+    });
+
+    window.addEventListener("gamepaddisconnected", (event) => {
+        log(`Controller disconnected: ${event.gamepad.id}`);
+        updatePttBindingLabel();
     });
 
     form.addEventListener('submit', async (event) => {
@@ -219,6 +717,9 @@ export function start() {
             speakerSelect.disabled = false;
 
             if (microphoneStream) microphoneStream.getTracks().forEach(track => track.stop());
+
+            clearPttSources();
+            exitFullscreenPtt();
 
             return;
         }
@@ -285,6 +786,8 @@ export function start() {
 
             if (microphoneStream) microphoneStream.getTracks().forEach(track => track.stop());
 
+            clearPttSources();
+            exitFullscreenPtt();
 
             micActiveUntil = 0;
             micIndicator.classList.remove("active");
@@ -345,6 +848,11 @@ export function start() {
 
 
     window.addEventListener("DOMContentLoaded", async () => {
+        updatePttBindingLabel();
+        updateTransmitModeUi();
+        updatePttButtons();
+        gamepadPollHandle = window.requestAnimationFrame(pollGamepads);
+
         await initAudioWorklet();
         await populateSpeakers();
         await populateMicrophones();

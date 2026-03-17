@@ -33,6 +33,9 @@
                 margin-bottom: 10px;
                 font-size: 14px;
             }
+            label {
+                font-weight: 600;
+            }
             input, select {
                 padding: 8px;
                 border-radius: 4px;
@@ -49,9 +52,42 @@
             button:hover {
                 background-color: #00aacc;
             }
+            button:disabled {
+                opacity: 0.65;
+                cursor: not-allowed;
+            }
+            .settingsBlock {
+                margin-top: 18px;
+                padding-top: 16px;
+                border-top: 1px solid #3f3f3f;
+            }
+            .settingsHint {
+                font-size: 12px;
+                color: #b8b8b8;
+                margin: 0;
+            }
+            .inlineButtons {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-bottom: 10px;
+            }
+            .inlineButtons button {
+                flex: 1 1 160px;
+            }
+            #pttBindingLabel {
+                margin-bottom: 10px;
+                padding: 10px 12px;
+                border-radius: 6px;
+                background: #1d1d1d;
+                border: 1px solid #454545;
+                font-family: monospace;
+                min-height: 20px;
+            }
             #micControls {
                 display: flex;
                 align-items: center;
+                flex-wrap: wrap;
                 gap: 12px;
                 margin-bottom: 10px;
             }
@@ -84,6 +120,58 @@
             #micIndicator.active {
                 background-color: #33ff66;
             }
+            #pttControls {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 14px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .pttButton {
+                min-width: 190px;
+                font-weight: bold;
+                user-select: none;
+                -webkit-user-select: none;
+                touch-action: manipulation;
+            }
+            .pttButton.active {
+                background-color: #33aa55;
+                color: #000;
+            }
+            #fullscreenPttBtn {
+                background-color: #f2b94b;
+            }
+            #fullscreenPttBtn:hover {
+                background-color: #d79c2f;
+            }
+            #pttFullscreenOverlay {
+                position: fixed;
+                inset: 0;
+                display: none;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 18px;
+                background: radial-gradient(circle at center, rgba(0, 212, 255, 0.18), rgba(0, 0, 0, 0.94));
+                z-index: 1000;
+            }
+            #pttFullscreenOverlay.visible {
+                display: flex;
+            }
+            #pushToTalkFullscreenBtn {
+                width: min(82vw, 540px);
+                height: min(58vh, 540px);
+                border-radius: 24px;
+                font-size: clamp(24px, 5vw, 42px);
+            }
+            #exitFullscreenPttBtn {
+                background-color: #444;
+                color: #fff;
+            }
+            body.fullscreen-ptt-active {
+                overflow: hidden;
+            }
             #status {
                 margin: 10px;
                 padding: 8px 12px;
@@ -112,6 +200,28 @@
                 width: 90%;
                 max-width: 600px;
             }
+            @media (max-width: 640px) {
+                body {
+                    padding: 16px;
+                }
+                form {
+                    padding: 16px;
+                }
+                #inputArea {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+                #inputArea button {
+                    width: 100%;
+                }
+                #pttControls {
+                    width: 100%;
+                }
+                .pttButton,
+                #fullscreenPttBtn {
+                    width: min(100%, 420px);
+                }
+            }
         </style>
     </head>
     <body>
@@ -129,12 +239,34 @@
         <label for="speaker">Select Speaker:</label>
         <select id="speaker" name="speaker"></select>
 
+        <div class="settingsBlock">
+            <label for="transmitMode">Transmit Mode:</label>
+            <select id="transmitMode" name="transmitMode">
+                <option value="voice">Voice Activity</option>
+                <option value="ptt">Push to Talk</option>
+            </select>
+
+            <div id="pttBindingControls" hidden>
+                <div class="inlineButtons">
+                    <button type="button" id="bindPttBtn">Bind Push-to-Talk</button>
+                    <button type="button" id="clearPttBtn">Clear Binding</button>
+                </div>
+                <div id="pttBindingLabel">No binding set. Use the hold button or add a binding.</div>
+                <p class="settingsHint">Bindings support keyboard keys, side mouse buttons, and standard controller buttons on Xbox, PlayStation, and Nintendo pads.</p>
+            </div>
+        </div>
+
         <button type="submit" id="joinbtn">Join</button>
     </form>
 
     <div id="micControls">
         <button id="muteBtn" class="unmuted">Mute</button>
         <span id="micIndicator" title="Mic activity"></span>
+    </div>
+
+    <div id="pttControls" hidden>
+        <button id="pushToTalkBtn" class="pttButton" type="button">Hold to Talk</button>
+        <button id="fullscreenPttBtn" type="button">Fullscreen Push-to-Talk</button>
     </div>
 
     <div id="status">Waiting to join...</div>
@@ -146,6 +278,11 @@
         <button id="messageButton">Send</button>
     </div>
     <button id="testSound" type="button">Test Sound</button>
+
+    <div id="pttFullscreenOverlay" aria-hidden="true">
+        <button id="pushToTalkFullscreenBtn" class="pttButton" type="button">Hold to Talk</button>
+        <button id="exitFullscreenPttBtn" type="button">Exit Fullscreen PTT</button>
+    </div>
 
     <script type="module">
         import { start } from '/js/client.js';
