@@ -27,6 +27,11 @@ public final class JettyServer {
     private final SvgCore core;
 
     /**
+     * Idle Timeout
+     */
+    private final Duration idleTimeout;
+
+    /**
      * set server port
      * @param port port to run server on
      */
@@ -34,9 +39,23 @@ public final class JettyServer {
         this.server = new Server();
         this.core = core;
 
+        double idleTimeoutMinutes =
+                core.getConfig().getDouble("client.idletimeout", 2.0);
+
+        idleTimeoutMinutes = Math.max(0.5, Math.min(idleTimeoutMinutes, 10.0));
+
+        SvgCore.getLogger().info("Idle timeout: " + idleTimeoutMinutes + " minutes.");
+
+        this.idleTimeout = Duration.ofSeconds(
+                Math.round(idleTimeoutMinutes * 60)
+        );
+
+
+
         ServerConnector connector = new ServerConnector(server);
         connector.setHost(host);
         connector.setPort(port);
+        connector.setIdleTimeout(idleTimeout.toMillis());
 
         server.addConnector(connector);
         SvgCore.getLogger().info("Started on: " + connector.getDefaultProtocol() + " " + connector.getHost() + ":" + connector.getPort());
@@ -53,17 +72,6 @@ public final class JettyServer {
 
         // Serve all static resources from /web
         context.addServlet(new ServletHolder(new ResourceServlet()), "/*");
-
-        double idleTimeoutMinutes =
-                core.getConfig().getDouble("client.idletimeout", 2.0);
-
-        idleTimeoutMinutes = Math.max(0.5, Math.min(idleTimeoutMinutes, 10.0));
-
-        SvgCore.getLogger().info("Idle timeout: " + idleTimeoutMinutes + " minutes.");
-
-        Duration idleTimeout = Duration.ofSeconds(
-                Math.round(idleTimeoutMinutes * 60)
-        );
 
         // Register WebSocket at /ws
         JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) -> {
