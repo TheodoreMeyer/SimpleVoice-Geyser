@@ -40,7 +40,8 @@ public final class AudioThread {
     }
 
     /**
-     * Execute
+     * Execute code on the thread
+     * @param runnable code to execute
      */
     public static void execute(Runnable runnable) {
         instance.getExecutor().execute(runnable);

@@ -33,7 +33,9 @@ public final class JettyServer {
 
     /**
      * set server port
+     * @param core svg core
      * @param port port to run server on
+     * @param host the host address to bind the server to.
      */
     public JettyServer(SvgCore core, int port, String host) {
         this.server = new Server();

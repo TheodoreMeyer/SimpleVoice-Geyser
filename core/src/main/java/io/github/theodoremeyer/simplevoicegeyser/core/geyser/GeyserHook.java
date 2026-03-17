@@ -7,6 +7,9 @@ import org.geysermc.geyser.api.GeyserApi;
 
 import java.util.UUID;
 
+/**
+ * Hook with Geyser MC
+ */
 public final class GeyserHook {
 
     /**

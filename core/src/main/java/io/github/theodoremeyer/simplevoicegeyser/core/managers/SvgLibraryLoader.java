@@ -8,9 +8,9 @@ import com.saicone.ezlib.EzlibLoader;
  */
 public final class SvgLibraryLoader {
 
-    public SvgLibraryLoader() {
-    }
-
+    /**
+     * Load the core's dependencies using Ez-Lib
+     */
     public void loadDependencies() {
 
         EzlibLoader loader = new EzlibLoader();
@@ -63,10 +63,6 @@ public final class SvgLibraryLoader {
         // ------------------------------
         // Jetty WebSocket
         // ------------------------------
-        loader.applyDependency(
-                EzlibLoader.Dependency.valueOf("org.eclipse.jetty.websocket:websocket-jetty-server:11.0.25").transitive(true)
-        );
-
         loader.applyDependency(
                 EzlibLoader.Dependency.valueOf("org.eclipse.jetty.websocket:websocket-jetty-server:11.0.25").transitive(true)
         );

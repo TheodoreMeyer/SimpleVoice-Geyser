@@ -31,6 +31,10 @@ public final class GroupManager {
      */
     private final Map<String, Group> groups = new ConcurrentHashMap<>(); //list of active groups
 
+    /**
+     * Create a group manager to control groups with
+     * @param api the bridge to SVG
+     */
     public GroupManager(VoiceChatBridge api) {
         this.bridge = api;
     }
@@ -104,6 +108,7 @@ public final class GroupManager {
      * Translate a String to Group Type
      * NOTE: Returns A default group type: OPEN
      * @param string the translatable String
+     * @return The group type
      */
     public Type stringToType(String string) {
         if ("isolated".equalsIgnoreCase(string)) {
@@ -199,6 +204,10 @@ public final class GroupManager {
         return true;
     }
 
+    /**
+     * Get a list of all known group names
+     * @return the list of group names
+     */
     public List<String> getGroupNames() {
         List<String> names = new ArrayList<>();
 
@@ -242,6 +251,7 @@ public final class GroupManager {
     /**
      * Simply return whether the SvgPlayer is in a group
      * @param SvgPlayer SvgPlayer is/isn't in group
+     * @return whether the player is in a group
      */
     public boolean isInGroup(SvgPlayer SvgPlayer) {
         VoicechatServerApi api = getApi();
@@ -263,15 +273,19 @@ public final class GroupManager {
 
     /**
      * Easy way to see if a SvgPlayer can create the group type
+     * @param svgPlayer the player to check
+     * @param type the type of group to check
+     * @param persistent whether the group is persistent
+     * @return whether they can create it or not
      */
-    public boolean canCreate(SvgPlayer SvgPlayer, String type, boolean persistent) {
+    public boolean canCreate(SvgPlayer svgPlayer, String type, boolean persistent) {
 
         if (type.equalsIgnoreCase("isolated")
-                && !SvgPlayer.hasPermission("svg.vc.group.type.isolated")) {
+                && !svgPlayer.hasPermission("svg.vc.group.type.isolated")) {
             return false;
 
         } else if (persistent
-                && !SvgPlayer.hasPermission("svg.vc.creategroup.setpersistent")) {
+                && !svgPlayer.hasPermission("svg.vc.creategroup.setpersistent")) {
 
             return false;
         }
@@ -287,6 +301,10 @@ public final class GroupManager {
         groups.put(group.getName(), group);
     }
 
+    /**
+     * Remove a group from the manager
+     * @param group the group to remove
+     */
     public void removeGroup(Group group) {
         groups.remove(group.getName());
     }

@@ -133,6 +133,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
     /**
      * Creates an AudioSender
      * @param uuid uuid to link sender too
+     * @return the registered Sender
      */
     public SvgAudioSender registerAudioSender(UUID uuid) {
         if (serverApi == null) {
@@ -187,6 +188,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
     /**
      * Creates an AudioListener
      * @param uuid uuid to associate listener to
+     * @param session the associated session of the player
      */
     public void registerAudioListener(UUID uuid, Session session) {
         if (serverApi == null) {

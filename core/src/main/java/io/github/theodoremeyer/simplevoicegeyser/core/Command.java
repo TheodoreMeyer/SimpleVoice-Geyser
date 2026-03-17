@@ -23,6 +23,10 @@ public final class Command {
      */
     private final FormHandler formHandler;
 
+    /**
+     * The Svg Command
+     * @param groupManager the manager to work with groups
+     */
     protected Command(GroupManager groupManager) {
         this.groupManager = groupManager;
         this.formHandler = new FormHandler(groupManager);

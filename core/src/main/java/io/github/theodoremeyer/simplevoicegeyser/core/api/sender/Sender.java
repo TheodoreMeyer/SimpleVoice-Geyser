@@ -13,6 +13,7 @@ public abstract class Sender {
 
     /**
      * Get the Sender's Name.
+     * @return the name
      */
     public abstract String getName();
 }

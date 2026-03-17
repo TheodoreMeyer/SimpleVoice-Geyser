@@ -34,6 +34,11 @@ public final class WebSocketManager {
         return true;
     }
 
+    /**
+     * Get a known/active client
+     * @param uuid the uuid to get for
+     * @return the Client
+     */
     public Session getClient(UUID uuid) {
         return clients.get(uuid);
     }
@@ -103,6 +108,7 @@ public final class WebSocketManager {
     /**
      * Send A JSON message to the Websocket Client
      * This allows custom messages to be sent to client other than status data
+     * @param uuid the uuid of session to send to
      * @param json the Data to send
      */
     public void sendJson(UUID uuid, JSONObject json) {

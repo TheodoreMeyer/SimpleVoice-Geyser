@@ -12,6 +12,9 @@ import org.geysermc.cumulus.form.SimpleForm;
 
 import java.util.List;
 
+/**
+ * Handle Cumulus forms
+ */
 public final class FormHandler {
 
     /**
