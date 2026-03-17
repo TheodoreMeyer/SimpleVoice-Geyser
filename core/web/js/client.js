@@ -846,12 +846,41 @@ export function start() {
         return false;
     }
 
+    /**
+     * Determine whether we should run the gamepad polling loop.
+     * We only start polling when a PTT-style transmit mode is active,
+     * to avoid unnecessary CPU usage for users in e.g. Voice Activity mode.
+     */
+    function shouldStartGamepadPolling() {
+        // Ensure required pieces exist
+        if (typeof pollGamepads !== "function") {
+            return false;
+        }
+        if (!transmitModeSelect) {
+            return false;
+        }
+
+        const mode = transmitModeSelect.value;
+        // Treat any PTT-style modes as requiring gamepad polling.
+        // Adjust the mode strings here if additional PTT modes exist.
+        const isPttMode =
+            mode === "ptt" ||
+            mode === "push-to-talk" ||
+            mode === "gamepad-ptt";
+
+        return isPttMode;
+    }
+
 
     window.addEventListener("DOMContentLoaded", async () => {
         updatePttBindingLabel();
         updateTransmitModeUi();
         updatePttButtons();
-        gamepadPollHandle = window.requestAnimationFrame(pollGamepads);
+
+        // Only start the gamepad polling loop when PTT mode is active.
+        if (shouldStartGamepadPolling()) {
+            gamepadPollHandle = window.requestAnimationFrame(pollGamepads);
+        }
 
         await initAudioWorklet();
         await populateSpeakers();
