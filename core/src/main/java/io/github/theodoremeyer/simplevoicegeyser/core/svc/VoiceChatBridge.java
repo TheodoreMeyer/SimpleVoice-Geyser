@@ -38,7 +38,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
     /**
      * Map Containing all the audioSenders
      */
-    public final Map<UUID, SvgAudioSender> audioSenders = new ConcurrentHashMap<>();
+    private final Map<UUID, SvgAudioSender> audioSenders = new ConcurrentHashMap<>();
     /**
      * Map containing all the audioListeners
      */

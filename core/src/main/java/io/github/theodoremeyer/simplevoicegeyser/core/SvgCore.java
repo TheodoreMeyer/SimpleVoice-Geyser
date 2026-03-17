@@ -14,7 +14,7 @@ import org.geysermc.geyser.api.event.EventRegistrar;
 
 import java.util.logging.Logger;
 
-public class SvgCore implements EventRegistrar {
+public final class SvgCore implements EventRegistrar {
     /**
      * The Platform
      */

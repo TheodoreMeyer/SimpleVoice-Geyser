@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * The Class Managing Websockets
  */
-public class WebSocketManager {
+public final class WebSocketManager {
 
     /**
      * A list of Websockets that are actively connected

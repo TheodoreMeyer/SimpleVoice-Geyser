@@ -10,7 +10,7 @@ import java.io.InputStream;
 /**
  * Servlet responsible for serving static resources packaged inside the plugin JAR.
  */
-public class ResourceServlet extends HttpServlet {
+public final class ResourceServlet extends HttpServlet {
 
     /**
      * Root directory inside the JAR where static files are stored.

@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * SVG Group System manager
  */
-public class GroupManager {
+public final class GroupManager {
 
     /**
      * Interface to group system
@@ -29,7 +29,7 @@ public class GroupManager {
     /**
      * Groups that are listed/Available
      */
-    protected final Map<String, Group> groups = new ConcurrentHashMap<>(); //list of active groups
+    private final Map<String, Group> groups = new ConcurrentHashMap<>(); //list of active groups
 
     public GroupManager(VoiceChatBridge api) {
         this.bridge = api;
