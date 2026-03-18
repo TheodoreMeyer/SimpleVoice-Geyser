@@ -60,8 +60,6 @@ public final class SvgCore implements EventRegistrar {
      */
     public SvgCore(Platform platform) {
 
-        new SvgLibraryLoader().loadDependencies();
-
         this.platform = platform;
         instance = this;
         new AudioThread();
