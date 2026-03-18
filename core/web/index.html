@@ -3,7 +3,8 @@
     <head>
         <meta charset="UTF-8">
         <title>SimpleVoice-Geyser</title>
-        <link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" href="/css/styles.css">
+        <link rel="stylesheet" href="/css/ptt.css">
     </head>
     <body>
     <h1>Join Simple Voice Chat</h1>
@@ -33,6 +34,12 @@
                     <button type="button" id="clearPttBtn">Clear Binding</button>
                 </div>
                 <div id="pttBindingLabel">No binding set. Use the hold button or add a binding.</div>
+                
+                <div class="checkboxSetting">
+                    <input type="checkbox" id="allowBackgroundPtt" name="allowBackgroundPtt">
+                    <label for="allowBackgroundPtt">Allow Background PTT (Controller only)</label>
+                </div>
+
                 <p class="settingsHint">Bindings support keyboard keys, side mouse buttons, and standard controller buttons on Xbox, PlayStation, and Nintendo pads.</p>
             </div>
         </div>

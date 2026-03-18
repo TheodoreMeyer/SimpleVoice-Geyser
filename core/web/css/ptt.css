@@ -1,0 +1,65 @@
+#pttControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pttButton {
+  min-width: 190px;
+  font-weight: bold;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.pttButton.active {
+  background-color: #33aa55;
+  color: #000;
+}
+
+#fullscreenPttBtn {
+  background-color: #f2b94b;
+}
+
+#fullscreenPttBtn:hover {
+  background-color: #d79c2f;
+}
+
+#pttFullscreenOverlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  background: radial-gradient(
+    circle at center,
+    rgba(0, 212, 255, 0.18),
+    rgba(0, 0, 0, 0.94)
+  );
+  z-index: 1000;
+}
+
+#pttFullscreenOverlay.visible {
+  display: flex;
+}
+
+#pushToTalkFullscreenBtn {
+  width: min(82vw, 540px);
+  height: min(58vh, 540px);
+  border-radius: 24px;
+  font-size: clamp(24px, 5vw, 42px);
+}
+
+#exitFullscreenPttBtn {
+  background-color: #444;
+  color: #fff;
+}
+
+body.fullscreen-ptt-active {
+  overflow: hidden;
+}

@@ -9,9 +9,11 @@ body {
   margin: 0;
   min-height: 100vh;
 }
+
 h1 {
   color: #00d4ff;
 }
+
 form {
   background: #2a2a2a;
   padding: 20px;
@@ -21,6 +23,7 @@ form {
   max-width: 400px;
   margin-bottom: 20px;
 }
+
 label,
 input,
 select {
@@ -29,15 +32,18 @@ select {
   margin-bottom: 10px;
   font-size: 14px;
 }
+
 label {
   font-weight: 600;
 }
+
 input,
 select {
   padding: 8px;
   border-radius: 4px;
   border: none;
 }
+
 button {
   padding: 10px 15px;
   background-color: #00d4ff;
@@ -46,32 +52,39 @@ button {
   border-radius: 4px;
   cursor: pointer;
 }
+
 button:hover {
   background-color: #00aacc;
 }
+
 button:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }
+
 .settingsBlock {
   margin-top: 18px;
   padding-top: 16px;
   border-top: 1px solid #3f3f3f;
 }
+
 .settingsHint {
   font-size: 12px;
   color: #b8b8b8;
   margin: 0;
 }
+
 .inlineButtons {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 10px;
 }
+
 .inlineButtons button {
   flex: 1 1 160px;
 }
+
 #pttBindingLabel {
   margin-bottom: 10px;
   padding: 10px 12px;
@@ -81,6 +94,7 @@ button:disabled {
   font-family: monospace;
   min-height: 20px;
 }
+
 #micControls {
   display: flex;
   align-items: center;
@@ -112,69 +126,14 @@ button:disabled {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background-color: #444; /* idle */
+  background-color: #444;
   border: 1px solid #666;
 }
 
 #micIndicator.active {
   background-color: #33ff66;
 }
-#pttControls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.pttButton {
-  min-width: 190px;
-  font-weight: bold;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: manipulation;
-}
-.pttButton.active {
-  background-color: #33aa55;
-  color: #000;
-}
-#fullscreenPttBtn {
-  background-color: #f2b94b;
-}
-#fullscreenPttBtn:hover {
-  background-color: #d79c2f;
-}
-#pttFullscreenOverlay {
-  position: fixed;
-  inset: 0;
-  display: none;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 18px;
-  background: radial-gradient(
-    circle at center,
-    rgba(0, 212, 255, 0.18),
-    rgba(0, 0, 0, 0.94)
-  );
-  z-index: 1000;
-}
-#pttFullscreenOverlay.visible {
-  display: flex;
-}
-#pushToTalkFullscreenBtn {
-  width: min(82vw, 540px);
-  height: min(58vh, 540px);
-  border-radius: 24px;
-  font-size: clamp(24px, 5vw, 42px);
-}
-#exitFullscreenPttBtn {
-  background-color: #444;
-  color: #fff;
-}
-body.fullscreen-ptt-active {
-  overflow: hidden;
-}
+
 #status {
   margin: 10px;
   padding: 8px 12px;
@@ -182,6 +141,7 @@ body.fullscreen-ptt-active {
   background: #333;
   border: 1px solid #666;
 }
+
 #log {
   width: 90%;
   max-width: 600px;
@@ -194,32 +154,39 @@ body.fullscreen-ptt-active {
   white-space: pre-wrap;
   font-family: monospace;
 }
+
 #inputArea {
   display: flex;
-  justify-content: center; /* center contents */
+  justify-content: center;
   align-items: center;
   gap: 10px;
-  margin: 10px auto; /* center container */
+  margin: 10px auto;
   width: 90%;
   max-width: 600px;
 }
+
 @media (max-width: 640px) {
   body {
     padding: 16px;
   }
+
   form {
     padding: 16px;
   }
+
   #inputArea {
     flex-direction: column;
     align-items: stretch;
   }
+
   #inputArea button {
     width: 100%;
   }
+
   #pttControls {
     width: 100%;
   }
+
   .pttButton,
   #fullscreenPttBtn {
     width: min(100%, 420px);
