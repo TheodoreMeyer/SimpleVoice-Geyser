@@ -16,16 +16,16 @@
             <input type="text" id="username" name="username" required autocomplete="username">
 
             <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
+            <input type="password" id="password" name="password" required autocomplete="svg-password">
 
             <label for="mic">Select Microphone:</label>
             <select id="mic" name="mic">
-                <option disabled checked hidden>Select</option>
+                <option disabled selected hidden>Select</option>
             </select>
 
             <label for="speaker">Select Speaker:</label>
             <select id="speaker" name="speaker">
-                <option disabled checked hidden>Select</option>
+                <option disabled selected hidden>Select</option>
             </select>
 
             <button type="submit" id="joinbtn">Join</button>
@@ -41,18 +41,26 @@
         <div id="log"></div>
         <br>
         <div id="inputArea">
+            <label for="msgInput">Message</label>
             <input type="text" id="msgInput" placeholder="Type a message..." />
             <button id="messageButton">Send</button>
         </div>
         <br>
         <button id="testSound" type="button">Test Sound</button>
     </div>
-    <div>
-        <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank"><img src="images/github.svg"alt="Github Link" class="githubicon"></a>
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank">
+            <img src="images/github.svg" alt="Github Link" class="githubicon">
+            <span>Theodore Meyer</span>
+        </a>
     </div>
-    <noscript>HEY IDIOT GO TURN ON JAVASCRIPT ON YOUR BROSWER</noscript>
+    <noscript>
+        <div style="background:red;color:white;padding:10px;text-align:center;">
+            Please enable JavaScript to access voice chat.
+        </div>
+    </noscript>
     <script type="module">
-        import { start } from '/client.js';
+        import { start } from '/js/client.js';
         start(); // manually triggers it
     </script>
 
