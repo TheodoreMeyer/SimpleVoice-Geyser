@@ -12,7 +12,7 @@ import java.util.UUID;
  * Auth System for Player.
  * The password needs to be more securely saved.
  */
-public class PlayerVcPswd {
+public final class PlayerVcPswd {
 
     private static final Map<String, String> playerPasswords = new HashMap<>();
     private static final Map<String, UUID> playerUUIDs = new HashMap<>();

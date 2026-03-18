@@ -64,7 +64,12 @@ subprojects {\
 
     tasks.withType(Jar).configureEach {
         from(rootProject.layout.projectDirectory.file("LICENSE")) {
-            into("")
+            into("META-INF")
+            rename { "SVG_LICENSE" }
+        }
+        from(rootProject.layout.projectDirectory.file("NOTICE")) {
+            into("META-INF")
+            rename { "SVG_NOTICE" }
         }
     }
 }

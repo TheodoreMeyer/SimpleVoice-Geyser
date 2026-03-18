@@ -49,6 +49,10 @@ public final class JettyWebSocket {
      */
     private final SvgCore plugin;
 
+    /**
+     * Create a websocket connection with a client
+     * @param p the core
+     */
     public JettyWebSocket(SvgCore p) {
         this.plugin = p;
     }

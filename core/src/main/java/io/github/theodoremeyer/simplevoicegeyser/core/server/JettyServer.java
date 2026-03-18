@@ -27,16 +27,37 @@ public final class JettyServer {
     private final SvgCore core;
 
     /**
+     * Idle Timeout
+     */
+    private final Duration idleTimeout;
+
+    /**
      * set server port
+     * @param core svg core
      * @param port port to run server on
+     * @param host the host address to bind the server to.
      */
     public JettyServer(SvgCore core, int port, String host) {
         this.server = new Server();
         this.core = core;
 
+        double idleTimeoutMinutes =
+                core.getConfig().getDouble("client.idletimeout", 2.0);
+
+        idleTimeoutMinutes = Math.max(0.5, Math.min(idleTimeoutMinutes, 10.0));
+
+        SvgCore.getLogger().info("Idle timeout: " + idleTimeoutMinutes + " minutes.");
+
+        this.idleTimeout = Duration.ofSeconds(
+                Math.round(idleTimeoutMinutes * 60)
+        );
+
+
+
         ServerConnector connector = new ServerConnector(server);
         connector.setHost(host);
         connector.setPort(port);
+        connector.setIdleTimeout(idleTimeout.toMillis());
 
         server.addConnector(connector);
         SvgCore.getLogger().info("Started on: " + connector.getDefaultProtocol() + " " + connector.getHost() + ":" + connector.getPort());
@@ -51,38 +72,8 @@ public final class JettyServer {
         context.setContextPath("/");
         server.setHandler(context);
 
-        String htmlType = "text/html";
-        String jSType = "application/javascript";
-
-        // Add HTML page at root
-        context.addServlet(new ServletHolder(new ResourceServlet(
-                "/web/index.html", htmlType)), "/");
-
-        // Add driving JavaScript
-        context.addServlet(new ServletHolder(new ResourceServlet(
-                "/web/js/client.js", jSType)), "/client.js");
-
-        //add audio servlet
-        context.addServlet(new ServletHolder(new ResourceServlet(
-                "/web/js/audio-worklet-processor.js", jSType)), "/audio-worklet-processor.js");
-
-        // add mic servlet
-        context.addServlet(new ServletHolder(new ResourceServlet(
-                "/web/js/mic-capture-processor.js", jSType)), "/mic-capture-processor.js");
-
-
-
-
-        double idleTimeoutMinutes =
-                core.getConfig().getDouble("client.idletimeout", 2.0);
-
-        idleTimeoutMinutes = Math.max(0.5, Math.min(idleTimeoutMinutes, 10.0));
-
-        SvgCore.getLogger().info("Idle timeout: " + idleTimeoutMinutes + " minutes.");
-
-        Duration idleTimeout = Duration.ofSeconds(
-                Math.round(idleTimeoutMinutes * 60)
-        );
+        // Serve all static resources from /web
+        context.addServlet(new ServletHolder(new ResourceServlet()), "/*");
 
         // Register WebSocket at /ws
         JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) -> {

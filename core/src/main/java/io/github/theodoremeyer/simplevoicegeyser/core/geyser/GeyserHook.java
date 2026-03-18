@@ -7,7 +7,10 @@ import org.geysermc.geyser.api.GeyserApi;
 
 import java.util.UUID;
 
-public class GeyserHook {
+/**
+ * Hook with Geyser MC
+ */
+public final class GeyserHook {
 
     /**
      * Whether Geyser is enabled in some form

@@ -30,6 +30,8 @@ public final class SvgAudioListener implements PlayerAudioListener {
     /**
      * Class constructor to set id
      * @param listenerId the id of this listener
+     * @param session the Session to link to
+     * @param serverApi the VcServer API
      */
     public SvgAudioListener(UUID listenerId, Session session, VoicechatServerApi serverApi) {
         this.listenerId = listenerId;

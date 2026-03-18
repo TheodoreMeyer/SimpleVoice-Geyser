@@ -27,7 +27,7 @@ export function start() {
     let micActiveUntil = 0;
     const MIC_HOLD_MS = 120;
 
-    console.log("CLIENT.JS loaded!");
+    console.debug("CLIENT.JS loaded!");
 
     // Load the AudioWorklet processor
     async function initAudioWorklet() {
@@ -36,8 +36,8 @@ export function start() {
                 console.warn("WRONG SAMPLE RATE: " + audioContext.sampleRate);
             }
 
-            await audioContext.audioWorklet.addModule('/audio-worklet-processor.js');
-            await audioContext.audioWorklet.addModule('/mic-capture-processor.js');
+            await audioContext.audioWorklet.addModule('/js/audio-worklet-processor.js');
+            await audioContext.audioWorklet.addModule('/js/mic-capture-processor.js');
 
             audioWorkletNode = new AudioWorkletNode(audioContext, 'pcm-player');
 
@@ -227,7 +227,7 @@ export function start() {
         if (audioContext.state === 'suspended') {
             await audioContext.resume();
             await audioContextSetOutputDevice(speakerSelect.value);
-            console.log("AudioContext resumed. Current state:", audioContext.state);
+            console.debug("AudioContext resumed. Current state:", audioContext.state);
         }
 
 
@@ -321,7 +321,7 @@ export function start() {
         if (audioContext.setSinkId) {
             try {
                 await audioContext.setSinkId(deviceId);
-                console.log("AudioContext output device set:", deviceId);
+                console.debug("AudioContext output device set:", deviceId);
                 return true;
             } catch (e) {
                 console.warn("AudioContext.setSinkId failed:", e);
@@ -371,6 +371,6 @@ export function start() {
         }
 
         audioWorkletNode.port.postMessage({ type: 'pcm', buffer: float32Data });
-        console.log("Test sound sent to AudioWorklet");
+        console.debug("Test sound sent to AudioWorklet");
     });
 }

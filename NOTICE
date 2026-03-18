@@ -1,0 +1,17 @@
+Simple Voice Geyser
+Copyright (c) 2025-2026 Theodore Meyer
+
+This product bundles and redistributes the following third-party libraries
+in a shaded (relocated) form:
+
+- Eclipse Jetty
+- Jakarta Servlet API
+- JSON.org
+- jBCrypt
+- ezlib
+- SLF4J
+
+These components remain under their original licenses.
+License texts are included in the META-INF directory of this JAR.
+
+Relocation of packages does not modify the original licensing terms.

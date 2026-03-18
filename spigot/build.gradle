@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'java-library'
+    id 'com.gradleup.shadow' version '9.4.0' // ShadowJar
     id "xyz.jpenilla.run-paper" version "2.3.0"
 }
 
@@ -9,9 +10,6 @@ dependencies {
 
     // CORE MODULE
     implementation(project(":core"))
-
-    //implementation('com.saicone.ezlib:ezlib:1.3.3')
-    implementation 'com.saicone.ezlib:loader:1.3.3'
 
     // GeyserMC API (provided by platform)
     compileOnly("org.geysermc.geyser:api:${geysermc_api_version}")
@@ -33,23 +31,43 @@ tasks.processResources {
     }
 }
 
+tasks.shadowJar {
+    archiveBaseName.set("Svg-Spigot")
+    archiveClassifier.set("") // no -all suffix
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    // Relocate Jetty + Servlet + JSON + BCrypt + Ezlib
+    relocate("org.eclipse.jetty", "io.github.theodoremeyer.simplevoicegeyser.shadow.jetty")
+    relocate("jakarta.servlet", "io.github.theodoremeyer.simplevoicegeyser.shadow.servlet")
+    relocate("org.json", "io.github.theodoremeyer.simplevoicegeyser.shadow.json")
+    relocate("org.mindrot", "io.github.theodoremeyer.simplevoicegeyser.shadow.mindrot")
+    relocate("com.saicone.ezlib", "io.github.theodoremeyer.simplevoicegeyser.shadow.ezlib")
+
+    relocate("org.sl4j", "io.github.theodoremeyer.simplevoicegeyser.shadow.sl4j")
+
+    // Include core classes + resources
+    from(project(":core").sourceSets.main.output)
+
+}
+
 tasks.withType(Jar).configureEach {
     archiveBaseName.set("Svg-Spigot")
 }
 
 
 tasks.jar {
-    dependsOn(":core:jar") // make sure core is built first
+    enabled = false
+    //dependsOn(":core:jar") // make sure core is built first
 
-    from(project(":core").sourceSets.main.output) // include compiled classes
-    from(project(":core").sourceSets.main.resources) // include core resources
+    //from(project(":core").sourceSets.main.output) // include compiled classes
+    //from(project(":core").sourceSets.main.resources) // include core resources
 
     // Include Ezlib (and any other runtime dependencies you explicitly want)
-    from({
-        configurations.runtimeClasspath.filter {
-            it.name.contains("ezlib") || it.name.contains("loader")
-        }.collect { zipTree(it) }
-    })
+    //from({
+    //    configurations.runtimeClasspath.filter {
+    //        it.name.contains("ezlib") || it.name.contains("loader")
+    //    }.collect { zipTree(it) }
+    //})
 }
 
 runServer { // https://github.com/jpenilla/run-task/wiki
@@ -57,7 +75,6 @@ runServer { // https://github.com/jpenilla/run-task/wiki
     downloadPlugins {
         // Simple Voice Chat //
         url("https://cdn.modrinth.com/data/9eGKb6K1/versions/FeJRj2X0/voicechat-bukkit-2.6.12.jar")
-
         // Geyser //
         url("https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot")
         // Floodgate //

@@ -11,7 +11,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
 /**
  * Class that controls the main command for plugin: /svg
  */
-public class Command {
+public final class Command {
 
     /**
      * Interface to Group System
@@ -23,6 +23,10 @@ public class Command {
      */
     private final FormHandler formHandler;
 
+    /**
+     * The Svg Command
+     * @param groupManager the manager to work with groups
+     */
     protected Command(GroupManager groupManager) {
         this.groupManager = groupManager;
         this.formHandler = new FormHandler(groupManager);

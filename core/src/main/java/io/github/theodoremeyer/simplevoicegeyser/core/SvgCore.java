@@ -5,7 +5,6 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.PlayerManager;
-import io.github.theodoremeyer.simplevoicegeyser.core.managers.SvgLibraryLoader;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.JettyServer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.WebSocketManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
@@ -14,7 +13,10 @@ import org.geysermc.geyser.api.event.EventRegistrar;
 
 import java.util.logging.Logger;
 
-public class SvgCore implements EventRegistrar {
+/**
+ * Driving class for Simple Voice Geyser
+ */
+public final class SvgCore implements EventRegistrar {
     /**
      * The Platform
      */
@@ -51,9 +53,12 @@ public class SvgCore implements EventRegistrar {
      */
     private boolean debug = false;
 
+    /**
+     * Initialize the Core of SimpleVoice-Geyser
+     * @see Platform the hook to the platform
+     * @param platform the platform to build with
+     */
     public SvgCore(Platform platform) {
-
-        new SvgLibraryLoader().loadDependencies();
 
         this.platform = platform;
         instance = this;
@@ -64,6 +69,9 @@ public class SvgCore implements EventRegistrar {
         this.webSocketManager = new WebSocketManager();
     }
 
+    /**
+     * Start SVG server and handling with SVC
+     */
     public void init() {
         this.debug = platform.getFile(DataType.CONFIG).getBoolean("debug", false);
 
@@ -88,6 +96,10 @@ public class SvgCore implements EventRegistrar {
         }
     }
 
+    /**
+     * Get the config as a File
+     * @return config
+     */
     public SvgFile getConfig() {
         return platform.getFile(DataType.CONFIG);
     }
@@ -95,10 +107,20 @@ public class SvgCore implements EventRegistrar {
     //-----
     // LOGGERS
     //-----
+
+    /**
+     * Get the Logger
+     * @see Logger
+     * @return logger
+     */
     public static Logger getLogger() {
         return instance.platform.getLogger();
     }
 
+    /**
+     * Get the Log/Chat Prefix
+     * @return prefix
+     */
     public static String getPrefix() {
         return instance.platform.getPrefix();
     }
@@ -131,6 +153,7 @@ public class SvgCore implements EventRegistrar {
     //-----
     /**
      * Get The Platform
+     * @return the platform
      */
     public static Platform getPlatform() {
         return instance.platform;
@@ -138,26 +161,53 @@ public class SvgCore implements EventRegistrar {
 
     /**
      * Get Password System
+     * @see PlayerVcPswd
+     * @return PasswordManager
      */
     public static PlayerVcPswd getPasswordManager() {
         return instance.playerVcPswd;
     }
 
+    /**
+     * Get the Player Manager
+     * @see PlayerManager
+     * @return PlayerManager
+     */
     public static PlayerManager getPlayerManager() {
         return instance.playerManager;
     }
 
+    /**
+     * Get the Group Manager
+     * @see GroupManager
+     * @return groupManager
+     */
     public static GroupManager getGroupManager() {
         return instance.groupManager;
     }
 
+    /**
+     * Get The Bridge with SVC
+     * @see VoiceChatBridge
+     * @return voiceChatBridge
+     */
     public static VoiceChatBridge getBridge() {
         return instance.vcBridge;
     }
 
+    /**
+     * Get the Ws Manager
+     * @see WebSocketManager
+     * @return WebsocketManager
+     */
     public static WebSocketManager getWsManager() {
         return instance.webSocketManager;
     }
 
+    /**
+     * Get the Svg Command
+     * @see Command
+     * @return SvgCommand
+     */
     public static Command getCommand() { return instance.command; }
 }
