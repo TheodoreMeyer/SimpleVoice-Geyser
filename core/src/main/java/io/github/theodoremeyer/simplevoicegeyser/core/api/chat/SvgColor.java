@@ -139,6 +139,14 @@ public enum SvgColor {
     }
 
     /**
+     * Make sure the real code is here
+     */
+    @Override
+    public String toString() {
+        return code;
+    }
+
+    /**
      * Translates an alternate character to the Color Code
      * @param altColorChar the character to translate from
      * @param text the text to translate
