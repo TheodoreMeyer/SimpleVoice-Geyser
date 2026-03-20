@@ -58,17 +58,6 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
 
         SvgListener listener = new SvgListener();
         Bukkit.getPluginManager().registerEvents(listener, this);
-
-        //Plugin geyser = Bukkit.getPluginManager().getPlugin("Geyser-Spigot");
-        //if (geyser != null && geyser.isEnabled()) {
-        //    GeyserApi.api().eventBus().subscribe(
-        //            this,
-        //            ClientEmoteEvent.class,
-        //            listener::onEmote
-        //    );
-        //} else {
-        //    getLogger().warning("Geyser is not installed. Skipping Bedrock Events");
-        //}
     }
 
     @Override

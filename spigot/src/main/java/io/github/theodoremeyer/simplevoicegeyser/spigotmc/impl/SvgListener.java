@@ -34,26 +34,4 @@ public class SvgListener implements Listener {
             SvgCore.getPlayerManager().removePlayer(player);
         }
     }
-
-    ///**
-    // * Used to check for emote event
-    // * @param event the EmoteEvent
-    // */
-    //public void onEmote(ClientEmoteEvent event) {
-    //    UUID uuid = event.connection().playerUuid();
-    //    String playerName = event.connection().name();
-    //    FormHandler formHandler = new FormHandler(SvgCore.getGroupManager());
-
-    //    SvgCore.getLogger().info("UUID for Emote: " + uuid);
-    //    if (uuid == null) {
-    //        SvgCore.getLogger().warning("Could not resolve UUID for: " + playerName);
-    //        return;
-    //    }
-    //    SvgPlayer player = SvgCore.getPlayerManager().getPlayer(uuid);
-    //    if (player == null) {
-    //        SvgCore.getLogger().warning("Player not online for:" + playerName + " UUID: " + uuid);
-    //        return;
-    //    }
-    //    formHandler.openCommand(player);
-    //}
 }
