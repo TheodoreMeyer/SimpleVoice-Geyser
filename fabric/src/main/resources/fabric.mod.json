@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "simplevoicegeyser",
+  "version": "${version}",
+  "name": "Simple Voice Geyser",
+  "description": "Bridges Simple Voice Chat with Geyser support for Fabric servers.",
+  "authors": [
+    "TheodoreMeyer"
+  ],
+  "contact": {
+    "repo": "https://github.com/TheodoreMeyer/SimpleVoice-Geyser"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "io.github.theodoremeyer.simplevoicegeyser.fabric.SvgMod"
+    ],
+    "voicechat": [
+      "io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricVcBridge"
+    ]
+  },
+  "depends": {
+    "minecraft": ">=${mc_min}",
+    "fabricloader": ">=0.15.0",
+    "fabric-api": "*",
+    "voicechat_api": ">=${voicechat_api_version}"
+  }
+}

@@ -3,12 +3,15 @@ pluginManagement {
         gradlePluginPortal()
         mavenCentral()
         mavenLocal()
+        maven {
+            url = "https://maven.fabricmc.net/"
+        }
     }
     plugins {
-        id("com.gradleup.shadow") version "9.3.1"
+        id("com.gradleup.shadow") version "9.4.0"
     }
 }
 
 rootProject.name = "SimpleVoice-Geyser"
 
-include("core", "spigot")
+include("core", "spigot", "fabric")
