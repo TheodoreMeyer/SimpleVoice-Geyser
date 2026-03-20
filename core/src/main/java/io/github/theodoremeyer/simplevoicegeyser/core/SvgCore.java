@@ -3,20 +3,21 @@ package io.github.theodoremeyer.simplevoicegeyser.core;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.Platform;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
+import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserEventHook;
+import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.PlayerManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.JettyServer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.WebSocketManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
 import io.github.theodoremeyer.simplevoicegeyser.core.thread.AudioThread;
-import org.geysermc.geyser.api.event.EventRegistrar;
 
 import java.util.logging.Logger;
 
 /**
  * Driving class for Simple Voice Geyser
  */
-public final class SvgCore implements EventRegistrar {
+public final class SvgCore {
     /**
      * The Platform
      */
@@ -93,6 +94,12 @@ public final class SvgCore implements EventRegistrar {
         } catch (Exception e) {
             getLogger().severe("Failed to start Jetty server: " + e.getMessage());
             platform.disable();
+        }
+
+        if (GeyserHook.isGeyser()) {
+            new GeyserEventHook();
+        }  else {
+            getLogger().warning("Geyser is not installed. Skipping Bedrock Events");
         }
     }
 

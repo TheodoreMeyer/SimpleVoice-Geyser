@@ -12,11 +12,9 @@ import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.ConfigFile;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.PasswordFile;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.event.EventRegistrar;
-import org.geysermc.geyser.api.event.bedrock.ClientEmoteEvent;
 
 import java.io.File;
 
@@ -61,16 +59,16 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
         SvgListener listener = new SvgListener();
         Bukkit.getPluginManager().registerEvents(listener, this);
 
-        Plugin geyser = Bukkit.getPluginManager().getPlugin("Geyser-Spigot");
-        if (geyser != null && geyser.isEnabled()) {
-            GeyserApi.api().eventBus().subscribe(
-                    this,
-                    ClientEmoteEvent.class,
-                    listener::onEmote
-            );
-        } else {
-            getLogger().warning("Geyser is not installed. Skipping Bedrock Events");
-        }
+        //Plugin geyser = Bukkit.getPluginManager().getPlugin("Geyser-Spigot");
+        //if (geyser != null && geyser.isEnabled()) {
+        //    GeyserApi.api().eventBus().subscribe(
+        //            this,
+        //            ClientEmoteEvent.class,
+        //            listener::onEmote
+        //    );
+        //} else {
+        //    getLogger().warning("Geyser is not installed. Skipping Bedrock Events");
+        //}
     }
 
     @Override
@@ -95,7 +93,7 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
         VoiceChatBridge bridge = null;
 
         if (service != null) { //make sure BukkitVoicechatService exists
-            VoiceChatBridge voicechatBridge = new VoiceChatBridge(core);
+            VoiceChatBridge voicechatBridge = new VoiceChatBridge();
             service.registerPlugin(voicechatBridge); //register the main api class
             bridge = voicechatBridge;
             getLogger().info("Registered plugin with Simple Voice Chat.");

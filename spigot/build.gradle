@@ -32,6 +32,7 @@ tasks.processResources {
 }
 
 tasks.shadowJar {
+
     archiveBaseName.set("Svg-Spigot")
     archiveClassifier.set("") // no -all suffix
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -42,8 +43,7 @@ tasks.shadowJar {
     relocate("org.json", "io.github.theodoremeyer.simplevoicegeyser.shadow.json")
     relocate("org.mindrot", "io.github.theodoremeyer.simplevoicegeyser.shadow.mindrot")
     relocate("com.saicone.ezlib", "io.github.theodoremeyer.simplevoicegeyser.shadow.ezlib")
-
-    relocate("org.sl4j", "io.github.theodoremeyer.simplevoicegeyser.shadow.sl4j")
+    relocate("org.slf4j", "io.github.theodoremeyer.simplevoicegeyser.shadow.slf4j")
 
     // Include core classes + resources
     from(project(":core").sourceSets.main.output)
