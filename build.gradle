@@ -23,9 +23,6 @@ allprojects {
             url = uri("https://oss.sonatype.org/content/repositories/releases/")
         }
         maven {
-            url = uri('https://hub.spigotmc.org/nexus/content/groups/public/')
-        }
-        maven {
             name = "henkelmax.public"
             url = 'https://maven.maxhenkel.de/repository/public'
         }
@@ -96,5 +93,18 @@ tasks.register("collectJars", Copy) {
 
 tasks.named("build") {
     finalizedBy("collectJars")
+}
+
+//SHADOW
+ext.applySvgRelocations = { task ->
+
+    // Relocate Jetty + Servlet + JSON + BCrypt
+    task.relocate("org.eclipse.jetty", "io.github.theodoremeyer.simplevoicegeyser.shadow.jetty")
+    task.relocate("jakarta.servlet", "io.github.theodoremeyer.simplevoicegeyser.shadow.servlet")
+    task.relocate("org.json", "io.github.theodoremeyer.simplevoicegeyser.shadow.json")
+    task.relocate("org.mindrot", "io.github.theodoremeyer.simplevoicegeyser.shadow.mindrot")
+    task.relocate("org.slf4j", "io.github.theodoremeyer.simplevoicegeyser.shadow.slf4j")
+    logger.info("Loaded relocations for", task)
+
 }
 
