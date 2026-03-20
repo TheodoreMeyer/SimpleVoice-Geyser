@@ -1,0 +1,186 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #1e1e1e;
+  color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  margin: 0;
+  min-height: 100vh;
+}
+
+h1 {
+  color: #00d4ff;
+}
+
+form {
+  background: #2a2a2a;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px #000000;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 30px;
+}
+
+label,
+select {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+input,
+select {
+  padding: 8px;
+  border-radius: 4px;
+  border: none;
+}
+
+button {
+  padding: 10px 15px;
+  background-color: #00d4ff;
+  border: none;
+  color: #000;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #00aacc;
+  transform: scale(1.1);
+}
+
+button:active {
+  background-color: #008ca8;
+  transform: scale(1.15);
+}
+
+#micControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  justify-content: center;
+}
+
+#muteBtn {
+  padding: 10px 18px;
+  font-weight: bold;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+#muteBtn.muted {
+  background-color: #aa3333;
+  color: #fff;
+}
+
+#muteBtn.unmuted {
+  background-color: #33aa55;
+  color: #000;
+}
+
+#micIndicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #444;
+  border: 1px solid #666;
+}
+
+#micIndicator.active {
+  background-color: #33ff66;
+}
+
+#status {
+  margin: 10px auto;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: #333;
+  border: 1px solid #666;
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  justify-content: center;
+}
+
+#log {
+  height: 350px;
+  width: 95%;
+  overflow-y: auto;
+  background: #2c2c2c;
+  border: 1px solid #555;
+  padding: 10px;
+  margin: 10px 0;
+  white-space: pre-wrap;
+  font-family: monospace;
+}
+
+#inputArea {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 10px auto;
+  width: 90%;
+  max-width: 600px;
+}
+
+#joinbtn {
+  width: 100%;
+  margin: 2% 0 0 0;
+}
+
+#form-container {
+  width: 60%;
+  display: flex;
+  justify-content: center;
+}
+
+#main-vc-container {
+  background: #2a2a2a;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px #000000;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+#testSound {
+  width: 100%;
+}
+
+#msgInput {
+  width: 100%;
+}
+
+#messageButton {
+  width: 20%;
+  margin: 0 0 0 2%;
+}
+
+label {
+  margin: 3% 0 2% 0;
+}
+
+.githubicon {
+  width: 30px;
+  height: 30px;
+  margin: 25px 0 0 0;
+}
+
+input:hover, .githubicon:hover, select:hover {
+  transform: scale(1.1);
+}
+
+input:active, .githubicon:active, select:active {
+  transform: scale(1.15);
+}
+
+input {
+  width: 96%;
+}

@@ -1,156 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>SimpleVoice-Geyser</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background: #1e1e1e;
-                color: #f5f5f5;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                padding: 20px;
-                margin: 0;
-                min-height: 100vh;
-            }
-            h1 {
-                color: #00d4ff;
-            }
-            form {
-                background: #2a2a2a;
-                padding: 20px;
-                border-radius: 8px;
-                box-shadow: 0 0 10px #000;
-                width: 100%;
-                max-width: 400px;
-                margin-bottom: 20px;
-            }
-            label, input, select {
-                display: block;
-                width: 100%;
-                margin-bottom: 10px;
-                font-size: 14px;
-            }
-            input, select {
-                padding: 8px;
-                border-radius: 4px;
-                border: none;
-            }
-            button {
-                padding: 10px 15px;
-                background-color: #00d4ff;
-                border: none;
-                color: #000;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-            button:hover {
-                background-color: #00aacc;
-            }
-            #micControls {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                margin-bottom: 10px;
-            }
 
-            #muteBtn {
-                padding: 10px 18px;
-                font-weight: bold;
-                border-radius: 6px;
-                transition: background-color 0.15s ease, color 0.15s ease;
-            }
+<head>
+    <meta charset="UTF-8">
+    <title>SimpleVoice-Geyser</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+</head>
 
-            #muteBtn.muted {
-                background-color: #aa3333;
-                color: #fff;
-            }
-
-            #muteBtn.unmuted {
-                background-color: #33aa55;
-                color: #000;
-            }
-
-            #micIndicator {
-                width: 12px;
-                height: 12px;
-                border-radius: 50%;
-                background-color: #444; /* idle */
-                border: 1px solid #666;
-            }
-
-            #micIndicator.active {
-                background-color: #33ff66;
-            }
-            #status {
-                margin: 10px;
-                padding: 8px 12px;
-                border-radius: 4px;
-                background: #333;
-                border: 1px solid #666;
-            }
-            #log {
-                width: 90%;
-                max-width: 600px;
-                height: 200px;
-                overflow-y: auto;
-                background: #2c2c2c;
-                border: 1px solid #555;
-                padding: 10px;
-                margin: 10px 0;
-                white-space: pre-wrap;
-                font-family: monospace;
-            }
-            #inputArea {
-                display: flex;
-                justify-content: center;   /* center contents */
-                align-items: center;
-                gap: 10px;
-                margin: 10px auto;         /* center container */
-                width: 90%;
-                max-width: 600px;
-            }
-        </style>
-    </head>
-    <body>
+<body>
     <h1>Join Simple Voice Chat</h1>
-    <form id="joinForm">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required autocomplete="username">
+    <div id="form-container">
+        <form id="joinForm">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required autocomplete="username">
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required autocomplete="password">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required autocomplete="svg-password">
 
-        <label for="mic">Select Microphone:</label>
-        <select id="mic" name="mic"></select>
+            <label for="mic">Select Microphone:</label>
+            <select id="mic" name="mic">
+                <option disabled selected hidden>Select</option>
+            </select>
 
-        <label for="speaker">Select Speaker:</label>
-        <select id="speaker" name="speaker"></select>
+            <label for="speaker">Select Speaker:</label>
+            <select id="speaker" name="speaker">
+                <option disabled selected hidden>Select</option>
+            </select>
 
-        <button type="submit" id="joinbtn">Join</button>
-    </form>
-
-    <div id="micControls">
-        <button id="muteBtn" class="unmuted">Mute</button>
-        <span id="micIndicator" title="Mic activity"></span>
+            <button type="submit" id="joinbtn">Join</button>
+        </form>
     </div>
-
-    <div id="status">Waiting to join...</div>
-    <div id="log"></div>
-
-    <div id="inputArea">
-        <label for="msgInput"></label>
-        <input type="text" id="msgInput" placeholder="Type message..." />
-        <button id="messageButton">Send</button>
+    <div id="main-vc-container">
+        <div id="micControls">
+            <button id="muteBtn" class="unmuted">Mute</button>
+            <span id="micIndicator" title="Mic activity"></span>
+        </div>
+        <br>
+        <div id="status">Waiting to join...</div>
+        <div id="log"></div>
+        <br>
+        <div id="inputArea">
+            <label for="msgInput">Message</label>
+            <input type="text" id="msgInput" placeholder="Type a message..." />
+            <button id="messageButton">Send</button>
+        </div>
+        <br>
+        <button id="testSound" type="button">Test Sound</button>
     </div>
-    <button id="testSound" type="button">Test Sound</button>
-
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank">
+            <img src="images/github.svg" alt="Github Link" class="githubicon">
+            <span>Theodore Meyer</span>
+        </a>
+    </div>
+    <noscript>
+        <div style="background:red; color:white; padding:10px; text-align:center; font-weight: bolder;">
+            <h1>Please enable JavaScript to access voice chat.</h1>h1>
+        </div>
+    </noscript>
     <script type="module">
         import { start } from '/js/client.js';
         start(); // manually triggers it
     </script>
 
-    </body>
+</body>
+
 </html>
