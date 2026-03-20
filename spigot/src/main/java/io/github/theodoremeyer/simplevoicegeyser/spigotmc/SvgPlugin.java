@@ -3,9 +3,11 @@ package io.github.theodoremeyer.simplevoicegeyser.spigotmc;
 import de.maxhenkel.voicechat.api.BukkitVoicechatService;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.Platform;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
+import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.BukkitLogger;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.SvgCommand;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.SvgListener;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.ConfigFile;
@@ -26,9 +28,12 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
 
     private PasswordFile passwordFile;
 
+    private BukkitLogger logger;
+
     //JAVA PLUGIN
     @Override
     public void onLoad() {
+        logger = new BukkitLogger(getLogger());
 
         // Ensure plugin folder exists
         if (!getDataFolder().exists()) {
@@ -92,6 +97,11 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
         }
 
         return bridge;
+    }
+
+    @Override
+    public SvgLogger getSvgLogger() {
+        return logger;
     }
 
     @Override

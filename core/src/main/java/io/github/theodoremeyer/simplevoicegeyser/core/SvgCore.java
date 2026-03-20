@@ -1,6 +1,7 @@
 package io.github.theodoremeyer.simplevoicegeyser.core;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.api.Platform;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserEventHook;
@@ -120,8 +121,8 @@ public final class SvgCore {
      * @see Logger
      * @return logger
      */
-    public static Logger getLogger() {
-        return instance.platform.getLogger();
+    public static SvgLogger getLogger() {
+        return instance.platform.getSvgLogger();
     }
 
     /**

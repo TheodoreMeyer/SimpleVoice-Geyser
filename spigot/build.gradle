@@ -39,7 +39,6 @@ tasks.processResources {
 
 tasks.shadowJar {
 
-    archiveBaseName.set("Svg-Spigot")
     archiveClassifier.set("") // no -all suffix
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -57,17 +56,6 @@ tasks.withType(Jar).configureEach {
 
 tasks.jar {
     enabled = false
-    //dependsOn(":core:jar") // make sure core is built first
-
-    //from(project(":core").sourceSets.main.output) // include compiled classes
-    //from(project(":core").sourceSets.main.resources) // include core resources
-
-    // Include Ezlib (and any other runtime dependencies you explicitly want)
-    //from({
-    //    configurations.runtimeClasspath.filter {
-    //        it.name.contains("ezlib") || it.name.contains("loader")
-    //    }.collect { zipTree(it) }
-    //})
 }
 
 runServer { // https://github.com/jpenilla/run-task/wiki
