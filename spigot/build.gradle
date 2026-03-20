@@ -5,8 +5,14 @@ plugins {
     id "xyz.jpenilla.run-paper" version "3.0.2"
 }
 
+repositories {
+    maven {
+        url = uri('https://hub.spigotmc.org/nexus/content/groups/public/')
+    }
+}
+
 dependencies {
-    compileOnly("org.spigotmc:spigot-api:${spigot_api_version}-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot-api:${low_mc_version}-R0.1-SNAPSHOT")
 
     // CORE MODULE
     implementation(project(":core"))
@@ -21,28 +27,22 @@ dependencies {
 
 tasks.processResources {
     inputs.property("version", version)
-    inputs.property("spigot_version", spigot_api_version)
+    inputs.property("spigot_version", low_mc_version)
 
     filesMatching('plugin.yml') {
         expand(
                 plugin_version: version,
-                spigot_version: spigot_api_version
+                spigot_version: low_mc_version
         )
     }
 }
 
 tasks.shadowJar {
-    archiveBaseName.set("Svg-Spigot")
+
     archiveClassifier.set("") // no -all suffix
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-    // Relocate Jetty + Servlet + JSON + BCrypt + Ezlib + SL4FJ
-    relocate("org.eclipse.jetty", "io.github.theodoremeyer.simplevoicegeyser.shadow.jetty")
-    relocate("jakarta.servlet", "io.github.theodoremeyer.simplevoicegeyser.shadow.servlet")
-    relocate("org.json", "io.github.theodoremeyer.simplevoicegeyser.shadow.json")
-    relocate("org.mindrot", "io.github.theodoremeyer.simplevoicegeyser.shadow.mindrot")
-    relocate("com.saicone.ezlib", "io.github.theodoremeyer.simplevoicegeyser.shadow.ezlib")
-    relocate("org.sl4fj", "io.github.theodoremeyer.simplevoicegeyser.shadow.slf4j")
+    rootProject.applySvgRelocations(delegate)
 
     // Include core classes + resources
     from(project(":core").sourceSets.main.output)

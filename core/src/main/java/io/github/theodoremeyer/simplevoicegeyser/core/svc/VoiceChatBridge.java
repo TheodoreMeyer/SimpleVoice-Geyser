@@ -44,14 +44,10 @@ public class VoiceChatBridge implements VoicechatPlugin {
      */
     private final Map<UUID, SvgAudioListener> audioListeners = new ConcurrentHashMap<>();
 
-    private final SvgCore core;
-
     /**
      * Initializes the plugin's connection with SVC.
-     * @param core SVG plugin
      */
-    public VoiceChatBridge(SvgCore core) {
-        this.core = core;
+    public VoiceChatBridge() {
     }
 
     /**
