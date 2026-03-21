@@ -37,7 +37,7 @@ public class SvgListener {
                     Component.literal("Then join via the server SVG website")
             );
 
-            core.getPlayerManager().addPlayer(
+            SvgCore.getPlayerManager().addPlayer(
                     new FabricPlayer(player)
             );
         });
@@ -47,10 +47,10 @@ public class SvgListener {
 
             UUID uuid = handler.player.getUUID();
 
-            SvgPlayer player = core.getPlayerManager().getPlayer(uuid);
+            SvgPlayer player = SvgCore.getPlayerManager().getPlayer(uuid);
 
             if (player != null) {
-                core.getPlayerManager().removePlayer(player);
+                SvgCore.getPlayerManager().removePlayer(player);
             }
         });
     }

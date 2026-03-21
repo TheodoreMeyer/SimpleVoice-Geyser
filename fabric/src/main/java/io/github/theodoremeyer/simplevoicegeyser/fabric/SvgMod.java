@@ -7,6 +7,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
+import io.github.theodoremeyer.simplevoicegeyser.fabric.hooks.LuckPermsHook;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricCommand;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricLogger;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricVcBridge;
@@ -24,6 +25,8 @@ public class SvgMod implements ModInitializer, Platform {
 
     private static SvgCore core;
     private static FabricVcBridge voiceChatBridge;
+
+    private static LuckPermsHook luckPermsHook;
 
     private PasswordFile passwordFile;
     private ConfigFile configFile;
@@ -56,6 +59,8 @@ public class SvgMod implements ModInitializer, Platform {
             new FabricCommand(core);
             new SvgListener(core);
 
+            luckPermsHook = new LuckPermsHook();
+
             ready = true;
             if (voiceChatBridge != null) {
                 core.init();
@@ -73,9 +78,14 @@ public class SvgMod implements ModInitializer, Platform {
         if (voiceChatBridge == null) {
             voiceChatBridge = bridge;
         }
-        if (voiceChatBridge != null && ready) {
+        if (ready) {
             core.init();
         }
+    }
+
+    //Permissions
+    public static LuckPermsHook getLuckPerms() {
+        return luckPermsHook;
     }
 
     // -----------------------------

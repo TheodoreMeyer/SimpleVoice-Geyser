@@ -1,6 +1,7 @@
 package io.github.theodoremeyer.simplevoicegeyser.fabric.impl.sender;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
+import io.github.theodoremeyer.simplevoicegeyser.fabric.SvgMod;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -21,8 +22,13 @@ public class FabricPlayer extends SvgPlayer {
 
     @Override
     public boolean hasPermission(String permission) {
-        // Fabric has no built-in permissions system
-        return true; // TODO: integrate LuckPerms Fabric later
+        try {
+            return SvgMod.getLuckPerms().hasPermission(player, permission);
+        } catch (Exception e) {
+            System.err.println("[Permissions] Unable to determine permission for '" + permission + "', defaulting to true.");
+            e.printStackTrace();
+            return true;
+        }
     }
 
     @Override
