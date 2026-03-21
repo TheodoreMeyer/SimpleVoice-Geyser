@@ -3,13 +3,12 @@ package io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Type;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,22 +26,51 @@ public class ConfigFile extends SvgFile {
     private final File file;
     private Map<String, String> data;
 
-    public ConfigFile(File file) {
-        this.file = file;
+    /**
+     * Creates/loads config.json inside the given data folder.
+     * If missing, attempts to copy default from resources.
+     */
+    public ConfigFile(File dataFolder) {
+        this.file = new File(dataFolder, "config.json");
 
-        if (!file.exists()) {
-            try {
-                file.getParentFile().mkdirs();
-                file.createNewFile();
+        try {
+            // Create or copy file if missing
+            if (!file.exists()) {
+                boolean createdFromResource = copyDefaultFromResources();
 
-                this.data = new HashMap<>();
-                save();
-
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to create JSON file", e);
+                if (!createdFromResource) {
+                    file.createNewFile();
+                    this.data = new HashMap<>();
+                    save();
+                }
             }
-        } else {
+
+            // Load config
             load();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize ConfigFile", e);
+        }
+    }
+
+    /**
+     * Attempts to copy default config.json from jar resources.
+     */
+    private boolean copyDefaultFromResources() {
+        try (InputStream in = getClass().getResourceAsStream("/config.json")) {
+
+            if (in == null) {
+                SvgCore.getLogger().warning("[Config] No default config.json found in resources.");
+                return false;
+            }
+
+            Files.copy(in, file.toPath());
+            SvgCore.getLogger().info("[Config] Default config.json created from resources.");
+            return true;
+
+        } catch (Exception e) {
+            SvgCore.getLogger().error("[Config] Failed to copy default config.json", e);
+            return false;
         }
     }
 

@@ -51,7 +51,7 @@ public class SvgMod implements ModInitializer, Platform {
             }
 
             passwordFile = new PasswordFile(new File(getDataFolder(), "password.json"));
-            configFile = new ConfigFile(new File(getDataFolder(), "config.json"));
+            configFile = new ConfigFile(getDataFolder());
 
             // Init core AFTER filesystem is ready
             core = new SvgCore(this);
