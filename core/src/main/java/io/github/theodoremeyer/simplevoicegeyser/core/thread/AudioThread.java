@@ -27,8 +27,8 @@ public final class AudioThread {
     /**
      * Stop Thread
      */
-    public void shutdown() {
-        executor.shutdownNow();
+    public static void shutdown() {
+        instance.executor.shutdownNow();
     }
 
     /**

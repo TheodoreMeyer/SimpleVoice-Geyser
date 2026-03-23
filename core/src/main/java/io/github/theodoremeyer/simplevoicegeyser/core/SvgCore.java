@@ -70,6 +70,10 @@ public final class SvgCore {
         this.playerManager = new PlayerManager();
         this.webSocketManager = new WebSocketManager();
     }
+    
+    private static SvgCore getInstance() {
+        return instance;
+    }
 
     /**
      * Start SVG server and handling with SVC
@@ -95,6 +99,7 @@ public final class SvgCore {
         } catch (Exception e) {
             getLogger().severe("Failed to start Jetty server: " + e.getMessage());
             platform.disable();
+            AudioThread.shutdown();
         }
 
         if (GeyserHook.isGeyser()) {
@@ -122,7 +127,7 @@ public final class SvgCore {
      * @return logger
      */
     public static SvgLogger getLogger() {
-        return instance.platform.getSvgLogger();
+        return getInstance().platform.getSvgLogger();
     }
 
     /**
@@ -130,7 +135,7 @@ public final class SvgCore {
      * @return prefix
      */
     public static String getPrefix() {
-        return instance.platform.getPrefix();
+        return getInstance().platform.getPrefix();
     }
 
     /**
@@ -139,7 +144,7 @@ public final class SvgCore {
      * @param message the message
      */
     public static void debug(String section, String message) {
-        if (instance != null && instance.debug) {
+        if (instance != null && getInstance().debug) {
             getLogger().info("[Debug][" + section + "] " + message);
         }
     }
@@ -151,7 +156,7 @@ public final class SvgCore {
      * @param t the throwable/error thrown
      */
     public static void debug(String section, String message, Throwable t) {
-        if (instance != null && instance.debug) {
+        if (instance != null && getInstance().debug) {
             getLogger().info("[Debug][" + section + "] " + message + ", " + t);
         }
     }
@@ -164,7 +169,7 @@ public final class SvgCore {
      * @return the platform
      */
     public static Platform getPlatform() {
-        return instance.platform;
+        return getInstance().platform;
     }
 
     /**
@@ -173,7 +178,7 @@ public final class SvgCore {
      * @return PasswordManager
      */
     public static PlayerVcPswd getPasswordManager() {
-        return instance.playerVcPswd;
+        return getInstance().playerVcPswd;
     }
 
     /**
@@ -182,7 +187,7 @@ public final class SvgCore {
      * @return PlayerManager
      */
     public static PlayerManager getPlayerManager() {
-        return instance.playerManager;
+        return getInstance().playerManager;
     }
 
     /**
@@ -191,7 +196,7 @@ public final class SvgCore {
      * @return groupManager
      */
     public static GroupManager getGroupManager() {
-        return instance.groupManager;
+        return getInstance().groupManager;
     }
 
     /**
@@ -200,7 +205,7 @@ public final class SvgCore {
      * @return voiceChatBridge
      */
     public static VoiceChatBridge getBridge() {
-        return instance.vcBridge;
+        return getInstance().vcBridge;
     }
 
     /**
@@ -209,7 +214,7 @@ public final class SvgCore {
      * @return WebsocketManager
      */
     public static WebSocketManager getWsManager() {
-        return instance.webSocketManager;
+        return getInstance().webSocketManager;
     }
 
     /**
@@ -217,5 +222,5 @@ public final class SvgCore {
      * @see Command
      * @return SvgCommand
      */
-    public static Command getCommand() { return instance.command; }
+    public static Command getCommand() { return getInstance().command; }
 }
