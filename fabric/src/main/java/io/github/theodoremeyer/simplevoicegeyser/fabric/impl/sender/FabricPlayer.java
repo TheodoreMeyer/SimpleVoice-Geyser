@@ -1,5 +1,6 @@
 package io.github.theodoremeyer.simplevoicegeyser.fabric.impl.sender;
 
+import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.SvgMod;
 import net.minecraft.network.chat.Component;
@@ -25,8 +26,8 @@ public class FabricPlayer extends SvgPlayer {
         try {
             return SvgMod.getLuckPerms().hasPermission(player, permission);
         } catch (Exception e) {
-            System.err.println("[Permissions] Unable to determine permission for '" + permission + "', defaulting to true.");
-            e.printStackTrace();
+            SvgCore.getLogger().error("[Permissions] Unable to determine permission for '" + permission + "', defaulting to true.");
+            SvgCore.getLogger().error("[Permissions] This may be caused by LuckPerms not being installed or an internal error. Please check your logs for more details.", e);
             return true;
         }
     }

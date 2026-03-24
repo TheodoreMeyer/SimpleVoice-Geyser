@@ -30,7 +30,10 @@ public class ConfigFile extends SvgFile {
                 boolean created = copyDefaultFromResources();
 
                 if (!created) {
-                    file.createNewFile();
+                    boolean success = file.createNewFile();
+                    if (!success) {
+                        SvgCore.getLogger().severe("[Config] Failed to create config.json file at " + file.getAbsolutePath());
+                    }
                     this.data = new HashMap<>();
                     save();
                 }
@@ -157,9 +160,23 @@ public class ConfigFile extends SvgFile {
         Map<String, Object> current = data;
 
         for (int i = 0; i < parts.length - 1; i++) {
-            current = (Map<String, Object>) current.computeIfAbsent(parts[i], k -> new HashMap<>());
-        }
+            Object next = current.get(parts[i]);
 
+            if (next == null) {
+                Map<String, Object> newMap = new HashMap<>();
+                current.put(parts[i], newMap);
+                current = newMap;
+            } else if (next instanceof Map) {
+                current = (Map<String, Object>) next;
+            } else {
+                // Existing value is not a map → overwrite it safely
+                Map<String, Object> newMap = new HashMap<>();
+                current.put(parts[i], newMap);
+                current = newMap;
+            }
+        }
         current.put(parts[parts.length - 1], value);
+
+        save();
     }
 }

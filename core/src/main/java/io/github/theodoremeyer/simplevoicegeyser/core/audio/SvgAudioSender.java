@@ -32,11 +32,6 @@ public final class SvgAudioSender {
     private final OpusEncoder encoder;
 
     /**
-     * Connection, Centralized for less Latency and fewer checks
-     */
-    private final VoicechatConnection connection;
-
-    /**
      * Class Constructor. Creates and registers the audio sender
      * @param serverApi voice chat server api
      * @param playerUuid uuid of player registering sender for.
@@ -45,7 +40,8 @@ public final class SvgAudioSender {
         this.serverApi = serverApi;
         this.playerUuid = playerUuid;
         this.encoder = serverApi.createEncoder();
-        this.connection = serverApi.getConnectionOf(playerUuid);
+
+        VoicechatConnection connection = serverApi.getConnectionOf(playerUuid);
 
         if (connection == null) {
             throw new RuntimeException("no svc connection for uuid: " + playerUuid);

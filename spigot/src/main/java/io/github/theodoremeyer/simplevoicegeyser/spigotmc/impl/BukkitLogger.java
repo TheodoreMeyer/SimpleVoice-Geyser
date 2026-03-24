@@ -2,6 +2,7 @@ package io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BukkitLogger implements SvgLogger {
@@ -34,7 +35,6 @@ public class BukkitLogger implements SvgLogger {
 
     @Override
     public void error(String msg, Throwable t) {
-        logger.severe(msg);
-        t.printStackTrace();
+        logger.log(Level.SEVERE, msg, t);
     }
 }

@@ -14,6 +14,7 @@ import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.ConfigFile;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.PasswordFile;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -35,7 +36,10 @@ public class SvgPlugin extends JavaPlugin implements Platform {
 
         // Ensure plugin folder exists
         if (!getDataFolder().exists()) {
-            getDataFolder().mkdirs();
+            boolean success = getDataFolder().mkdirs();
+            if (!success) {
+                logger.severe("Failed to create plugin data folder at " + getDataFolder().getAbsolutePath());
+            }
         }
 
         // Define config file location
@@ -57,7 +61,13 @@ public class SvgPlugin extends JavaPlugin implements Platform {
     public void onEnable() {
         core.init();
 
-        getCommand("svg").setExecutor(new SvgCommand());
+        PluginCommand command = getCommand("svg");
+        if (command == null) {
+            logger.severe("Failed to register command: 'svg' not found in plugin.yml");
+            SvgCore.disable();
+            return;
+        }
+        command.setExecutor(new SvgCommand());
 
         SvgListener listener = new SvgListener();
         Bukkit.getPluginManager().registerEvents(listener, this);

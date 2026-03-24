@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 
 public class FabricLogger implements SvgLogger {
 
-    private final Logger logger = LoggerFactory.getLogger("SimpleVoiceGeyser");
+    private final Logger logger = LoggerFactory.getLogger("SV-G");
 
     @Override
     public void info(String msg) {

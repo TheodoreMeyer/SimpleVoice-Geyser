@@ -13,7 +13,7 @@ import static net.minecraft.commands.Commands.literal;
 
 public class FabricCommand {
 
-    public FabricCommand(SvgCore core) {
+    public FabricCommand() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 register(dispatcher)
         );

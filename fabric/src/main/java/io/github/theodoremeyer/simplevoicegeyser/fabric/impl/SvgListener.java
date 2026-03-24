@@ -11,10 +11,7 @@ import java.util.UUID;
 
 public class SvgListener {
 
-    private final SvgCore core;
-
-    public SvgListener(SvgCore core) {
-        this.core = core;
+    public SvgListener() {
         register();
     }
 

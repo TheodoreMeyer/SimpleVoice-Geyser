@@ -36,8 +36,15 @@ public class PasswordFile extends SvgFile {
 
         if (!file.exists()) {
             try {
-                file.getParentFile().mkdirs();
-                file.createNewFile();
+                boolean success = file.getParentFile().mkdirs();
+                if (!success) {
+                    SvgCore.getLogger().warning("Failed to create parent directories for " + file.getAbsolutePath());
+                }
+
+                boolean created = file.createNewFile();
+                if (!created) {
+                    SvgCore.getLogger().severe("Failed to create password.json file at " + file.getAbsolutePath());
+                }
 
                 this.data = new HashMap<>();
                 save();

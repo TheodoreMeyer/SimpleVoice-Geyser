@@ -105,8 +105,7 @@ public final class SvgCore {
             getLogger().info("Jetty server started on port: " + port);
         } catch (Exception e) {
             getLogger().severe("Failed to start Jetty server: " + e.getMessage());
-            platform.disable();
-            AudioThread.shutdown();
+            shutdown();
         }
 
         if (GeyserHook.isGeyser()) {
@@ -114,6 +113,23 @@ public final class SvgCore {
         }  else {
             getLogger().warning("Geyser is not installed. Skipping Bedrock Events");
         }
+    }
+
+    public static void disable() {
+        getInstance().shutdown();
+    }
+
+    private void shutdown() {
+        if (jettyServer != null) {
+            try {
+                jettyServer.stop();
+                getLogger().info("Jetty server stopped successfully.");
+            } catch (Exception e) {
+                getLogger().severe("Failed to stop Jetty server: " + e.getMessage());
+            }
+        }
+        platform.disable();
+        AudioThread.shutdown();
     }
 
     /**

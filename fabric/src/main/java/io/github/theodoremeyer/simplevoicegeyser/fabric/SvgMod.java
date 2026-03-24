@@ -47,7 +47,10 @@ public class SvgMod implements ModInitializer, Platform {
             // Ensure data directory exists
             File dir = getDataFolder();
             if (!dir.exists()) {
-                dir.mkdirs();
+                boolean created = dir.mkdirs();
+                if (!created) {
+                    logger.severe(getPrefix() + "Failed to create data directory: " + dir.getAbsolutePath());
+                }
             }
 
             passwordFile = new PasswordFile(new File(getDataFolder(), "password.json"));
@@ -56,8 +59,8 @@ public class SvgMod implements ModInitializer, Platform {
             // Init core AFTER filesystem is ready
             core = new SvgCore(this);
 
-            new FabricCommand(core);
-            new SvgListener(core);
+            new FabricCommand();
+            new SvgListener();
 
             luckPermsHook = new LuckPermsHook();
 
