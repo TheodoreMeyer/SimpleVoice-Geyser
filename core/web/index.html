@@ -31,6 +31,12 @@
             <button type="submit" id="joinbtn">Join</button>
         </form>
     </div>
+    <noscript>
+        <div style="background:red; color:white; padding:10px; text-align:center; font-weight: bolder;">
+            <h2>Error:</h2>
+            <p>JavaScript is required to use this application.</p>
+        </div>
+    </noscript>
     <div id="main-vc-container">
         <div id="micControls">
             <button id="muteBtn" class="unmuted">Mute</button>
@@ -54,16 +60,10 @@
             <span>Theodore Meyer</span>
         </a>
     </div>
-    <noscript>
-        <div style="background:red; color:white; padding:10px; text-align:center; font-weight: bolder;">
-            <h1>Please enable JavaScript to access voice chat.</h1>
-        </div>
-    </noscript>
     <script type="module">
         import { start } from '/js/client.js';
         start(); // manually triggers it
     </script>
 
 </body>
-
 </html>
