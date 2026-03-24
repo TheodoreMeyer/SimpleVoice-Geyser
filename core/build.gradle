@@ -46,13 +46,6 @@ java {
 
 tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    // Only include the library loader in the jar
-    from({
-        configurations.runtimeClasspath
-                .filter { it.name.contains("ezlib") || it.name.contains("loader") } // only helper JAR
-                .collect { zipTree(it) }
-    })
 }
 
 publishing {

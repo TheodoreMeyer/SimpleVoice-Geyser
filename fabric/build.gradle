@@ -39,8 +39,8 @@ dependencies {
     // =========================
     // EXTERNAL LIBRARIES (SHADOWED)
     // =========================
-    shadow "org.eclipse.jetty:jetty-server:9.4.54.v20240208"
-    shadow "jakarta.servlet:jakarta.servlet-api:5.0.0"
+    shadow "org.eclipse.jetty:jetty-server:11.0.25"
+    shadow "org.eclipse.jetty:jetty-servlet:11.0.25"
     shadow "org.json:json:20240303"
     shadow "org.mindrot:jbcrypt:0.4"
     shadow "org.slf4j:slf4j-api:2.0.12"
