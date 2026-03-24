@@ -67,14 +67,14 @@ public final class Command {
                 SvgPlayer player = requirePlayer(sender, "Only players can create groups.");
                 if (player == null) return true;
 
-                if (!player.hasPermission("svg.vc.creategroup.create")) {
+                if (!player.hasPermission("svg.vc.group.create")) {
                     sender.sendMessage(SvgCore.getPrefix() + SvgColor.RED + "You do not have permission to create groups.");
                     return true;
                 }
 
                 String groupName = null;
                 String groupType = "open";
-                String password = null;
+                String password = "";
                 boolean persistent = false;
 
                 for (int i = 1; i < args.length; i++) {

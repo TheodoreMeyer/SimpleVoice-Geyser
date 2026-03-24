@@ -95,13 +95,18 @@ public final class WebSocketManager {
      */
     public void sendJson(UUID uuid, String type, String message) {
         Session session = clients.get(uuid); // get session to send to
+        if (session == null || !session.isOpen()) {
+            SvgCore.getLogger().warning("Attempted to send message to non-existent or closed session: " + uuid);
+            return;
+        }
+
         JSONObject json = new JSONObject();
         json.put("type", type);
         json.put("message", message);
         try {
             session.getRemote().sendString(json.toString()); //send the message
         } catch (IOException e) {
-            e.printStackTrace();
+            SvgCore.getLogger().error("Failed to send message to client: " + uuid, e);
         }
     }
 
@@ -114,10 +119,15 @@ public final class WebSocketManager {
     public void sendJson(UUID uuid, JSONObject json) {
         Session session = clients.get(uuid);
 
+        if (session == null || !session.isOpen()) {
+            SvgCore.getLogger().warning("Attempted to send message to non-existent or closed session: " + uuid);
+            return;
+        }
+
         try {
             session.getRemote().sendString(json.toString());
         } catch (Exception e) {
-            e.printStackTrace();
+            SvgCore.getLogger().error("Failed to send message to client: " + uuid, e);
         }
     }
 }

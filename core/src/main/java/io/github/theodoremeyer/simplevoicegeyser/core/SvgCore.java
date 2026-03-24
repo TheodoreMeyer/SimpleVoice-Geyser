@@ -85,6 +85,7 @@ public final class SvgCore {
 
         this.vcBridge = platform.registerVcBridge();
 
+
         if (this.vcBridge == null) {
             getLogger().severe("Failed to register VoiceChatBridge. Disabling SimpleVoice-Geyser.");
             platform.disable();

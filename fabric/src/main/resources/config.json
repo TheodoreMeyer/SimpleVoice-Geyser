@@ -3,7 +3,7 @@
 
   "client": {
     "vctimeout": 30,
-    "idletimout": 2,
+    "idletimeout": 2,
     "requireBedrock": false,
     "useEmoteForSVG": true
   },

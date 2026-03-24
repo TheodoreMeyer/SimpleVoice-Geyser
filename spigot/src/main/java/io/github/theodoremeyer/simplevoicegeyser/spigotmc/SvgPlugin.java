@@ -15,12 +15,10 @@ import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.PasswordFile
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.geysermc.geyser.api.GeyserApi;
-import org.geysermc.geyser.api.event.EventRegistrar;
 
 import java.io.File;
 
-public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
+public class SvgPlugin extends JavaPlugin implements Platform {
 
     private SvgCore core;
 
@@ -67,7 +65,6 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
 
     @Override
     public void onDisable() {
-        GeyserApi.api().eventBus().unregisterAll(this);
         SvgCore.getWsManager().disconnectAllClients();
     }
 

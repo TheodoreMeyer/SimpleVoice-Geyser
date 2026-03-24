@@ -21,7 +21,13 @@ public class FabricCommand {
 
     private void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
-                literal("svg").executes(this::execute)
+                literal("svg")
+                        .then(literal("pswd").executes(this::execute))
+                        .then(literal("lgroup").executes(this::execute))
+                        .then(literal("jgroup").executes(this::execute))
+                        .then(literal("help").executes(this::execute))
+                        .then(literal("cgroup").executes(this::execute))
+                        .executes(this::execute)
         );
     }
 

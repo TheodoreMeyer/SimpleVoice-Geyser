@@ -74,7 +74,7 @@ public final class GroupManager {
         if (groupType == null) groupType = Type.NORMAL;
 
         Group group;
-        if (password.isEmpty()) { //build the group
+        if (password == null || password.isEmpty()) { //build the group
             group = api.groupBuilder()
                     .setName(groupName)
                     .setType(groupType)
@@ -226,7 +226,7 @@ public final class GroupManager {
         if (api == null) return Optional.empty();
 
         VoicechatConnection connection = api.getConnectionOf(SvgPlayer.getUniqueId());
-        if (connection == null || !connection.isInGroup()) Optional.empty();
+        if (connection == null || !connection.isInGroup()) return Optional.empty();
 
         Group group = connection.getGroup();
         if (group == null) return Optional.empty();
@@ -285,7 +285,7 @@ public final class GroupManager {
             return false;
 
         } else if (persistent
-                && !svgPlayer.hasPermission("svg.vc.creategroup.setpersistent")) {
+                && !svgPlayer.hasPermission("svg.vc.group.setpersistent")) {
 
             return false;
         }

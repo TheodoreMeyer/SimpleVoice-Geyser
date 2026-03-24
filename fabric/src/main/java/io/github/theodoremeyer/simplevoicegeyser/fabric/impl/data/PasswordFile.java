@@ -3,6 +3,7 @@ package io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 
 import java.io.File;
@@ -17,15 +18,18 @@ import java.util.Set;
 
 /**
  * Platform-independent JSON implementation of SvgFile.
- * Replaces Bukkit YamlConfiguration.
+ * Uses hierarchical JSON structure instead of flat paths.
  */
 public class PasswordFile extends SvgFile {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Type TYPE = new TypeToken<Map<String, String>>() {}.getType();
+
+    // Map<player, Map<field, value>>
+    private static final Type TYPE =
+            new TypeToken<Map<String, Map<String, String>>>() {}.getType();
 
     private final File file;
-    private Map<String, String> data;
+    private Map<String, Map<String, String>> data;
 
     public PasswordFile(File file) {
         this.file = file;
@@ -48,10 +52,11 @@ public class PasswordFile extends SvgFile {
 
     private void load() {
         try (FileReader reader = new FileReader(file)) {
-            Map<String, String> loaded = GSON.fromJson(reader, TYPE);
+            Map<String, Map<String, String>> loaded = GSON.fromJson(reader, TYPE);
             this.data = (loaded != null) ? loaded : new HashMap<>();
         } catch (Exception e) {
             this.data = new HashMap<>();
+            SvgCore.getLogger().error("Failed to load JSON file, starting with empty data", e);
         }
     }
 
@@ -62,39 +67,57 @@ public class PasswordFile extends SvgFile {
 
     @Override
     public void set(String path, String value) {
-        data.put(path, value);
+        String[] parts = splitPath(path);
+        if (parts == null) return;
+
+        data.computeIfAbsent(parts[0], k -> new HashMap<>())
+                .put(parts[1], value);
     }
 
     @Override
     public String getString(String path) {
-        return data.get(path);
+        String[] parts = splitPath(path);
+        if (parts == null) return null;
+
+        Map<String, String> section = data.get(parts[0]);
+        if (section == null) return null;
+
+        return section.get(parts[1]);
     }
 
     @Override
     public String getString(String path, String def) {
-        return data.getOrDefault(path, def);
+        String val = getString(path);
+        return val != null ? val : def;
     }
 
     @Override
     public boolean getBoolean(String path, boolean def) {
-        String val = data.get(path);
+        String val = getString(path);
         return val == null ? def : Boolean.parseBoolean(val);
     }
 
     @Override
     public int getInt(String path, int def) {
+        String val = getString(path);
+        if (val == null) return def;
+
         try {
-            return Integer.parseInt(data.get(path));
-        } catch (Exception e) {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException e) {
             return def;
         }
     }
 
     @Override
     public double getDouble(String path, double def) {
+        String val = getString(path);
+        if (val == null) return def;
+
         try {
-            return Double.parseDouble(data.get(path));
-        } catch (Exception e) {
+            return Double.parseDouble(val);
+        } catch (NumberFormatException e) {
+            SvgCore.debug("Pswd", "Failed to parse double for path '" + path + "': " + val, e);
             return def;
         }
     }
@@ -111,5 +134,20 @@ public class PasswordFile extends SvgFile {
     @Override
     public File getFile() {
         return file;
+    }
+
+    /**
+     * Splits a path like "player.password" into ["player", "password"]
+     */
+    private String[] splitPath(String path) {
+        if (path == null) return null;
+
+        String[] parts = path.split("\\.", 2);
+        if (parts.length != 2) {
+            SvgCore.getLogger().warning("Invalid path: " + path);
+            return null;
+        }
+
+        return parts;
     }
 }

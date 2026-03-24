@@ -17,6 +17,11 @@ public class SvgCommand implements CommandExecutor {
         if (commandSender instanceof Player p) {
             SvgPlayer player = SvgCore.getPlayerManager().getPlayer(p.getUniqueId());
 
+            if (player == null) {
+                commandSender.sendMessage("Unable to find the SvgPlayer instance for you. Please try again.");
+                return true;
+            }
+
             return SvgCore.getCommand().onCommand(player, strings);
         } else if (commandSender instanceof ConsoleCommandSender) {
             return SvgCore.getCommand().onCommand(new BukkitConsole(), strings);

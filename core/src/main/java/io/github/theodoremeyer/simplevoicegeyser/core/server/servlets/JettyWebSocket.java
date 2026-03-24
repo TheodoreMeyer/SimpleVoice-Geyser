@@ -81,7 +81,7 @@ public final class JettyWebSocket {
             return;
         }
 
-        message = message.trim().toLowerCase();
+        message = message.trim();
 
         //reject non JSON messages early
         if (!message.startsWith("{")) {
@@ -142,15 +142,15 @@ public final class JettyWebSocket {
      */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
-        String username = SvgCore.getPasswordManager().getUsernameFromUUID(uuid);
-        String displayName = (username != null) ? username : uuid.toString();
-
-        SvgCore.getLogger().info("[WebSocket] WebSocket for " + displayName + " closed: " + statusCode + " - " + reason);
         if (uuid != null) { //make sure the uuid for the session is not null, needed to close senders/listeners
+            String username = SvgCore.getPasswordManager().getUsernameFromUUID(uuid);
+            String displayName = (username != null) ? username : uuid.toString();
+            SvgCore.getLogger().info("[WebSocket] WebSocket for " + displayName + " closed: " + statusCode + " - " + reason);
+
             SvgCore.getBridge().unregisterAudioSender(uuid);
             SvgCore.getBridge().unregisterAudioListener(uuid);
         } else {
-            SvgCore.getLogger().warning("[WebSocket] Disconnected: unknown client (" + reason + ")");
+            SvgCore.getLogger().warning("[WebSocket] Disconnected: unknown client for " + reason + ".");
         }
         SvgCore.getWsManager().removeClient(uuid);
     }

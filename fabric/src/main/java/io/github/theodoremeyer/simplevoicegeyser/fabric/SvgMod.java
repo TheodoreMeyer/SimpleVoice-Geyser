@@ -128,8 +128,19 @@ public class SvgMod implements ModInitializer, Platform {
 
     @Override
     public boolean isDependencyEnabled(String name) {
+        if (name.equalsIgnoreCase("LuckPerms")) {
+            return isClassPresent("net.luckperms.api.LuckPerms");
+        } else if (name.equalsIgnoreCase("Geyser-Spigot")) {
+            return isClassPresent("org.geysermc.api.GeyserApi");
+        } else if (name.equalsIgnoreCase("floodgate")) {
+            return isClassPresent("org.geysermc.floodgate.api.FloodgateApi");
+        }
+        return false;
+    }
+
+    private boolean isClassPresent(String className) {
         try {
-            Class.forName(name);
+            Class.forName(className);
             return true;
         } catch (ClassNotFoundException e) {
             return false;

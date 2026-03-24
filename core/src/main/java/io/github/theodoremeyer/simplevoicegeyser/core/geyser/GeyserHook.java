@@ -62,7 +62,9 @@ public final class GeyserHook {
      * @param form the form
      */
     public static void sendForm(UUID uuid, Form form) {
-        if (!isBedrock(uuid).booleanValue()) return;
+        Boolean bedrock = isBedrock(uuid);
+
+        if (bedrock == null || !bedrock) return;
 
         if (isFloodgate()) {
             FloodgateApi.getInstance().sendForm(uuid, form);

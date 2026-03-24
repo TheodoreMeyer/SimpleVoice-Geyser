@@ -7,7 +7,7 @@ client:
 
   # default: 2
   # idle websocket timeout in minutes
-  idletimout: 2
+  idletimeout: 2
 
   # default: false
   # Only allow bedrock players to join the chat
@@ -46,4 +46,4 @@ server:
 # default: false
 # Debug logs
 # Do NOT use this in production. This will very quickly fill up your server logs.
-Debug: false
+debug: false
