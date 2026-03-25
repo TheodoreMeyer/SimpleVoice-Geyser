@@ -19,7 +19,7 @@ public final class ResourceServlet extends HttpServlet {
 
     /**
      * Handles HTTP GET requests and serves the requested static resource.
-     *
+     * <p>
      * @param req  the HTTP request
      * @param resp the HTTP response
      * @throws IOException if the resource cannot be read or written

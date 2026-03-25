@@ -1,4 +1,4 @@
-class MicCaptureProcessor extends AudioWorkletProcessor {
+class Microphone extends AudioWorkletProcessor {
     constructor() {
         super();
 
@@ -37,7 +37,7 @@ class MicCaptureProcessor extends AudioWorkletProcessor {
 
         // ---- 4) Send data to main thread ----
         this.port.postMessage({
-            samples: input,
+            samples: new Float32Array(input), // COPY
             speech: isSpeech
         });
 
@@ -45,4 +45,4 @@ class MicCaptureProcessor extends AudioWorkletProcessor {
     }
 }
 
-registerProcessor('mic-capture', MicCaptureProcessor);
+registerProcessor('mic-capture', Microphone);

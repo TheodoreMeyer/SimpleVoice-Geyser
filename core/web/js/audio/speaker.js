@@ -1,4 +1,4 @@
-class AudioPlayerProcessor extends AudioWorkletProcessor {
+class SpeakerProcessor extends AudioWorkletProcessor {
     constructor() {
         super();
 
@@ -19,6 +19,8 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
 
         this.lastSample = 0; // for repeating when underrun
 
+        this.droppedFrames = 0; //Dropped amount of frames
+
         //For resetting state
         this.silenceFrames = 0;
         this.SILENCE_RESET_FRAMES = 128 * 15;
@@ -27,11 +29,16 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
             if (event.data.type === 'pcm') {
                 const input = event.data.buffer;
 
+                if (!(input instanceof Float32Array)) {
+                    return;
+                }
+
                 for (let i = 0; i < input.length; i++) {
                     // Drop the oldest audio if buffer is full
                     if (this.available >= this.MAX_BUFFER) {
                         this.readIndex = (this.readIndex + 1) % this.MAX_BUFFER;
                         this.available--;
+                        this.droppedFrames++;
                     }
 
                     this.buffer[this.writeIndex] = input[i];
@@ -39,7 +46,6 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
                     this.available++;
                 }
             } else if (event.data.type === 'reset') {
-                // Hard reset to clean state
                 this.writeIndex = 0;
                 this.readIndex = 0;
                 this.available = 0;
@@ -48,6 +54,7 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
                 this.lastSample = 0;
                 this.silenceFrames = 0;
                 this.underruns = 0;
+                this.droppedFrames = 0;
 
                 this.buffer.fill(0);
             }
@@ -120,4 +127,4 @@ class AudioPlayerProcessor extends AudioWorkletProcessor {
     }
 }
 
-registerProcessor('pcm-player', AudioPlayerProcessor);
+registerProcessor('pcm-player', SpeakerProcessor);
