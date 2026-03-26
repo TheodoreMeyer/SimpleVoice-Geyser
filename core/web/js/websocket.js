@@ -92,7 +92,7 @@ function createSocket(onStatusChange) {
         resetAudioState();
         onStatusChange(false);
 
-        if (!manualClose && lastCredentials && !authFailed) {
+        if (!manualClose && lastCredentials && reOpen) {
             reconnectTimeout = setTimeout(() => {
                 log("Reconnecting...");
                 createSocket(onStatusChange);

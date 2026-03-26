@@ -95,10 +95,10 @@ public final class WebSocketManager {
     /**
      * Disconnects a player when they leave
      */
-    public boolean playerLeave(UUID uuid) {
+    public void playerLeave(UUID uuid) {
         String playerName = SvgCore.getPlayerManager().getPlayer(uuid).getName();
         sendJson(uuid, "message", playerName + " left the game.");
-        return disconnectClient(uuid);
+        disconnectClient(uuid);
     }
 
     /**
