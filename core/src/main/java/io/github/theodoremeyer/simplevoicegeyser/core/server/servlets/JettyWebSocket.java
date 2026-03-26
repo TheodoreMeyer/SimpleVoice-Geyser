@@ -15,6 +15,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -127,11 +128,12 @@ public final class JettyWebSocket {
     public void onMessage(byte[] buffer, int offset, int length) {
         if (!authenticated || uuid == null) return; //make sure they signed in
 
-        byte[] pcmData = new byte[length];
-        System.arraycopy(buffer, offset, pcmData, 0, length);
+        //byte[] pcmData = new byte[length];
+        //System.arraycopy(buffer, offset, pcmData, 0, length);
 
         if (audioSender != null) { //make sure the sender is not null
-            audioSender.sendOpus(pcmData); //send the audio data
+            //audioSender.sendOpus(pcmData); //send the audio data
+            audioSender.sendOpus(Arrays.copyOfRange(buffer, offset, offset + length));
         }
     }
 
@@ -152,7 +154,7 @@ public final class JettyWebSocket {
         } else {
             SvgCore.getLogger().warning("[WebSocket] Disconnected: unknown client for " + reason + ".");
         }
-        SvgCore.getWsManager().removeClient(uuid);
+        SvgCore.getWsManager().removeClient(uuid, session);
     }
 
     /**
@@ -203,7 +205,7 @@ public final class JettyWebSocket {
         }
 
         if (!SvgCore.getWsManager().addClient(uuid, this.session)) { //add this session to the list of active sessions
-            closeOnError("Incorrect password!", false);
+            closeOnError("Failed to Join.", false);
             return;
         }
 

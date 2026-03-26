@@ -11,13 +11,18 @@ let muted = false;
 let micActiveUntil = 0;
 const MIC_HOLD_MS = 120;
 
-let micBuffer = new Int16Array(0);
+//   FIX: ring buffer (NO reallocation)
 const PACKET_SIZE = 960;
+const BUFFER_SIZE = 960 * 20; // 20 packets max
+
+let micBuffer = new Int16Array(BUFFER_SIZE);
+let writeIndex = 0;
+let readIndex = 0;
+let available = 0;
 
 let micIndicator = null;
 
 export async function initAudio() {
-    //const AudioCtx = window.AudioContext || window.webkitAudioContext;
     audioContext = new AudioContext({ sampleRate: 48000 });
 
     if (audioContext.sampleRate !== 48000) {
@@ -58,7 +63,6 @@ export async function startMic(deviceId) {
     micNode = new AudioWorkletNode(audioContext, "mic-capture");
 
     micSource.connect(micNode);
-
     micNode.port.onmessage = handleMicMessage;
 }
 
@@ -80,20 +84,31 @@ function handleMicMessage(event) {
 
     if (!speech || muted) return;
 
-    const int16 = new Int16Array(samples.length);
+    //   Float32 -> Int16
     for (let i = 0; i < samples.length; i++) {
         const s = Math.max(-1, Math.min(1, samples[i]));
-        int16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+        // write into ring buffer
+        micBuffer[writeIndex] = s < 0 ? s * 0x8000 : s * 0x7fff;
+        writeIndex = (writeIndex + 1) % BUFFER_SIZE;
+
+        if (available < BUFFER_SIZE) {
+            available++;
+        } else {
+            // overwrite oldest
+            readIndex = (readIndex + 1) % BUFFER_SIZE;
+        }
     }
 
-    const merged = new Int16Array(micBuffer.length + int16.length);
-    merged.set(micBuffer);
-    merged.set(int16, micBuffer.length);
-    micBuffer = merged;
+    //   send fixed 960 sample packets ONLY
+    while (available >= PACKET_SIZE) {
+        const packet = new Int16Array(PACKET_SIZE);
 
-    while (micBuffer.length >= PACKET_SIZE) {
-        const packet = micBuffer.slice(0, PACKET_SIZE);
-        micBuffer = micBuffer.slice(PACKET_SIZE);
+        for (let i = 0; i < PACKET_SIZE; i++) {
+            packet[i] = micBuffer[readIndex];
+            readIndex = (readIndex + 1) % BUFFER_SIZE;
+        }
+
+        available -= PACKET_SIZE;
 
         micHandler?.(packet.buffer);
     }
@@ -116,8 +131,10 @@ export function stopMic() {
         microphoneStream = null;
     }
 
-    micBuffer = new Int16Array(0);
-    micActiveUntil = 0;
+    // reset buffer
+    writeIndex = 0;
+    readIndex = 0;
+    available = 0;
 
     if (micIndicator) {
         micIndicator.classList.remove("active");
@@ -140,7 +157,10 @@ export function playAudio(buffer) {
 
 export function resetAudioState() {
     audioWorkletNode?.port.postMessage({ type: "reset" });
-    micBuffer = new Int16Array(0);
+
+    writeIndex = 0;
+    readIndex = 0;
+    available = 0;
 }
 
 export async function setOutputDevice(deviceId) {

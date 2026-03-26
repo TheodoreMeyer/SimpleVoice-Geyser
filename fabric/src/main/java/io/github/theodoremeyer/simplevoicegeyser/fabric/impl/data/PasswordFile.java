@@ -79,6 +79,7 @@ public class PasswordFile extends SvgFile {
 
         data.computeIfAbsent(parts[0], k -> new HashMap<>())
                 .put(parts[1], value);
+        save();
     }
 
     @Override

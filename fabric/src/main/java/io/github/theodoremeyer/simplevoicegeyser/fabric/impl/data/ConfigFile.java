@@ -1,26 +1,20 @@
 package io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.*;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 
 import java.io.*;
-import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 public class ConfigFile extends SvgFile {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Type TYPE = new TypeToken<Map<String, Object>>() {}.getType();
 
     private final File file;
-    private Map<String, Object> data;
+    private JsonObject data;
 
     public ConfigFile(File dataFolder) {
         this.file = new File(dataFolder, "config.json");
@@ -32,9 +26,9 @@ public class ConfigFile extends SvgFile {
                 if (!created) {
                     boolean success = file.createNewFile();
                     if (!success) {
-                        SvgCore.getLogger().severe("[Config] Failed to create config.json file at " + file.getAbsolutePath());
+                        SvgCore.getLogger().severe("[Config] Failed to create config.json at " + file.getAbsolutePath());
                     }
-                    this.data = new HashMap<>();
+                    this.data = new JsonObject();
                     save();
                 }
             }
@@ -65,8 +59,10 @@ public class ConfigFile extends SvgFile {
 
     private void load() {
         try (FileReader reader = new FileReader(file)) {
-            Map<String, Object> loaded = GSON.fromJson(reader, TYPE);
-            this.data = (loaded != null) ? loaded : new HashMap<>();
+            JsonElement element = JsonParser.parseReader(reader);
+            this.data = element != null && element.isJsonObject()
+                    ? element.getAsJsonObject()
+                    : new JsonObject();
         } catch (Exception e) {
             throw new RuntimeException("Failed to load config.json", e);
         }
@@ -79,13 +75,13 @@ public class ConfigFile extends SvgFile {
 
     @Override
     public void set(String path, String value) {
-        setValue(path, value);
+        setValue(path, new JsonPrimitive(value));
     }
 
     @Override
     public String getString(String path) {
-        Object val = getValue(path);
-        return val != null ? String.valueOf(val) : null;
+        JsonElement el = getValue(path);
+        return el != null && el.isJsonPrimitive() ? el.getAsString() : null;
     }
 
     @Override
@@ -96,32 +92,20 @@ public class ConfigFile extends SvgFile {
 
     @Override
     public boolean getBoolean(String path, boolean def) {
-        Object val = getValue(path);
-        return val instanceof Boolean ? (Boolean) val : def;
+        JsonElement el = getValue(path);
+        return el != null && el.isJsonPrimitive() ? el.getAsBoolean() : def;
     }
 
     @Override
     public int getInt(String path, int def) {
-        Object val = getValue(path);
-        if (val instanceof Number) return ((Number) val).intValue();
-
-        try {
-            return val != null ? Integer.parseInt(val.toString()) : def;
-        } catch (Exception e) {
-            return def;
-        }
+        JsonElement el = getValue(path);
+        return el != null && el.isJsonPrimitive() ? el.getAsInt() : def;
     }
 
     @Override
     public double getDouble(String path, double def) {
-        Object val = getValue(path);
-        if (val instanceof Number) return ((Number) val).doubleValue();
-
-        try {
-            return val != null ? Double.parseDouble(val.toString()) : def;
-        } catch (Exception e) {
-            return def;
-        }
+        JsonElement el = getValue(path);
+        return el != null && el.isJsonPrimitive() ? el.getAsDouble() : def;
     }
 
     @Override
@@ -139,44 +123,42 @@ public class ConfigFile extends SvgFile {
     }
 
     // ------------------------
-    // Internal path traversal
+    // Path traversal
     // ------------------------
 
-    private Object getValue(String path) {
+    private JsonElement getValue(String path) {
         String[] parts = path.split("\\.");
-        Object current = data;
+        JsonElement current = data;
 
         for (String part : parts) {
-            if (!(current instanceof Map)) return null;
-            current = ((Map<?, ?>) current).get(part);
+            if (!current.isJsonObject()) return null;
+
+            JsonObject obj = current.getAsJsonObject();
+            current = obj.get(part);
+
             if (current == null) return null;
         }
 
         return current;
     }
 
-    private void setValue(String path, Object value) {
+    private void setValue(String path, JsonElement value) {
         String[] parts = path.split("\\.");
-        Map<String, Object> current = data;
+        JsonObject current = data;
 
         for (int i = 0; i < parts.length - 1; i++) {
-            Object next = current.get(parts[i]);
+            String key = parts[i];
 
-            if (next == null) {
-                Map<String, Object> newMap = new HashMap<>();
-                current.put(parts[i], newMap);
-                current = newMap;
-            } else if (next instanceof Map) {
-                current = (Map<String, Object>) next;
+            if (!current.has(key) || !current.get(key).isJsonObject()) {
+                JsonObject newObj = new JsonObject();
+                current.add(key, newObj);
+                current = newObj;
             } else {
-                // Existing value is not a map → overwrite it safely
-                Map<String, Object> newMap = new HashMap<>();
-                current.put(parts[i], newMap);
-                current = newMap;
+                current = current.getAsJsonObject(key);
             }
         }
-        current.put(parts[parts.length - 1], value);
 
+        current.add(parts[parts.length - 1], value);
         save();
     }
 }

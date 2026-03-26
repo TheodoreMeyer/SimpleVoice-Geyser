@@ -4,6 +4,7 @@ import {log} from "./utils/logger.js";
 let ws = null;
 let reconnectTimeout = null;
 let lastCredentials = null;
+let manualClose = false;
 
 export function initWebSocket() {
     onMicData((packet) => {
@@ -15,6 +16,7 @@ export function initWebSocket() {
 
 export function connect(username, password, onStatusChange) {
     lastCredentials = { username, password };
+    manualClose = false;
     createSocket(onStatusChange);
 }
 
@@ -38,6 +40,7 @@ function createSocket(onStatusChange) {
                 log("Server: " + event.data);
             }
         } else {
+            //    STRICT PCM decode
             const int16 = new Int16Array(event.data);
             const float32 = new Float32Array(int16.length);
 
@@ -54,7 +57,7 @@ function createSocket(onStatusChange) {
         resetAudioState();
         onStatusChange(false);
 
-        if (lastCredentials) {
+        if (!manualClose && lastCredentials) {
             reconnectTimeout = setTimeout(() => {
                 log("Reconnecting...");
                 createSocket(onStatusChange);
@@ -68,6 +71,7 @@ function createSocket(onStatusChange) {
 }
 
 export function disconnect() {
+    manualClose = true;
     lastCredentials = null;
 
     if (reconnectTimeout) {

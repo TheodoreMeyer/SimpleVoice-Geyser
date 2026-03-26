@@ -27,10 +27,16 @@ public final class WebSocketManager {
      * @return true/false whether it did it successfully.
      */
     public boolean addClient(UUID uuid, Session session) {
-        if (clients.containsKey(uuid)) {
-            return false; // already connected
+        Session old = clients.put(uuid, session);
+
+        if (old != null && old != session && old.isOpen()) {
+            try {
+                old.close(); // kill old connection
+            } catch (Exception e) {
+                SvgCore.debug("WS", "Failed to close old session for UUID: " + uuid, e);
+                return false;
+            }
         }
-        clients.put(uuid, session);
         return true;
     }
 
@@ -47,16 +53,28 @@ public final class WebSocketManager {
      * Removes closed voice chat player session to prevent problems
      * This method needs to be fixed
      * @param uuid uuid of websocket to disconnect
+     * @param session session of websocket to disconnect
      */
-    public void removeClient(UUID uuid) {
-        if (uuid == null) {
-            SvgCore.getLogger().warning("-[WebSocketManager] Tried to remove null UUID");
+    public void removeClient(UUID uuid, Session session) {
+        if (uuid == null || session == null) {
+            SvgCore.getLogger().warning("[WebSocketManager] Tried to remove null UUID/session");
             return;
         }
-        Session session = clients.get(uuid);
-        if (session != null) {
-            session.close(); //close associated websocket session
-            clients.remove(uuid); //remove the closed session from the map
+
+        Session current = clients.get(uuid);
+
+        // CRITICAL FIX
+        if (current != session) {
+            // Old/stale session → ignore
+            return;
+        }
+
+        clients.remove(uuid);
+
+        if (session.isOpen()) {
+            try {
+                session.close();
+            } catch (Exception ignored) {}
         }
     }
 
