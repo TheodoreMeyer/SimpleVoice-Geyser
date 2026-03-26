@@ -6,6 +6,8 @@ let reconnectTimeout = null;
 let lastCredentials = null;
 let manualClose = false;
 
+let reOpen = true; // flag to control auto-reopening
+
 export function initWebSocket() {
     onMicData((packet) => {
         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -17,6 +19,7 @@ export function initWebSocket() {
 export function connect(username, password, onStatusChange) {
     lastCredentials = { username, password };
     manualClose = false;
+    reOpen = true; // Can reopen
     createSocket(onStatusChange);
 }
 
@@ -34,8 +37,40 @@ function createSocket(onStatusChange) {
     ws.onmessage = (event) => {
         if (typeof event.data === "string") {
             try {
+
                 const data = JSON.parse(event.data);
+
+                // 🔴 detect auth failure BEFORE logging
+                const msg = (data.message || "").toLowerCase();
+
+                if (data.type === "error") {
+
+                    const isFatalError = msg.includes("bedrock player to join") ||
+                        msg.includes("Use /svg pswd") ||
+                        msg.includes("access denied:") ||
+                        msg.includes("timeout") ||
+                        msg.includes("left the game.")
+                    if (isFatalError) {
+                        reOpen = false; // don't auto-reopen on fatal errors
+
+                        // optional: immediately close so onclose handles it cleanly
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            ws.close();
+                        }
+                    }
+                }
+
+                if (msg.includes("left the game.")) {
+                    reOpen = false; // normal disconnect, don't auto-reopen
+
+                    // optional: immediately close so onclose handles it cleanly
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.close();
+                    }
+                }
+
                 log((data.type || "info") + ": " + (data.message || JSON.stringify(data)));
+
             } catch {
                 log("Server: " + event.data);
             }
@@ -57,7 +92,7 @@ function createSocket(onStatusChange) {
         resetAudioState();
         onStatusChange(false);
 
-        if (!manualClose && lastCredentials) {
+        if (!manualClose && lastCredentials && !authFailed) {
             reconnectTimeout = setTimeout(() => {
                 log("Reconnecting...");
                 createSocket(onStatusChange);

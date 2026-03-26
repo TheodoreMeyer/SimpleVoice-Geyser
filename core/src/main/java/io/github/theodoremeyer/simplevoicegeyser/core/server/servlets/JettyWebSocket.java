@@ -188,7 +188,7 @@ public final class JettyWebSocket {
             }
         } else if (!bedrock) {
             if (plugin.getConfig().getBoolean("client.requireBedrock", false)) {
-                closeOnError("You must be a Bedrock player to join!", false);
+                closeOnError("Access Denied: You must be a Bedrock player to join!", false);
                 return;
             }
         }
@@ -200,12 +200,12 @@ public final class JettyWebSocket {
         }
 
         if (!playerVcPswd.validatePassword(username, password)) { //validate the player's password from form input
-            closeOnError("Incorrect password!", false);
+            closeOnError("Access Denied: Incorrect password!", false);
             return;
         }
 
         if (!SvgCore.getWsManager().addClient(uuid, this.session)) { //add this session to the list of active sessions
-            closeOnError("Failed to Join.", false);
+            closeOnError("Access Denied: Failed to Join.", false);
             return;
         }
 
@@ -232,7 +232,7 @@ public final class JettyWebSocket {
 
         VoicechatConnection connection = SvgCore.getBridge().getVcServerApi().getConnectionOf(uuid);
         if (connection == null || connection.isInstalled()) {
-            closeOnError("Can't Join server with mod installed or Connection is Null", false);
+            closeOnError("Access Denies: Can't Join server with mod installed or Connection is Null", false);
             return;
         }
 
