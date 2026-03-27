@@ -28,6 +28,7 @@ export function initUI() {
             ? "Developer Tools ▲"
             : "Developer Tools ▼";
     });
+    // The rest
 
     setMicIndicator(micIndicator);
 
