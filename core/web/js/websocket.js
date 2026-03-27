@@ -62,11 +62,6 @@ function createSocket(onStatusChange) {
 
                 if (msg.includes("left the game.")) {
                     reOpen = false; // normal disconnect, don't auto-reopen
-
-                    // optional: immediately close so onclose handles it cleanly
-                    if (ws && ws.readyState === WebSocket.OPEN) {
-                        ws.close();
-                    }
                 }
 
                 log((data.type || "info") + ": " + (data.message || JSON.stringify(data)));

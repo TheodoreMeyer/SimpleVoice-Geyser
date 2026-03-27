@@ -38,10 +38,6 @@
         </div>
     </noscript>
     <div id="main-vc-container">
-        <div id="micControls">
-            <button id="muteBtn" class="unmuted">Mute</button>
-            <span id="micIndicator" title="Mic activity"></span>
-        </div>
         <br>
         <div id="status">Waiting to join...</div>
         <div id="log"></div>
@@ -51,8 +47,39 @@
             <input type="text" id="msgInput" placeholder="Type a message..." />
             <button id="messageButton">Send</button>
         </div>
-        <br>
-        <button id="testSound" type="button">Test Sound</button>
+    </div>
+    <br>
+    <div id="controls">
+
+        <!-- TOP: NORMAL CONTROLS -->
+        <div id="controls-main">
+            <div class="control-group">
+                <span class="control-label">Microphone</span>
+                <div id="micControls">
+                    <button id="muteBtn" class="unmuted">Mute</button>
+                    <span id="micIndicator" title="Mic activity"></span>
+                </div>
+            </div>
+
+            <!-- Add more real controls here later -->
+        </div>
+
+        <!-- DIVIDER -->
+        <div class="controls-divider"></div>
+
+        <!-- BOTTOM: DEV -->
+        <div id="controls-dev">
+            <button id="devToggle" class="dev-toggle">
+                Developer Tools ▼
+            </button>
+            <div id="devContent" hidden>
+                <div class="control-group">
+                    <span class="control-label">Debug</span>
+                    <button id="testSound" type="button">Test Sound</button>
+                </div>
+            </div>
+        </div>
+
     </div>
     <div style="display: flex; align-items: center; gap: 8px;">
         <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank">

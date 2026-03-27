@@ -14,6 +14,21 @@ export function initUI() {
     const micIndicator = document.getElementById('micIndicator');
     const sendBtn = document.getElementById("messageButton");
 
+    //DEV UI
+    const devToggle = document.getElementById("devToggle");
+    const devContent = document.getElementById("devContent");
+
+    let devOpen = false;
+
+    devToggle.addEventListener("click", () => {
+        devOpen = !devOpen;
+
+        devContent.hidden = !devOpen;
+        devToggle.textContent = devOpen
+            ? "Developer Tools ▲"
+            : "Developer Tools ▼";
+    });
+
     setMicIndicator(micIndicator);
 
     setLogger((msg) => {
