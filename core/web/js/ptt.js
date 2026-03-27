@@ -96,7 +96,7 @@ export function createPttController({ elements, log }) {
         updatePttButtons();
     }
 
-    function clearNonGamepadSources() {
+    function clearKeyboardAndMouseSources() {
         const retained = [];
         for (const sourceId of pttSources) {
             if (sourceId.startsWith("gamepad:")) {
@@ -400,7 +400,6 @@ export function createPttController({ elements, log }) {
 
         window.addEventListener("blur", () => {
             if (allowBackgroundPtt) {
-                clearNonGamepadSources();
                 return;
             }
             clearPttSources();
@@ -409,10 +408,22 @@ export function createPttController({ elements, log }) {
         document.addEventListener("visibilitychange", () => {
             if (document.hidden) {
                 if (allowBackgroundPtt) {
-                    clearNonGamepadSources();
                     return;
                 }
                 clearPttSources();
+                return;
+            }
+
+            if (allowBackgroundPtt) {
+                // Keyboard/mouse release events are not guaranteed while unfocused.
+                clearKeyboardAndMouseSources();
+            }
+        });
+
+        window.addEventListener("focus", () => {
+            if (allowBackgroundPtt) {
+                // Clear stale keyboard/mouse holds once focus is regained.
+                clearKeyboardAndMouseSources();
             }
         });
 
