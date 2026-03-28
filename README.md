@@ -45,10 +45,11 @@ Reach out through issues!
 - Bcrypt           [Mindrot.org](https://www.mindrot.org/projects/jBCrypt/)
 
 ## Important Notes
-- `Simple Voice Chat 2.6.0 or compatible is required to work, It must run on the server.
+- Simple Voice Chat 2.6.0 or compatible is required to work, It must run on the server.
+- GeyserMC 2.9.0-SNAPSHOT or compatible is required to work, It must run on the server.
+
 - Releases/versions/jars ending with -Dev{version} mean this is a dev/test version and not meant for productional use.
    - you are welcome to test these, but no guarantee they will work.
-   - 
 - Microphone/Speaker options may or may not work, depending on your browser, as this was built for Google Chrome.
 
 ## Developer Notes
