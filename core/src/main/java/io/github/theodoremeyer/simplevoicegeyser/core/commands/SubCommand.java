@@ -1,11 +1,9 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.commands;
 
-import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.Sender;
-
-public interface SubCommand<T> {
+public interface SubCommand {
 
     String name();
 
-    void execute(Sender sender, T args);
+    boolean execute(CommandArgs args);
 
 }
