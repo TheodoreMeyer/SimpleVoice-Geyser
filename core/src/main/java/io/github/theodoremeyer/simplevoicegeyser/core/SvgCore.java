@@ -4,6 +4,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.Platform;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
+import io.github.theodoremeyer.simplevoicegeyser.core.commands.Command;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserEventHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
