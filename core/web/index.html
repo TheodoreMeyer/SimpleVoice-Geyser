@@ -21,7 +21,12 @@
         <label for="speaker">Select Speaker:</label>
         <select id="speaker" name="speaker"></select>
 
-        <div class="settingsBlock">
+        <button type="submit" id="joinbtn">Join</button>
+    </form>
+
+    <div id="controls-main">
+        <div class="settingsBlock" id="ptt-settings">
+            <h2>Push-to-Talk Settings</h2>
             <label for="transmitMode">Transmit Mode:</label>
             <select id="transmitMode" name="transmitMode">
                 <option value="voice">Voice Activity</option>
@@ -34,7 +39,7 @@
                     <button type="button" id="clearPttBtn">Clear Binding</button>
                 </div>
                 <div id="pttBindingLabel">No binding set. Use the hold button or add a binding.</div>
-                
+
                 <div class="checkboxSetting">
                     <input type="checkbox" id="allowBackgroundPtt" name="allowBackgroundPtt">
                     <label for="allowBackgroundPtt">Allow Background PTT</label>
@@ -44,17 +49,15 @@
             </div>
         </div>
 
-        <button type="submit" id="joinbtn">Join</button>
-    </form>
+        <div id="micControls">
+            <button id="muteBtn" class="unmuted">Mute</button>
+            <span id="micIndicator" title="Mic activity"></span>
+        </div>
 
-    <div id="micControls">
-        <button id="muteBtn" class="unmuted">Mute</button>
-        <span id="micIndicator" title="Mic activity"></span>
-    </div>
-
-    <div id="pttControls" hidden>
-        <button id="pushToTalkBtn" class="pttButton" type="button">Hold to Talk</button>
-        <button id="fullscreenPttBtn" type="button">Fullscreen Push-to-Talk</button>
+        <div id="pttControls" hidden>
+            <button id="pushToTalkBtn" class="pttButton" type="button">Hold to Talk</button>
+            <button id="fullscreenPttBtn" type="button">Fullscreen Push-to-Talk</button>
+        </div>
     </div>
 
     <div id="status">Waiting to join...</div>

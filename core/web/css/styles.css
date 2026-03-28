@@ -21,6 +21,16 @@ form {
   box-shadow: 0 0 10px #000;
   width: 100%;
   max-width: 400px;
+  margin-bottom: 16px;
+}
+
+#controls-main {
+  background: #2a2a2a;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #000;
+  width: 100%;
+  max-width: 400px;
   margin-bottom: 20px;
 }
 
@@ -63,9 +73,16 @@ button:disabled {
 }
 
 .settingsBlock {
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid #3f3f3f;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  margin-bottom: 14px;
+}
+
+#ptt-settings h2 {
+  margin: 0 0 12px;
+  color: #00d4ff;
+  font-size: 18px;
 }
 
 .settingsHint {
@@ -100,7 +117,7 @@ button:disabled {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 10px;
+  margin: 0 0 14px;
 }
 
 #muteBtn {
@@ -177,6 +194,10 @@ button:disabled {
   #inputArea {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  #controls-main {
+    padding: 16px;
   }
 
   #inputArea button {
