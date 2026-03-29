@@ -3,6 +3,7 @@ package io.github.theodoremeyer.simplevoicegeyser.core;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.Platform;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.Command;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserEventHook;
@@ -65,6 +66,8 @@ public final class SvgCore {
 
         this.platform = platform;
         instance = this;
+        SvgConfig.init(platform.getFile(DataType.CONFIG));
+
         new AudioThread();
 
         //Managers

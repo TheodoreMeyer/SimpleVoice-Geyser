@@ -20,7 +20,7 @@ public abstract class SvgFile {
      * @param path path to set
      * @param value the value to set
      */
-    public abstract void set(String path, String value);
+    public abstract void set(String path, Object value);
 
     /**
      * Get a String from store

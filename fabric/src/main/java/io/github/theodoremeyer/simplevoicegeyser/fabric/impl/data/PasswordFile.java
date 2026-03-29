@@ -18,7 +18,6 @@ import java.util.Set;
 
 /**
  * Platform-independent JSON implementation of SvgFile.
- * Uses hierarchical JSON structure instead of flat paths.
  */
 public class PasswordFile extends SvgFile {
 
@@ -73,12 +72,21 @@ public class PasswordFile extends SvgFile {
     }
 
     @Override
-    public void set(String path, String value) {
+    public void set(String path, Object value) {
+        if (value == null) return;
+
         String[] parts = splitPath(path);
-        if (parts == null) return;
+        if (parts == null) {
+            SvgCore.getLogger().warning("Invalid path for set: " + path);
+            return;
+        }
+
+        // Force string storage (this is correct for passwords)
+        String str = String.valueOf(value);
 
         data.computeIfAbsent(parts[0], k -> new HashMap<>())
-                .put(parts[1], value);
+                .put(parts[1], str);
+
         save();
     }
 

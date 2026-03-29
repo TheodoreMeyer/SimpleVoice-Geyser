@@ -74,8 +74,25 @@ public class ConfigFile extends SvgFile {
     }
 
     @Override
-    public void set(String path, String value) {
-        setValue(path, new JsonPrimitive(value));
+    public void set(String path, Object value) {
+
+        JsonElement element;
+
+        if (value instanceof String s) {
+            element = new JsonPrimitive(s);
+        } else if (value instanceof Number n) {
+            element = new JsonPrimitive(n);
+        } else if (value instanceof Boolean b) {
+            element = new JsonPrimitive(b);
+        } else if (value instanceof Character c) {
+            element = new JsonPrimitive(c);
+        } else if (value == null) {
+            element = JsonNull.INSTANCE;
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + value.getClass());
+        }
+
+        setValue(path, element);
     }
 
     @Override

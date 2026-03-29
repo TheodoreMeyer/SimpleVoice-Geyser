@@ -37,7 +37,7 @@ public class PasswordFile extends SvgFile {
     }
 
     @Override
-    public void set(String path, String value) {
+    public void set(String path, Object value) {
         config.set(path, value);
     }
 
