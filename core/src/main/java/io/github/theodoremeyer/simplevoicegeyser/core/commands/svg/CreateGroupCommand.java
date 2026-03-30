@@ -9,19 +9,38 @@ import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.SubCommand;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
 
+/**
+ * /svg cgroup command
+ */
 public final class CreateGroupCommand implements SubCommand {
 
+    /**
+     * GroupManager
+     */
     private final GroupManager groupManager;
 
+    /**
+     * Create the sub-Command
+     * @param groupManager
+     */
     public CreateGroupCommand(GroupManager groupManager) {
         this.groupManager = groupManager;
     }
 
+    /**
+     * Name of command
+     * @return cgroup
+     */
     @Override
     public String name() {
         return "cgroup";
     }
 
+    /**
+     * Execute the sub command
+     * @param args args passed by executor
+     * @return success
+     */
     @Override
     public boolean execute(CommandArgs args) {
         Sender sender = args.getSender();

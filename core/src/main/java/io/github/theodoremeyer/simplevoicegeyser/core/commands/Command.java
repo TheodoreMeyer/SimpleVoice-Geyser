@@ -12,11 +12,25 @@ import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Represents SVG-G's /svg command. This class is responsible for registering and executing subcommands, as well as handling the command form for Bedrock players.
+ */
 public final class Command {
 
+    /**
+     * Map of sub commands
+     */
     private final Map<String, SubCommand> commands = new HashMap<>();
+
+    /**
+     * Form Handler
+     */
     private final FormHandler formHandler;
 
+    /**
+     * create the Command
+     * @param groupManager group manager to pass to subcommands
+     */
     public Command(GroupManager groupManager) {
         this.formHandler = new FormHandler(groupManager);
 
@@ -27,10 +41,20 @@ public final class Command {
         register(new HelpCommand());
     }
 
+    /**
+     * Get a specific sub command
+     * @param name the name of sub command
+     * @return command
+     */
     public SubCommand get(String name) {
         return commands.get(name.toLowerCase());
     }
 
+    /**
+     * Execute a command
+     * @param args command args
+     * @return if it executed successfully
+     */
     public boolean execute(CommandArgs args) {
         SubCommand cmd = get(args.sub());
 
@@ -41,6 +65,10 @@ public final class Command {
         return cmd.execute(args);
     }
 
+    /**
+     * register a command
+     * @param cmd sub command to register
+     */
     private void register(SubCommand cmd) {
         commands.put(cmd.name(), cmd);
     }

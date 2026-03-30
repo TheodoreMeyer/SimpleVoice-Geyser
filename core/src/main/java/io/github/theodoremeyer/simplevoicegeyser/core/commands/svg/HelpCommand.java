@@ -6,13 +6,25 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.Sender;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.SubCommand;
 
+/**
+ * Represents /svg help
+ */
 public final class HelpCommand implements SubCommand {
 
+    /**
+     * Get sub command name
+     * @return help
+     */
     @Override
     public String name() {
         return "help";
     }
 
+    /**
+     * Execute this sub command
+     * @param args args to execute with
+     * @return success
+     */
     @Override
     public boolean execute(CommandArgs args) {
         Sender sender = args.getSender();

@@ -8,19 +8,38 @@ import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.SubCommand;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
 
+/**
+ * Represents /svg jgroup
+ */
 public final class JoinGroupCommand implements SubCommand {
 
+    /**
+     * Group Manager
+     */
     private final GroupManager groupManager;
 
+    /**
+     * Create an instance of the command
+     * @param groupManager group manager to join groups with
+     */
     public JoinGroupCommand(GroupManager groupManager) {
         this.groupManager = groupManager;
     }
 
+    /**
+     * sub command name
+     * @return jgroup
+     */
     @Override
     public String name() {
         return "jgroup";
     }
 
+    /**
+     * Execute this sub command
+     * @param args args to execute with
+     * @return success
+     */
     @Override
     public boolean execute(CommandArgs args) {
         Sender sender = args.getSender();

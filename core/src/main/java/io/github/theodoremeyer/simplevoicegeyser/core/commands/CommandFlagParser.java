@@ -3,6 +3,9 @@ package io.github.theodoremeyer.simplevoicegeyser.core.commands;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Inter-Platform command parser
+ */
 public class CommandFlagParser {
 
     /**
@@ -21,6 +24,7 @@ public class CommandFlagParser {
      * @param schema flag definitions
      * @param args full args array
      * @param start index to start parsing (skip sub + name)
+     * @return map of parsed flags
      */
     public static Map<String, Object> parse(Map<String, Boolean> schema,
                                             String[] args,
@@ -58,6 +62,7 @@ public class CommandFlagParser {
 
     /**
      * Maps flags → internal keys
+     * @param flag the flag to map
      */
     private static String mapKey(String flag) {
         return switch (flag) {

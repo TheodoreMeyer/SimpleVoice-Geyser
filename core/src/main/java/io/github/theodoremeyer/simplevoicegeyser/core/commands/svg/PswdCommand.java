@@ -7,13 +7,26 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.SubCommand;
 
+/**
+ * represents /svg pswd
+ * TODO: Secure from seeing password in logs
+ */
 public final class PswdCommand implements SubCommand {
 
+    /**
+     * name of sub command
+     * @return pswd
+     */
     @Override
     public String name() {
         return "pswd";
     }
 
+    /**
+     * Execute this sub command
+     * @param args args to execute with
+     * @return success
+     */
     @Override
     public boolean execute(CommandArgs args) {
         Sender sender = args.getSender();

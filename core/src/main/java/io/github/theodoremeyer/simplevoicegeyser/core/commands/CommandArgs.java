@@ -9,8 +9,19 @@ import java.util.Map;
  * Command Arg wrapper for parsing and passing around command arguments in a more flexible way.
  */
 public class CommandArgs {
+    /**
+     * Map of agrs
+     */
     private final Map<String, Object> values = new HashMap<>();
+
+    /**
+     * Name of sub command
+     */
     private final String sub;
+
+    /**
+     * The executor
+     */
     private final Sender sender;
 
     /**

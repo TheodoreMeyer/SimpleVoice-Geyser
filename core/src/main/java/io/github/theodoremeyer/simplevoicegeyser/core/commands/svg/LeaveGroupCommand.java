@@ -8,19 +8,38 @@ import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.SubCommand;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
 
+/**
+ * Represents /svg lgroup
+ */
 public final class LeaveGroupCommand implements SubCommand {
 
+    /**
+     * Group Manager
+     */
     private final GroupManager groupManager;
 
+    /**
+     * create an instance of the command
+     * @param groupManager group manager
+     */
     public LeaveGroupCommand(GroupManager groupManager) {
         this.groupManager = groupManager;
     }
 
+    /**
+     * Name of sub command
+     * @return lgroup
+     */
     @Override
     public String name() {
         return "lgroup";
     }
 
+    /**
+     * Execute this subCommand
+     * @param args args to execute with
+     * @return success
+     */
     @Override
     public boolean execute(CommandArgs args) {
         Sender sender = args.getSender();
