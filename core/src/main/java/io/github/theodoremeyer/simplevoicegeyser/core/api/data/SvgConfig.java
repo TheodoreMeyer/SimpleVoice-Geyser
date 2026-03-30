@@ -27,6 +27,9 @@ public final class SvgConfig {
     }
 
     // ---- KEYS ----
+    private static final ConfigKey<String> CONFIG_INFO =
+            new ConfigKey<>("config-info", "This file is used to configure Simple Voice Geyser. " +
+                    "For more information, see the wiki: https://theodoremeyer.github.io/projects/simplevoicegeyser/");
 
     public static final ConfigKey<Integer> VC_TIMEOUT =
             new ConfigKey<>("client.vctimeout", 30);
@@ -55,10 +58,11 @@ public final class SvgConfig {
     public static final ConfigKey<Boolean> DEBUG =
             new ConfigKey<>("debug", false);
 
-    private static final ConfigKey<int[]> CONFIG_VERSION =
-            new ConfigKey<>("config-version", new int[]{0, 1, 0});
+    private static final ConfigKey<String> CONFIG_VERSION =
+            new ConfigKey<>("config-version", "0.1.0");
 
     private static final List<ConfigKey<?>> ALL_KEYS = List.of(
+            CONFIG_INFO,
             VC_TIMEOUT,
             IDLE_TIMEOUT,
             REQUIRE_BEDROCK,
@@ -77,7 +81,7 @@ public final class SvgConfig {
         SvgFile file = getFile();
 
         for (ConfigKey<?> key : ALL_KEYS) {
-            if (!file.getKeys().contains(key.path())) {
+            if (!file.has(key.path())) {
                 file.set(key.path(), key.def());
             }
         }

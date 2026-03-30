@@ -72,6 +72,17 @@ public class PasswordFile extends SvgFile {
     }
 
     @Override
+    public boolean has(String key) {
+        String[] parts = splitPath(key);
+        if (parts == null) return false;
+
+        Map<String, String> section = data.get(parts[0]);
+        if (section == null) return false;
+
+        return section.containsKey(parts[1]);
+    }
+
+    @Override
     public void set(String path, Object value) {
         if (value == null) return;
 

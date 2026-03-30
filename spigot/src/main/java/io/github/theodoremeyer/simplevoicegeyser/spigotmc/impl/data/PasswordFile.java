@@ -37,6 +37,11 @@ public class PasswordFile extends SvgFile {
     }
 
     @Override
+    public boolean has(String key) {
+        return config.contains(key);
+    }
+
+    @Override
     public void set(String path, Object value) {
         config.set(path, value);
     }

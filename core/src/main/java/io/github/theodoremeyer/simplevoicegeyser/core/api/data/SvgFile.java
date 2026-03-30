@@ -16,6 +16,12 @@ public abstract class SvgFile {
     public abstract Set<String> getKeys();
 
     /**
+     * Does the file contain the key/value for key
+     * @param key the key to check
+     */
+    public abstract boolean has(String key);
+
+    /**
      * Set a value
      * @param path path to set
      * @param value the value to set

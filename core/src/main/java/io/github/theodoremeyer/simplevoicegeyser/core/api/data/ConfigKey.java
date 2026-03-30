@@ -31,8 +31,8 @@ public record ConfigKey<T>(String path, T def) {
      * Set The value of this key in the config file
      * @param value value to set to
      * @throws IllegalArgumentException if value is not the same type as default
-     * @apiNote This does not save the config file, you must call SvgConfig.getFile().save() to save changes
-     * @apiNote Don't use very often
+     * This does not save the config file, you must call SvgConfig.getFile().save() to save changes
+     * Don't use very often
      */
     public void set(T value) {
         var file = SvgConfig.getFile();

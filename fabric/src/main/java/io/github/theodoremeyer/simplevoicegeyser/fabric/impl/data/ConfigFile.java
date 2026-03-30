@@ -74,6 +74,11 @@ public class ConfigFile extends SvgFile {
     }
 
     @Override
+    public boolean has(String key) {
+        return getValue(key) != null;
+    }
+
+    @Override
     public void set(String path, Object value) {
 
         JsonElement element;

@@ -1,6 +1,7 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.server;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.servlets.JettyWebSocket;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.servlets.ResourceServlet;
 import org.eclipse.jetty.server.Server;
@@ -41,10 +42,10 @@ public final class JettyServer {
         this.server = new Server();
         this.core = core;
 
-        double idleTimeoutMinutes =
-                core.getConfig().getDouble("client.idletimeout", 2.0);
+        double idleTimeoutMinutes = SvgConfig.IDLE_TIMEOUT.get();
+                //core.getConfig().getDouble("client.idletimeout", 2.0);
 
-        idleTimeoutMinutes = Math.max(0.5, Math.min(idleTimeoutMinutes, 10.0));
+        idleTimeoutMinutes = Math.clamp(idleTimeoutMinutes, 0.5, 10.0);
 
         SvgCore.getLogger().info("Idle timeout: " + idleTimeoutMinutes + " minutes.");
 

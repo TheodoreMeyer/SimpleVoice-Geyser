@@ -5,6 +5,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
+import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioThread;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.Command;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserEventHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
@@ -13,7 +14,6 @@ import io.github.theodoremeyer.simplevoicegeyser.core.managers.PlayerManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.JettyServer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.WebSocketManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
-import io.github.theodoremeyer.simplevoicegeyser.core.thread.AudioThread;
 
 import java.util.logging.Logger;
 
@@ -84,6 +84,9 @@ public final class SvgCore {
      */
     public void init() {
         this.debug = platform.getFile(DataType.CONFIG).getBoolean("debug", false);
+        if (debug) {
+            getLogger().info("Debug mode enabled.");
+        }
 
         this.playerVcPswd = new PlayerVcPswd(platform.getFile(DataType.PASSWORD));
 

@@ -1,4 +1,4 @@
-package io.github.theodoremeyer.simplevoicegeyser.core.thread;
+package io.github.theodoremeyer.simplevoicegeyser.core.audio;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
