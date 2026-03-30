@@ -4,7 +4,6 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.Platform;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
-import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioThread;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.Command;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserEventHook;
@@ -30,6 +29,11 @@ public final class SvgCore {
      * Instance
      */
     private static SvgCore instance;
+
+    /**
+     * Config system
+     */
+    private SvgConfig config;
 
     /**
      * The Link to the SVC system
@@ -66,7 +70,8 @@ public final class SvgCore {
 
         this.platform = platform;
         instance = this;
-        SvgConfig.init(platform.getFile(DataType.CONFIG));
+
+        this.config = new SvgConfig(platform.getFile(DataType.CONFIG));
 
         new AudioThread();
 
@@ -83,7 +88,7 @@ public final class SvgCore {
      * Start SVG server and handling with SVC
      */
     public void init() {
-        this.debug = platform.getFile(DataType.CONFIG).getBoolean("debug", false);
+        this.debug = getConfig().DEBUG.get();
         if (debug) {
             getLogger().info("Debug mode enabled.");
         }
@@ -103,11 +108,11 @@ public final class SvgCore {
 
         this.command = new Command(groupManager);
 
-        int port = platform.getFile(DataType.CONFIG).getInt("server.port", 8080);
-        String host = platform.getFile(DataType.CONFIG).getString("server.bind-address", "0.0.0.0");
+        int port = getConfig().PORT.get();
+        String host = getConfig().BIND_ADDRESS.get();
 
         try {
-            jettyServer = new JettyServer(this, port, host); //start the jetty server
+            jettyServer = new JettyServer(host, port); //start the jetty server
             jettyServer.start();
             getLogger().info("Jetty server started on port: " + port);
         } catch (Exception e) {
@@ -122,10 +127,16 @@ public final class SvgCore {
         }
     }
 
+    /**
+     * Disable SVG
+     */
     public static void disable() {
         getInstance().shutdown();
     }
 
+    /**
+     * Stops itself
+     */
     private void shutdown() {
         if (jettyServer != null) {
             try {
@@ -137,14 +148,6 @@ public final class SvgCore {
         }
         platform.disable();
         AudioThread.shutdown();
-    }
-
-    /**
-     * Get the config as a File
-     * @return config
-     */
-    public SvgFile getConfig() {
-        return platform.getFile(DataType.CONFIG);
     }
 
     //-----
@@ -200,6 +203,14 @@ public final class SvgCore {
      */
     public static Platform getPlatform() {
         return getInstance().platform;
+    }
+
+    /**
+     * Get Config
+     * @return config
+     */
+    public static SvgConfig getConfig() {
+        return getInstance().config;
     }
 
     /**

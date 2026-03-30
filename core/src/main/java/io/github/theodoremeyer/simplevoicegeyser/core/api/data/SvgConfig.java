@@ -2,66 +2,72 @@ package io.github.theodoremeyer.simplevoicegeyser.core.api.data;
 
 import java.util.List;
 
+/**
+ * Represents the configuration for Simple Voice Geyser. This class is responsible for loading and saving the configuration file, as well as providing access to the configuration values.
+ */
 public final class SvgConfig {
 
-    private static SvgFile FILE;
+    /**
+     * The file config exists on
+     */
+    private final SvgFile file;
 
-    private static boolean initialized = false;
-
-    // ---- INIT ----
-    public static void init(SvgFile file) {
-        if (!initialized) {
-            initialized = true;
-            FILE = file;
-            applyDefaults();
-        } else {
-            throw new IllegalStateException("SvgConfig already initialized");
-        }
+    /**
+     * Create config manager
+     * @param file
+     */
+    public SvgConfig(SvgFile file) {
+        this.file = file;
+        applyDefaults();
     }
 
-    static SvgFile getFile() {
-        if (FILE == null) {
+    /**
+     * Get the underlying file
+     * @return config file
+     */
+    SvgFile getFile() {
+        if (file == null) {
             throw new IllegalStateException("SvgConfig not initialized");
         }
-        return FILE;
+        return file;
     }
 
     // ---- KEYS ----
-    private static final ConfigKey<String> CONFIG_INFO =
-            new ConfigKey<>("config-info", "This file is used to configure Simple Voice Geyser. " +
+    private final ConfigKey<String> CONFIG_INFO =
+            new ConfigKey <>(this, "config-info", "This file is used to configure Simple Voice Geyser. " +
                     "For more information, see the wiki: https://theodoremeyer.github.io/projects/simplevoicegeyser/");
 
-    public static final ConfigKey<Integer> VC_TIMEOUT =
-            new ConfigKey<>("client.vctimeout", 30);
+    public final ConfigKey<Integer> VC_TIMEOUT =
+            new ConfigKey <>(this, "client.vctimeout", 30);
 
-    public static final ConfigKey<Integer> IDLE_TIMEOUT =
-            new ConfigKey<>("client.idletimeout", 2);
+    public final ConfigKey<Integer> IDLE_TIMEOUT =
+            new ConfigKey <>(this, "client.idletimeout", 2);
 
-    public static final ConfigKey<Boolean> REQUIRE_BEDROCK =
-            new ConfigKey<>("client.requireBedrock", false);
+    public final ConfigKey<Boolean> REQUIRE_BEDROCK =
+            new ConfigKey <>(this, "client.requireBedrock", false);
 
-    public static final ConfigKey<Boolean> USE_EMOTE =
-            new ConfigKey<>("client.useEmoteForSVG", true);
+    public final ConfigKey<Boolean> USE_EMOTE =
+            new ConfigKey <>(this, "client.useEmoteForSVG", true);
 
-    public static final ConfigKey<Boolean> DEFAULT_GROUP_ENABLED =
-            new ConfigKey<>("server.group.default.enabled", true);
+    public final ConfigKey<Boolean> DEFAULT_GROUP_ENABLED =
+            new ConfigKey <>(this, "server.group.default.enabled", true);
 
-    public static final ConfigKey<String> DEFAULT_GROUP_PASSWORD =
-            new ConfigKey<>("server.group.default.password", "1a2b");
+    public final ConfigKey<String> DEFAULT_GROUP_PASSWORD =
+            new ConfigKey <>(this, "server.group.default.password", "1a2b");
 
-    public static final ConfigKey<Integer> PORT =
-            new ConfigKey<>("server.port", 8080);
+    public final ConfigKey<Integer> PORT =
+            new ConfigKey <>(this, "server.port", 8080);
 
-    public static final ConfigKey<String> BIND_ADDRESS =
-            new ConfigKey<>("server.bind-address", "0.0.0.0");
+    public final ConfigKey<String> BIND_ADDRESS =
+            new ConfigKey <>(this, "server.bind-address", "0.0.0.0");
 
-    public static final ConfigKey<Boolean> DEBUG =
-            new ConfigKey<>("debug", false);
+    public final ConfigKey<Boolean> DEBUG =
+            new ConfigKey <>(this, "debug", false);
 
-    private static final ConfigKey<String> CONFIG_VERSION =
-            new ConfigKey<>("config-version", "0.1.0");
+    private final ConfigKey<String> CONFIG_VERSION =
+            new ConfigKey <>(this, "config-version", "0.1.0");
 
-    private static final List<ConfigKey<?>> ALL_KEYS = List.of(
+    private final List<ConfigKey<?>> ALL_KEYS = List.of(
             CONFIG_INFO,
             VC_TIMEOUT,
             IDLE_TIMEOUT,
@@ -76,8 +82,7 @@ public final class SvgConfig {
     );
 
     // ---- DEFAULTS ----
-
-    private static void applyDefaults() {
+    private void applyDefaults() {
         SvgFile file = getFile();
 
         for (ConfigKey<?> key : ALL_KEYS) {

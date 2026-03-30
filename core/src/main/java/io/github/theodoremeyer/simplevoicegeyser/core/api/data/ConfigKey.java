@@ -2,11 +2,12 @@ package io.github.theodoremeyer.simplevoicegeyser.core.api.data;
 
 /**
  * Represents a config key with a path and default value
+ * @param config the config this key belongs to
  * @param path path of key
  * @param def key default
  * @param <T> the type of key (like Boolean or String)
  */
-public record ConfigKey<T>(String path, T def) {
+public record ConfigKey<T>(SvgConfig config, String path, T def) {
 
     /**
      * Get the value of this key from the config file, or the default if not set
@@ -14,7 +15,7 @@ public record ConfigKey<T>(String path, T def) {
      */
     @SuppressWarnings("unchecked")
     public T get() {
-        var file = SvgConfig.getFile();
+        SvgFile file = config.getFile();
 
         Object value = switch (def) {
             case String s -> file.getString(path, s);
@@ -31,11 +32,11 @@ public record ConfigKey<T>(String path, T def) {
      * Set The value of this key in the config file
      * @param value value to set to
      * @throws IllegalArgumentException if value is not the same type as default
-     * This does not save the config file, you must call SvgConfig.getFile().save() to save changes
      * Don't use very often
      */
     public void set(T value) {
-        var file = SvgConfig.getFile();
+        SvgFile file = config.getFile();
         file.set(path, value);
+        file.save();
     }
 }

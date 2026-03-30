@@ -1,7 +1,6 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.server;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
-import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.servlets.JettyWebSocket;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.servlets.ResourceServlet;
 import org.eclipse.jetty.server.Server;
@@ -22,10 +21,6 @@ public final class JettyServer {
      * The Server
      */
     private final Server server;
-    /**
-     * The Plugin
-     */
-    private final SvgCore core;
 
     /**
      * Idle Timeout
@@ -34,15 +29,13 @@ public final class JettyServer {
 
     /**
      * set server port
-     * @param core svg core
-     * @param port port to run server on
      * @param host the host address to bind the server to.
+     * @param port port to run server on
      */
-    public JettyServer(SvgCore core, int port, String host) {
+    public JettyServer(String host, int port) {
         this.server = new Server();
-        this.core = core;
 
-        double idleTimeoutMinutes = SvgConfig.IDLE_TIMEOUT.get();
+        double idleTimeoutMinutes = SvgCore.getConfig().IDLE_TIMEOUT.get();
                 //core.getConfig().getDouble("client.idletimeout", 2.0);
 
         idleTimeoutMinutes = Math.clamp(idleTimeoutMinutes, 0.5, 10.0);
@@ -78,7 +71,7 @@ public final class JettyServer {
 
         // Register WebSocket at /ws
         JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) -> {
-            wsContainer.addMapping("/ws", (req, resp) -> new JettyWebSocket(core));
+            wsContainer.addMapping("/ws", (req, resp) -> new JettyWebSocket());
             wsContainer.setIdleTimeout(idleTimeout);
         });
 

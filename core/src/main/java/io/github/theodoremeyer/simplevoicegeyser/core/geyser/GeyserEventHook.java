@@ -13,10 +13,20 @@ import java.util.UUID;
  */
 public final class GeyserEventHook implements EventRegistrar {
 
+    private final FormHandler formHandler;
+
     /**
      * Start Event Listener
      */
     public GeyserEventHook() {
+        this.formHandler = new FormHandler(SvgCore.getGroupManager());
+        if (SvgCore.getConfig().USE_EMOTE.get()) {
+            SvgCore.getLogger().info("Using Emote for SVG");
+        } else {
+            SvgCore.getLogger().info("Not using Emote for SVG");
+            return;
+        }
+
         GeyserApi.api().eventBus().subscribe(
                 this,
                 ClientEmoteEvent.class,
@@ -33,9 +43,7 @@ public final class GeyserEventHook implements EventRegistrar {
         UUID uuid = event.connection().playerUuid();
         String playerName = event.connection().name();
 
-        FormHandler formHandler = new FormHandler(SvgCore.getGroupManager());
-
-        SvgCore.getLogger().info("UUID for Emote: " + uuid);
+        SvgCore.debug("GEYSER", "UUID for Emote: " + uuid);
 
         if (uuid == null) {
             SvgCore.getLogger().warning("Could not resolve UUID for: " + playerName);

@@ -45,19 +45,11 @@ public final class JettyWebSocket {
      * AudioSender associated with this.
      */
     private SvgAudioSender audioSender;
-    /**
-     * The Main Class.
-     */
-    private final SvgCore plugin;
 
     /**
      * Create a websocket connection with a client
-     * @param p the core
      */
-    public JettyWebSocket(SvgCore p) {
-        this.plugin = p;
-    }
-
+    public JettyWebSocket() {}
 
     /**
      * When the client connects.
@@ -66,7 +58,7 @@ public final class JettyWebSocket {
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
-        session.setIdleTimeout(Duration.ofMinutes(plugin.getConfig().getInt("client.idletimeout", 4)));
+        session.setIdleTimeout(Duration.ofMinutes(SvgCore.getConfig().IDLE_TIMEOUT.get()));
         SvgCore.getLogger().info("[Websocket] WebSocket connected: " + session.getRemoteAddress());
     }
 
@@ -181,13 +173,15 @@ public final class JettyWebSocket {
         this.uuid = storedUuid;
 
         Boolean bedrock = GeyserHook.isBedrock(storedUuid);
+        boolean bedrockRequired = SvgCore.getConfig().REQUIRE_BEDROCK.get();
+
         if (bedrock == null) {
             // Geyser/Floodgate not installed
-            if (plugin.getConfig().getBoolean("client.requireBedrock", false)) {
+            if (bedrockRequired) {
                 SvgCore.getLogger().warning("Unable to enforce: client.requireBedrock. Please install floodgate or geyser");
             }
         } else if (!bedrock) {
-            if (plugin.getConfig().getBoolean("client.requireBedrock", false)) {
+            if (bedrockRequired) {
                 closeOnError("Access Denied: You must be a Bedrock player to join!", false);
                 return;
             }
@@ -210,7 +204,7 @@ public final class JettyWebSocket {
         }
 
         //get timeout numbers for the message.
-        int timeout = plugin.getConfig().getInt("client.vctimeout", 30);
+        int timeout = SvgCore.getConfig().VC_TIMEOUT.get();//plugin.getConfig().getInt("client.vctimeout", 30);
         long delayInTicks = timeout * 20L;
 
         authenticated = true;
@@ -236,9 +230,9 @@ public final class JettyWebSocket {
             return;
         }
 
-        if (plugin.getConfig().getBoolean("server.group.default.enabled", false)) {
-            String gPswd = plugin.getConfig().getString("server.group.default.password", "1a2b");
-
+        // Add player to default group if enabled
+        if (SvgCore.getConfig().DEFAULT_GROUP_ENABLED.get()) {
+            String gPswd = SvgCore.getConfig().DEFAULT_GROUP_PASSWORD.get();
             SvgCore.getGroupManager().createGroup(player, "Svg", gPswd, Group.Type.OPEN, false, true); //add player to a default group
         }
 
