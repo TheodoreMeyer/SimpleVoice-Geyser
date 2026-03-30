@@ -18,6 +18,7 @@ public abstract class SvgFile {
     /**
      * Does the file contain the key/value for key
      * @param key the key to check
+     * @return whether the key exists
      */
     public abstract boolean has(String key);
 

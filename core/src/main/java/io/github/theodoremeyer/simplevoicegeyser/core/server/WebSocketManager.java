@@ -94,6 +94,7 @@ public final class WebSocketManager {
 
     /**
      * Disconnects a player when they leave
+     * @param uuid uuid of player leaving
      */
     public void playerLeave(UUID uuid) {
         String playerName = SvgCore.getPlayerManager().getPlayer(uuid).getName();

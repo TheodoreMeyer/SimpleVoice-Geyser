@@ -76,6 +76,8 @@ public final class Command {
 
     /**
      * Try opening the form for a player
+     * @param sender the executor
+     * @return success
      */
     public boolean formOrHelp(Sender sender) {
         if (sender instanceof SvgPlayer player) {

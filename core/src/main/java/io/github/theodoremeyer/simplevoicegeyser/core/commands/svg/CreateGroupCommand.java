@@ -21,7 +21,7 @@ public final class CreateGroupCommand implements SubCommand {
 
     /**
      * Create the sub-Command
-     * @param groupManager
+     * @param groupManager group manager
      */
     public CreateGroupCommand(GroupManager groupManager) {
         this.groupManager = groupManager;
