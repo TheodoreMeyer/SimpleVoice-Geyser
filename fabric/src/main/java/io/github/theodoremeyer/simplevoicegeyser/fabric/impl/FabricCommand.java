@@ -110,13 +110,6 @@ public class FabricCommand {
     }
 
     /**
-     * Handles root: /svg
-     */
-    private int executeRoot(CommandContext<CommandSourceStack> ctx) {
-        return execute(ctx, "");
-    }
-
-    /**
      * Core executor (no args modifier)
      */
     private int execute(CommandContext<CommandSourceStack> ctx, String sub) {

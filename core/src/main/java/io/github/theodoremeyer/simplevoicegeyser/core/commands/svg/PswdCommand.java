@@ -6,12 +6,22 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.Sender;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.SubCommand;
+import io.github.theodoremeyer.simplevoicegeyser.core.geyser.FormHandler;
+import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
+
+import java.util.UUID;
 
 /**
  * represents /svg pswd
  * TODO: Secure from seeing password in logs
  */
 public final class PswdCommand implements SubCommand {
+
+    private final FormHandler formHandler;
+
+    public PswdCommand() {
+        this.formHandler = new FormHandler(SvgCore.getGroupManager());
+    }
 
     /**
      * name of sub command
@@ -30,6 +40,7 @@ public final class PswdCommand implements SubCommand {
     @Override
     public boolean execute(CommandArgs args) {
         Sender sender = args.getSender();
+
         if (!(sender instanceof SvgPlayer player)) {
             sender.sendMessage(SvgCore.getPrefix() + SvgColor.RED +
                     "Only players can set their password.");
@@ -39,9 +50,14 @@ public final class PswdCommand implements SubCommand {
         String password = args.get("password");
 
         if (password == null || password.isBlank()) {
-            sender.sendMessage(SvgCore.getPrefix() + SvgColor.RED +
-                    "Usage: /svg pswd <password>");
-            return true;
+            UUID uuid = player.getUniqueId();
+            if (GeyserHook.isBedrock(uuid) != null && GeyserHook.isBedrock(uuid)) {
+                formHandler.setPassword(player);
+            } else {
+                sender.sendMessage(SvgCore.getPrefix() + SvgColor.RED +
+                        "Usage: /svg pswd <password>");
+            }
+           return true;
         }
 
         SvgCore.getPasswordManager().setPassword(player, password);

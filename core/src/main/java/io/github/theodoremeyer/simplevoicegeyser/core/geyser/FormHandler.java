@@ -174,7 +174,7 @@ public final class FormHandler {
      * Allow a bedrock player to set their password using forms
      * @param p the player
      */
-    private void setPassword(SvgPlayer p) {
+    public void setPassword(SvgPlayer p) {
         Form form = CustomForm.builder()
                 .title("Set SVG Password")
                 .input("Password (between 8-32 characters)", "password")
