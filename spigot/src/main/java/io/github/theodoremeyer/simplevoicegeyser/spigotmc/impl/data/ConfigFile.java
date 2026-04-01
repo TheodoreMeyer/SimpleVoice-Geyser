@@ -25,7 +25,12 @@ public class ConfigFile extends SvgFile {
     }
 
     @Override
-    public void set(String path, String value) {
+    public boolean has(String key) {
+        return config.contains(key);
+    }
+
+    @Override
+    public void set(String path, Object value) {
         config.set(path, value);
     }
 

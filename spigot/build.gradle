@@ -1,17 +1,21 @@
 plugins {
     id 'java'
     id 'java-library'
-    id "xyz.jpenilla.run-paper" version "2.3.0"
+    id 'com.gradleup.shadow' version '9.4.0' // ShadowJar
+    id "xyz.jpenilla.run-paper" version "3.0.2"
+}
+
+repositories {
+    maven {
+        url = uri('https://hub.spigotmc.org/nexus/content/groups/public/')
+    }
 }
 
 dependencies {
-    compileOnly("org.spigotmc:spigot-api:${spigot_api_version}-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot-api:${low_mc_version}-R0.1-SNAPSHOT")
 
     // CORE MODULE
     implementation(project(":core"))
-
-    //implementation('com.saicone.ezlib:ezlib:1.3.3')
-    implementation 'com.saicone.ezlib:loader:1.3.3'
 
     // GeyserMC API (provided by platform)
     compileOnly("org.geysermc.geyser:api:${geysermc_api_version}")
@@ -23,14 +27,26 @@ dependencies {
 
 tasks.processResources {
     inputs.property("version", version)
-    inputs.property("spigot_version", spigot_api_version)
+    inputs.property("spigot_version", low_mc_version)
 
     filesMatching('plugin.yml') {
         expand(
                 plugin_version: version,
-                spigot_version: spigot_api_version
+                spigot_version: low_mc_version
         )
     }
+}
+
+tasks.shadowJar {
+
+    archiveClassifier.set("") // no -all suffix
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    rootProject.applySvgRelocations(delegate)
+
+    // Include core classes + resources
+    from(project(":core").sourceSets.main.output)
+
 }
 
 tasks.withType(Jar).configureEach {
@@ -39,25 +55,14 @@ tasks.withType(Jar).configureEach {
 
 
 tasks.jar {
-    dependsOn(":core:jar") // make sure core is built first
-
-    from(project(":core").sourceSets.main.output) // include compiled classes
-    from(project(":core").sourceSets.main.resources) // include core resources
-
-    // Include Ezlib (and any other runtime dependencies you explicitly want)
-    from({
-        configurations.runtimeClasspath.filter {
-            it.name.contains("ezlib") || it.name.contains("loader")
-        }.collect { zipTree(it) }
-    })
+    enabled = false
 }
 
-runServer { // https://github.com/jpenilla/run-task/wiki
+tasks.runServer { // https://github.com/jpenilla/run-task/wiki
     minecraftVersion("1.21.11")
     downloadPlugins {
         // Simple Voice Chat //
         url("https://cdn.modrinth.com/data/9eGKb6K1/versions/FeJRj2X0/voicechat-bukkit-2.6.12.jar")
-
         // Geyser //
         url("https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot")
         // Floodgate //

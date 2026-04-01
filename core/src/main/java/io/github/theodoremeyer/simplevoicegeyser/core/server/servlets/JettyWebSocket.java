@@ -15,6 +15,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -44,15 +45,11 @@ public final class JettyWebSocket {
      * AudioSender associated with this.
      */
     private SvgAudioSender audioSender;
+
     /**
-     * The Main Class.
+     * Create a websocket connection with a client
      */
-    private final SvgCore plugin;
-
-    public JettyWebSocket(SvgCore p) {
-        this.plugin = p;
-    }
-
+    public JettyWebSocket() {}
 
     /**
      * When the client connects.
@@ -61,7 +58,7 @@ public final class JettyWebSocket {
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
-        session.setIdleTimeout(Duration.ofMinutes(plugin.getConfig().getInt("client.idletimeout", 4)));
+        session.setIdleTimeout(Duration.ofMinutes(SvgCore.getConfig().IDLE_TIMEOUT.get()));
         SvgCore.getLogger().info("[Websocket] WebSocket connected: " + session.getRemoteAddress());
     }
 
@@ -77,7 +74,7 @@ public final class JettyWebSocket {
             return;
         }
 
-        message = message.trim().toLowerCase();
+        message = message.trim();
 
         //reject non JSON messages early
         if (!message.startsWith("{")) {
@@ -123,11 +120,12 @@ public final class JettyWebSocket {
     public void onMessage(byte[] buffer, int offset, int length) {
         if (!authenticated || uuid == null) return; //make sure they signed in
 
-        byte[] pcmData = new byte[length];
-        System.arraycopy(buffer, offset, pcmData, 0, length);
+        //byte[] pcmData = new byte[length];
+        //System.arraycopy(buffer, offset, pcmData, 0, length);
 
         if (audioSender != null) { //make sure the sender is not null
-            audioSender.sendOpus(pcmData); //send the audio data
+            //audioSender.sendOpus(pcmData); //send the audio data
+            audioSender.sendOpus(Arrays.copyOfRange(buffer, offset, offset + length));
         }
     }
 
@@ -138,17 +136,17 @@ public final class JettyWebSocket {
      */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
-        String username = SvgCore.getPasswordManager().getUsernameFromUUID(uuid);
-        String displayName = (username != null) ? username : uuid.toString();
-
-        SvgCore.getLogger().info("[WebSocket] WebSocket for " + displayName + " closed: " + statusCode + " - " + reason);
         if (uuid != null) { //make sure the uuid for the session is not null, needed to close senders/listeners
+            String username = SvgCore.getPasswordManager().getUsernameFromUUID(uuid);
+            String displayName = (username != null) ? username : uuid.toString();
+            SvgCore.getLogger().info("[WebSocket] WebSocket for " + displayName + " closed: " + statusCode + " - " + reason);
+
             SvgCore.getBridge().unregisterAudioSender(uuid);
             SvgCore.getBridge().unregisterAudioListener(uuid);
         } else {
-            SvgCore.getLogger().warning("[WebSocket] Disconnected: unknown client (" + reason + ")");
+            SvgCore.getLogger().warning("[WebSocket] Disconnected: unknown client for " + reason + ".");
         }
-        SvgCore.getWsManager().removeClient(uuid);
+        SvgCore.getWsManager().removeClient(uuid, session);
     }
 
     /**
@@ -175,14 +173,16 @@ public final class JettyWebSocket {
         this.uuid = storedUuid;
 
         Boolean bedrock = GeyserHook.isBedrock(storedUuid);
+        boolean bedrockRequired = SvgCore.getConfig().REQUIRE_BEDROCK.get();
+
         if (bedrock == null) {
             // Geyser/Floodgate not installed
-            if (plugin.getConfig().getBoolean("client.requireBedrock", false)) {
+            if (bedrockRequired) {
                 SvgCore.getLogger().warning("Unable to enforce: client.requireBedrock. Please install floodgate or geyser");
             }
         } else if (!bedrock) {
-            if (plugin.getConfig().getBoolean("client.requireBedrock", false)) {
-                closeOnError("You must be a Bedrock player to join!", false);
+            if (bedrockRequired) {
+                closeOnError("Access Denied: You must be a Bedrock player to join!", false);
                 return;
             }
         }
@@ -194,17 +194,17 @@ public final class JettyWebSocket {
         }
 
         if (!playerVcPswd.validatePassword(username, password)) { //validate the player's password from form input
-            closeOnError("Incorrect password!", false);
+            closeOnError("Access Denied: Incorrect password!", false);
             return;
         }
 
         if (!SvgCore.getWsManager().addClient(uuid, this.session)) { //add this session to the list of active sessions
-            closeOnError("Incorrect password!", false);
+            closeOnError("Access Denied: Failed to Join.", false);
             return;
         }
 
         //get timeout numbers for the message.
-        int timeout = plugin.getConfig().getInt("client.vctimeout", 30);
+        int timeout = SvgCore.getConfig().VC_TIMEOUT.get();//plugin.getConfig().getInt("client.vctimeout", 30);
         long delayInTicks = timeout * 20L;
 
         authenticated = true;
@@ -226,13 +226,13 @@ public final class JettyWebSocket {
 
         VoicechatConnection connection = SvgCore.getBridge().getVcServerApi().getConnectionOf(uuid);
         if (connection == null || connection.isInstalled()) {
-            closeOnError("Can't Join server with mod installed or Connection is Null", false);
+            closeOnError("Access Denies: Can't Join server with mod installed or Connection is Null", false);
             return;
         }
 
-        if (plugin.getConfig().getBoolean("server.group.default.enabled", false)) {
-            String gPswd = plugin.getConfig().getString("server.group.default.password", "1a2b");
-
+        // Add player to default group if enabled
+        if (SvgCore.getConfig().DEFAULT_GROUP_ENABLED.get()) {
+            String gPswd = SvgCore.getConfig().DEFAULT_GROUP_PASSWORD.get();
             SvgCore.getGroupManager().createGroup(player, "Svg", gPswd, Group.Type.OPEN, false, true); //add player to a default group
         }
 

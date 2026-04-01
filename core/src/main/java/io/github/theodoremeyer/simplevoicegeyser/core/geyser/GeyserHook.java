@@ -7,7 +7,10 @@ import org.geysermc.geyser.api.GeyserApi;
 
 import java.util.UUID;
 
-public class GeyserHook {
+/**
+ * Hook with Geyser MC
+ */
+public final class GeyserHook {
 
     /**
      * Whether Geyser is enabled in some form
@@ -59,7 +62,9 @@ public class GeyserHook {
      * @param form the form
      */
     public static void sendForm(UUID uuid, Form form) {
-        if (!isBedrock(uuid).booleanValue()) return;
+        Boolean bedrock = isBedrock(uuid);
+
+        if (bedrock == null || !bedrock) return;
 
         if (isFloodgate()) {
             FloodgateApi.getInstance().sendForm(uuid, form);

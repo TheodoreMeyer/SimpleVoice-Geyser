@@ -74,7 +74,7 @@ public final class PlayerManager {
         players.remove(player.getUniqueId());
         playersByName.remove(player.getName());
 
-        SvgCore.getWsManager().disconnectClient(player.getUniqueId());
+        SvgCore.getWsManager().playerLeave(player.getUniqueId());
     }
 
     // Is Player Online

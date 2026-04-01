@@ -1,4 +1,4 @@
-package io.github.theodoremeyer.simplevoicegeyser.core.thread;
+package io.github.theodoremeyer.simplevoicegeyser.core.audio;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,8 +27,8 @@ public final class AudioThread {
     /**
      * Stop Thread
      */
-    public void shutdown() {
-        executor.shutdownNow();
+    public static void shutdown() {
+        instance.executor.shutdownNow();
     }
 
     /**
@@ -40,7 +40,8 @@ public final class AudioThread {
     }
 
     /**
-     * Execute
+     * Execute code on the thread
+     * @param runnable code to execute
      */
     public static void execute(Runnable runnable) {
         instance.getExecutor().execute(runnable);

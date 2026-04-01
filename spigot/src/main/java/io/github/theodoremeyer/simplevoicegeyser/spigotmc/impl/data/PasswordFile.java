@@ -1,5 +1,6 @@
 package io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data;
 
+import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -19,7 +20,10 @@ public class PasswordFile extends SvgFile {
 
         if (!configFile.exists()) {
             try {
-                configFile.createNewFile();
+                boolean success = configFile.createNewFile();
+                if (!success) {
+                    SvgCore.getLogger().severe("Failed to create password.yml file at " + configFile.getAbsolutePath());
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -33,7 +37,12 @@ public class PasswordFile extends SvgFile {
     }
 
     @Override
-    public void set(String path, String value) {
+    public boolean has(String key) {
+        return config.contains(key);
+    }
+
+    @Override
+    public void set(String path, Object value) {
         config.set(path, value);
     }
 

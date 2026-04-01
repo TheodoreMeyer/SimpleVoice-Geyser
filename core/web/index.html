@@ -1,84 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>SimpleVoice-Geyser</title>
-        <link rel="stylesheet" href="/css/styles.css">
-        <link rel="stylesheet" href="/css/ptt.css">
-    </head>
-    <body>
+
+<head>
+    <meta charset="UTF-8">
+    <title>SimpleVoice-Geyser</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
     <h1>Join Simple Voice Chat</h1>
-    <form id="joinForm">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required autocomplete="username">
+    <div id="form-container">
+        <form id="joinForm">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required autocomplete="username">
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required autocomplete="password">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required autocomplete="svg-password">
 
-        <label for="mic">Select Microphone:</label>
-        <select id="mic" name="mic"></select>
-
-        <label for="speaker">Select Speaker:</label>
-        <select id="speaker" name="speaker"></select>
-
-        <button type="submit" id="joinbtn">Join</button>
-    </form>
-
-    <div id="controls-main">
-        <div class="settingsBlock" id="ptt-settings">
-            <h2>Push-to-Talk Settings</h2>
-            <label for="transmitMode">Transmit Mode:</label>
-            <select id="transmitMode" name="transmitMode">
-                <option value="voice">Voice Activity</option>
-                <option value="ptt">Push to Talk</option>
+            <label for="mic">Select Microphone:</label>
+            <select id="mic" name="mic">
+                <option disabled selected hidden>Select</option>
             </select>
 
-            <div id="pttBindingControls" hidden>
-                <div class="inlineButtons">
-                    <button type="button" id="bindPttBtn">Bind Push-to-Talk</button>
-                    <button type="button" id="clearPttBtn">Clear Binding</button>
-                </div>
-                <div id="pttBindingLabel">No binding set. Use the hold button or add a binding.</div>
+            <label for="speaker">Select Speaker:</label>
+            <select id="speaker" name="speaker">
+                <option disabled selected hidden>Select</option>
+            </select>
 
-                <div class="checkboxSetting">
-                    <input type="checkbox" id="allowBackgroundPtt" name="allowBackgroundPtt">
-                    <label for="allowBackgroundPtt">Allow Background PTT</label>
+            <button type="submit" id="joinbtn">Join</button>
+        </form>
+    </div>
+    <noscript>
+        <div style="background:red; color:white; padding:10px; text-align:center; font-weight: bolder;">
+            <h2>Error:</h2>
+            <p>JavaScript is required to use this application.</p>
+        </div>
+    </noscript>
+    <div id="main-vc-container">
+        <br>
+        <div id="status">Waiting to join...</div>
+        <div id="log"></div>
+        <br>
+        <div id="inputArea">
+            <label for="msgInput">Message</label>
+            <input type="text" id="msgInput" placeholder="Type a message..." />
+            <button id="messageButton">Send</button>
+        </div>
+    </div>
+    <br>
+    <div id="controls">
+        <div id="controls-main">
+            <div class="control-group">
+                <span class="control-label">Microphone</span>
+                <div id="micControls">
+                    <button id="muteBtn" class="unmuted">Mute</button>
+                    <span id="micIndicator" title="Mic activity"></span>
                 </div>
+            </div>
 
-                <p class="settingsHint">Bindings support keyboard keys, side mouse buttons, and standard controller buttons on Xbox, PlayStation, and Nintendo pads. Controller input can be detected while this page is in the background; keyboard and mouse background input is limited by browser security rules.</p>
+            <!-- Add more real controls here later -->
+        </div>
+        <div class="controls-divider"></div>
+        <div id="controls-dev">
+            <button id="devToggle" class="dev-toggle">
+                Developer Tools ▼
+            </button>
+            <div id="devContent" hidden>
+                <div class="control-group">
+                    <span class="control-label">Debug</span>
+                    <button id="testSound" type="button">Test Sound</button>
+                </div>
             </div>
         </div>
-
-        <div id="micControls">
-            <button id="muteBtn" class="unmuted">Mute</button>
-            <span id="micIndicator" title="Mic activity"></span>
-        </div>
-
-        <div id="pttControls" hidden>
-            <button id="pushToTalkBtn" class="pttButton" type="button">Hold to Talk</button>
-            <button id="fullscreenPttBtn" type="button">Fullscreen Push-to-Talk</button>
-        </div>
     </div>
-
-    <div id="status">Waiting to join...</div>
-    <div id="log"></div>
-
-    <div id="inputArea">
-        <label for="msgInput"></label>
-        <input type="text" id="msgInput" placeholder="Type message..." />
-        <button id="messageButton">Send</button>
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank">
+            <img src="images/github.svg" alt="GitHub Link" class="githubicon">
+            <span>Theodore Meyer</span>
+        </a>
     </div>
-    <button id="testSound" type="button">Test Sound</button>
-
-    <div id="pttFullscreenOverlay" aria-hidden="true">
-        <button id="pushToTalkFullscreenBtn" class="pttButton" type="button">Hold to Talk</button>
-        <button id="exitFullscreenPttBtn" type="button">Exit Fullscreen PTT</button>
-    </div>
-
     <script type="module">
         import { start } from '/js/client.js';
         start(); // manually triggers it
     </script>
 
-    </body>
+</body>
 </html>

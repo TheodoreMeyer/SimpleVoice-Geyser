@@ -4,24 +4,23 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import org.mindrot.jbcrypt.BCrypt;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Auth System for Player.
- * The password needs to be more securely saved.
  */
-public class PlayerVcPswd {
+public final class PlayerVcPswd {
 
-    private static final Map<String, String> playerPasswords = new HashMap<>();
-    private static final Map<String, UUID> playerUUIDs = new HashMap<>();
+    private final Map<String, String> playerPasswords = new ConcurrentHashMap<>();
+    private final Map<String, UUID> playerUUIDs = new ConcurrentHashMap<>();
 
     private final SvgFile config;
 
     /**
      * Creating the file, or registering it to memory.
-     * @param pswdFile the file
+     * @param pswdFile the file to use for storage
      */
     protected PlayerVcPswd(SvgFile pswdFile) {
         this.config = pswdFile;
@@ -129,15 +128,7 @@ public class PlayerVcPswd {
      * @return the Players uuid
      */
     public UUID getStoredUUID(String playerName) {
-        String uuidStr = config.getString(playerName.toLowerCase() + ".uuid");
-        if (uuidStr != null) {
-            try {
-                return UUID.fromString(uuidStr);
-            } catch (IllegalArgumentException e) {
-                SvgCore.getLogger().warning("[PlayerData] Invalid UUID format for " + playerName);
-            }
-        }
-        return null;
+        return playerUUIDs.get(playerName.toLowerCase());
     }
 
     /**

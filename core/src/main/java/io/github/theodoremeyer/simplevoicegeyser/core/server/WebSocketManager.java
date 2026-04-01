@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * The Class Managing Websockets
  */
-public class WebSocketManager {
+public final class WebSocketManager {
 
     /**
      * A list of Websockets that are actively connected
@@ -27,13 +27,24 @@ public class WebSocketManager {
      * @return true/false whether it did it successfully.
      */
     public boolean addClient(UUID uuid, Session session) {
-        if (clients.containsKey(uuid)) {
-            return false; // already connected
+        Session old = clients.put(uuid, session);
+
+        if (old != null && old != session && old.isOpen()) {
+            try {
+                old.close(); // kill old connection
+            } catch (Exception e) {
+                SvgCore.debug("WS", "Failed to close old session for UUID: " + uuid, e);
+                return false;
+            }
         }
-        clients.put(uuid, session);
         return true;
     }
 
+    /**
+     * Get a known/active client
+     * @param uuid the uuid to get for
+     * @return the Client
+     */
     public Session getClient(UUID uuid) {
         return clients.get(uuid);
     }
@@ -42,16 +53,28 @@ public class WebSocketManager {
      * Removes closed voice chat player session to prevent problems
      * This method needs to be fixed
      * @param uuid uuid of websocket to disconnect
+     * @param session session of websocket to disconnect
      */
-    public void removeClient(UUID uuid) {
-        if (uuid == null) {
-            SvgCore.getLogger().warning("-[WebSocketManager] Tried to remove null UUID");
+    public void removeClient(UUID uuid, Session session) {
+        if (uuid == null || session == null) {
+            SvgCore.getLogger().warning("[WebSocketManager] Tried to remove null UUID/session");
             return;
         }
-        Session session = clients.get(uuid);
-        if (session != null) {
-            session.close(); //close associated websocket session
-            clients.remove(uuid); //remove the closed session from the map
+
+        Session current = clients.get(uuid);
+
+        // CRITICAL FIX
+        if (current != session) {
+            // Old/stale session → ignore
+            return;
+        }
+
+        clients.remove(uuid);
+
+        if (session.isOpen()) {
+            try {
+                session.close();
+            } catch (Exception ignored) {}
         }
     }
 
@@ -67,6 +90,16 @@ public class WebSocketManager {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Disconnects a player when they leave
+     * @param uuid uuid of player leaving
+     */
+    public void playerLeave(UUID uuid) {
+        String playerName = SvgCore.getPlayerManager().getPlayer(uuid).getName();
+        sendJson(uuid, "message", playerName + " left the game.");
+        disconnectClient(uuid);
     }
 
     /**
@@ -90,28 +123,39 @@ public class WebSocketManager {
      */
     public void sendJson(UUID uuid, String type, String message) {
         Session session = clients.get(uuid); // get session to send to
+        if (session == null || !session.isOpen()) {
+            SvgCore.getLogger().warning("Attempted to send message to non-existent or closed session: " + uuid);
+            return;
+        }
+
         JSONObject json = new JSONObject();
         json.put("type", type);
         json.put("message", message);
         try {
             session.getRemote().sendString(json.toString()); //send the message
         } catch (IOException e) {
-            e.printStackTrace();
+            SvgCore.getLogger().error("Failed to send message to client: " + uuid, e);
         }
     }
 
     /**
      * Send A JSON message to the Websocket Client
      * This allows custom messages to be sent to client other than status data
+     * @param uuid the uuid of session to send to
      * @param json the Data to send
      */
     public void sendJson(UUID uuid, JSONObject json) {
         Session session = clients.get(uuid);
 
+        if (session == null || !session.isOpen()) {
+            SvgCore.getLogger().warning("Attempted to send message to non-existent or closed session: " + uuid);
+            return;
+        }
+
         try {
             session.getRemote().sendString(json.toString());
         } catch (Exception e) {
-            e.printStackTrace();
+            SvgCore.getLogger().error("Failed to send message to client: " + uuid, e);
         }
     }
 }

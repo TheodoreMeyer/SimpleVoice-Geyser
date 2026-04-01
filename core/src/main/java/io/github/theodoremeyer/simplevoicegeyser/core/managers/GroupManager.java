@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * SVG Group System manager
  */
-public class GroupManager {
+public final class GroupManager {
 
     /**
      * Interface to group system
@@ -29,8 +29,12 @@ public class GroupManager {
     /**
      * Groups that are listed/Available
      */
-    protected final Map<String, Group> groups = new ConcurrentHashMap<>(); //list of active groups
+    private final Map<String, Group> groups = new ConcurrentHashMap<>(); //list of active groups
 
+    /**
+     * Create a group manager to control groups with
+     * @param api the bridge to SVG
+     */
     public GroupManager(VoiceChatBridge api) {
         this.bridge = api;
     }
@@ -70,7 +74,7 @@ public class GroupManager {
         if (groupType == null) groupType = Type.NORMAL;
 
         Group group;
-        if (password.isEmpty()) { //build the group
+        if (password == null || password.isEmpty()) { //build the group
             group = api.groupBuilder()
                     .setName(groupName)
                     .setType(groupType)
@@ -104,6 +108,7 @@ public class GroupManager {
      * Translate a String to Group Type
      * NOTE: Returns A default group type: OPEN
      * @param string the translatable String
+     * @return The group type
      */
     public Type stringToType(String string) {
         if ("isolated".equalsIgnoreCase(string)) {
@@ -116,25 +121,25 @@ public class GroupManager {
     }
 
     /**
-     * Set SvgPlayer Group
-     * @param SvgPlayer SvgPlayer affected
+     * Set svgPlayer Group
+     * @param svgPlayer svgPlayer affected
      * @param groupName uuid of the group, fetched by group.getName or by groups
      * @param password password of the group
      * @return True/False
      */
-    public boolean joinGroup(SvgPlayer SvgPlayer, String groupName, String password) {
+    public boolean joinGroup(SvgPlayer svgPlayer, String groupName, String password) {
 
         VoicechatServerApi api = getApi();
-        VoicechatConnection connection = api.getConnectionOf(SvgPlayer.getUniqueId());
+        VoicechatConnection connection = api.getConnectionOf(svgPlayer.getUniqueId());
 
         if (connection == null) {
-            SvgCore.getLogger().warning("[SVG] No voice connection found for SvgPlayer "
-                    + SvgPlayer.getName());
+            SvgCore.getLogger().warning("[SVG] No voice connection found for svgPlayer "
+                    + svgPlayer.getName());
             return false;
         }
 
         if (groupName == null) {
-            SvgCore.getLogger().warning("[SVG] SvgPlayer " + SvgPlayer.getName()
+            SvgCore.getLogger().warning("[SVG] svgPlayer " + svgPlayer.getName()
                     + " attempted to join group with null name.");
             return false;
         }
@@ -143,7 +148,7 @@ public class GroupManager {
 
         if (group == null) {
             SvgCore.getLogger().warning("[SVG] Unknown group '" + groupName
-                    + "' requested by " + SvgPlayer.getName());
+                    + "' requested by " + svgPlayer.getName());
             return false;
         }
 
@@ -166,7 +171,7 @@ public class GroupManager {
         }
 
         // Debug getLogger password state
-        SvgCore.debug("[GROUPS]", "SvgPlayer: " + SvgPlayer.getName()
+        SvgCore.debug("[GROUPS]", "svgPlayer: " + svgPlayer.getName()
                 + " | Group: " + groupName
                 + " | Provided Password: " + password
                 + " | Actual Password: " + groupPassword);
@@ -185,20 +190,24 @@ public class GroupManager {
 
         // Leave previous group
         if (connection.isInGroup()) {
-            SvgCore.debug("[SVG] ", SvgPlayer.getName()
+            SvgCore.debug("[SVG] ", svgPlayer.getName()
                     + " left group " + connection.getGroup().getName());
-            SvgPlayer.sendMessage("You left group: "
+            svgPlayer.sendMessage("You left group: "
                     + connection.getGroup().getName());
         }
 
         connection.setGroup(group);
 
-        SvgCore.debug("[SVG]", SvgPlayer.getName()
+        SvgCore.debug("[SVG]", svgPlayer.getName()
                 + " successfully joined group '" + groupName + "'");
 
         return true;
     }
 
+    /**
+     * Get a list of all known group names
+     * @return the list of group names
+     */
     public List<String> getGroupNames() {
         List<String> names = new ArrayList<>();
 
@@ -217,7 +226,7 @@ public class GroupManager {
         if (api == null) return Optional.empty();
 
         VoicechatConnection connection = api.getConnectionOf(SvgPlayer.getUniqueId());
-        if (connection == null || !connection.isInGroup()) Optional.empty();
+        if (connection == null || !connection.isInGroup()) return Optional.empty();
 
         Group group = connection.getGroup();
         if (group == null) return Optional.empty();
@@ -242,6 +251,7 @@ public class GroupManager {
     /**
      * Simply return whether the SvgPlayer is in a group
      * @param SvgPlayer SvgPlayer is/isn't in group
+     * @return whether the player is in a group
      */
     public boolean isInGroup(SvgPlayer SvgPlayer) {
         VoicechatServerApi api = getApi();
@@ -263,15 +273,19 @@ public class GroupManager {
 
     /**
      * Easy way to see if a SvgPlayer can create the group type
+     * @param svgPlayer the player to check
+     * @param type the type of group to check
+     * @param persistent whether the group is persistent
+     * @return whether they can create it or not
      */
-    public boolean canCreate(SvgPlayer SvgPlayer, String type, boolean persistent) {
+    public boolean canCreate(SvgPlayer svgPlayer, String type, boolean persistent) {
 
         if (type.equalsIgnoreCase("isolated")
-                && !SvgPlayer.hasPermission("svg.vc.group.type.isolated")) {
+                && !svgPlayer.hasPermission("svg.vc.group.type.isolated")) {
             return false;
 
         } else if (persistent
-                && !SvgPlayer.hasPermission("svg.vc.creategroup.setpersistent")) {
+                && !svgPlayer.hasPermission("svg.vc.group.setpersistent")) {
 
             return false;
         }
@@ -287,6 +301,10 @@ public class GroupManager {
         groups.put(group.getName(), group);
     }
 
+    /**
+     * Remove a group from the manager
+     * @param group the group to remove
+     */
     public void removeGroup(Group group) {
         groups.remove(group.getName());
     }

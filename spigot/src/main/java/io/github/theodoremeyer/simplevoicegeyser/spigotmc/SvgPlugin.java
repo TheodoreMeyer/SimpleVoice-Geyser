@@ -3,24 +3,23 @@ package io.github.theodoremeyer.simplevoicegeyser.spigotmc;
 import de.maxhenkel.voicechat.api.BukkitVoicechatService;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.Platform;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
+import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.BukkitLogger;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.SvgCommand;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.SvgListener;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.ConfigFile;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.PasswordFile;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.geysermc.geyser.api.GeyserApi;
-import org.geysermc.geyser.api.event.EventRegistrar;
-import org.geysermc.geyser.api.event.bedrock.ClientEmoteEvent;
 
 import java.io.File;
 
-public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
+public class SvgPlugin extends JavaPlugin implements Platform {
 
     private SvgCore core;
 
@@ -28,13 +27,19 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
 
     private PasswordFile passwordFile;
 
+    private BukkitLogger logger;
+
     //JAVA PLUGIN
     @Override
     public void onLoad() {
+        logger = new BukkitLogger(getLogger());
 
         // Ensure plugin folder exists
         if (!getDataFolder().exists()) {
-            getDataFolder().mkdirs();
+            boolean success = getDataFolder().mkdirs();
+            if (!success) {
+                logger.severe("Failed to create plugin data folder at " + getDataFolder().getAbsolutePath());
+            }
         }
 
         // Define config file location
@@ -56,26 +61,20 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
     public void onEnable() {
         core.init();
 
-        getCommand("svg").setExecutor(new SvgCommand());
+        PluginCommand command = getCommand("svg");
+        if (command == null) {
+            logger.severe("Failed to register command: 'svg' not found in plugin.yml");
+            SvgCore.disable();
+            return;
+        }
+        command.setExecutor(new SvgCommand());
 
         SvgListener listener = new SvgListener();
         Bukkit.getPluginManager().registerEvents(listener, this);
-
-        Plugin geyser = Bukkit.getPluginManager().getPlugin("Geyser-Spigot");
-        if (geyser != null && geyser.isEnabled()) {
-            GeyserApi.api().eventBus().subscribe(
-                    this,
-                    ClientEmoteEvent.class,
-                    listener::onEmote
-            );
-        } else {
-            getLogger().warning("Geyser is not installed. Skipping Bedrock Events");
-        }
     }
 
     @Override
     public void onDisable() {
-        GeyserApi.api().eventBus().unregisterAll(this);
         SvgCore.getWsManager().disconnectAllClients();
     }
 
@@ -95,7 +94,7 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
         VoiceChatBridge bridge = null;
 
         if (service != null) { //make sure BukkitVoicechatService exists
-            VoiceChatBridge voicechatBridge = new VoiceChatBridge(core);
+            VoiceChatBridge voicechatBridge = new VoiceChatBridge();
             service.registerPlugin(voicechatBridge); //register the main api class
             bridge = voicechatBridge;
             getLogger().info("Registered plugin with Simple Voice Chat.");
@@ -105,6 +104,11 @@ public class SvgPlugin extends JavaPlugin implements Platform, EventRegistrar {
         }
 
         return bridge;
+    }
+
+    @Override
+    public SvgLogger getSvgLogger() {
+        return logger;
     }
 
     @Override

@@ -23,10 +23,6 @@ dependencies {
 
     // Simple Voice Chat API (provided by platform)
     compileOnly("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
-
-    //Lib loader
-    //implementation('com.saicone.ezlib:ezlib:1.3.3')
-    implementation 'com.saicone.ezlib:loader:1.3.3'
 }
 
 tasks.processResources {
@@ -50,13 +46,6 @@ java {
 
 tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    // Only include the library loader in the jar
-    from({
-        configurations.runtimeClasspath
-                .filter { it.name.contains("ezlib") || it.name.contains("loader") } // only helper JAR
-                .collect { zipTree(it) }
-    })
 }
 
 publishing {

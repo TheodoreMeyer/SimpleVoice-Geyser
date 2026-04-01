@@ -5,7 +5,6 @@ import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import de.maxhenkel.voicechat.api.audiosender.AudioSender;
 import de.maxhenkel.voicechat.api.opus.OpusEncoder;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
-import io.github.theodoremeyer.simplevoicegeyser.core.thread.AudioThread;
 
 import java.util.UUID;
 
@@ -32,11 +31,6 @@ public final class SvgAudioSender {
     private final OpusEncoder encoder;
 
     /**
-     * Connection, Centralized for less Latency and fewer checks
-     */
-    private final VoicechatConnection connection;
-
-    /**
      * Class Constructor. Creates and registers the audio sender
      * @param serverApi voice chat server api
      * @param playerUuid uuid of player registering sender for.
@@ -45,7 +39,8 @@ public final class SvgAudioSender {
         this.serverApi = serverApi;
         this.playerUuid = playerUuid;
         this.encoder = serverApi.createEncoder();
-        this.connection = serverApi.getConnectionOf(playerUuid);
+
+        VoicechatConnection connection = serverApi.getConnectionOf(playerUuid);
 
         if (connection == null) {
             throw new RuntimeException("no svc connection for uuid: " + playerUuid);
@@ -70,11 +65,18 @@ public final class SvgAudioSender {
 
         SvgCore.debug( "AudioSender","received audio data from websocket!");
 
-        AudioThread.execute(() -> {
+        //AudioThread.execute(() -> {
 
             byte[] encoded;
             try {
                 short[] pcmShorts = serverApi.getAudioConverter().bytesToShorts(pcmData);
+                if (pcmShorts.length != 960) {
+                    SvgCore.getLogger().warning(
+                            "[AudioSender] Invalid frame size: " + pcmShorts.length + " (expected 960)"
+                    );
+                    return;
+                }
+
                 encoded = encoder.encode(pcmShorts); // PCM to Opus encoded
                 if (encoded == null || encoded.length == 0) {
                     SvgCore.getLogger().warning("[AudioSender] Encoder returned empty data for: " + playerUuid);
@@ -89,7 +91,7 @@ public final class SvgAudioSender {
             if (!success) {
                 SvgCore.getLogger().warning("[AudioSender] Failed to send audio for: " + playerUuid);
             }
-        });
+        //});
     }
 
     /**

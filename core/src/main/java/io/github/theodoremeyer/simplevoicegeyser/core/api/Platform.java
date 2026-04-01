@@ -1,11 +1,13 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.api;
 
+import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
 
-import java.util.logging.Logger;
-
+/**
+ * Represents the bridge between a platform like spigot and SVG core
+ */
 public interface Platform {
 
     /**
@@ -15,11 +17,13 @@ public interface Platform {
 
     /**
      * The Prefix for Logging
+     * @return the prefix
      */
     String getPrefix();
 
     /**
      * Register VoiceChatBridge
+     * @return the registered bridge
      */
     VoiceChatBridge registerVcBridge();
 
@@ -27,7 +31,7 @@ public interface Platform {
      * Logger
      * @return logger
      */
-    Logger getLogger();
+    SvgLogger getSvgLogger();
 
     /**
      * Get a file saved to disk
@@ -38,6 +42,8 @@ public interface Platform {
 
     /**
      * Figure out if a mod/plugin is enabled
+     * @param name the name of the dependency
+     * @return if its enabled
      */
     boolean isDependencyEnabled(String name);
 

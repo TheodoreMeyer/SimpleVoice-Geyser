@@ -38,20 +38,16 @@ public class VoiceChatBridge implements VoicechatPlugin {
     /**
      * Map Containing all the audioSenders
      */
-    public final Map<UUID, SvgAudioSender> audioSenders = new ConcurrentHashMap<>();
+    private final Map<UUID, SvgAudioSender> audioSenders = new ConcurrentHashMap<>();
     /**
      * Map containing all the audioListeners
      */
     private final Map<UUID, SvgAudioListener> audioListeners = new ConcurrentHashMap<>();
 
-    private final SvgCore core;
-
     /**
      * Initializes the plugin's connection with SVC.
-     * @param core SVG plugin
      */
-    public VoiceChatBridge(SvgCore core) {
-        this.core = core;
+    public VoiceChatBridge() {
     }
 
     /**
@@ -133,6 +129,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
     /**
      * Creates an AudioSender
      * @param uuid uuid to link sender too
+     * @return the registered Sender
      */
     public SvgAudioSender registerAudioSender(UUID uuid) {
         if (serverApi == null) {
@@ -187,6 +184,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
     /**
      * Creates an AudioListener
      * @param uuid uuid to associate listener to
+     * @param session the associated session of the player
      */
     public void registerAudioListener(UUID uuid, Session session) {
         if (serverApi == null) {

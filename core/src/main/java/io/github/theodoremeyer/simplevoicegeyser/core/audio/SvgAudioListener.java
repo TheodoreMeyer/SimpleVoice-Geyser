@@ -7,7 +7,6 @@ import de.maxhenkel.voicechat.api.packets.SoundPacket;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
-import io.github.theodoremeyer.simplevoicegeyser.core.thread.AudioThread;
 import org.eclipse.jetty.websocket.api.Session;
 
 import java.nio.ByteBuffer;
@@ -30,6 +29,8 @@ public final class SvgAudioListener implements PlayerAudioListener {
     /**
      * Class constructor to set id
      * @param listenerId the id of this listener
+     * @param session the Session to link to
+     * @param serverApi the VcServer API
      */
     public SvgAudioListener(UUID listenerId, Session session, VoicechatServerApi serverApi) {
         this.listenerId = listenerId;
