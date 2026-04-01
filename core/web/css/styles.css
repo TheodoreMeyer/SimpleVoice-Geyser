@@ -71,7 +71,7 @@ button {
 
 button:hover {
   background-color: #00aacc;
-  transform: scale(1.1);
+  transform: scale(1.04);
 }
 
 button:active {
@@ -128,7 +128,7 @@ Controls
   margin: 15px auto;
 
   display: flex;
-  flex-direction: column;   /* IMPORTANT: stack rows */
+  flex-direction: column;
   gap: 20px;
 }
 
@@ -152,13 +152,6 @@ Controls
   flex-wrap: wrap;
 }
 
-#controls-dev {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
 .control-group {
   display: flex;
   flex-direction: column;
@@ -171,10 +164,66 @@ Controls
   font-size: 13px;
   color: #aaa;
 }
+
+/* DEV CONTROLS */
+#controls-dev {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dev-hidden {
+  display: none !important;
+}
+
+#devContent {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  margin-top: 10px;
+  padding: 10px;
+  gap: 12px;
+
+  animation: fadeIn 0.15s ease;
+}
+
+.dev-toggle {
+  width: 100%;
+  background: #333;
+  color: #ccc;
+  font-size: 13px;
+  padding: 8px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.dev-toggle:hover {
+  background: #3f3f3f;
+  color: #fff;
+}
+
+#controls-dev .control-label {
+  color: #888;
+  font-size: 12px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /*
 MIC
  */
-
 #micControls {
   display: flex;
   align-items: center;
@@ -238,50 +287,6 @@ label {
   margin: 3% 0 2% 0;
 }
 
-/**
-DEV
- */
-
-.dev-toggle {
-  width: 100%;
-  background: #333;
-  color: #ccc;
-  font-size: 13px;
-  padding: 8px;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.dev-toggle:hover {
-  background: #3f3f3f;
-  color: #fff;
-}
-
-#controls-dev .control-label {
-  color: #888;
-  font-size: 12px;
-}
-
-#devContent {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-
-  animation: fadeIn 0.15s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 /*
 MISC
  */
@@ -297,7 +302,7 @@ input:hover, .githubicon:hover, select:hover {
 }
 
 input:active, .githubicon:active, select:active {
-  transform: scale(1.15);
+  transform: scale(1.06);
 }
 
 input {
