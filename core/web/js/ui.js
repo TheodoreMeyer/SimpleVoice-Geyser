@@ -17,18 +17,15 @@ export function initUI() {
     //DEV UI
     const devToggle = document.getElementById("devToggle");
     const devContent = document.getElementById("devContent");
-
-    let devOpen = false;
+    devContent.classList.add("dev-hidden");
 
     devToggle.addEventListener("click", () => {
-        devOpen = !devOpen;
+        const isHidden = devContent.classList.toggle("dev-hidden");
 
-        devContent.hidden = !devOpen;
-        devToggle.textContent = devOpen
+        devToggle.textContent = !isHidden
             ? "Developer Tools ▲"
             : "Developer Tools ▼";
     });
-    // The rest
 
     setMicIndicator(micIndicator);
 
