@@ -5,15 +5,20 @@ let ws = null;
 let reconnectTimeout = null;
 let lastCredentials = null;
 let manualClose = false;
+let shouldSendVoice = () => true;
 
 let reOpen = true; // flag to control auto-reopening
 
 export function initWebSocket() {
     onMicData((packet) => {
-        if (ws && ws.readyState === WebSocket.OPEN) {
+        if (ws && ws.readyState === WebSocket.OPEN && shouldSendVoice()) {
             ws.send(packet);
         }
     });
+}
+
+export function setShouldSendVoice(predicate) {
+    shouldSendVoice = typeof predicate === "function" ? predicate : () => true;
 }
 
 export function connect(username, password, onStatusChange) {

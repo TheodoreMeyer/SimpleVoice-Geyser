@@ -1,4 +1,4 @@
-import { getConnectedGamepad, getGamepadButtonName } from "/js/gamepad.js";
+import { getConnectedGamepad, getGamepadButtonName } from "./gamepad.js";
 
 const TRANSMIT_MODE_KEY = "svgTransmitMode";
 const PTT_BINDING_KEY = "svgPttBinding";

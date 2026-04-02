@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>SimpleVoice-Geyser</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/ptt.css">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
 </head>
 
@@ -59,6 +60,35 @@
                 </div>
             </div>
 
+            <div class="control-group">
+                <span class="control-label">Transmit Mode</span>
+                <select id="transmitModeSelect" aria-label="Transmit mode">
+                    <option value="voice">Voice Activity</option>
+                    <option value="ptt">Push-To-Talk</option>
+                </select>
+            </div>
+
+            <div class="control-group" id="pttBindingControls" hidden>
+                <span class="control-label">PTT Binding</span>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
+                    <button id="bindPttBtn" type="button">Bind Push-to-Talk</button>
+                    <button id="clearPttBtn" type="button">Clear Binding</button>
+                </div>
+                <small id="pttBindingLabel">No binding set. Use the hold button or add a binding.</small>
+                <label style="display: flex; align-items: center; gap: 8px; width: auto; margin: 0;">
+                    <input type="checkbox" id="allowBackgroundPtt">
+                    <span>Allow background controller PTT</span>
+                </label>
+            </div>
+
+            <div class="control-group" id="pttControls" hidden>
+                <span class="control-label">Push-to-Talk</span>
+                <div>
+                    <button id="pushToTalkBtn" class="pttButton" type="button">Hold to Talk</button>
+                    <button id="fullscreenPttBtn" type="button">Fullscreen PTT</button>
+                </div>
+            </div>
+
             <!-- Add more real controls here later -->
         </div>
         <div class="controls-divider"></div>
@@ -80,6 +110,12 @@
             <span>Theodore Meyer</span>
         </a>
     </div>
+
+    <div id="pttFullscreenOverlay" aria-hidden="true">
+        <button id="pushToTalkFullscreenBtn" class="pttButton" type="button">Hold to Talk</button>
+        <button id="exitFullscreenPttBtn" type="button">Exit Fullscreen</button>
+    </div>
+
     <script type="module">
         import { start } from '/js/client.js';
         start(); // manually triggers it
