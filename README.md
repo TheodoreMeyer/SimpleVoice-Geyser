@@ -1,11 +1,10 @@
 # Simple Voice Geyser
-[![Spigot](https://img.shields.io/badge/Available%20on-Spigot-orange?logo=spigotmc&logoColor=white)](https://www.spigotmc.org/resources/132386)
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.8--1.21.11-blue)](https://www.minecraft.net/en-us/)
 [![GitHub release](https://img.shields.io/github/v/release/TheodoreMeyer/SimpleVoice-Geyser?include_prereleases)](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/releases)
 [![License](https://img.shields.io/github/license/TheodoreMeyer/SimpleVoice-Geyser)](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/blob/master/LICENSE)
 
-**Available on:**
-- [![Spigot](https://img.shields.io/badge/Spigot-Supported-orange?logo=spigotmc&logoColor=white)](...)
+**Supports:**
+- [![Spigot](https://img.shields.io/badge/Spigot-Supported-orange?logo=spigotmc&logoColor=white)](https://www.spigotmc.org/resources/132386)
 - <a href="https://papermc.io/">
     <img src="https://assets.papermc.io/brand/papermc_logo.min.svg" height="14"/>
     <img src="https://img.shields.io/badge/Paper-Supported-3b82f6"/>
