@@ -1,6 +1,7 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.server;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import org.eclipse.jetty.websocket.api.Session;
 import org.json.JSONObject;
 
@@ -94,11 +95,11 @@ public final class WebSocketManager {
 
     /**
      * Disconnects a player when they leave
-     * @param uuid uuid of player leaving
+     * @param player uuid of player leaving
      */
-    public void playerLeave(UUID uuid) {
-        String playerName = SvgCore.getPlayerManager().getPlayer(uuid).getName();
-        sendJson(uuid, "message", playerName + " left the game.");
+    public void playerLeave(SvgPlayer player) {
+        UUID uuid = player.getUniqueId();
+        sendJson(uuid, "message", player.getName() + " left the game.");
         disconnectClient(uuid);
     }
 
