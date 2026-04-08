@@ -301,7 +301,7 @@ input:hover, .githubicon:hover, select:hover {
   transform: scale(1.1);
 }
 
-input:active, .githubicon:active, select:active {
+.githubicon:active {
   transform: scale(1.06);
 }
 
