@@ -250,12 +250,18 @@ public final class JettyWebSocket {
         }
 
         if (!chatMessage.isEmpty()) {
-            String name = SvgCore.getPasswordManager().getUsernameFromUUID(uuid);
+            String savedName = SvgCore.getPasswordManager().getUsernameFromUUID(uuid);
+            String displayName = (player != null) ? player.getName() :
+                    savedName != null ? savedName : uuid.toString();
+
             if (player != null) {
                 sendMessage("chat", "You" + chatMessage, false);
-                player.chat("[Web Chat] " + (name != null ? name : uuid) + ": " + SvgColor.BLUE + chatMessage);
+                player.chat("[Web Chat] " + displayName + ": " + SvgColor.BLUE + chatMessage);
             } else {
-                sendMessage("error", "You are Not in Game", false);
+                sendMessage("error", "You are Not in Game. Sent message", false);
+                for (SvgPlayer p : SvgCore.getPlayerManager().getAllPlayers()) {
+                    p.sendMessage("[Web Chat] " + displayName + ": " + SvgColor.BLUE + chatMessage);
+                }
             }
         }
     }

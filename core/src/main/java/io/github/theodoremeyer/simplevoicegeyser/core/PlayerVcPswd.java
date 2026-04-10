@@ -57,7 +57,7 @@ public final class PlayerVcPswd {
     private void saveToFile(String playerName, String password, UUID uuid) {
         String key = playerName.toLowerCase();
         config.set(key + ".password", password);
-        config.set(key + ".uuid", uuid.toString());
+        config.set(key + ".uuid", uuid);
         
         config.save();
     }
@@ -129,15 +129,6 @@ public final class PlayerVcPswd {
      */
     public UUID getStoredUUID(String playerName) {
         return playerUUIDs.get(playerName.toLowerCase());
-    }
-
-    /**
-     * If there is an uuid for player
-     * @param playerName player to check for
-     * @return whether uuid is linked for player
-     */
-    public boolean isUUIDLinked(String playerName) {
-        return playerUUIDs.containsKey(playerName.toLowerCase());
     }
 
     /**
