@@ -71,10 +71,10 @@ public final class PlayerManager {
      * @param player the player to remove
      */
     public void removePlayer(SvgPlayer player) {
+        SvgCore.getWsManager().playerLeave(player);
+
         players.remove(player.getUniqueId());
         playersByName.remove(player.getName());
-
-        SvgCore.getWsManager().playerLeave(player.getUniqueId());
     }
 
     // Is Player Online
