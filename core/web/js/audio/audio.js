@@ -21,6 +21,7 @@ let readIndex = 0;
 let available = 0;
 
 let micIndicator = null;
+let shouldCaptureVoice = () => true;
 
 export async function initAudio() {
     audioContext = new AudioContext({ sampleRate: 48000 });
@@ -46,6 +47,10 @@ export function onMicData(handler) {
     micHandler = handler;
 }
 
+export function setShouldCaptureVoice(predicate) {
+    shouldCaptureVoice = typeof predicate === "function" ? predicate : () => true;
+}
+
 export async function startMic(deviceId) {
     await audioContext.resume();
 
@@ -69,8 +74,9 @@ export async function startMic(deviceId) {
 function handleMicMessage(event) {
     const { samples, speech } = event.data;
     const now = performance.now();
+    const canTransmit = shouldCaptureVoice();
 
-    if (speech && !muted) {
+    if (speech && !muted && canTransmit) {
         micActiveUntil = now + MIC_HOLD_MS;
     }
 
@@ -82,7 +88,7 @@ function handleMicMessage(event) {
         }
     }
 
-    if (!speech || muted) return;
+    if (!speech || muted || !canTransmit) return;
 
     //   Float32 -> Int16
     for (let i = 0; i < samples.length; i++) {

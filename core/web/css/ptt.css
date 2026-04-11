@@ -1,31 +1,63 @@
+#pttBindingControls,
 #pttControls {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 10px;
   margin-bottom: 14px;
-  flex-wrap: wrap;
   justify-content: center;
+  padding: 10px 12px;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #2f2f2f 0%, #262626 100%);
+}
+
+#pttBindingControls[hidden],
+#pttControls[hidden],
+#fullscreenPttBtn[hidden],
+#pttFullscreenOverlay[hidden] {
+  display: none !important;
+}
+
+#pttBindingControls small {
+  color: #b7c2c8;
+}
+
+#pttControls > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .pttButton {
   min-width: 190px;
   font-weight: bold;
+  letter-spacing: 0.2px;
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
+  border: 1px solid #2a6f82;
+  background: linear-gradient(180deg, #4ad0ea 0%, #1ea2c6 100%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
 .pttButton.active {
-  background-color: #33aa55;
-  color: #000;
+  background: linear-gradient(180deg, #4bde7d 0%, #2cb45f 100%);
+  border-color: #2f8f53;
+  color: #04130a;
+  box-shadow: 0 0 0 1px rgba(76, 223, 132, 0.32), 0 0 18px rgba(76, 223, 132, 0.34);
 }
 
 #fullscreenPttBtn {
-  background-color: #f2b94b;
+  background: linear-gradient(180deg, #ffd37e 0%, #f2b94b 100%);
+  border: 1px solid #bf8f35;
+  color: #2b1e05;
 }
 
 #fullscreenPttBtn:hover {
-  background-color: #d79c2f;
+  background: linear-gradient(180deg, #ffdca0 0%, #e0a73e 100%);
 }
 
 #pttFullscreenOverlay {
