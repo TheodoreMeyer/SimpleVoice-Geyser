@@ -23,6 +23,27 @@
   color: #b7c2c8;
 }
 
+.ptt-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ptt-background-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  margin: 0;
+}
+
+#pttBindingControls,
+#pttControls {
+  min-width: 250px;
+}
+
 #pttControls > div {
   display: flex;
   align-items: center;
