@@ -14,7 +14,9 @@ export function initUI() {
     const muteBtn = document.getElementById('muteBtn');
     const micIndicator = document.getElementById('micIndicator');
     const sendBtn = document.getElementById("messageButton");
+    const micCard = document.getElementById("micCard");
     const transmitModeSelect = document.getElementById("transmitModeSelect");
+    const pttCard = document.getElementById("pttCard");
     const pttBindingControls = document.getElementById("pttBindingControls");
     const bindPttBtn = document.getElementById("bindPttBtn");
     const clearPttBtn = document.getElementById("clearPttBtn");
@@ -50,7 +52,9 @@ export function initUI() {
 
     const pttController = createPttController({
         elements: {
+            micCard,
             transmitModeSelect,
+            pttCard,
             pttBindingControls,
             bindPttBtn,
             clearPttBtn,

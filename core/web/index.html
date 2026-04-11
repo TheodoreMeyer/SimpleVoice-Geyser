@@ -52,40 +52,46 @@
     <br>
     <div id="controls">
         <div id="controls-main">
-            <div class="control-group">
-                <span class="control-label">Microphone</span>
-                <div id="micControls">
-                    <button id="muteBtn" class="unmuted">Mute</button>
-                    <span id="micIndicator" title="Mic activity"></span>
+            <div class="controls-card" id="micCard">
+                <div class="control-group">
+                    <span class="control-label">Microphone</span>
+                    <div id="micControls">
+                        <button id="muteBtn" class="unmuted">Mute</button>
+                        <span id="micIndicator" title="Mic activity"></span>
+                    </div>
                 </div>
             </div>
 
-            <div class="control-group">
-                <span class="control-label">Transmit Mode</span>
-                <select id="transmitModeSelect" aria-label="Transmit mode">
-                    <option value="voice">Voice Activity</option>
-                    <option value="ptt">Push-To-Talk</option>
-                </select>
-            </div>
-
-            <div class="control-group" id="pttBindingControls" hidden>
-                <span class="control-label">PTT Binding</span>
-                <div class="ptt-action-row">
-                    <button id="bindPttBtn" type="button">Bind Push-to-Talk</button>
-                    <button id="clearPttBtn" type="button">Clear Binding</button>
+            <div class="controls-card">
+                <div class="control-group">
+                    <span class="control-label">Transmit Mode</span>
+                    <select id="transmitModeSelect" aria-label="Transmit mode">
+                        <option value="voice">Voice Activity</option>
+                        <option value="ptt">Push-To-Talk</option>
+                    </select>
                 </div>
-                <small id="pttBindingLabel">No binding set. Use the hold button or add a binding.</small>
-                <label class="ptt-background-toggle">
-                    <input type="checkbox" id="allowBackgroundPtt">
-                    <span>Allow background controller PTT</span>
-                </label>
             </div>
 
-            <div class="control-group" id="pttControls" hidden>
-                <span class="control-label">Push-to-Talk</span>
-                <div>
-                    <button id="pushToTalkBtn" class="pttButton" type="button">Hold to Talk</button>
-                    <button id="fullscreenPttBtn" type="button">Fullscreen PTT</button>
+            <div class="controls-card controls-card-ptt dev-hidden" id="pttCard">
+                <div class="control-group" id="pttBindingControls">
+                    <span class="control-label">PTT Binding</span>
+                    <div class="ptt-action-row">
+                        <button id="bindPttBtn" type="button">Bind Push-to-Talk</button>
+                        <button id="clearPttBtn" type="button">Clear Binding</button>
+                    </div>
+                    <small id="pttBindingLabel">No binding set. Use the hold button or add a binding.</small>
+                    <label class="ptt-background-toggle">
+                        <input type="checkbox" id="allowBackgroundPtt">
+                        <span>Allow background controller PTT</span>
+                    </label>
+                </div>
+
+                <div class="control-group" id="pttControls">
+                    <span class="control-label">Push-to-Talk</span>
+                    <div>
+                        <button id="pushToTalkBtn" class="pttButton" type="button">Hold to Talk</button>
+                        <button id="fullscreenPttBtn" type="button">Fullscreen PTT</button>
+                    </div>
                 </div>
             </div>
 

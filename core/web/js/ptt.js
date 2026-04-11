@@ -6,7 +6,9 @@ const ALLOW_BACKGROUND_PTT_KEY = "svgAllowBackgroundPtt";
 
 export function createPttController({ elements, log }) {
     const {
+        micCard,
         transmitModeSelect,
+        pttCard,
         pttBindingControls,
         bindPttBtn,
         clearPttBtn,
@@ -22,7 +24,6 @@ export function createPttController({ elements, log }) {
 
     const logFn = typeof log === "function" ? log : () => {};
 
-    const touchDevice = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
     const pttSources = new Set();
 
     let bindingCaptureActive = false;
@@ -223,9 +224,16 @@ export function createPttController({ elements, log }) {
 
     function updateTransmitModeUi() {
         const pttMode = isPttMode();
-        pttBindingControls.hidden = !pttMode;
-        pttControls.hidden = !pttMode;
-        fullscreenPttBtn.hidden = !pttMode || !touchDevice;
+        if (pttCard) {
+            pttCard.classList.toggle("dev-hidden", !pttMode);
+        }
+        if (micCard) {
+            micCard.classList.toggle("dev-hidden", pttMode);
+        }
+
+        pttBindingControls.classList.toggle("dev-hidden", !pttMode);
+        pttControls.classList.toggle("dev-hidden", !pttMode);
+        fullscreenPttBtn.hidden = !pttMode;
 
         if (!pttMode) {
             clearPttSources();
