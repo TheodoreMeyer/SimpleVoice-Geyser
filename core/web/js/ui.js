@@ -1,5 +1,13 @@
 import {connect, disconnect, isConnected, sendChat} from "./websocket.js";
-import {setMicIndicator, setOutputDevice, setShouldCaptureVoice, startMic, stopMic, toggleMute} from "./audio/audio.js";
+import {
+    setMicIndicator,
+    setOutputDevice,
+    setPttActiveProvider,
+    setTransmitModeProvider,
+    startMic,
+    stopMic,
+    toggleMute
+} from "./audio/audio.js";
 import {log, setLogger} from "./utils/logger.js";
 import {createPttController} from "./ptt.js";
 
@@ -69,15 +77,15 @@ export function initUI() {
         },
         log
     });
-
     pttController.init();
 
-    setShouldCaptureVoice(() => {
-        if (!pttController.isPttMode()) {
-            return true;
-        }
-        return pttController.isPttActive();
-    });
+    setTransmitModeProvider(() =>
+        pttController.isPttMode() ? "ptt" : "voice"
+    );
+
+    setPttActiveProvider(() =>
+        pttController.isPttActive()
+    );
 
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
