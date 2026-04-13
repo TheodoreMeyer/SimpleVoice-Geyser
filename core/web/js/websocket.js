@@ -51,7 +51,7 @@ function createSocket(onStatusChange) {
                         msg.includes("timeout") ||
                         msg.includes("left the game.")
                     if (isFatalError) {
-                        reOpen = false; // don't auto-reopen on fatal errors
+                        stopReconnection(); // prevent any further reconnect attempts
 
                         // optional: immediately close so onclose handles it cleanly
                         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -61,7 +61,7 @@ function createSocket(onStatusChange) {
                 }
 
                 if (msg.includes("left the game.")) {
-                    reOpen = false; // normal disconnect, don't auto-reopen
+                    stopReconnection(); // stop trying to reconnect if explicitly kicked
                 }
 
                 log((data.type || "info") + ": " + (data.message || JSON.stringify(data)));
@@ -97,6 +97,11 @@ function createSocket(onStatusChange) {
 
     ws.onerror = () => {
         log("WebSocket error occurred.");
+
+        // If the socket never opened, treat as fatal
+        if (ws.readyState !== WebSocket.OPEN) {
+            stopReconnection();
+        }
     };
 }
 
@@ -123,4 +128,9 @@ export function sendChat(msg) {
 
 export function isConnected() {
     return ws && ws.readyState === WebSocket.OPEN;
+}
+
+function stopReconnection() {
+    reOpen = false;
+    reconnectTimeout = null; // prevent any pending reconnects
 }

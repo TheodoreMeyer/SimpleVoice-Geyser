@@ -226,7 +226,7 @@ public final class JettyWebSocket {
 
         VoicechatConnection connection = SvgCore.getBridge().getVcServerApi().getConnectionOf(uuid);
         if (connection == null || connection.isInstalled()) {
-            closeOnError("Access Denies: Can't Join server with mod installed or Connection is Null", false);
+            closeOnError("Access Denied: Can't Join server with mod installed or Connection is Null", false);
             return;
         }
 
@@ -245,7 +245,7 @@ public final class JettyWebSocket {
     private void chat(JSONObject json) {
         String chatMessage = json.optString("message", "").trim();
         if (!authenticated) { //if they are signed in
-            sendMessage("error", "You must be authenticated.", false);
+            sendMessage("error", "Access Denied: You must be authenticated.", false);
             return;
         }
 

@@ -8,7 +8,6 @@ import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandFlagParser
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.sender.BukkitConsole;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -19,7 +18,7 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
     //COMMAND EXECUTION
      //-----
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
+    public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
 
         if (sender instanceof Player p) {
             SvgPlayer player = SvgCore.getPlayerManager().getPlayer(p.getUniqueId());
@@ -87,10 +86,8 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
     // TAB COMPLETION
     //---------------
     @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender,
-                                      @NotNull Command command,
-                                      @NotNull String alias,
-                                      @NotNull String[] args) {
+    public List<String> onTabComplete(CommandSender sender, Command command,
+                                      String alias, String[] args) {
 
         if (args.length == 1) {
             return suggestSubcommands(args[0]);

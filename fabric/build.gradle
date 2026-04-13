@@ -54,13 +54,13 @@ base {
 tasks.processResources {
     inputs.property("version", version)
     inputs.property("voicechat_api_version", voicechat_api_version)
-    inputs.property("mc_min", low_mc_version)
+    inputs.property("mc_min", current_mc_version)
 
     filesMatching('fabric.mod.json') {
         expand(
                 version: version,
                 voicechat_api_version: voicechat_api_version,
-                mc_min: low_mc_version
+                mc_min: current_mc_version
         )
     }
 }
