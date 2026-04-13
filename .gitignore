@@ -4,6 +4,7 @@ extra.html
 build/
 gradle/
 .idea/
+.vscode/
 .gradle/
 jettyhtml.html
 gradlew
@@ -15,3 +16,4 @@ notes
 notes/
 notes/notes1.txt
 run/
+.DS_Store

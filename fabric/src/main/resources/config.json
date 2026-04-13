@@ -1,0 +1,23 @@
+{
+  "_link": "https://theodoremeyer.github.io/projects/simplevoicegeyser/install/#:~:text=Server%20configuration",
+
+  "client": {
+    "vctimeout": 30,
+    "idletimeout": 2,
+    "requireBedrock": false,
+    "useEmoteForSVG": true
+  },
+
+  "server": {
+    "group": {
+      "default": {
+        "enabled": true,
+        "password": "1a2b"
+      }
+    },
+    "port": 8080,
+    "bind-address": "0.0.0.0"
+  },
+
+  "debug": false
+}

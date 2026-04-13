@@ -1,0 +1,71 @@
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'com.gradleup.shadow' version '9.4.0' // ShadowJar
+    id "xyz.jpenilla.run-paper" version "3.0.2"
+}
+
+repositories {
+    maven {
+        url = uri('https://hub.spigotmc.org/nexus/content/groups/public/')
+    }
+}
+
+dependencies {
+    compileOnly("org.spigotmc:spigot-api:${low_mc_version}-R0.1-SNAPSHOT")
+
+    // CORE MODULE
+    implementation(project(":core"))
+
+    // GeyserMC API (provided by platform)
+    compileOnly("org.geysermc.geyser:api:${geysermc_api_version}")
+    compileOnly("org.geysermc.floodgate:api:${floodgate_api_version}")
+
+    // Simple Voice Chat API
+    compileOnly("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
+}
+
+tasks.processResources {
+    inputs.property("version", version)
+    inputs.property("spigot_version", low_mc_version)
+
+    filesMatching('plugin.yml') {
+        expand(
+                plugin_version: version,
+                spigot_version: low_mc_version
+        )
+    }
+}
+
+tasks.shadowJar {
+
+    archiveClassifier.set("") // no -all suffix
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    rootProject.applySvgRelocations(delegate)
+
+    // Include core classes + resources
+    from(project(":core").sourceSets.main.output)
+
+}
+
+tasks.withType(Jar).configureEach {
+    archiveBaseName.set("Svg-Spigot")
+}
+
+
+tasks.jar {
+    enabled = false
+}
+
+tasks.runServer { // https://github.com/jpenilla/run-task/wiki
+    minecraftVersion("1.21.11")
+    downloadPlugins {
+        // Simple Voice Chat //
+        url("https://cdn.modrinth.com/data/9eGKb6K1/versions/FeJRj2X0/voicechat-bukkit-2.6.12.jar")
+        // Geyser //
+        url("https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot")
+        // Floodgate //
+        url("https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot")
+    }
+}

@@ -1,0 +1,91 @@
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'fabric-loom' version '1.15-SNAPSHOT'
+    id 'com.gradleup.shadow' version '9.4.0'
+}
+
+repositories {
+    maven {
+        url = "https://maven.fabricmc.net/"
+    }
+}
+
+dependencies {
+
+    // =========================
+    // FABRIC
+    // =========================
+    minecraft "com.mojang:minecraft:${project.current_mc_version}"
+    mappings loom.officialMojangMappings()
+
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // =========================
+    // SHARED CORE (SAFE - NOT SHADOWED)
+    // =========================
+    shadow project(":core")
+
+    // =========================
+    // APIs (compile only)
+    // =========================
+    compileOnly "org.geysermc.geyser:api:${geysermc_api_version}"
+    compileOnly "org.geysermc.floodgate:api:${floodgate_api_version}"
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
+
+    compileOnly 'net.luckperms:api:5.4'
+
+    // =========================
+    // EXTERNAL LIBRARIES (SHADOWED)
+    // =========================
+    shadow "org.eclipse.jetty:jetty-server:11.0.25"
+    shadow "org.eclipse.jetty:jetty-servlet:11.0.25"
+    shadow "org.json:json:20240303"
+    shadow "org.mindrot:jbcrypt:0.4"
+    shadow "org.slf4j:slf4j-api:2.0.12"
+
+}
+
+base {
+    setArchivesName(project.fabric_archives_base_name)
+}
+
+tasks.processResources {
+    inputs.property("version", version)
+    inputs.property("voicechat_api_version", voicechat_api_version)
+    inputs.property("mc_min", current_mc_version)
+
+    filesMatching('fabric.mod.json') {
+        expand(
+                version: version,
+                voicechat_api_version: voicechat_api_version,
+                mc_min: current_mc_version
+        )
+    }
+}
+
+tasks.shadowJar {
+    mergeServiceFiles()
+
+    archiveClassifier.set("")
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    configurations = [project.configurations.shadow]
+
+    rootProject.applySvgRelocations(delegate)
+}
+
+tasks.jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn(tasks.shadowJar)
+    from {
+        zipTree(tasks.shadowJar.archiveFile.get().asFile)
+    }
+}
+
+tasks.remapJar {
+ dependsOn(tasks.jar)
+    archiveClassifier.set("")
+}

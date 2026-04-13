@@ -1,0 +1,58 @@
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+}
+
+dependencies {
+    // password encryption
+    implementation("org.mindrot:jbcrypt:0.4")
+
+    // Json
+    implementation("org.json:json:20250107")
+
+    // GeyserMC API (provided by platform)
+    compileOnly("org.geysermc.geyser:api:${geysermc_api_version}")
+    compileOnly("org.geysermc.floodgate:api:${floodgate_api_version}")
+
+    // Jetty (embedded server)
+    implementation("org.eclipse.jetty:jetty-server:11.0.25")
+    implementation("org.eclipse.jetty:jetty-servlet:11.0.25")
+    implementation("org.eclipse.jetty.websocket:websocket-servlet:11.0.25")
+    implementation("org.eclipse.jetty.websocket:websocket-jetty-server:11.0.25")
+
+    // Simple Voice Chat API (provided by platform)
+    compileOnly("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
+}
+
+tasks.processResources {
+    // include all normal resources
+    from(sourceSets.main.resources.srcDirs)
+
+    // include web/ folder into the JAR under "web/"
+    from("web") {
+        into("web")
+    }
+}
+
+tasks.withType(Jar).configureEach {
+    archiveBaseName.set("Svg-Core")
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+tasks.jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = "Core"
+            //artifact(tasks.shadowJar)
+        }
+    }
+}
