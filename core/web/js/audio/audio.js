@@ -21,6 +21,8 @@ let readIndex = 0;
 let available = 0;
 
 let micIndicator = null;
+let isPttActive = () => true;
+let getTransmitMode = () => "voice"; // injected from controller
 
 export async function initAudio() {
     audioContext = new AudioContext({ sampleRate: 48000 });
@@ -44,6 +46,14 @@ export function setMicIndicator(el) {
 
 export function onMicData(handler) {
     micHandler = handler;
+}
+
+export function setTransmitModeProvider(fn) {
+    getTransmitMode = fn;
+}
+
+export function setPttActiveProvider(fn) {
+    isPttActive = fn;
 }
 
 export async function startMic(deviceId) {
@@ -70,25 +80,14 @@ function handleMicMessage(event) {
     const { samples, speech } = event.data;
     const now = performance.now();
 
-    if (speech && !muted) {
-        micActiveUntil = now + MIC_HOLD_MS;
-    }
+    const mode = getTransmitMode();   // "voice" | "ptt"
+    const pttActive = isPttActive();
 
-    if (micIndicator) {
-        if (!muted && now < micActiveUntil) {
-            micIndicator.classList.add("active");
-        } else {
-            micIndicator.classList.remove("active");
-        }
-    }
-
-    if (!speech || muted) return;
-
-    //   Float32 -> Int16
+    // --- ALWAYS BUFFER (never gate this) ---
     for (let i = 0; i < samples.length; i++) {
         const s = Math.max(-1, Math.min(1, samples[i]));
-        // write into ring buffer
         micBuffer[writeIndex] = s < 0 ? s * 0x8000 : s * 0x7fff;
+
         writeIndex = (writeIndex + 1) % BUFFER_SIZE;
 
         if (available < BUFFER_SIZE) {
@@ -99,7 +98,19 @@ function handleMicMessage(event) {
         }
     }
 
-    //   send fixed 960 sample packets ONLY
+    // --- UI INDICATOR (visual only) ---
+    if (micIndicator) {
+        if (mode === "ptt") {
+            micIndicator.classList.toggle("active", !muted && pttActive);
+        } else {
+            if (speech && !muted) {
+                micActiveUntil = now + MIC_HOLD_MS;
+            }
+            micIndicator.classList.toggle("active", now < micActiveUntil);
+        }
+    }
+
+    // --- FIXED PACKET FLOW (always consistent timing) ---
     while (available >= PACKET_SIZE) {
         const packet = new Int16Array(PACKET_SIZE);
 
@@ -110,8 +121,28 @@ function handleMicMessage(event) {
 
         available -= PACKET_SIZE;
 
-        micHandler?.(packet.buffer);
+        // --- TRANSMIT DECISION ---
+        if (shouldSendPacket(mode, speech, pttActive)) {
+            // avoid buffer reuse issues
+            micHandler?.(packet.slice().buffer);
+        }
     }
+}
+
+function shouldSendPacket(mode, speech, pttActive) {
+    if (muted) return false;
+
+    if (mode === "voice") {
+        // VAD
+        return speech;
+    }
+
+    if (mode === "ptt") {
+        // Push-to-talk
+        return pttActive;
+    }
+
+    return false;
 }
 
 export function stopMic() {

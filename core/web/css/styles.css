@@ -1,6 +1,6 @@
 /*
 GLOBAL
- */
+*/
 body {
   font-family: Arial, sans-serif;
   background: #1e1e1e;
@@ -19,7 +19,7 @@ h1 {
 
 /*
 FORM
- */
+*/
 #form-container {
   width: 60%;
   display: flex;
@@ -56,10 +56,9 @@ select {
   margin: 2% 0 0 0;
 }
 
-
 /*
 BUTTONS
- */
+*/
 button {
   padding: 10px 15px;
   background-color: #00d4ff;
@@ -67,6 +66,7 @@ button {
   color: #000;
   border-radius: 4px;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 button:hover {
@@ -78,9 +78,10 @@ button:active {
   background-color: #008ca8;
   transform: scale(1.15);
 }
+
 /*
 MAIN VC
- */
+*/
 #main-vc-container {
   background: #2a2a2a;
   padding: 20px;
@@ -114,9 +115,10 @@ MAIN VC
   white-space: pre-wrap;
   font-family: monospace;
 }
+
 /*
 Controls
- */
+*/
 #controls {
   background: #2a2a2a;
   padding: 25px;
@@ -136,10 +138,10 @@ Controls
   width: 100%;
   height: 1px;
   background: linear-gradient(
-          to right,
-          transparent,
-          #666,
-          transparent
+    to right,
+    transparent,
+    #666,
+    transparent
   );
   margin: 5px 0;
 }
@@ -147,9 +149,22 @@ Controls
 #controls-main {
   display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 40px;
+  align-items: stretch;
+  gap: 16px;
   flex-wrap: wrap;
+}
+
+.controls-card {
+  background: #2f2f2f;
+  border: 1px solid #3f3f3f;
+  border-radius: 10px;
+  padding: 14px;
+  min-width: 220px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.controls-card-ptt {
+  flex: 1 1 100%;
 }
 
 .control-group {
@@ -223,7 +238,7 @@ Controls
 
 /*
 MIC
- */
+*/
 #micControls {
   display: flex;
   align-items: center;
@@ -289,19 +304,22 @@ label {
 
 /*
 MISC
- */
-
+*/
 .githubicon {
   width: 30px;
   height: 30px;
   margin: 25px 0 0 0;
 }
 
-input:hover, .githubicon:hover, select:hover {
+input:hover,
+.githubicon:hover,
+select:hover {
   transform: scale(1.1);
 }
 
-.githubicon:active {
+input:active,
+.githubicon:active,
+select:active {
   transform: scale(1.06);
 }
 
@@ -310,11 +328,22 @@ input {
 }
 
 a {
-  color: #f5f5f5;           /* match your text */
-  text-decoration: none;    /* remove underline */
+  color: #f5f5f5;
+  text-decoration: none;
+}
+
+@media (max-width: 760px) {
+  #controls {
+    padding: 16px;
+  }
+
+  .controls-card {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 a:hover {
-  color: #00d4ff;           /* match your theme accent */
-  text-decoration: underline; /* optional */
+  color: #00d4ff;
+  text-decoration: underline;
 }
