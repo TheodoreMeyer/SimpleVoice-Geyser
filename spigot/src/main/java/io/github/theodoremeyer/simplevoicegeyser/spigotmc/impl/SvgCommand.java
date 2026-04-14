@@ -74,8 +74,10 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
             }
 
             case "cgroup" -> {
-                out.put("name", args[1]);
-                out.putAll(CommandFlagParser.parse(CommandFlagParser.CGROUP_FLAGS, Arrays.copyOfRange(args, 2, args.length), 0));
+                if (args.length >= 2) {
+                    out.put("name", args[1]);
+                    out.putAll(CommandFlagParser.parse(CommandFlagParser.CGROUP_FLAGS, Arrays.copyOfRange(args, 2, args.length), 0));
+                }
             }
         }
 

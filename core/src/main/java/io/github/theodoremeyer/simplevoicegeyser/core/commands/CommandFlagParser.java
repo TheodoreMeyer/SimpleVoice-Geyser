@@ -41,14 +41,14 @@ public class CommandFlagParser {
             String token = args[i].toLowerCase();
 
             if (!schema.containsKey(token)) {
-                throw new IllegalArgumentException("Unknown flag: " + token);
+                continue; // unrecognized token, ignore
             }
 
             boolean needsValue = schema.get(token);
 
             if (needsValue) {
                 if (i + 1 >= args.length) {
-                    throw new IllegalArgumentException("Flag " + token + " requires a value");
+                    continue; // missing value, ignore
                 }
 
                 out.put(mapKey(token), args[++i]);
