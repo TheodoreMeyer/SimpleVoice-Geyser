@@ -51,8 +51,13 @@ tasks.jar {
 publishing {
     publications {
         create("mavenJava", MavenPublication) {
-            artifactId = "Core"
-            //artifact(tasks.shadowJar)
+            artifact(tasks.jar)
+            artifact(tasks.sourcesJar)
+            artifact(tasks.javadocJar)
+
+            groupId = project.group
+            artifactId = "svg-core"
+            version = project.version
         }
     }
 }
