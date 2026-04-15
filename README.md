@@ -1,21 +1,21 @@
 # Simple Voice Geyser
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.8--1.21.11-blue)](https://www.minecraft.net/en-us/)
 [![GitHub release](https://img.shields.io/github/v/release/TheodoreMeyer/SimpleVoice-Geyser?include_prereleases)](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/releases)
 [![License](https://img.shields.io/github/license/TheodoreMeyer/SimpleVoice-Geyser)](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/blob/master/LICENSE)
 
 **Supports:**
-- [![Spigot](https://img.shields.io/badge/Spigot-Supported-orange?logo=spigotmc&logoColor=white)](https://www.spigotmc.org/resources/132386)
+- [![Spigot](https://img.shields.io/badge/Spigot-1.20.1–26.1.2-orange?logo=spigotmc&logoColor=white)](https://www.spigotmc.org/resources/132386)
+
 - <a href="https://papermc.io/">
-    <img src="https://assets.papermc.io/brand/papermc_logo.min.svg" height="14"/>
-    <img src="https://img.shields.io/badge/Paper-Supported-3b82f6"/>
+    <img src="https://assets.papermc.io/brand/papermc_logo.min.svg" height="22"/>
+    <img src="https://img.shields.io/badge/Paper-1.20.1–26.1.2-3b82f6"/>
   </a>
--  <a href="https://purpurmc.org/">
-    <img src="https://purpurmc.org/docs/images/purpur-small.png" height="14"/>
-    <img src="https://img.shields.io/badge/Purpur-Supported-7c3aed"/>
-   </a>
+- <a href="https://purpurmc.org/">
+    <img src="https://purpurmc.org/docs/images/purpur-small.png" height="22"/>
+    <img src="https://img.shields.io/badge/Purpur-1.20.1–26.1.2-7c3aed"/>
+  </a>
 - <a href="https://fabricmc.net/">
-    <img src="https://fabricmc.net/assets/logo.png" height="14"/>
-    <img src="https://img.shields.io/badge/Fabric-Supported-1f2937"/>
+    <img src="https://fabricmc.net/assets/logo.png" height="22"/>
+    <img src="https://img.shields.io/badge/Fabric-1.21.11–26.1.2-1f2937"/>
   </a>
 
 A Geyser Extension to allow Bedrock Clients to connect with Simple voice Chat.
@@ -44,8 +44,8 @@ A Geyser Extension to allow Bedrock Clients to connect with Simple voice Chat.
 ## Features to be worked on
 - External Webserver (you host the vc connection at your website)
 - Support
-  - Fabric
   - Velocity
+- More Web browser support.
 
 ## Suggestions?
 Reach out through issues!
