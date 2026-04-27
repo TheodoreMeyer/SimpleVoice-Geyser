@@ -194,6 +194,23 @@ export function resetAudioState() {
     available = 0;
 }
 
+// audio.js
+export async function getAudioDevices() {
+    try {
+        // Required so device labels are available
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (error) {
+        console.warn("Microphone permission denied:", error);
+    }
+
+    const devices = await navigator.mediaDevices.enumerateDevices();
+
+    return {
+        microphones: devices.filter(device => device.kind === "audioinput"),
+        speakers: devices.filter(device => device.kind === "audiooutput")
+    };
+}
+
 export async function setOutputDevice(deviceId) {
     if (audioContext.setSinkId) {
         try {
@@ -204,7 +221,7 @@ export async function setOutputDevice(deviceId) {
 
     if (window.audioElement?.setSinkId) {
         try {
-            await audioElement.setSinkId(deviceId);
+            await window.audioElement.setSinkId(deviceId);
             return true;
         } catch {}
     }
