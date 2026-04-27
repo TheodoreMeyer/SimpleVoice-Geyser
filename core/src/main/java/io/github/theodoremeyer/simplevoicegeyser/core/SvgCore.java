@@ -13,6 +13,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.managers.PlayerManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.JettyServer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.WebSocketManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
+import io.github.theodoremeyer.simplevoicegeyser.core.update.UpdateChecker;
 
 import java.util.logging.Logger;
 
@@ -29,6 +30,11 @@ public final class SvgCore {
      * Instance
      */
     private static SvgCore instance;
+
+    /**
+     * Project Version
+     */
+    private static final String VERSION = "0.1.0-Dev";
 
     /**
      * Config system
@@ -72,6 +78,11 @@ public final class SvgCore {
         instance = this;
 
         this.config = new SvgConfig(platform.getFile(DataType.CONFIG));
+
+        Boolean checkUpdate = config.UPDATE_CHECKER_ENABLED.get();
+        if (Boolean.TRUE.equals(checkUpdate)) {
+            new UpdateChecker(VERSION, platform.getServerMcVersion(), platform.getSvgLogger()).check();
+        }
 
         new AudioThread();
 

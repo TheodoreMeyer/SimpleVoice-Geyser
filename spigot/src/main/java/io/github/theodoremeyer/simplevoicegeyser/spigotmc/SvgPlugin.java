@@ -89,6 +89,11 @@ public class SvgPlugin extends JavaPlugin implements Platform {
     }
 
     @Override
+    public String getServerMcVersion() {
+        return Bukkit.getBukkitVersion().split("-")[0]; //e.g. "1.20.4"
+    }
+
+    @Override
     public VoiceChatBridge registerVcBridge() {
         BukkitVoicechatService service = Bukkit.getServicesManager().load(BukkitVoicechatService.class);
         VoiceChatBridge bridge = null;

@@ -96,6 +96,13 @@ public final class SvgConfig {
             new ConfigKey <>(this, "debug", false);
 
     /**
+     * Config path: updatechecker.enable
+     */
+    public final ConfigKey<Boolean> UPDATE_CHECKER_ENABLED =
+            new ConfigKey <>(this, "updatechecker.enable", true);
+
+
+    /**
      * Config path: config-version
      */
     private final ConfigKey<String> CONFIG_VERSION =
