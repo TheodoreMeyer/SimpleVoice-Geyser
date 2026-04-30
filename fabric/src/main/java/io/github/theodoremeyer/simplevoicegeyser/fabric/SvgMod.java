@@ -15,6 +15,7 @@ import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.SvgListener;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data.ConfigFile;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data.PasswordFile;
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.SharedConstants;
 
 import java.io.File;
 
@@ -107,6 +108,11 @@ public class SvgMod implements ModInitializer, Platform {
     @Override
     public String getPrefix() {
         return SvgColor.GREEN + "[" + SvgColor.AQUA + "SVG" + SvgColor.GREEN + "] " + SvgColor.RESET;
+    }
+
+    @Override
+    public String getServerMcVersion() {
+        return SharedConstants.getCurrentVersion().name();
     }
 
     @Override

@@ -19,6 +19,9 @@ public final class PswdCommand implements SubCommand {
 
     private final FormHandler formHandler;
 
+    /**
+     * Create the default password command
+     */
     public PswdCommand() {
         this.formHandler = new FormHandler(SvgCore.getGroupManager());
     }

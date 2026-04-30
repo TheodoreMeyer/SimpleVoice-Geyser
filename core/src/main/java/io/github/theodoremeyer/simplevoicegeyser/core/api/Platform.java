@@ -22,6 +22,12 @@ public interface Platform {
     String getPrefix();
 
     /**
+     * The server's mc version
+     * @return mc version (x.x.x)
+     */
+    String getServerMcVersion();
+
+    /**
      * Register VoiceChatBridge
      * @return the registered bridge
      */

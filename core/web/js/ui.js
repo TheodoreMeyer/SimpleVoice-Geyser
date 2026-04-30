@@ -1,5 +1,6 @@
 import {connect, disconnect, isConnected, sendChat} from "./websocket.js";
 import {
+    getAudioDevices,
     setMicIndicator,
     setOutputDevice,
     setPttActiveProvider,
@@ -51,6 +52,61 @@ export function initUI() {
     });
 
     setMicIndicator(micIndicator);
+
+    async function populateAudioDevices() {
+        const { microphones, speakers } = await getAudioDevices();
+
+        micSelect.innerHTML = "";
+        speakerSelect.innerHTML = "";
+
+        for (const mic of microphones) {
+            const option = document.createElement("option");
+            option.value = mic.deviceId;
+            option.textContent =
+                mic.label || `Microphone ${micSelect.options.length + 1}`;
+            micSelect.appendChild(option);
+        }
+
+        for (const speaker of speakers) {
+            const option = document.createElement("option");
+            option.value = speaker.deviceId;
+            option.textContent =
+                speaker.label || `Speaker ${speakerSelect.options.length + 1}`;
+            speakerSelect.appendChild(option);
+        }
+
+        const savedMic = localStorage.getItem("preferredMic");
+        const savedSpeaker = localStorage.getItem("preferredSpeaker");
+
+        if (savedMic && microphones.some(d => d.deviceId === savedMic)) {
+            micSelect.value = savedMic;
+        }
+
+        if (savedSpeaker && speakers.some(d => d.deviceId === savedSpeaker)) {
+            speakerSelect.value = savedSpeaker;
+            await setOutputDevice(savedSpeaker);
+        }
+    }
+
+    populateAudioDevices()
+        .then(() => {
+            log("Audio devices loaded successfully.");
+        })
+        .catch(error => {
+            console.error(error);
+            log("Failed to load audio devices.");
+        });
+
+    navigator.mediaDevices.addEventListener("devicechange", () => {
+        populateAudioDevices()
+            .then(() => {
+                log("Audio device list refreshed.");
+            })
+            .catch(error => {
+                console.error(error);
+                log("Failed to refresh audio devices.");
+            });
+    });
 
     setLogger((msg) => {
         const time = new Date().toLocaleTimeString();
@@ -144,7 +200,11 @@ export function initUI() {
         await setOutputDevice(speakerSelect.value);
     });
 
-    micSelect.addEventListener("change", () => {
+    micSelect.addEventListener("change", async () => {
         localStorage.setItem("preferredMic", micSelect.value);
+        if (isConnected()) {
+            stopMic();
+            await startMic(micSelect.value);
+        }
     });
 }
