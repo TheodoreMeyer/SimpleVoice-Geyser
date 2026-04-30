@@ -31,7 +31,7 @@ public class SvgMod implements ModInitializer, Platform {
     private PasswordFile passwordFile;
     private ConfigFile configFile;
 
-    private final SvgLogger logger = new FabricLogger();
+    private final FabricLogger logger = new FabricLogger();
 
     private static boolean ready = false;
 
@@ -53,8 +53,8 @@ public class SvgMod implements ModInitializer, Platform {
                 }
             }
 
-            passwordFile = new PasswordFile(new File(getDataFolder(), "password.json"));
-            configFile = new ConfigFile(getDataFolder());
+            passwordFile = new PasswordFile(new File(getDataFolder(), "password.json"), logger);
+            configFile = new ConfigFile(getDataFolder(), logger);
 
             // Init core AFTER filesystem is ready
             core = new SvgCore(this);

@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
+import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricLogger;
 
 import java.io.File;
 import java.io.FileReader;
@@ -29,27 +30,30 @@ public class PasswordFile extends SvgFile {
 
     private final File file;
     private Map<String, Map<String, String>> data;
+    
+    private final FabricLogger logger;
 
-    public PasswordFile(File file) {
+    public PasswordFile(File file, FabricLogger logger) {
+        this.logger = logger;
         this.file = file;
 
         if (!file.exists()) {
             try {
                 boolean success = file.getParentFile().mkdirs();
                 if (!success) {
-                    SvgCore.getLogger().warning("Failed to create parent directories for " + file.getAbsolutePath());
+                    logger.warning("Failed to create parent directories for " + file.getAbsolutePath());
                 }
 
                 boolean created = file.createNewFile();
                 if (!created) {
-                    SvgCore.getLogger().severe("Failed to create password.json file at " + file.getAbsolutePath());
+                    logger.severe("Failed to create password.json file at " + file.getAbsolutePath());
                 }
 
                 this.data = new HashMap<>();
                 save();
 
             } catch (IOException e) {
-                throw new RuntimeException("Failed to create JSON file", e);
+                logger.error("Failed to create JSON file", e);
             }
         } else {
             load();
@@ -62,7 +66,7 @@ public class PasswordFile extends SvgFile {
             this.data = (loaded != null) ? loaded : new HashMap<>();
         } catch (Exception e) {
             this.data = new HashMap<>();
-            SvgCore.getLogger().error("Failed to load JSON file, starting with empty data", e);
+            logger.error("Failed to load JSON file, starting with empty data", e);
         }
     }
 
@@ -88,7 +92,7 @@ public class PasswordFile extends SvgFile {
 
         String[] parts = splitPath(path);
         if (parts == null) {
-            SvgCore.getLogger().warning("Invalid path for set: " + path);
+            logger.warning("Invalid path for set: " + path);
             return;
         }
 
@@ -171,7 +175,7 @@ public class PasswordFile extends SvgFile {
 
         String[] parts = path.split("\\.", 2);
         if (parts.length != 2) {
-            SvgCore.getLogger().warning("Invalid path: " + path);
+            logger.warning("Invalid path: " + path);
             return null;
         }
 

@@ -1,8 +1,8 @@
 package io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data;
 
 import com.google.gson.*;
-import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
+import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricLogger;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -15,8 +15,11 @@ public class ConfigFile extends SvgFile {
 
     private final File file;
     private JsonObject data;
+    
+    private FabricLogger logger;
 
-    public ConfigFile(File dataFolder) {
+    public ConfigFile(File dataFolder, FabricLogger logger) {
+        this.logger = logger;
         this.file = new File(dataFolder, "config.json");
 
         try {
@@ -26,7 +29,7 @@ public class ConfigFile extends SvgFile {
                 if (!created) {
                     boolean success = file.createNewFile();
                     if (!success) {
-                        SvgCore.getLogger().severe("[Config] Failed to create config.json at " + file.getAbsolutePath());
+                        logger.severe("[Config] Failed to create config.json at " + file.getAbsolutePath());
                     }
                     this.data = new JsonObject();
                     save();
@@ -36,7 +39,7 @@ public class ConfigFile extends SvgFile {
             load();
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize ConfigFile", e);
+            logger.error("[Config] Failed to initialize config.json", e);
         }
     }
 
@@ -44,7 +47,7 @@ public class ConfigFile extends SvgFile {
         try (InputStream in = getClass().getResourceAsStream("/config.json")) {
 
             if (in == null) {
-                SvgCore.getLogger().warning("[Config] No default config.json found.");
+                logger.warning("[Config] No default config.json found.");
                 return false;
             }
 
@@ -52,7 +55,7 @@ public class ConfigFile extends SvgFile {
             return true;
 
         } catch (Exception e) {
-            SvgCore.getLogger().error("[Config] Failed to copy default config.json", e);
+            logger.error("[Config] Failed to copy default config.json", e);
             return false;
         }
     }
@@ -64,7 +67,7 @@ public class ConfigFile extends SvgFile {
                     ? element.getAsJsonObject()
                     : new JsonObject();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to load config.json", e);
+            logger.error("Failed to load config.json", e);
         }
     }
 
@@ -94,7 +97,8 @@ public class ConfigFile extends SvgFile {
         } else if (value == null) {
             element = JsonNull.INSTANCE;
         } else {
-            throw new IllegalArgumentException("Unsupported type: " + value.getClass());
+            logger.warning("Unsupported type: " + value.getClass());
+            return;
         }
 
         setValue(path, element);
@@ -135,7 +139,7 @@ public class ConfigFile extends SvgFile {
         try (FileWriter writer = new FileWriter(file)) {
             GSON.toJson(data, writer);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save config.json", e);
+            logger.error("Failed to save config.json", e);
         }
     }
 
