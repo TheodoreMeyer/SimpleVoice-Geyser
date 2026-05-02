@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "simplevoicegeyser",
   "version": "${version}",
-  "name": "Simple Voice Geyser",
+  "name": "SimpleVoice-Geyser",
   "description": "Bridges Simple Voice Chat with Geyser support for Fabric servers.",
   "authors": [
     "TheodoreMeyer"
@@ -23,7 +23,7 @@
   "depends": {
     "minecraft": ">=${mc_min}",
     "fabricloader": ">=0.15.0",
-    "fabric-api": "*",
+    "fabric-api": ">=${fabric_api_version}",
     "voicechat_api": ">=${voicechat_api_version}"
   }
 }
