@@ -15,6 +15,7 @@ import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.SvgListener;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data.ConfigFile;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data.PasswordFile;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 
 import java.io.File;
@@ -45,17 +46,7 @@ public class SvgMod implements ModInitializer, Platform {
 
         logger.info(getPrefix() + "Initializing Fabric platform...");
         try {
-            // Ensure data directory exists
-            File dir = getDataFolder();
-            if (!dir.exists()) {
-                boolean created = dir.mkdirs();
-                if (!created) {
-                    logger.severe(getPrefix() + "Failed to create data directory: " + dir.getAbsolutePath());
-                }
-            }
-
-            passwordFile = new PasswordFile(new File(getDataFolder(), "password.json"), logger);
-            configFile = new ConfigFile(getDataFolder(), logger);
+            createFiles();
 
             // Init core AFTER filesystem is ready
             core = new SvgCore(this);
@@ -73,7 +64,7 @@ public class SvgMod implements ModInitializer, Platform {
             logger.info(getPrefix() + "Initialization complete.");
 
         } catch (Exception e) {
-            logger.severe(getPrefix() + "Failed to initialize: " + e.getMessage());
+            logger.error(getPrefix() + "Failed to initialize. ", e);
             disable();
         }
     }
@@ -81,9 +72,9 @@ public class SvgMod implements ModInitializer, Platform {
     public static void injectBridge(FabricVcBridge bridge) {
         if (voiceChatBridge == null) {
             voiceChatBridge = bridge;
-        }
-        if (ready) {
-            core.init();
+            if (ready) {
+                core.init();
+            }
         }
     }
 
@@ -97,7 +88,29 @@ public class SvgMod implements ModInitializer, Platform {
     // -----------------------------
 
     public File getDataFolder() {
-        return new File("config/SimpleVoice-Geyser");
+        return FabricLoader.getInstance()
+                .getConfigDir()
+                .resolve("SimpleVoice-Geyser")
+                .toFile();
+    }
+
+    public void createFiles() {
+        File dir = getDataFolder();
+
+        // 1. Guarantee base directory exists
+        if (!dir.exists()) {
+            boolean created = dir.mkdirs();
+            if (!created && !dir.exists()) {
+                logger.severe(getPrefix() + "Failed to create data directory: " + dir.getAbsolutePath());
+            }
+        }
+
+        // 2. Optional: normalize to absolute path
+        dir = dir.getAbsoluteFile();
+
+        // 3. Now safe to construct files (NO file existence logic inside them anymore)
+        this.passwordFile = new PasswordFile(dir, logger);
+        this.configFile = new ConfigFile(dir, logger);
     }
 
     @Override

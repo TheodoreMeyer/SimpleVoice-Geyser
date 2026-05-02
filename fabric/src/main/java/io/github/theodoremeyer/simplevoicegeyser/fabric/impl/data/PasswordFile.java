@@ -33,30 +33,25 @@ public class PasswordFile extends SvgFile {
     
     private final FabricLogger logger;
 
-    public PasswordFile(File file, FabricLogger logger) {
+    public PasswordFile(File dataFolder, FabricLogger logger) {
         this.logger = logger;
-        this.file = file;
+        this.file = new File(dataFolder, "password.json");
 
-        if (!file.exists()) {
-            try {
-                boolean success = file.getParentFile().mkdirs();
-                if (!success) {
-                    logger.warning("Failed to create parent directories for " + file.getAbsolutePath());
-                }
-
+        try {
+            if (!file.exists()) {
                 boolean created = file.createNewFile();
-                if (!created) {
-                    logger.severe("Failed to create password.json file at " + file.getAbsolutePath());
+                if (!created && !file.exists()) {
+                    logger.error("Failed to create password.json: " + file.getAbsolutePath());
                 }
 
                 this.data = new HashMap<>();
                 save();
-
-            } catch (IOException e) {
-                logger.error("Failed to create JSON file", e);
+            } else {
+                load();
             }
-        } else {
-            load();
+        } catch (Exception e) {
+            logger.error("[Password] Failed to initialize password.json", e);
+            this.data = new HashMap<>();
         }
     }
 
@@ -158,7 +153,7 @@ public class PasswordFile extends SvgFile {
         try (FileWriter writer = new FileWriter(file)) {
             GSON.toJson(data, writer);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save JSON file", e);
+            logger.error("[Password] Failed to save JSON file", e);
         }
     }
 
