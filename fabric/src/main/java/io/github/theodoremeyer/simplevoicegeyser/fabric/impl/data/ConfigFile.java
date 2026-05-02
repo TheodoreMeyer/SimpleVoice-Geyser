@@ -24,22 +24,20 @@ public class ConfigFile extends SvgFile {
 
         try {
             if (!file.exists()) {
-                boolean created = copyDefaultFromResources();
-
-                if (!created) {
-                    boolean success = file.createNewFile();
-                    if (!success) {
-                        logger.severe("[Config] Failed to create config.json at " + file.getAbsolutePath());
-                    }
-                    this.data = new JsonObject();
-                    save();
+                boolean created = file.createNewFile();
+                if (!created && !file.exists()) {
+                    logger.error("Failed to create config.json: " + file.getAbsolutePath());
                 }
+
+                // Only responsibility: initialize empty + let higher layer decide defaults
+                this.data = new JsonObject();
+                save();
+            } else {
+                load();
             }
-
-            load();
-
         } catch (Exception e) {
             logger.error("[Config] Failed to initialize config.json", e);
+            this.data = new JsonObject();
         }
     }
 
