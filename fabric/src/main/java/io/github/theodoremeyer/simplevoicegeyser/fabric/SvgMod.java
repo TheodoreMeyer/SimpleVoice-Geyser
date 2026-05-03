@@ -129,6 +129,11 @@ public class SvgMod implements ModInitializer, Platform {
     }
 
     @Override
+    public String getServerPlatform() {
+        return "fabric";
+    }
+
+    @Override
     public VoiceChatBridge registerVcBridge() {
         return voiceChatBridge;
     }

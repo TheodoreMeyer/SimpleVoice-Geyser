@@ -81,7 +81,7 @@ public final class SvgCore {
 
         Boolean checkUpdate = config.UPDATE_CHECKER_ENABLED.get();
         if (Boolean.TRUE.equals(checkUpdate)) {
-            new UpdateChecker(VERSION, platform.getServerMcVersion(), platform.getSvgLogger()).check();
+            new UpdateChecker(VERSION, platform).check();
         }
 
         new AudioThread();

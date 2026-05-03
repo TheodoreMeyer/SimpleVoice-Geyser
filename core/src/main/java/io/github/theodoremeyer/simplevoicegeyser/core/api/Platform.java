@@ -28,6 +28,12 @@ public interface Platform {
     String getServerMcVersion();
 
     /**
+     * The Server platform
+     * @return platform: bukkit, fabric, etc
+     */
+    String getServerPlatform();
+
+    /**
      * Register VoiceChatBridge
      * @return the registered bridge
      */

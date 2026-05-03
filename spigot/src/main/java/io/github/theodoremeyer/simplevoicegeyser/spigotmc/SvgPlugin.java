@@ -94,6 +94,11 @@ public class SvgPlugin extends JavaPlugin implements Platform {
     }
 
     @Override
+    public String getServerPlatform() {
+        return "spigot";
+    }
+
+    @Override
     public VoiceChatBridge registerVcBridge() {
         BukkitVoicechatService service = Bukkit.getServicesManager().load(BukkitVoicechatService.class);
         VoiceChatBridge bridge = null;
