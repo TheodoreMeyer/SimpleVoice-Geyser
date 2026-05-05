@@ -34,7 +34,7 @@ public final class SvgCore {
     /**
      * Project Version
      */
-    private static final String VERSION = "0.1.0-Dev";
+    public static final String VERSION = "0.1.0-Dev";
 
     /**
      * Config system
@@ -117,7 +117,7 @@ public final class SvgCore {
         }
         this.groupManager = new GroupManager(vcBridge);
 
-        this.command = new Command(groupManager);
+        this.command = new Command(groupManager, this);
 
         int port = getConfig().PORT.get();
         String host = getConfig().BIND_ADDRESS.get();

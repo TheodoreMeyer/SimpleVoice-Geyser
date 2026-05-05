@@ -92,7 +92,7 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
                                       String alias, String[] args) {
 
         if (args.length == 1) {
-            return suggestSubcommands(args[0]);
+            return suggestSubcommands(args[0], sender);
         }
 
         String sub = args[0].toLowerCase();
@@ -104,8 +104,12 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
         };
     }
 
-    private List<String> suggestSubcommands(String input) {
-        return filter(input, List.of("help", "lgroup", "pswd", "jgroup", "cgroup"));
+    private List<String> suggestSubcommands(String input, CommandSender sender) {
+        List<String> suggestions = new ArrayList<>(filter(input, List.of("help", "lgroup", "pswd", "jgroup", "cgroup")));
+        if (sender.hasPermission("svg.admin")) {
+            suggestions.addAll(filter(input, List.of("checkUpdate")));
+        }
+        return suggestions;
     }
 
     private List<String> suggestCreateGroup(String[] args) {

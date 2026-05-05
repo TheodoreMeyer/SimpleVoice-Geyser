@@ -31,13 +31,14 @@ public final class Command {
      * create the Command
      * @param groupManager group manager to pass to subcommands
      */
-    public Command(GroupManager groupManager) {
+    public Command(GroupManager groupManager, SvgCore core) {
         this.formHandler = new FormHandler(groupManager);
 
         register(new PswdCommand());
         register(new CreateGroupCommand(groupManager));
         register(new JoinGroupCommand(groupManager));
         register(new LeaveGroupCommand(groupManager));
+        register(new CheckUpdateCommand(core));
         register(new HelpCommand());
     }
 

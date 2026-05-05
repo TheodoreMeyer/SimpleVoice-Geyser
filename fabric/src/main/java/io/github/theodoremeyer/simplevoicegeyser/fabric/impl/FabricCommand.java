@@ -106,6 +106,12 @@ public class FabricCommand {
                                         )
                                 )
                         )
+
+                        //Check Updates
+                        .then(literal("checkUpdate")
+                                .executes(ctx -> execute(ctx, "checkUpdate"))
+                        )
+
         );
     }
 

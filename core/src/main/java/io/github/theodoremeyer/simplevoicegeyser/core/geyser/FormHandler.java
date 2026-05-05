@@ -3,6 +3,7 @@ package io.github.theodoremeyer.simplevoicegeyser.core.geyser;
 import de.maxhenkel.voicechat.api.Group;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
+import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.cumulus.component.DropdownComponent;
@@ -36,16 +37,19 @@ public final class FormHandler {
      * @return whether it successfully opened
      */
     public boolean openCommand(SvgPlayer player) {
+        boolean isAdmin = player.hasPermission("svg.admin");
         Form form = SimpleForm.builder()
                 .title("Simple Voice Chat (SVG)")
                 .button("Groups")
                 .button("Set Password")
                 .button("Options")
+                .optionalButton("Admin Menu", isAdmin)
                 .validResultHandler(response -> {
                     switch (response.clickedButtonId()) {
                         case 0 -> groups(player);
                         case 1 -> setPassword(player);
                         case 2 -> options(player);
+                        case 3 -> adminMenu(player);
                     }
                 })
                 .build();
@@ -182,6 +186,25 @@ public final class FormHandler {
                     String password = e.next();
 
                     SvgCore.getPasswordManager().setPassword(p, password);
+                })
+                .build();
+        GeyserHook.sendForm(p.getUniqueId(), form);
+    }
+
+    public void adminMenu(SvgPlayer p) {
+        DropdownComponent.@NonNull Builder dropdown = DropdownComponent.builder("Commands");
+        dropdown.option("Reload Config"); //TODO
+        dropdown.option("Check for Updates");
+
+        Form form = CustomForm.builder()
+                .title("Admin Menu")
+                .label("Select a command to execute.")
+                .dropdown(dropdown)
+                .validResultHandler((e) -> {
+                    switch ((int) e.next()) {
+                        case 0 -> SvgCore.getCommand().execute(new CommandArgs("reload", p));
+                        case 1 -> SvgCore.getCommand().execute(new CommandArgs("checkUpdate", p));
+                    }
                 })
                 .build();
         GeyserHook.sendForm(p.getUniqueId(), form);
