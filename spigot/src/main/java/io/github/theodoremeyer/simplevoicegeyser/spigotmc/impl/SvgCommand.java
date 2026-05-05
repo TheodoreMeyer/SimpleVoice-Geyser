@@ -107,7 +107,7 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
     private List<String> suggestSubcommands(String input, CommandSender sender) {
         List<String> suggestions = new ArrayList<>(filter(input, List.of("help", "lgroup", "pswd", "jgroup", "cgroup")));
         if (sender.hasPermission("svg.admin")) {
-            suggestions.addAll(filter(input, List.of("checkUpdate")));
+            suggestions.addAll(filter(input, List.of("checkUpdate", "reload")));
         }
         return suggestions;
     }

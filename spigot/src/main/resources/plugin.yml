@@ -15,6 +15,17 @@ commands:
     usage: /svg help
 
 permissions:
+  svg.admin:
+    description: Allows player to use all SimpleVoiceGeyser admin commands and features
+    default: op
+
+  svg.vc:
+    description: Allows player to use voice chat features from browser
+    default: op
+    children:
+      - svg.vc.join
+      - svg.vc.group
+
   svg.vc.join:
     description: Allows player to join voice chat from browser
     default: true
@@ -22,6 +33,10 @@ permissions:
   svg.vc.group:
     description: Allows player to use voice chat group creation
     default: true
+    children:
+      - svg.vc.group.create
+      - svg.vc.group.type
+      - svg.vc.group.type.isolated
 
   svg.vc.group.create:
     description: "Allows the player to create voice chat groups"

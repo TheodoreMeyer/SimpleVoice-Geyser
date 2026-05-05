@@ -40,6 +40,7 @@ public final class Command {
         register(new LeaveGroupCommand(groupManager));
         register(new CheckUpdateCommand(core));
         register(new HelpCommand());
+        register(new ReloadCommand());
     }
 
     /**

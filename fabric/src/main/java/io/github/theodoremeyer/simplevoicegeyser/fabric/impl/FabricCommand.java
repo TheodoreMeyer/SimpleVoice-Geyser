@@ -111,6 +111,9 @@ public class FabricCommand {
                         .then(literal("checkUpdate")
                                 .executes(ctx -> execute(ctx, "checkUpdate"))
                         )
+                        .then(literal("reload")
+                                .executes(ctx -> execute(ctx, "reload"))
+                        )
 
         );
     }

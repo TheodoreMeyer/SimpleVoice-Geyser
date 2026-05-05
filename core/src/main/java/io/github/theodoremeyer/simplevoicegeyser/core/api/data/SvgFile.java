@@ -66,6 +66,11 @@ public abstract class SvgFile {
     public abstract void save();
 
     /**
+     * Reload Config
+     */
+    public abstract void reload();
+
+    /**
      * The file the DataStore represents
      * @return File
      */

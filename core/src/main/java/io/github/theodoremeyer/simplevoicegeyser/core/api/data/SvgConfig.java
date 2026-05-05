@@ -130,7 +130,7 @@ public final class SvgConfig {
     /**
      * Apply missing config keys/values
      */
-    private void applyDefaults() {
+    public void applyDefaults() {
         SvgFile file = getFile();
 
         for (ConfigKey<?> key : ALL_KEYS) {

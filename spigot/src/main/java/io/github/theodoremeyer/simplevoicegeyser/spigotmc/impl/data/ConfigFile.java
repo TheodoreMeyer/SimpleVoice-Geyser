@@ -64,6 +64,17 @@ public class ConfigFile extends SvgFile {
     }
 
     @Override
+    public void reload() {
+        FileConfiguration newConfig = YamlConfiguration.loadConfiguration(configFile);
+
+        config.getKeys(false).forEach(k -> config.set(k, null));
+
+        for (String key : newConfig.getKeys(false)) {
+            config.set(key, newConfig.get(key));
+        }
+    }
+
+    @Override
     public File getFile() {
         return configFile;
     }

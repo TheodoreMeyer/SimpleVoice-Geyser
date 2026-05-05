@@ -142,6 +142,29 @@ public class ConfigFile extends SvgFile {
     }
 
     @Override
+    public void reload() {
+        if (!file.exists()) {
+            logger.warning("[Config] Reload failed: file does not exist.");
+            return;
+        }
+
+        try (FileReader reader = new FileReader(file)) {
+
+            JsonElement element = JsonParser.parseReader(reader);
+
+            if (element == null || !element.isJsonObject()) {
+                logger.warning("[Config] Reload failed: invalid JSON, keeping current state.");
+                return;
+            }
+
+            this.data = element.getAsJsonObject();
+
+        } catch (Exception e) {
+            logger.error("[Config] Failed to reload config.json", e);
+        }
+    }
+
+    @Override
     public File getFile() {
         return file;
     }
