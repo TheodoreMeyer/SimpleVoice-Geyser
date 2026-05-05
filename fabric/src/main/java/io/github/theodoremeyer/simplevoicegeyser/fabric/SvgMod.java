@@ -13,7 +13,6 @@ import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricLogger;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricVcBridge;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.SvgListener;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data.ConfigFile;
-import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data.PasswordFile;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
@@ -30,7 +29,6 @@ public class SvgMod implements ModInitializer, Platform {
 
     private static LuckPermsHook luckPermsHook;
 
-    private PasswordFile passwordFile;
     private ConfigFile configFile;
 
     private final FabricLogger logger = new FabricLogger();
@@ -108,8 +106,7 @@ public class SvgMod implements ModInitializer, Platform {
         // 2. Optional: normalize to absolute path
         dir = dir.getAbsoluteFile();
 
-        // 3. Now safe to construct files (NO file existence logic inside them anymore)
-        this.passwordFile = new PasswordFile(dir, logger);
+        // 3. Now safe to construct file (NO file existence logic inside them anymore)
         this.configFile = new ConfigFile(dir, logger);
     }
 
@@ -147,8 +144,6 @@ public class SvgMod implements ModInitializer, Platform {
     public SvgFile getFile(DataType type) {
         if (type == DataType.CONFIG) {
             return configFile;
-        } else if (type == DataType.PASSWORD) {
-            return passwordFile;
         }
         return null;
     }

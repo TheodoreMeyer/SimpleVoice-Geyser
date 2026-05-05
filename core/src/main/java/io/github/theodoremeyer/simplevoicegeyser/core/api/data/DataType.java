@@ -14,5 +14,5 @@ public enum DataType {
      * DataStore for main config
      * to be used
      */
-    CONFIG,
+    CONFIG
 }

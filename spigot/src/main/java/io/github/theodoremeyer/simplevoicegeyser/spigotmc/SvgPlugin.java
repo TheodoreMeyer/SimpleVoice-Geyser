@@ -11,7 +11,6 @@ import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.BukkitLogger;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.SvgCommand;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.SvgListener;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.ConfigFile;
-import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.PasswordFile;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
@@ -24,8 +23,6 @@ public class SvgPlugin extends JavaPlugin implements Platform {
     private SvgCore core;
 
     private ConfigFile configFile;
-
-    private PasswordFile passwordFile;
 
     private BukkitLogger logger;
 
@@ -52,7 +49,6 @@ public class SvgPlugin extends JavaPlugin implements Platform {
 
         // Initialize ConfigFile wrapper
         this.configFile = new ConfigFile(file);
-        this.passwordFile = new PasswordFile(new File(getDataFolder(), "playerpasswords.yml"));
 
         this.core = new SvgCore(this);
     }
@@ -125,8 +121,6 @@ public class SvgPlugin extends JavaPlugin implements Platform {
     public SvgFile getFile(DataType type) {
         if (type == DataType.CONFIG) {
             return configFile;
-        } else if (type == DataType.PASSWORD) {
-            return passwordFile;
         }
         return null;
     }

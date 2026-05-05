@@ -6,6 +6,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioThread;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.Command;
+import io.github.theodoremeyer.simplevoicegeyser.core.data.PlayerVcPswd;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserEventHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
@@ -104,7 +105,7 @@ public final class SvgCore {
             getLogger().info("Debug mode enabled.");
         }
 
-        this.playerVcPswd = new PlayerVcPswd(platform.getFile(DataType.PASSWORD));
+        this.playerVcPswd = new PlayerVcPswd(this);
 
         this.vcBridge = platform.registerVcBridge();
 
@@ -159,6 +160,7 @@ public final class SvgCore {
         }
         platform.disable();
         AudioThread.shutdown();
+        playerVcPswd.shutdown();
     }
 
     //-----

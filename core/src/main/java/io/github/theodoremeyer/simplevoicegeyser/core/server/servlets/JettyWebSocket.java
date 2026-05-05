@@ -2,11 +2,11 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.servlets;
 
 import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
-import io.github.theodoremeyer.simplevoicegeyser.core.PlayerVcPswd;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioSender;
+import io.github.theodoremeyer.simplevoicegeyser.core.data.PlayerVcPswd;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.jetty.websocket.api.Session;
@@ -120,11 +120,7 @@ public final class JettyWebSocket {
     public void onMessage(byte[] buffer, int offset, int length) {
         if (!authenticated || uuid == null) return; //make sure they signed in
 
-        //byte[] pcmData = new byte[length];
-        //System.arraycopy(buffer, offset, pcmData, 0, length);
-
         if (audioSender != null) { //make sure the sender is not null
-            //audioSender.sendOpus(pcmData); //send the audio data
             audioSender.sendOpus(Arrays.copyOfRange(buffer, offset, offset + length));
         }
     }
@@ -137,7 +133,7 @@ public final class JettyWebSocket {
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
         if (uuid != null) { //make sure the uuid for the session is not null, needed to close senders/listeners
-            String username = SvgCore.getPasswordManager().getUsernameFromUUID(uuid);
+            String username = SvgCore.getPasswordManager().getUsername(uuid);
             String displayName = (username != null) ? username : uuid.toString();
             SvgCore.getLogger().info("[WebSocket] WebSocket for " + displayName + " closed: " + statusCode + " - " + reason);
 
@@ -164,7 +160,7 @@ public final class JettyWebSocket {
 
         String username = json.getString("username");
         String password = json.optString("password", "");
-        UUID storedUuid = playerVcPswd.getStoredUUID(username); //get the uuid to associate with this session
+        UUID storedUuid = playerVcPswd.getUUID(username); //get the uuid to associate with this session
 
         if (storedUuid == null) {
             closeOnError("Player " + username + " not found. Use /svg pswd [password] in-game to register.", false);
@@ -208,12 +204,10 @@ public final class JettyWebSocket {
         long delayInTicks = timeout * 20L;
 
         authenticated = true;
-        sendMessage("status", "Connected as " + username + ".", false); //Make sure to join server within " + timeout + " seconds!");
+        sendMessage("status", "Connected as " + username + ".", false);
 
         SvgCore.getLogger().info("[WebSocket] " + username + " joined with UUID: " + uuid);
 
-        // Schedule timeout if player never joins. Currently, disabled.
-        //Bukkit.getScheduler().runTaskLater(plugin, () -> {
         this.player = SvgCore.getPlayerManager().getPlayer(uuid);
         if (player == null) {
             closeOnError("Timeout: You didn’t join the server in time.", false);
@@ -238,8 +232,6 @@ public final class JettyWebSocket {
 
         SvgCore.getBridge().registerAudioListener(uuid, session); //register the players audio sender
         this.audioSender = SvgCore.getBridge().registerAudioSender(uuid); //register the players audio sender
-        // Currently disabled.
-        // }, delayInTicks);
     }
 
     private void chat(JSONObject json) {
@@ -250,7 +242,7 @@ public final class JettyWebSocket {
         }
 
         if (!chatMessage.isEmpty()) {
-            String savedName = SvgCore.getPasswordManager().getUsernameFromUUID(uuid);
+            String savedName = SvgCore.getPasswordManager().getUsername(uuid);
             String displayName = (player != null) ? player.getName() :
                     savedName != null ? savedName : uuid.toString();
 
