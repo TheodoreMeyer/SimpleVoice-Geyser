@@ -15,8 +15,8 @@ public class ConfigFile extends SvgFile {
 
     private final File file;
     private JsonObject data;
-    
-    private FabricLogger logger;
+
+    private final FabricLogger logger;
 
     public ConfigFile(File dataFolder, FabricLogger logger) {
         this.logger = logger;
