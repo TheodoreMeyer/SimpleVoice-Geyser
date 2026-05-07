@@ -23,28 +23,16 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     // =========================
-    // SHARED CORE (SAFE - NOT SHADOWED)
+    // SHARED CORE
     // =========================
     shadow project(":core")
 
     // =========================
     // APIs (compile only)
     // =========================
-    compileOnly "org.geysermc.geyser:api:${geysermc_api_version}"
-    compileOnly "org.geysermc.floodgate:api:${floodgate_api_version}"
     compileOnly "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
 
     compileOnly 'net.luckperms:api:5.4'
-
-    // =========================
-    // EXTERNAL LIBRARIES (SHADOWED)
-    // =========================
-    shadow "org.eclipse.jetty:jetty-server:11.0.25"
-    shadow "org.eclipse.jetty:jetty-servlet:11.0.25"
-    shadow "org.json:json:20240303"
-    shadow "org.mindrot:jbcrypt:0.4"
-    shadow "org.slf4j:slf4j-api:2.0.12"
-
 }
 
 base {

@@ -17,10 +17,6 @@ dependencies {
     // CORE MODULE
     implementation(project(":core"))
 
-    // GeyserMC API (provided by platform)
-    compileOnly("org.geysermc.geyser:api:${geysermc_api_version}")
-    compileOnly("org.geysermc.floodgate:api:${floodgate_api_version}")
-
     // Simple Voice Chat API
     compileOnly("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
 }
