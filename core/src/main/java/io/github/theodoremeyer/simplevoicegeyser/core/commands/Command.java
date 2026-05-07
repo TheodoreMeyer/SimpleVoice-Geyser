@@ -30,6 +30,7 @@ public final class Command {
     /**
      * create the Command
      * @param groupManager group manager to pass to subcommands
+     * @param core core to pass to subcommands
      */
     public Command(GroupManager groupManager, SvgCore core) {
         this.formHandler = new FormHandler(groupManager);

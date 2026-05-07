@@ -10,6 +10,11 @@ import java.util.Set;
 public abstract class SvgFile {
 
     /**
+     * Create something that represents a file
+     */
+    public SvgFile() {}
+
+    /**
      * All keys in datastore
      * @return keys/values
      */

@@ -12,6 +12,11 @@ import io.github.theodoremeyer.simplevoicegeyser.core.commands.SubCommand;
 public final class HelpCommand implements SubCommand {
 
     /**
+     * Create a no-arg instance of this class
+     */
+    public HelpCommand() {}
+
+    /**
      * Get sub command name
      * @return help
      */

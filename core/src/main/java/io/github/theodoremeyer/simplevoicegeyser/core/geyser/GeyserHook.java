@@ -13,6 +13,11 @@ import java.util.UUID;
 public final class GeyserHook {
 
     /**
+     * Block class from being made, as it is static util
+     */
+    private GeyserHook() {}
+
+    /**
      * Whether Geyser is enabled in some form
      * @return geyser enabled
      */

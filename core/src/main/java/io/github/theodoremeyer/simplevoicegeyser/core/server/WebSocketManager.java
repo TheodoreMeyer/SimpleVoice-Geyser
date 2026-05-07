@@ -17,6 +17,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class WebSocketManager {
 
     /**
+     * Create the websocketManager to handle sessions
+     */
+    public WebSocketManager() {}
+
+    /**
      * A list of Websockets that are actively connected
      */
     private final Map<UUID, Session> clients = new ConcurrentHashMap<>();

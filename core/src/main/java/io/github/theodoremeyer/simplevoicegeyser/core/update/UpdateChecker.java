@@ -32,6 +32,11 @@ public final class UpdateChecker {
     private final Platform platform;
     private final SvgLogger logger;
 
+    /**
+     * Create an UpdateChecker
+     * @param currentVersion current project version
+     * @param platform the platform to check for (used for filtering and logging)
+     */
     public UpdateChecker(String currentVersion, Platform platform) {
 
         this.currentVersion = SemanticVersion.parse(
@@ -46,6 +51,7 @@ public final class UpdateChecker {
 
     /**
      * Performs an asynchronous update check.
+     * @return a future that completes when the check is done
      */
     public CompletableFuture<Void> check() {
         HttpRequest request = HttpRequest.newBuilder()

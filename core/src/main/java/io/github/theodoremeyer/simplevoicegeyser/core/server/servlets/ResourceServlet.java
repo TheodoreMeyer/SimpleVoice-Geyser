@@ -13,6 +13,11 @@ import java.io.InputStream;
 public final class ResourceServlet extends HttpServlet {
 
     /**
+     * Create the servlet
+     */
+    public ResourceServlet() {}
+
+    /**
      * Root directory inside the JAR where static files are stored.
      */
     private static final String RESOURCE_ROOT = "/web";

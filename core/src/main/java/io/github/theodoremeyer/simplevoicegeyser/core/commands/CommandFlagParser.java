@@ -9,6 +9,11 @@ import java.util.Map;
 public class CommandFlagParser {
 
     /**
+     * Block class from being made, this is a utility class with static methods only
+     */
+    private CommandFlagParser() {}
+
+    /**
      * Schema for cgroup flags
      * true = requires value
      * false = boolean flag

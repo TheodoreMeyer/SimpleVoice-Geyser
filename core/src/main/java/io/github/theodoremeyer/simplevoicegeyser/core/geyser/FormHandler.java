@@ -191,6 +191,10 @@ public final class FormHandler {
         GeyserHook.sendForm(p.getUniqueId(), form);
     }
 
+    /**
+     * The admin menu
+     * @param p the player that uses admin
+     */
     public void adminMenu(SvgPlayer p) {
         DropdownComponent.@NonNull Builder dropdown = DropdownComponent.builder("Commands");
         dropdown.option("Reload Config"); //TODO

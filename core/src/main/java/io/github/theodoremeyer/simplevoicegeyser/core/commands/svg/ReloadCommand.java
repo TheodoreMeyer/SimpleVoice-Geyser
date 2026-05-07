@@ -8,7 +8,16 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.SubCommand;
 
+/**
+ * The Command for reloading the server
+ */
 public class ReloadCommand implements SubCommand {
+
+    /**
+     * Create the reload command
+     */
+    public ReloadCommand() {}
+
     @Override
     public String name() {
         return "reload";

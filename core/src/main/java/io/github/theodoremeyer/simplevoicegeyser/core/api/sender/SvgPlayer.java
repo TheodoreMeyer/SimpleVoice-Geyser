@@ -8,6 +8,11 @@ import java.util.UUID;
 public abstract class SvgPlayer extends Sender {
 
     /**
+     * Create a representation of a player
+     */
+    public SvgPlayer() {}
+
+    /**
      * Get the Player's UUID
      * @return player's uuid
      */
