@@ -106,7 +106,7 @@ public final class SvgConfig {
      * Config path: config-version
      */
     private final ConfigKey<String> CONFIG_VERSION =
-            new ConfigKey <>(this, "config-version", "0.1.0");
+            new ConfigKey <>(this, "config-version", "0.1.1");
 
     /**
      * Represents all the keys.
@@ -138,6 +138,7 @@ public final class SvgConfig {
                 file.set(key.path(), key.def());
             }
         }
+        file.set(CONFIG_VERSION.path(), CONFIG_VERSION.get());
 
         file.save();
     }

@@ -35,7 +35,7 @@ public final class SvgCore {
     /**
      * Project Version
      */
-    public static final String VERSION = "0.1.0-Dev";
+    public static final String VERSION = "0.1.1-Dev";
 
     /**
      * Config system
