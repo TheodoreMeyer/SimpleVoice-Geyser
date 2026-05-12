@@ -196,19 +196,36 @@ export function resetAudioState() {
 
 // audio.js
 export async function getAudioDevices() {
+    let permissionStream = null;
+
     try {
         // Required so device labels are available
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        permissionStream = await navigator.mediaDevices.getUserMedia({
+            audio: true
+        });
+
+        const devices = await navigator.mediaDevices.enumerateDevices();
+
+        return {
+            microphones: devices.filter(
+                device => device.kind === "audioinput"
+            ),
+            speakers: devices.filter(
+                device => device.kind === "audiooutput"
+            )
+        };
+
     } catch (error) {
         console.warn("Microphone permission denied:", error);
+
+        return {
+            microphones: [],
+            speakers: []
+        };
+
+    } finally {
+        permissionStream?.getTracks().forEach(track => track.stop());
     }
-
-    const devices = await navigator.mediaDevices.enumerateDevices();
-
-    return {
-        microphones: devices.filter(device => device.kind === "audioinput"),
-        speakers: devices.filter(device => device.kind === "audiooutput")
-    };
 }
 
 export async function setOutputDevice(deviceId) {

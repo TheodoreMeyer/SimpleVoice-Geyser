@@ -49,7 +49,8 @@ function createSocket(onStatusChange) {
                         msg.includes("Use /svg pswd") ||
                         msg.includes("access denied:") ||
                         msg.includes("timeout") ||
-                        msg.includes("left the game.")
+                        msg.includes("left the game.") ||
+                        msg.includes("not found.");
                     if (isFatalError) {
                         stopReconnection(); // prevent any further reconnect attempts
 
