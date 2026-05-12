@@ -215,9 +215,8 @@ public class VoiceChatBridge implements VoicechatPlugin {
 
         SvgAudioListener listener = audioListeners.remove(uuid); //remove the listener from the map
         if (listener != null) {
-            serverApi.unregisterAudioListener(listener); //unregister the listener
-            SvgCore.debug("VCBridge", "Unregistered audio listener for: " + uuid);
             listener.unRegister();
+            SvgCore.debug("VCBridge", "Unregistered audio listener for: " + uuid);
         } else {
             if (SvgCore.getPlayerManager().getPlayer(uuid) != null) {
                 SvgCore.getLogger().warning("[VCBridge] No audio listener found for: " + uuid);

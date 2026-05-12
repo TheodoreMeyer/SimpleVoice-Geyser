@@ -20,6 +20,7 @@ public final class SvgAudioListener implements PlayerAudioListener {
     private final UUID listenerId;
     private final VoicechatServerApi serverApi;
     private final OpusDecoder decoder;
+    private PlayerAudioListener listener;
 
     /**
      * Session, used for less method checks
@@ -85,7 +86,7 @@ public final class SvgAudioListener implements PlayerAudioListener {
      * May be moved to class constructor
      */
     public void registerListener() {
-        PlayerAudioListener listener = serverApi.playerAudioListenerBuilder()
+        this.listener = serverApi.playerAudioListenerBuilder()
                 .setPlayer(listenerId)
                 .setPacketListener(this::onAudioReceived)
                 .build();
@@ -110,6 +111,7 @@ public final class SvgAudioListener implements PlayerAudioListener {
     public void unRegister() {
         decoder.resetState();
         decoder.close();
+        serverApi.unregisterAudioListener(listener);
     }
 
     /**

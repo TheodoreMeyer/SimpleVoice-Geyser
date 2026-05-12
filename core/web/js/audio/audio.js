@@ -1,3 +1,5 @@
+import {log} from "../utils/logger.js";
+
 let audioContext;
 let audioWorkletNode;
 
@@ -232,16 +234,25 @@ export async function setOutputDevice(deviceId) {
     if (audioContext.setSinkId) {
         try {
             await audioContext.setSinkId(deviceId);
+            log(`AudioContext output set to device ${deviceId}`);
             return true;
-        } catch {}
+        } catch {
+            log("Failed to set audio context sink ID, falling back to audio element");
+        }
+    } else {
+        log("AudioContext does not support setSinkId, falling back to audio element");
     }
 
     if (window.audioElement?.setSinkId) {
         try {
             await window.audioElement.setSinkId(deviceId);
+            log(`AudioElement output set to device ${deviceId}`);
             return true;
-        } catch {}
-    }
+        } catch {
+            log("Failed to set audio context sink ID");
+        }
+    } else {log("Audio element does not support setSinkId, cannot set output device");}
+    log("No method available to set audio output device");
 
     return false;
 }
