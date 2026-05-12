@@ -43,7 +43,7 @@ public final class CheckUpdateCommand implements SubCommand {
         Sender sender = args.getSender();
 
         if (sender instanceof SvgPlayer player) {
-            if (!player.hasPermission("svg.admin.checkUpdate")) {
+            if (!player.hasPermission("svg.admin")) {
                 sender.sendMessage(SvgCore.getPrefix() + SvgColor.RED +
                         "You do not have permission to check for updates.");
                 return true;

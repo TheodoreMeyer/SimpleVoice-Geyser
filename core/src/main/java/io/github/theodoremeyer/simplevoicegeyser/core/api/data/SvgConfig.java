@@ -121,6 +121,7 @@ public final class SvgConfig {
             DEFAULT_GROUP_PASSWORD,
             PORT,
             BIND_ADDRESS,
+            UPDATE_CHECKER_ENABLED,
             DEBUG,
             CONFIG_VERSION
     );
@@ -138,7 +139,7 @@ public final class SvgConfig {
                 file.set(key.path(), key.def());
             }
         }
-        file.set(CONFIG_VERSION.path(), CONFIG_VERSION.get());
+        file.set(CONFIG_VERSION.path(), CONFIG_VERSION.def());
 
         file.save();
     }

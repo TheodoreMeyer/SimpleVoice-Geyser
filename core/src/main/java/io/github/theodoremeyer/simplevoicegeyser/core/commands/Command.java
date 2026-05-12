@@ -50,7 +50,7 @@ public final class Command {
      * @return command
      */
     public SubCommand get(String name) {
-        return commands.get(name.toLowerCase());
+        return commands.get(name);
     }
 
     /**

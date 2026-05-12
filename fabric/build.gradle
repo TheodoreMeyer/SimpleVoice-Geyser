@@ -16,7 +16,7 @@ dependencies {
     // =========================
     // FABRIC
     // =========================
-    minecraft "com.mojang:minecraft:${project.current_mc_version}"
+    minecraft "com.mojang:minecraft:${project.fabric_mc_version}"
     mappings loom.officialMojangMappings()
 
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
@@ -42,13 +42,13 @@ base {
 tasks.processResources {
     inputs.property("version", version)
     inputs.property("voicechat_api_version", voicechat_api_version)
-    inputs.property("mc_min", current_mc_version)
+    inputs.property("mc_min", fabric_mc_version)
 
     filesMatching('fabric.mod.json') {
         expand(
                 version: version,
                 voicechat_api_version: voicechat_api_version,
-                mc_min: current_mc_version,
+                mc_min: fabric_mc_version,
         )
     }
 }

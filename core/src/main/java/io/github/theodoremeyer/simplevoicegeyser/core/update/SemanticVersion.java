@@ -71,6 +71,11 @@ public final class SemanticVersion implements Comparable<SemanticVersion> {
     }
 
     @Override
+    public String toString() {
+        return major + "." + minor + "." + patch + (tag != null ? "-" + tag : "");
+    }
+
+    @Override
     public int compareTo(SemanticVersion o) {
         int c = Integer.compare(major, o.major);
         if (c != 0) return c;

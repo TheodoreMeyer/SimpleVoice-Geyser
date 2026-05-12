@@ -151,10 +151,12 @@ public final class UpdateChecker {
      */
     private void handleResult(VersionCandidate latest) {
         if (latest == null) {
+            logger.warning("No latest version found!");
             return;
         }
 
         if (!latest.semantic.isNewerThan(currentVersion)) {
+            logger.info("You are running the latest version of SimpleVoice-Geyser (" + currentVersion + ")!");
             return;
         }
 

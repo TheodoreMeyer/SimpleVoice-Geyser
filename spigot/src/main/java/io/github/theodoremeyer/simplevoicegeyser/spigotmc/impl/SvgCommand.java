@@ -44,7 +44,7 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
             return SvgCore.getCommand().formOrHelp(sender);
         }
 
-        String sub = args[0].toLowerCase();
+        String sub = args[0];
 
         // Parse args into CommandArgs
         CommandArgs parsedArgs = parseArgs(new CommandArgs(sub, sender), sub, args);
