@@ -63,5 +63,11 @@ Reach out through issues!
 
 - Microphone/Speaker options may or may not work, depending on your browser, as this was built for Google Chrome.
 
+## Audio Transport Migration (PR #45)
+- `server.audio.transport-mode`: `auto` (default), `legacy`, `svg-v2`
+- `server.audio.allow-legacy-fallback`: `true` (default during migration)
+
+`auto` keeps compatibility by defaulting to legacy PCM transport when client capabilities are missing or unsupported, and uses `svg-v2` only when the client reports compatible decoder support in a secure context.
+
 ## Developer Notes
 - Please see the contributing.md before contributing to this project.
