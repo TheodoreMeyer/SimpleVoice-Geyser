@@ -4,6 +4,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.Platform;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
+import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioByteCompiler;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioThread;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.Command;
 import io.github.theodoremeyer.simplevoicegeyser.core.data.PlayerVcPswd;
@@ -22,19 +23,8 @@ import java.util.logging.Logger;
  * Driving class for Simple Voice Geyser
  */
 public final class SvgCore {
-    /**
-     * The Platform
-     */
     public final Platform platform;
-
-    /**
-     * Instance
-     */
     private static SvgCore instance;
-
-    /**
-     * Project Version
-     */
     public static final String VERSION = "0.1.1-Dev";
 
     /**
@@ -46,43 +36,21 @@ public final class SvgCore {
      * Config system
      */
     private final SvgConfig config;
-
-    /**
-     * The Link to the SVC system
-     */
     private VoiceChatBridge vcBridge;
-
-    /**
-     * Connection System
-     */
     private final ConnectionManager connectionManager;
-
-    /**
-     * Server
-     */
     private JettyServer jettyServer;
-
-    //MANAGERS
     private final PlayerManager playerManager;
-
     private GroupManager groupManager;
-
     private PlayerVcPswd playerVcPswd;
-
     private Command command;
-
+    private final AudioByteCompiler audioByteCompiler;
+    private final String buildToken;
     private State state = State.NEW;
 
-    /**
-     * Initialize the Core of SimpleVoice-Geyser
-     * @see Platform the hook to the platform
-     * @param platform the platform to build with
-     */
     public SvgCore(Platform platform) {
-
         this.platform = platform;
         instance = this;
-
+        this.buildToken = createBuildToken();
         this.config = new SvgConfig(platform.getFile(DataType.CONFIG));
 
         Boolean checkUpdate = config.UPDATE_CHECKER_ENABLED.get();
@@ -91,26 +59,19 @@ public final class SvgCore {
         }
 
         new AudioThread();
-
-        //Managers
         this.playerManager = new PlayerManager();
         this.connectionManager = new ConnectionManager();
+        this.audioByteCompiler = new AudioByteCompiler();
     }
-    
+
     private static SvgCore getInstance() {
         return instance;
     }
 
-    /**
-     * Start SVG server and handling with SVC
-     * @return success
-     */
     public synchronized boolean init() {
-
         if (state == State.RUNNING) {
             return true;
         }
-
         if (state == State.SHUTDOWN || state == State.FAILED) {
             return false;
         }
@@ -121,18 +82,23 @@ public final class SvgCore {
                 getLogger().setDebug(true);
             }
 
+            getLogger().info("Web UI build token: " + getBuildToken());
+            getLogger().info("client.vctimeout is currently documented but inactive in this dev build.");
+
             this.playerVcPswd = new PlayerVcPswd(this);
 
             int port = getConfig().PORT.get();
             String host = getConfig().BIND_ADDRESS.get();
 
+            if (Boolean.TRUE.equals(getConfig().AUDIO_ALLOW_LEGACY_FALLBACK.get())) {
+                getLogger().warning("Audio legacy fallback is enabled. This is recommended during svg-v2 transition only.");
+            }
+
             this.jettyServer = new JettyServer(host, port);
             this.jettyServer.start();
-
             getLogger().info("Jetty server started on port: " + port);
 
             this.vcBridge = platform.registerVcBridge();
-
             if (this.vcBridge == null) {
                 getLogger().severe("Failed to register VoiceChatBridge.");
                 shutdown();
@@ -151,39 +117,27 @@ public final class SvgCore {
 
             state = State.RUNNING;
             return true;
-
         } catch (Exception e) {
-
             getLogger().severe("Init failed: " + e.getMessage());
-
             shutdown();
             state = State.FAILED;
             return false;
         }
     }
 
-    /**
-     * Disable SVG
-     */
     public static void disable() {
         if (getInstance() != null) {
             getInstance().shutdown();
         }
     }
 
-    /**
-     * Stops itself
-     */
     private synchronized void shutdown() {
-
         if (state == State.SHUTDOWN) {
             return;
         }
 
         state = State.SHUTDOWN;
-
         connectionManager.disconnectAll();
-        //webSocketManager.disconnectAllClients();
 
         try {
             if (jettyServer != null) {
@@ -207,97 +161,66 @@ public final class SvgCore {
         command = null;
     }
 
-    //-----
-    // LOGGERS
-    //-----
-
-    /**
-     * Get the Logger
-     * @see Logger
-     * @return logger
-     */
     public static SvgLogger getLogger() {
         return getInstance().platform.getSvgLogger();
     }
 
-    /**
-     * Get the Log/Chat Prefix
-     * @return prefix
-     */
     public static String getPrefix() {
         return getInstance().platform.getPrefix();
     }
 
-    //-----
-    //FETCHERS
-    //-----
-    /**
-     * Get The Platform
-     * @return the platform
-     */
     public static Platform getPlatform() {
         return getInstance().platform;
     }
 
-    /**
-     * Get Config
-     * @return config
-     */
     public static SvgConfig getConfig() {
         return getInstance().config;
     }
 
-    /**
-     * Get Password System
-     * @see PlayerVcPswd
-     * @return PasswordManager
-     */
     public static PlayerVcPswd getPasswordManager() {
         return getInstance().playerVcPswd;
     }
 
-    /**
-     * Get the Player Manager
-     * @see PlayerManager
-     * @return PlayerManager
-     */
     public static PlayerManager getPlayerManager() {
         return getInstance().playerManager;
     }
 
-    /**
-     * Gets the Connection Manager
-     * @see ConnectionManager
-     * @return connectionManager
-     */
     public static ConnectionManager getConnectionManager() {
         return getInstance().connectionManager;
     }
 
-    /**
-     * Get the Group Manager
-     * @see GroupManager
-     * @return groupManager
-     */
     public static GroupManager getGroupManager() {
         return getInstance().groupManager;
     }
 
-    /**
-     * Get The Bridge with SVC
-     * @see VoiceChatBridge
-     * @return voiceChatBridge
-     */
     public static VoiceChatBridge getBridge() {
         return getInstance().vcBridge;
     }
 
-    /**
-     * Get the Svg Command
-     * @see Command
-     * @return SvgCommand
-     */
-    public static Command getCommand() { return getInstance().command; }
+    public static Command getCommand() {
+        return getInstance().command;
+    }
+
+    public static AudioByteCompiler getAudioByteCompiler() {
+        return getInstance().audioByteCompiler;
+    }
+
+    public static String getBuildToken() {
+        return getInstance().buildToken;
+    }
+
+    private String createBuildToken() {
+        String version = null;
+        Package pkg = getClass().getPackage();
+        if (pkg != null) {
+            version = pkg.getImplementationVersion();
+        }
+        if (version == null || version.isBlank()) {
+            version = "dev";
+        }
+        version = version.replaceAll("[^A-Za-z0-9._-]", "_");
+        return version + "-" + Long.toString(System.currentTimeMillis(), 36);
+    }
 
     private enum State {
         NEW, RUNNING, FAILED, SHUTDOWN

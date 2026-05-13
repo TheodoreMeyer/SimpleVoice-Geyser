@@ -7,24 +7,13 @@ import java.util.List;
  */
 public final class SvgConfig {
 
-    /**
-     * The file config exists on
-     */
     private final SvgFile file;
 
-    /**
-     * Create config manager
-     * @param file file
-     */
     public SvgConfig(SvgFile file) {
         this.file = file;
         applyDefaults();
     }
 
-    /**
-     * Get the underlying file
-     * @return config file
-     */
     SvgFile getFile() {
         if (file == null) {
             throw new IllegalStateException("SvgConfig not initialized");
@@ -32,103 +21,64 @@ public final class SvgConfig {
         return file;
     }
 
-    // ---- KEYS ----
-    /**
-     * config path: config-info.
-     * Represents help center for config
-     */
     private final ConfigKey<String> CONFIG_INFO =
             new ConfigKey <>(this, "config-info", "This file is used to configure Simple Voice Geyser. " +
                     "For more information, see the wiki: https://theodoremeyer.github.io/projects/simplevoicegeyser/");
 
-    /**
-     * Config path: client.vctimeout
-     */
     public final ConfigKey<Integer> VC_TIMEOUT =
             new ConfigKey <>(this, "client.vctimeout", 30);
 
-    /**
-     * Config path: client.idletimeout
-     */
     public final ConfigKey<Integer> IDLE_TIMEOUT =
             new ConfigKey <>(this, "client.idletimeout", 2);
 
-    /**
-     * Config path: client.requireBedrock
-     */
     public final ConfigKey<Boolean> REQUIRE_BEDROCK =
             new ConfigKey <>(this, "client.requireBedrock", false);
 
-    /**
-     * Config path: client.useEmoteForSVG
-     */
     public final ConfigKey<Boolean> USE_EMOTE =
             new ConfigKey <>(this, "client.useEmoteForSVG", true);
 
-    /**
-     * Config path: server.group.default.enabled
-     */
     public final ConfigKey<Boolean> DEFAULT_GROUP_ENABLED =
             new ConfigKey <>(this, "server.group.default.enabled", true);
 
-    /**
-     * Config path: server.group.default.password
-     */
     public final ConfigKey<String> DEFAULT_GROUP_PASSWORD =
             new ConfigKey <>(this, "server.group.default.password", "1a2b");
 
-    /**
-     * Config path: server.port
-     */
+    public final ConfigKey<Boolean> DEFAULT_GROUP_FORCE_ON_WEB_JOIN =
+            new ConfigKey <>(this, "server.group.default.force-on-web-join", false);
+
     public final ConfigKey<Integer> PORT =
             new ConfigKey <>(this, "server.port", 8080);
 
-    /**
-     * Config path: server.bind-address
-     */
     public final ConfigKey<String> BIND_ADDRESS =
             new ConfigKey <>(this, "server.bind-address", "0.0.0.0");
 
-    /**
-     * Config path: server.security.max-auth-failures
-     */
+    public final ConfigKey<String> CONTEXT_PATH =
+            new ConfigKey <>(this, "server.context-path", "/");
+
     public final ConfigKey<Integer> MAX_AUTH_FAILURES =
             new ConfigKey <>(this, "server.security.max-auth-failures", 5);
 
-    /**
-     * Config path: server.security.auth-fail-duration
-     */
     public final ConfigKey<Integer> AUTH_FAILURE_DURATION =
             new ConfigKey <>(this, "server.security.auth-fail-duration", 3);
 
-    /**
-     * Config path: server.security.auth-lock-duration
-     */
     public final ConfigKey<Integer> AUTH_LOCK_DURATION =
             new ConfigKey <>(this, "server.security.auth-lock-duration", 8);
 
-    /**
-     * Config path: debug
-     */
+    public final ConfigKey<String> AUDIO_TRANSPORT_MODE =
+            new ConfigKey <>(this, "server.audio.transport-mode", "auto");
+
+    public final ConfigKey<Boolean> AUDIO_ALLOW_LEGACY_FALLBACK =
+            new ConfigKey <>(this, "server.audio.allow-legacy-fallback", true);
+
     public final ConfigKey<Boolean> DEBUG =
             new ConfigKey <>(this, "debug", false);
 
-    /**
-     * Config path: updatechecker.enable
-     */
     public final ConfigKey<Boolean> UPDATE_CHECKER_ENABLED =
             new ConfigKey <>(this, "updatechecker.enable", true);
 
-
-    /**
-     * Config path: config-version
-     */
     private final ConfigKey<String> CONFIG_VERSION =
-            new ConfigKey <>(this, "config-version", "0.1.1");
+            new ConfigKey <>(this, "config-version", "0.1.1-dev-migration1");
 
-    /**
-     * Represents all the keys.
-     */
     private final List<ConfigKey<?>> ALL_KEYS = List.of(
             CONFIG_INFO,
             VC_TIMEOUT,
@@ -137,21 +87,20 @@ public final class SvgConfig {
             USE_EMOTE,
             DEFAULT_GROUP_ENABLED,
             DEFAULT_GROUP_PASSWORD,
+            DEFAULT_GROUP_FORCE_ON_WEB_JOIN,
             PORT,
             BIND_ADDRESS,
+            CONTEXT_PATH,
             AUTH_FAILURE_DURATION,
             AUTH_LOCK_DURATION,
             MAX_AUTH_FAILURES,
-            UPDATE_CHECKER_ENABLED,
+            AUDIO_TRANSPORT_MODE,
+            AUDIO_ALLOW_LEGACY_FALLBACK,
             DEBUG,
+            UPDATE_CHECKER_ENABLED,
             CONFIG_VERSION
     );
 
-    // ---- DEFAULTS ----
-
-    /**
-     * Apply missing config keys/values
-     */
     public void applyDefaults() {
         SvgFile file = getFile();
 
@@ -160,8 +109,30 @@ public final class SvgConfig {
                 file.set(key.path(), key.def());
             }
         }
-        file.set(CONFIG_VERSION.path(), CONFIG_VERSION.def());
 
+        file.set(CONTEXT_PATH.path(), normalizeContextPath(CONTEXT_PATH.get()));
+        file.set(CONFIG_VERSION.path(), CONFIG_VERSION.get());
         file.save();
+    }
+
+    public static String normalizeContextPath(String contextPath) {
+        if (contextPath == null) {
+            return "/";
+        }
+
+        String normalized = contextPath.trim();
+        if (normalized.isEmpty()) {
+            return "/";
+        }
+
+        if (!normalized.startsWith("/")) {
+            normalized = "/" + normalized;
+        }
+
+        while (normalized.length() > 1 && normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+
+        return normalized;
     }
 }
