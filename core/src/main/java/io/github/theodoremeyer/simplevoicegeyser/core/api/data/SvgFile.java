@@ -10,6 +10,39 @@ import java.util.Set;
 public abstract class SvgFile {
 
     /**
+     * Result object for config migration routines.
+     */
+    public static final class MigrationReport {
+        private final String mode;
+        private final String backupPath;
+        private final int addedKeys;
+        private final boolean migrated;
+
+        public MigrationReport(String mode, String backupPath, int addedKeys, boolean migrated) {
+            this.mode = mode;
+            this.backupPath = backupPath;
+            this.addedKeys = addedKeys;
+            this.migrated = migrated;
+        }
+
+        public String mode() {
+            return mode;
+        }
+
+        public String backupPath() {
+            return backupPath;
+        }
+
+        public int addedKeys() {
+            return addedKeys;
+        }
+
+        public boolean migrated() {
+            return migrated;
+        }
+    }
+
+    /**
      * Create something that represents a file
      */
     public SvgFile() {}
@@ -88,4 +121,15 @@ public abstract class SvgFile {
      * @return the value
      */
     public abstract double getDouble(String path, double def);
+
+    /**
+     * Regenerates defaults from bundled resources and merges user values.
+     * Implementations may return a no-op report when migration is unsupported.
+     *
+     * @param trigger why the migration ran (for logging context)
+     * @return migration report
+     */
+    public MigrationReport migrateFromBundledDefaults(String trigger) {
+        return new MigrationReport("none", "", 0, false);
+    }
 }

@@ -4,16 +4,18 @@ import com.google.gson.*;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricLogger;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Set;
 
 public class ConfigFile extends SvgFile {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final DateTimeFormatter BACKUP_TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
     private final File file;
     private JsonObject data;
@@ -115,6 +117,23 @@ public class ConfigFile extends SvgFile {
     }
 
     @Override
+    public MigrationReport migrateFromBundledDefaults(String trigger) {
+        JsonObject defaults = loadBundledDefaults();
+        if (defaults == null) {
+            return new MigrationReport("json", "", 0, false);
+        }
+
+        JsonObject existing = data != null ? data : new JsonObject();
+        AddedCounter counter = new AddedCounter();
+        JsonObject merged = mergeObject(defaults, existing, counter);
+
+        String backupPath = backupCurrentConfig();
+        this.data = merged;
+        save();
+        return new MigrationReport("json", backupPath, counter.count, true);
+    }
+
+    @Override
     public void save() {
         try (FileWriter writer = new FileWriter(file)) {
             GSON.toJson(data, writer);
@@ -189,5 +208,127 @@ public class ConfigFile extends SvgFile {
 
         current.add(parts[parts.length - 1], value);
         save();
+    }
+
+    private JsonObject loadBundledDefaults() {
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream("config.json")) {
+            if (in == null) {
+                logger.info("[Config] No bundled config.json found. Using SvgConfig code defaults for migration.");
+                return buildCodeDefaults();
+            }
+            try (InputStreamReader reader = new InputStreamReader(in)) {
+                JsonElement parsed = JsonParser.parseReader(reader);
+                if (parsed == null || !parsed.isJsonObject()) {
+                    logger.warning("[Config] Bundled config.json is invalid. Using SvgConfig code defaults.");
+                    return buildCodeDefaults();
+                }
+                return parsed.getAsJsonObject();
+            }
+        } catch (Exception e) {
+            logger.error("[Config] Failed loading bundled config.json. Using SvgConfig code defaults.", e);
+            return buildCodeDefaults();
+        }
+    }
+
+    private JsonObject buildCodeDefaults() {
+        JsonObject root = new JsonObject();
+        root.addProperty("config-info",
+                "This file is used to configure Simple Voice Geyser. For more information, see the wiki: "
+                        + "https://theodoremeyer.github.io/projects/simplevoicegeyser/");
+
+        JsonObject client = new JsonObject();
+        client.addProperty("vctimeout", 30);
+        client.addProperty("idletimeout", 2);
+        client.addProperty("requireBedrock", false);
+        client.addProperty("useEmoteForSVG", true);
+        root.add("client", client);
+
+        JsonObject server = new JsonObject();
+        JsonObject group = new JsonObject();
+        JsonObject defaults = new JsonObject();
+        defaults.addProperty("enabled", true);
+        defaults.addProperty("password", "1a2b");
+        defaults.addProperty("force-on-web-join", false);
+        group.add("default", defaults);
+        server.add("group", group);
+        server.addProperty("port", 8080);
+        server.addProperty("bind-address", "0.0.0.0");
+        server.addProperty("context-path", "/");
+        JsonObject audio = new JsonObject();
+        audio.addProperty("transport-mode", "auto");
+        audio.addProperty("allow-legacy-fallback", true);
+        server.add("audio", audio);
+        root.add("server", server);
+
+        root.addProperty("debug", false);
+        JsonObject updateChecker = new JsonObject();
+        updateChecker.addProperty("enable", true);
+        root.add("updatechecker", updateChecker);
+        root.addProperty("config-version", "0.1.1-dev-migration1");
+        return root;
+    }
+
+    private String backupCurrentConfig() {
+        if (!file.exists()) {
+            return "";
+        }
+        String ts = LocalDateTime.now().format(BACKUP_TS);
+        File backup = new File(file.getParentFile(), "config-" + ts + ".json.bak");
+        try {
+            Files.copy(file.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            return backup.getAbsolutePath();
+        } catch (IOException e) {
+            logger.error("[Config] Failed backing up config.json", e);
+            return "";
+        }
+    }
+
+    private JsonObject mergeObject(JsonObject defaults, JsonObject existing, AddedCounter counter) {
+        JsonObject merged = new JsonObject();
+
+        for (String key : defaults.keySet()) {
+            JsonElement defaultValue = defaults.get(key);
+            if (existing.has(key)) {
+                JsonElement existingValue = existing.get(key);
+                if (defaultValue != null && defaultValue.isJsonObject()
+                        && existingValue != null && existingValue.isJsonObject()) {
+                    merged.add(key, mergeObject(defaultValue.getAsJsonObject(), existingValue.getAsJsonObject(), counter));
+                } else {
+                    merged.add(key, existingValue.deepCopy());
+                }
+            } else {
+                merged.add(key, defaultValue.deepCopy());
+                counter.count += countLeafNodes(defaultValue);
+            }
+        }
+
+        for (String key : existing.keySet()) {
+            if (!merged.has(key)) {
+                merged.add(key, existing.get(key).deepCopy());
+            }
+        }
+        return merged;
+    }
+
+    private int countLeafNodes(JsonElement element) {
+        if (element == null || element.isJsonNull()) {
+            return 1;
+        }
+        if (element.isJsonPrimitive() || element.isJsonArray()) {
+            return 1;
+        }
+        if (!element.isJsonObject()) {
+            return 1;
+        }
+        int total = 0;
+        JsonObject obj = element.getAsJsonObject();
+        for (String key : obj.keySet()) {
+            total += countLeafNodes(obj.get(key));
+        }
+        return total;
+    }
+
+    private static final class AddedCounter {
+        private int count = 0;
     }
 }

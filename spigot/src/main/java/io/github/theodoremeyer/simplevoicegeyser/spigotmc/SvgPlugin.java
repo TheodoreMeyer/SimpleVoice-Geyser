@@ -49,6 +49,10 @@ public class SvgPlugin extends JavaPlugin implements Platform {
 
         // Initialize ConfigFile wrapper
         this.configFile = new ConfigFile(file);
+        SvgFile.MigrationReport migration = this.configFile.migrateFromBundledDefaults("startup");
+        logger.info("[Config] migration trigger=startup mode=" + migration.mode()
+                + " addedKeys=" + migration.addedKeys()
+                + " backup=" + (migration.backupPath().isBlank() ? "none" : migration.backupPath()));
 
         this.core = new SvgCore(this);
     }

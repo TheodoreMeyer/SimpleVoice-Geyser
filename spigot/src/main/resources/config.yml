@@ -2,11 +2,11 @@ client:
 
   # default: 30
   # Timeout in seconds
-  # WARNING: Developer Has disabled this for right now.
+  # WARNING: Developer has disabled timeout enforcement for current dev builds.
   vctimeout: 30
 
   # default: 2
-  # idle websocket timeout in minutes
+  # Idle websocket timeout in minutes
   idletimeout: 2
 
   # default: false
@@ -14,36 +14,61 @@ client:
   requireBedrock: false
 
   # default: true
-  # Allows for the bedrock client to open a menu just by opening the emotes menu
-  # WARNING: Make sure you have off-hand-emote turned off in geyser or there may
-  #          be conflict
+  # Allows bedrock clients to open the SVG menu via emotes.
+  # WARNING: Make sure off-hand-emote is disabled in Geyser to avoid conflicts.
   useEmoteForSVG: true
 
 server:
 
   group:
 
-    # Settings for the default group for Svg players.
+    # Settings for the default group for SVG web players.
     default:
 
       # default: true
-      # This decides whether the Svg group is created for players who use the website
+      # Decides whether the SVG group is created for players who use the website.
       enabled: true
 
       # default: 1a2b
-      # This control's the default groups's password.
+      # Controls the default group's password.
       password: 1a2b
 
+      # default: false
+      # Force assigning the default SVG group even when a user already has a group.
+      force-on-web-join: false
+
   # default: 8080
-  # port server will run on.
+  # Port server will run on.
   port: 8080
 
   # default: 0.0.0.0
-  # Address server binds to, use 127.0.0.1 to only connect from host device.
-  # This is suggested to be changed only if you are running a proxy on the same network/device as the server to allow https/wss.
+  # Address server binds to; use 127.0.0.1 to only allow host-local access.
   bind-address: 0.0.0.0
+
+  # default: /
+  # Context path for hosting SVG web UI behind proxies/subpaths.
+  context-path: /
+
+  audio:
+
+    # default: auto
+    # Audio transport preference: auto | legacy | svg-v2
+    transport-mode: auto
+
+    # default: true
+    # During migration, fallback to legacy transport for incompatible clients.
+    allow-legacy-fallback: true
 
 # default: false
 # Debug logs
 # Do NOT use this in production. This will very quickly fill up your server logs.
 debug: false
+
+# default: true
+# Check for plugin updates on startup.
+updatechecker:
+  enable: true
+
+# default: 0.1.1-dev-migration1
+# Internal config schema marker used for migration tracking.
+config-version: 0.1.1-dev-migration1
