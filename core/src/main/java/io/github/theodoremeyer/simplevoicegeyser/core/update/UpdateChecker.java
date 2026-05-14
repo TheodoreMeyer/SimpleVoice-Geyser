@@ -1,5 +1,6 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.update;
 
+import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.Platform;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import org.json.JSONArray;
@@ -22,8 +23,8 @@ import java.util.concurrent.CompletableFuture;
 public final class UpdateChecker {
 
     private static final String PROJECT_ID = "GJLuArlK";
-    private static final String DOWNLOAD_URL =
-            "https://modrinth.com/plugin/simplevoice-geyser";
+    private static final URI DOWNLOAD_URL =
+            URI.create("https://modrinth.com/plugin/simplevoice-geyser");;
 
     private static final HttpClient HTTP = HttpClient.newHttpClient();
 
@@ -160,12 +161,14 @@ public final class UpdateChecker {
             return;
         }
 
-        logger.warning("====================================================");
-        logger.warning("A new version of SimpleVoice-Geyser is available!");
-        logger.warning("Current Version: " + currentVersion);
-        logger.warning("Latest Version:  " + latest.versionRaw);
-        logger.warning("Download Here:   " + DOWNLOAD_URL);
-        logger.warning("====================================================");
+        String message = String.join("\n",
+                "A new version of SimpleVoice-Geyser is available!",
+                "   Current Version: " + currentVersion,
+                "   Latest Version:  " + latest.versionRaw,
+                "   Download Here:   " + DOWNLOAD_URL
+        );
+
+        logger.warning(SvgCore.getPrefix() + ":\n" +  message);
     }
 
     /**
