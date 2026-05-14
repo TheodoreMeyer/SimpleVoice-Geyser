@@ -163,6 +163,10 @@ public final class JettyWebSocket {
     private void join(@NonNull JSONObject json) {
         PlayerVcPswd playerVcPswd = SvgCore.getPasswordManager();
         String remoteKey = getRemoteKey();
+        if (remoteKey.isEmpty()) {
+            closeOnError("Access Denied: Unable to identify client address.", false);
+            return;
+        }
 
         if (!AUTH_RATE_LIMITER.allow(remoteKey)) {
             closeOnError("Too many login attempts. Please wait before trying again.", false);
@@ -304,12 +308,13 @@ public final class JettyWebSocket {
 
     private String getRemoteKey() {
         if (session == null || session.getRemoteAddress() == null) {
-            return "unknown";
+            return "";
         }
         if (session.getRemoteAddress().getAddress() != null) {
             return session.getRemoteAddress().getAddress().getHostAddress();
         }
-        return session.getRemoteAddress().getHostString();
+        String host = session.getRemoteAddress().getHostString();
+        return host == null ? "" : host;
     }
 
     private static final class AuthRateLimiter {
@@ -326,8 +331,10 @@ public final class JettyWebSocket {
 
         private boolean allow(String key) {
             long now = System.currentTimeMillis();
+            cleanupStaleEntries(now);
             Entry entry = entries.computeIfAbsent(key, unused -> new Entry());
             synchronized (entry) {
+                entry.lastSeen = now;
                 if (now < entry.lockUntil) {
                     return false;
                 }
@@ -341,8 +348,10 @@ public final class JettyWebSocket {
 
         private void recordFailure(String key) {
             long now = System.currentTimeMillis();
+            cleanupStaleEntries(now);
             Entry entry = entries.computeIfAbsent(key, unused -> new Entry());
             synchronized (entry) {
+                entry.lastSeen = now;
                 if (now - entry.windowStart > windowMillis) {
                     entry.windowStart = now;
                     entry.failures = 0;
@@ -360,10 +369,19 @@ public final class JettyWebSocket {
             entries.remove(key);
         }
 
+        private void cleanupStaleEntries(long now) {
+            long maxAge = windowMillis + lockMillis;
+            entries.entrySet().removeIf(entry ->
+                    now - entry.getValue().lastSeen > maxAge &&
+                            now >= entry.getValue().lockUntil
+            );
+        }
+
         private static final class Entry {
             private long windowStart = System.currentTimeMillis();
             private int failures = 0;
             private long lockUntil = 0;
+            private long lastSeen = System.currentTimeMillis();
         }
     }
 }
