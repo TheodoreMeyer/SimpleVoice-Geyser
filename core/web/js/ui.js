@@ -154,7 +154,7 @@ export function initUI() {
             return;
         }
 
-        connect(form.username.value, form.password.value, (connected, username) => {
+        connect(form.username.value, form.password.value, async (connected, username) => {
             if (connected) {
                 statusEl.textContent = "Connected as " + username;
                 statusEl.style.backgroundColor = "#005f00";
@@ -163,7 +163,13 @@ export function initUI() {
                 micSelect.disabled = true;
                 speakerSelect.disabled = true;
 
-                startMic(micSelect.value);
+                try {
+                    await startMic(micSelect.value);
+                } catch (error) {
+                    console.error(error);
+                    log("Failed to start microphone. Check permissions/device and try again.");
+                    disconnect();
+                }
             } else {
                 statusEl.textContent = "Disconnected";
                 statusEl.style.backgroundColor = "#5f0000";

@@ -59,6 +59,7 @@ Reach out through issues!
 ## Important Notes
 - Simple Voice Chat 2.6.0 or compatible is required to work, It must run on the server.
 - GeyserMC 2.9.0-SNAPSHOT or compatible is required to work, It must run on the server.
+- Java 21 or newer is required to build this project from source.
 
 - Releases/versions/jars ending with -Dev{version} mean this is a dev/test version and not meant for productional use.
    - you are welcome to test these, but no guarantee they will work.

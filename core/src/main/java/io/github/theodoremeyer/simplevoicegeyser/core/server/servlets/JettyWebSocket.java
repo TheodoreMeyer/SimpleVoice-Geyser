@@ -17,12 +17,17 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Websocket session Class.
  */
 @WebSocket
 public final class JettyWebSocket {
+    private static final int FATAL_CLOSE_CODE = 4003;
+    private static final String FATAL_CLOSE_REASON = "fatal";
+    private static final AuthRateLimiter AUTH_RATE_LIMITER =
+            new AuthRateLimiter(5, Duration.ofMinutes(1), Duration.ofMinutes(5));
 
     /**
      * The Session that is the audio client.
@@ -157,12 +162,19 @@ public final class JettyWebSocket {
 
     private void join(@NonNull JSONObject json) {
         PlayerVcPswd playerVcPswd = SvgCore.getPasswordManager();
+        String remoteKey = getRemoteKey();
+
+        if (!AUTH_RATE_LIMITER.allow(remoteKey)) {
+            closeOnError("Too many login attempts. Please wait before trying again.", false);
+            return;
+        }
 
         String username = json.getString("username");
         String password = json.optString("password", "");
         UUID storedUuid = playerVcPswd.getUUID(username); //get the uuid to associate with this session
 
         if (storedUuid == null) {
+            AUTH_RATE_LIMITER.recordFailure(remoteKey);
             closeOnError("Player " + username + " not found. Use /svg pswd [password] in-game to register.", false);
             return;
         }
@@ -178,6 +190,7 @@ public final class JettyWebSocket {
             }
         } else if (!bedrock) {
             if (bedrockRequired) {
+                AUTH_RATE_LIMITER.recordFailure(remoteKey);
                 closeOnError("Access Denied: You must be a Bedrock player to join!", false);
                 return;
             }
@@ -185,25 +198,25 @@ public final class JettyWebSocket {
 
         //see if the player's password is set.
         if (!playerVcPswd.isPasswordSet(username)) {
+            AUTH_RATE_LIMITER.recordFailure(remoteKey);
             closeOnError("Password not set. Use /svg pswd [password] in-game.", false);
             return;
         }
 
         if (!playerVcPswd.validatePassword(username, password)) { //validate the player's password from form input
+            AUTH_RATE_LIMITER.recordFailure(remoteKey);
             closeOnError("Access Denied: Incorrect password!", false);
             return;
         }
 
         if (!SvgCore.getWsManager().addClient(uuid, this.session)) { //add this session to the list of active sessions
+            AUTH_RATE_LIMITER.recordFailure(remoteKey);
             closeOnError("Access Denied: Failed to Join.", false);
             return;
         }
 
-        //get timeout numbers for the message.
-        int timeout = SvgCore.getConfig().VC_TIMEOUT.get();//plugin.getConfig().getInt("client.vctimeout", 30);
-        long delayInTicks = timeout * 20L;
-
         authenticated = true;
+        AUTH_RATE_LIMITER.reset(remoteKey);
         sendMessage("status", "Connected as " + username + ".", false);
 
         SvgCore.getLogger().info("[WebSocket] " + username + " joined with UUID: " + uuid);
@@ -259,10 +272,14 @@ public final class JettyWebSocket {
     }
 
     private void sendMessage(String type, String message, boolean log) {
+        sendMessage(type, message, log, false);
+    }
 
+    private void sendMessage(String type, String message, boolean log, boolean fatal) {
         JSONObject json = new JSONObject();
         json.put("type", type);
         json.put("message", message);
+        json.put("fatal", fatal);
         try {
             session.getRemote().sendString(json.toString());
         } catch (IOException e) {
@@ -279,7 +296,74 @@ public final class JettyWebSocket {
     }
 
     private void closeOnError(String message, boolean log) {
-        sendMessage("error", message, log);
-        session.close();
+        sendMessage("error", message, log, true);
+        if (session != null && session.isOpen()) {
+            session.close(FATAL_CLOSE_CODE, FATAL_CLOSE_REASON);
+        }
+    }
+
+    private String getRemoteKey() {
+        if (session == null || session.getRemoteAddress() == null) {
+            return "unknown";
+        }
+        if (session.getRemoteAddress().getAddress() != null) {
+            return session.getRemoteAddress().getAddress().getHostAddress();
+        }
+        return session.getRemoteAddress().getHostString();
+    }
+
+    private static final class AuthRateLimiter {
+        private final int maxFailures;
+        private final long windowMillis;
+        private final long lockMillis;
+        private final ConcurrentHashMap<String, Entry> entries = new ConcurrentHashMap<>();
+
+        private AuthRateLimiter(int maxFailures, Duration window, Duration lockDuration) {
+            this.maxFailures = maxFailures;
+            this.windowMillis = window.toMillis();
+            this.lockMillis = lockDuration.toMillis();
+        }
+
+        private boolean allow(String key) {
+            long now = System.currentTimeMillis();
+            Entry entry = entries.computeIfAbsent(key, unused -> new Entry());
+            synchronized (entry) {
+                if (now < entry.lockUntil) {
+                    return false;
+                }
+                if (now - entry.windowStart > windowMillis) {
+                    entry.windowStart = now;
+                    entry.failures = 0;
+                }
+                return true;
+            }
+        }
+
+        private void recordFailure(String key) {
+            long now = System.currentTimeMillis();
+            Entry entry = entries.computeIfAbsent(key, unused -> new Entry());
+            synchronized (entry) {
+                if (now - entry.windowStart > windowMillis) {
+                    entry.windowStart = now;
+                    entry.failures = 0;
+                }
+                entry.failures++;
+                if (entry.failures >= maxFailures) {
+                    entry.lockUntil = now + lockMillis;
+                    entry.failures = 0;
+                    entry.windowStart = now;
+                }
+            }
+        }
+
+        private void reset(String key) {
+            entries.remove(key);
+        }
+
+        private static final class Entry {
+            private long windowStart = System.currentTimeMillis();
+            private int failures = 0;
+            private long lockUntil = 0;
+        }
     }
 }

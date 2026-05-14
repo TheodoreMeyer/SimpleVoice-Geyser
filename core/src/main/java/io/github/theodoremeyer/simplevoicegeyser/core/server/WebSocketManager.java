@@ -98,14 +98,23 @@ public final class WebSocketManager {
         return false;
     }
 
+    public boolean disconnectClient(UUID uuid, int statusCode, String reason) {
+        Session session = clients.remove(uuid);
+        if (session != null && session.isOpen()) {
+            session.close(statusCode, reason);
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Disconnects a player when they leave
      * @param player uuid of player leaving
      */
     public void playerLeave(SvgPlayer player) {
         UUID uuid = player.getUniqueId();
-        sendJson(uuid, "message", player.getName() + " left the game.");
-        disconnectClient(uuid);
+        sendJson(uuid, "error", player.getName() + " left the game.", true);
+        disconnectClient(uuid, 4003, "fatal");
     }
 
     /**
@@ -128,6 +137,10 @@ public final class WebSocketManager {
      * @param message the message to send.
      */
     public void sendJson(UUID uuid, String type, String message) {
+        sendJson(uuid, type, message, false);
+    }
+
+    public void sendJson(UUID uuid, String type, String message, boolean fatal) {
         Session session = clients.get(uuid); // get session to send to
         if (session == null || !session.isOpen()) {
             SvgCore.getLogger().warning("Attempted to send message to non-existent or closed session: " + uuid);
@@ -137,6 +150,7 @@ public final class WebSocketManager {
         JSONObject json = new JSONObject();
         json.put("type", type);
         json.put("message", message);
+        json.put("fatal", fatal);
         try {
             session.getRemote().sendString(json.toString()); //send the message
         } catch (IOException e) {
