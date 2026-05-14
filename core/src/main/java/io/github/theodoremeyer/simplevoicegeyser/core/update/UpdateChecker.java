@@ -24,7 +24,7 @@ public final class UpdateChecker {
 
     private static final String PROJECT_ID = "GJLuArlK";
     private static final URI DOWNLOAD_URL =
-            URI.create("https://modrinth.com/plugin/simplevoice-geyser");;
+            URI.create("https://modrinth.com/plugin/simplevoice-geyser");
 
     private static final HttpClient HTTP = HttpClient.newHttpClient();
 

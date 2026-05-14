@@ -40,7 +40,7 @@ public final class SvgCore {
     /**
      * Config system
      */
-    private SvgConfig config;
+    private final SvgConfig config;
 
     /**
      * The Link to the SVC system
