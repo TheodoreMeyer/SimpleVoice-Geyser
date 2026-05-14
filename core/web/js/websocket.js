@@ -46,7 +46,7 @@ function createSocket(onStatusChange) {
                 if (data.type === "error") {
 
                     const isFatalError = msg.includes("bedrock player to join") ||
-                        msg.includes("Use /svg pswd") ||
+                        msg.includes("use /svg pswd") ||
                         msg.includes("access denied:") ||
                         msg.includes("timeout") ||
                         msg.includes("left the game.") ||
@@ -133,5 +133,6 @@ export function isConnected() {
 
 function stopReconnection() {
     reOpen = false;
+    clearTimeout(reconnectTimeout);
     reconnectTimeout = null; // prevent any pending reconnects
 }
