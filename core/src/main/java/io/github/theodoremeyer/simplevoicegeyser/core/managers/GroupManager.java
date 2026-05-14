@@ -284,13 +284,8 @@ public final class GroupManager {
                 && !svgPlayer.hasPermission("svg.vc.group.type.isolated")) {
             return false;
 
-        } else if (persistent
-                && !svgPlayer.hasPermission("svg.vc.group.setpersistent")) {
-
-            return false;
-        }
-
-        return true;
+        } else return !persistent
+                || svgPlayer.hasPermission("svg.vc.group.setpersistent");
     }
 
     /**

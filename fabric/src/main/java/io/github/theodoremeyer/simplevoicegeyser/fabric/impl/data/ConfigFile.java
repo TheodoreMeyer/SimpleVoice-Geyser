@@ -4,8 +4,10 @@ import com.google.gson.*;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricLogger;
 
-import java.io.*;
-import java.nio.file.Files;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
@@ -41,23 +43,6 @@ public class ConfigFile extends SvgFile {
         }
     }
 
-    private boolean copyDefaultFromResources() {
-        try (InputStream in = getClass().getResourceAsStream("/config.json")) {
-
-            if (in == null) {
-                logger.warning("[Config] No default config.json found.");
-                return false;
-            }
-
-            Files.copy(in, file.toPath());
-            return true;
-
-        } catch (Exception e) {
-            logger.error("[Config] Failed to copy default config.json", e);
-            return false;
-        }
-    }
-
     private void load() {
         try (FileReader reader = new FileReader(file)) {
             JsonElement element = JsonParser.parseReader(reader);
@@ -84,19 +69,16 @@ public class ConfigFile extends SvgFile {
 
         JsonElement element;
 
-        if (value instanceof String s) {
-            element = new JsonPrimitive(s);
-        } else if (value instanceof Number n) {
-            element = new JsonPrimitive(n);
-        } else if (value instanceof Boolean b) {
-            element = new JsonPrimitive(b);
-        } else if (value instanceof Character c) {
-            element = new JsonPrimitive(c);
-        } else if (value == null) {
-            element = JsonNull.INSTANCE;
-        } else {
-            logger.warning("Unsupported type: " + value.getClass());
-            return;
+        switch (value) {
+            case String s -> element = new JsonPrimitive(s);
+            case Number n -> element = new JsonPrimitive(n);
+            case Boolean b -> element = new JsonPrimitive(b);
+            case Character c -> element = new JsonPrimitive(c);
+            case null -> element = JsonNull.INSTANCE;
+            default -> {
+                logger.warning("Unsupported type: " + value.getClass());
+                return;
+            }
         }
 
         setValue(path, element);

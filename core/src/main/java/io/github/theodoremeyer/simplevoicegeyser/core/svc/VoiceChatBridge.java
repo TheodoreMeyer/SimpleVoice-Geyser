@@ -25,12 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class VoiceChatBridge implements VoicechatPlugin {
 
     /**
-     * VoiceChatApi
-     * @apiNote not currently used
-     * @see VoicechatApi api
-     */
-    private VoicechatApi api;
-    /**
      * The VoiceChatSeverApi
      * @see VoicechatServerApi server api
      */
@@ -78,7 +72,6 @@ public class VoiceChatBridge implements VoicechatPlugin {
      */
     @Override
     public void initialize(VoicechatApi api) {
-        this.api = api;
         SvgCore.getLogger().info("[VCBridge] VoiceChat API initialized");
 
     }

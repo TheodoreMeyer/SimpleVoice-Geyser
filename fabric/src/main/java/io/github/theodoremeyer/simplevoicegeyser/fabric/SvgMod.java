@@ -18,6 +18,8 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 /**
  * Fabric entrypoint for SimpleVoiceGeyser
@@ -93,20 +95,15 @@ public class SvgMod implements ModInitializer, Platform {
     }
 
     public void createFiles() {
-        File dir = getDataFolder();
+        File dir = getDataFolder().getAbsoluteFile();
 
-        // 1. Guarantee base directory exists
-        if (!dir.exists()) {
-            boolean created = dir.mkdirs();
-            if (!created && !dir.exists()) {
-                logger.severe(getPrefix() + "Failed to create data directory: " + dir.getAbsolutePath());
-            }
+        try {
+            Files.createDirectories(dir.toPath());
+        } catch (IOException e) {
+            logger.error(getPrefix() + "Failed to create data directory: " + dir.getAbsolutePath(), e);
+            return;
         }
 
-        // 2. Optional: normalize to absolute path
-        dir = dir.getAbsoluteFile();
-
-        // 3. Now safe to construct file (NO file existence logic inside them anymore)
         this.configFile = new ConfigFile(dir, logger);
     }
 
