@@ -71,9 +71,6 @@ function createSocket(onStatusChange) {
         }
 
         if (!manualClose && lastCredentials && reOpen) {
-            if (reconnectTimeout) {
-                clearTimeout(reconnectTimeout);
-            }
             reconnectTimeout = setTimeout(() => {
                 log("Reconnecting...");
                 createSocket(onStatusChange);
