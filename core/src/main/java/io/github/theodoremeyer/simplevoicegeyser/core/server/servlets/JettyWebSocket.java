@@ -2,11 +2,11 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.servlets;
 
 import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
-import io.github.theodoremeyer.simplevoicegeyser.core.PlayerVcPswd;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioSender;
+import io.github.theodoremeyer.simplevoicegeyser.core.data.PlayerVcPswd;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.jetty.websocket.api.Session;
@@ -16,13 +16,33 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Websocket session Class.
  */
 @WebSocket
 public final class JettyWebSocket {
+    /**
+     * Standard code for fatal errors
+     */
+    private static final int FATAL_CLOSE_CODE = 4003;
+
+    /**
+     * Automatic reason, if it's not defined.
+     */
+    private static final String FATAL_CLOSE_REASON = "fatal";
+
+    /**
+     * AuthLimiter to limit login tries per user
+     * Max 5 failed attempts per minute, with a lockout duration of 5 minutes after reaching the limit.
+     * This helps protect against brute-force attacks while allowing legitimate users to retry after a short period.
+     * If this is triggered, easy reset of /svg pswd
+     */
+    private static final AuthRateLimiter AUTH_RATE_LIMITER =
+            new AuthRateLimiter(5, Duration.ofMinutes(1), Duration.ofMinutes(5));
 
     /**
      * The Session that is the audio client.
@@ -120,11 +140,7 @@ public final class JettyWebSocket {
     public void onMessage(byte[] buffer, int offset, int length) {
         if (!authenticated || uuid == null) return; //make sure they signed in
 
-        //byte[] pcmData = new byte[length];
-        //System.arraycopy(buffer, offset, pcmData, 0, length);
-
         if (audioSender != null) { //make sure the sender is not null
-            //audioSender.sendOpus(pcmData); //send the audio data
             audioSender.sendOpus(Arrays.copyOfRange(buffer, offset, offset + length));
         }
     }
@@ -137,7 +153,7 @@ public final class JettyWebSocket {
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
         if (uuid != null) { //make sure the uuid for the session is not null, needed to close senders/listeners
-            String username = SvgCore.getPasswordManager().getUsernameFromUUID(uuid);
+            String username = SvgCore.getPasswordManager().getUsername(uuid);
             String displayName = (username != null) ? username : uuid.toString();
             SvgCore.getLogger().info("[WebSocket] WebSocket for " + displayName + " closed: " + statusCode + " - " + reason);
 
@@ -161,85 +177,98 @@ public final class JettyWebSocket {
 
     private void join(@NonNull JSONObject json) {
         PlayerVcPswd playerVcPswd = SvgCore.getPasswordManager();
-
-        String username = json.getString("username");
+        String username = json.optString("username", "").trim();
         String password = json.optString("password", "");
-        UUID storedUuid = playerVcPswd.getStoredUUID(username); //get the uuid to associate with this session
+        String authKey = username.toLowerCase(Locale.ROOT);
 
-        if (storedUuid == null) {
-            closeOnError("Player " + username + " not found. Use /svg pswd [password] in-game to register.", false);
+        if (username.isEmpty()) {
+            closeOnError("Username required.", false);
             return;
         }
-        this.uuid = storedUuid;
+
+        if (!AUTH_RATE_LIMITER.allow(authKey)) {
+            closeOnError("Too many failed login attempts. Reset your password in-game with /svg pswd [password].",
+                    false
+            );
+            return;
+        }
+
+        UUID storedUuid = playerVcPswd.getUUID(username);
+
+        // Generic auth failure message
+        if (storedUuid == null ||
+                !playerVcPswd.isPasswordSet(username) ||
+                !playerVcPswd.validatePassword(username, password)) {
+
+            AUTH_RATE_LIMITER.recordFailure(authKey);
+
+            closeOnError("Access Denied: Invalid username or password.", false);
+            return;
+        }
 
         Boolean bedrock = GeyserHook.isBedrock(storedUuid);
         boolean bedrockRequired = SvgCore.getConfig().REQUIRE_BEDROCK.get();
 
         if (bedrock == null) {
-            // Geyser/Floodgate not installed
             if (bedrockRequired) {
-                SvgCore.getLogger().warning("Unable to enforce: client.requireBedrock. Please install floodgate or geyser");
+                SvgCore.getLogger().warning(
+                        "Unable to enforce: client.requireBedrock. Please install floodgate or geyser"
+                );
             }
-        } else if (!bedrock) {
-            if (bedrockRequired) {
-                closeOnError("Access Denied: You must be a Bedrock player to join!", false);
-                return;
-            }
-        }
+        } else if (!bedrock && bedrockRequired) {
+            AUTH_RATE_LIMITER.recordFailure(authKey);
 
-        //see if the player's password is set.
-        if (!playerVcPswd.isPasswordSet(username)) {
-            closeOnError("Password not set. Use /svg pswd [password] in-game.", false);
+            closeOnError("Access Denied: You must be a Bedrock player to join!", false);
             return;
         }
 
-        if (!playerVcPswd.validatePassword(username, password)) { //validate the player's password from form input
-            closeOnError("Access Denied: Incorrect password!", false);
-            return;
-        }
+        // Move uuid assignment until AFTER validation succeeds
+        this.uuid = storedUuid;
 
-        if (!SvgCore.getWsManager().addClient(uuid, this.session)) { //add this session to the list of active sessions
+        if (!SvgCore.getWsManager().addClient(uuid, this.session)) {
+            AUTH_RATE_LIMITER.recordFailure(authKey);
+
             closeOnError("Access Denied: Failed to Join.", false);
             return;
         }
 
-        //get timeout numbers for the message.
-        int timeout = SvgCore.getConfig().VC_TIMEOUT.get();//plugin.getConfig().getInt("client.vctimeout", 30);
-        long delayInTicks = timeout * 20L;
-
-        authenticated = true;
-        sendMessage("status", "Connected as " + username + ".", false); //Make sure to join server within " + timeout + " seconds!");
-
-        SvgCore.getLogger().info("[WebSocket] " + username + " joined with UUID: " + uuid);
-
-        // Schedule timeout if player never joins. Currently, disabled.
-        //Bukkit.getScheduler().runTaskLater(plugin, () -> {
         this.player = SvgCore.getPlayerManager().getPlayer(uuid);
+
         if (player == null) {
             closeOnError("Timeout: You didn’t join the server in time.", false);
             return;
         }
-        if (!player.hasPermission("svg.vc.join")) { //make sure they are allowed to join the vc
+
+        if (!player.hasPermission("svg.vc.join")) {
             closeOnError("Access Denied. You may have been banned from vc.", true);
             return;
         }
 
-        VoicechatConnection connection = SvgCore.getBridge().getVcServerApi().getConnectionOf(uuid);
+        VoicechatConnection connection =
+                SvgCore.getBridge().getVcServerApi().getConnectionOf(uuid);
+
         if (connection == null || connection.isInstalled()) {
             closeOnError("Access Denied: Can't Join server with mod installed or Connection is Null", false);
             return;
         }
 
-        // Add player to default group if enabled
         if (SvgCore.getConfig().DEFAULT_GROUP_ENABLED.get()) {
             String gPswd = SvgCore.getConfig().DEFAULT_GROUP_PASSWORD.get();
-            SvgCore.getGroupManager().createGroup(player, "Svg", gPswd, Group.Type.OPEN, false, true); //add player to a default group
+
+            SvgCore.getGroupManager().createGroup(
+                    player, "Svg", gPswd, Group.Type.OPEN, false, true
+            );
         }
 
-        SvgCore.getBridge().registerAudioListener(uuid, session); //register the players audio sender
-        this.audioSender = SvgCore.getBridge().registerAudioSender(uuid); //register the players audio sender
-        // Currently disabled.
-        // }, delayInTicks);
+        SvgCore.getBridge().registerAudioListener(uuid, session);
+        this.audioSender = SvgCore.getBridge().registerAudioSender(uuid);
+
+        authenticated = true;
+        AUTH_RATE_LIMITER.reset(authKey);
+
+        sendMessage("status", "Connected as " + username + ".", false);
+
+        SvgCore.getLogger().info("[WebSocket] " + username + " joined with UUID: " + uuid);
     }
 
     private void chat(JSONObject json) {
@@ -250,12 +279,12 @@ public final class JettyWebSocket {
         }
 
         if (!chatMessage.isEmpty()) {
-            String savedName = SvgCore.getPasswordManager().getUsernameFromUUID(uuid);
+            String savedName = SvgCore.getPasswordManager().getUsername(uuid);
             String displayName = (player != null) ? player.getName() :
                     savedName != null ? savedName : uuid.toString();
 
             if (player != null) {
-                sendMessage("chat", "You" + chatMessage, false);
+                sendMessage("chat", "You: " + chatMessage, false);
                 player.chat("[Web Chat] " + displayName + ": " + SvgColor.BLUE + chatMessage);
             } else {
                 sendMessage("error", "You are Not in Game. Sent message", false);
@@ -267,10 +296,14 @@ public final class JettyWebSocket {
     }
 
     private void sendMessage(String type, String message, boolean log) {
+        sendMessage(type, message, log, false);
+    }
 
+    private void sendMessage(String type, String message, boolean log, boolean fatal) {
         JSONObject json = new JSONObject();
         json.put("type", type);
         json.put("message", message);
+        json.put("fatal", fatal);
         try {
             session.getRemote().sendString(json.toString());
         } catch (IOException e) {
@@ -287,7 +320,123 @@ public final class JettyWebSocket {
     }
 
     private void closeOnError(String message, boolean log) {
-        sendMessage("error", message, log);
-        session.close();
+        sendMessage("error", message, log, true);
+        if (session != null && session.isOpen()) {
+            session.close(FATAL_CLOSE_CODE, FATAL_CLOSE_REASON);
+        }
+    }
+
+    /**
+     * Clear the user from the tracked failure list
+     * @param username username to clear
+     */
+    public static void clearAuthFailures(String username) {
+        AUTH_RATE_LIMITER.reset(username);
+    }
+
+    private static final class AuthRateLimiter {
+
+        private final int maxFailures;
+        private final long windowMillis;
+        private final long lockMillis;
+
+        private final ConcurrentHashMap<String, Entry> entries =
+                new ConcurrentHashMap<>();
+
+        private AuthRateLimiter(
+                int maxFailures,
+                Duration window,
+                Duration lockDuration
+        ) {
+            this.maxFailures = maxFailures;
+            this.windowMillis = window.toMillis();
+            this.lockMillis = lockDuration.toMillis();
+        }
+
+        private boolean allow(String username) {
+            long now = System.currentTimeMillis();
+
+            cleanupStaleEntries(now);
+
+            Entry entry = entries.computeIfAbsent(
+                    username,
+                    unused -> new Entry()
+            );
+
+            synchronized (entry) {
+
+                entry.lastSeen = now;
+
+                // Lock still active
+                if (now < entry.lockUntil) {
+                    return false;
+                }
+
+                // Reset rolling window
+                if (now - entry.windowStart > windowMillis) {
+                    entry.windowStart = now;
+                    entry.failures = 0;
+                    entry.lockUntil = 0;
+                }
+
+                return true;
+            }
+        }
+
+        private void recordFailure(String username) {
+            long now = System.currentTimeMillis();
+
+            cleanupStaleEntries(now);
+
+            Entry entry = entries.computeIfAbsent(
+                    username,
+                    unused -> new Entry()
+            );
+
+            synchronized (entry) {
+
+                entry.lastSeen = now;
+
+                // Reset expired window
+                if (now - entry.windowStart > windowMillis) {
+                    entry.windowStart = now;
+                    entry.failures = 0;
+                    entry.lockUntil = 0;
+                }
+
+                entry.failures++;
+
+                if (entry.failures >= maxFailures) {
+
+                    entry.lockUntil = now + lockMillis;
+
+                    entry.failures = 0;
+                    entry.windowStart = now;
+
+                    SvgCore.getLogger().warning(
+                            "[WebSocket] Account temporarily locked due to repeated failed logins: "
+                                    + username
+                    );
+                }
+            }
+        }
+
+        private void reset(String username) { entries.remove(username.toLowerCase(Locale.ROOT)); }
+
+        private void cleanupStaleEntries(long now) {
+            long maxAge = windowMillis + lockMillis;
+
+            entries.entrySet().removeIf(entry ->
+                    now - entry.getValue().lastSeen > maxAge &&
+                            now >= entry.getValue().lockUntil
+            );
+        }
+
+        private static final class Entry {
+            private long windowStart = System.currentTimeMillis();
+            private int failures = 0;
+            private long lockUntil = 0;
+            private long lastSeen = System.currentTimeMillis();
+        }
     }
 }

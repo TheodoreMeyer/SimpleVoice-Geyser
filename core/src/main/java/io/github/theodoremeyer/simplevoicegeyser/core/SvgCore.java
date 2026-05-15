@@ -6,6 +6,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioThread;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.Command;
+import io.github.theodoremeyer.simplevoicegeyser.core.data.PlayerVcPswd;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserEventHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
@@ -13,6 +14,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.managers.PlayerManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.JettyServer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.WebSocketManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
+import io.github.theodoremeyer.simplevoicegeyser.core.update.UpdateChecker;
 
 import java.util.logging.Logger;
 
@@ -31,9 +33,14 @@ public final class SvgCore {
     private static SvgCore instance;
 
     /**
+     * Project Version
+     */
+    public static final String VERSION = "0.1.1-Dev";
+
+    /**
      * Config system
      */
-    private SvgConfig config;
+    private final SvgConfig config;
 
     /**
      * The Link to the SVC system
@@ -73,6 +80,11 @@ public final class SvgCore {
 
         this.config = new SvgConfig(platform.getFile(DataType.CONFIG));
 
+        Boolean checkUpdate = config.UPDATE_CHECKER_ENABLED.get();
+        if (Boolean.TRUE.equals(checkUpdate)) {
+            new UpdateChecker(VERSION, platform).check();
+        }
+
         new AudioThread();
 
         //Managers
@@ -93,7 +105,7 @@ public final class SvgCore {
             getLogger().info("Debug mode enabled.");
         }
 
-        this.playerVcPswd = new PlayerVcPswd(platform.getFile(DataType.PASSWORD));
+        this.playerVcPswd = new PlayerVcPswd(this);
 
         this.vcBridge = platform.registerVcBridge();
 
@@ -106,7 +118,7 @@ public final class SvgCore {
         }
         this.groupManager = new GroupManager(vcBridge);
 
-        this.command = new Command(groupManager);
+        this.command = new Command(groupManager, this);
 
         int port = getConfig().PORT.get();
         String host = getConfig().BIND_ADDRESS.get();
@@ -148,6 +160,7 @@ public final class SvgCore {
         }
         platform.disable();
         AudioThread.shutdown();
+        playerVcPswd.shutdown();
     }
 
     //-----

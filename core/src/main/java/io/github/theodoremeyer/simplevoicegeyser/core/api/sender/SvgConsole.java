@@ -6,6 +6,11 @@ package io.github.theodoremeyer.simplevoicegeyser.core.api.sender;
 public abstract class SvgConsole extends Sender {
 
     /**
+     * No console args- Create the console
+     */
+    public SvgConsole() {}
+
+    /**
      * Just give the Consoles name
      * @return Console
      */

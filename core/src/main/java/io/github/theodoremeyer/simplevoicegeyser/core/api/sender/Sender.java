@@ -6,6 +6,11 @@ package io.github.theodoremeyer.simplevoicegeyser.core.api.sender;
 public abstract class Sender {
 
     /**
+     * Create a sender, no top-args needed
+     */
+    public Sender() {}
+
+    /**
      * Send a message
      * @param message message to send
      */

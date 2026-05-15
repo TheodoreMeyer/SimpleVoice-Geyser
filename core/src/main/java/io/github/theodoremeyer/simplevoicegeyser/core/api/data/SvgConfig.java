@@ -96,10 +96,17 @@ public final class SvgConfig {
             new ConfigKey <>(this, "debug", false);
 
     /**
+     * Config path: updatechecker.enable
+     */
+    public final ConfigKey<Boolean> UPDATE_CHECKER_ENABLED =
+            new ConfigKey <>(this, "updatechecker.enable", true);
+
+
+    /**
      * Config path: config-version
      */
     private final ConfigKey<String> CONFIG_VERSION =
-            new ConfigKey <>(this, "config-version", "0.1.0");
+            new ConfigKey <>(this, "config-version", "0.1.1");
 
     /**
      * Represents all the keys.
@@ -114,6 +121,7 @@ public final class SvgConfig {
             DEFAULT_GROUP_PASSWORD,
             PORT,
             BIND_ADDRESS,
+            UPDATE_CHECKER_ENABLED,
             DEBUG,
             CONFIG_VERSION
     );
@@ -123,7 +131,7 @@ public final class SvgConfig {
     /**
      * Apply missing config keys/values
      */
-    private void applyDefaults() {
+    public void applyDefaults() {
         SvgFile file = getFile();
 
         for (ConfigKey<?> key : ALL_KEYS) {
@@ -131,6 +139,7 @@ public final class SvgConfig {
                 file.set(key.path(), key.def());
             }
         }
+        file.set(CONFIG_VERSION.path(), CONFIG_VERSION.def());
 
         file.save();
     }

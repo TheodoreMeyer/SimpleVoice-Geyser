@@ -15,11 +15,12 @@ import java.util.UUID;
 /**
  * The Class Sending Audio to Client
  */
-public final class SvgAudioListener implements PlayerAudioListener {
+public final class SvgAudioListener {
 
     private final UUID listenerId;
     private final VoicechatServerApi serverApi;
     private final OpusDecoder decoder;
+    private PlayerAudioListener listener;
 
     /**
      * Session, used for less method checks
@@ -39,16 +40,6 @@ public final class SvgAudioListener implements PlayerAudioListener {
 
         // Decoder for opus to raw PCM (16-bit signed, little-endian)
         decoder = serverApi.createDecoder();
-    }
-
-    /**
-     * Get the uuid of this listener
-     * The id of the listener is currently the id of the player it is listening for
-     * @return UUID of the listener
-     */
-    @Override
-    public UUID getListenerId() {
-        return listenerId;
     }
 
     /**
@@ -85,7 +76,7 @@ public final class SvgAudioListener implements PlayerAudioListener {
      * May be moved to class constructor
      */
     public void registerListener() {
-        PlayerAudioListener listener = serverApi.playerAudioListenerBuilder()
+        this.listener = serverApi.playerAudioListenerBuilder()
                 .setPlayer(listenerId)
                 .setPacketListener(this::onAudioReceived)
                 .build();
@@ -110,6 +101,7 @@ public final class SvgAudioListener implements PlayerAudioListener {
     public void unRegister() {
         decoder.resetState();
         decoder.close();
+        serverApi.unregisterAudioListener(listener);
     }
 
     /**
@@ -117,7 +109,6 @@ public final class SvgAudioListener implements PlayerAudioListener {
      * Is the same as listener id
      * @return UUID the player's uuid
      */
-    @Override
     public UUID getPlayerUuid() {
         return listenerId;
     }

@@ -4,8 +4,10 @@ import com.google.gson.*;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricLogger;
 
-import java.io.*;
-import java.nio.file.Files;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
@@ -15,8 +17,8 @@ public class ConfigFile extends SvgFile {
 
     private final File file;
     private JsonObject data;
-    
-    private FabricLogger logger;
+
+    private final FabricLogger logger;
 
     public ConfigFile(File dataFolder, FabricLogger logger) {
         this.logger = logger;
@@ -38,23 +40,6 @@ public class ConfigFile extends SvgFile {
         } catch (Exception e) {
             logger.error("[Config] Failed to initialize config.json", e);
             this.data = new JsonObject();
-        }
-    }
-
-    private boolean copyDefaultFromResources() {
-        try (InputStream in = getClass().getResourceAsStream("/config.json")) {
-
-            if (in == null) {
-                logger.warning("[Config] No default config.json found.");
-                return false;
-            }
-
-            Files.copy(in, file.toPath());
-            return true;
-
-        } catch (Exception e) {
-            logger.error("[Config] Failed to copy default config.json", e);
-            return false;
         }
     }
 
@@ -84,19 +69,16 @@ public class ConfigFile extends SvgFile {
 
         JsonElement element;
 
-        if (value instanceof String s) {
-            element = new JsonPrimitive(s);
-        } else if (value instanceof Number n) {
-            element = new JsonPrimitive(n);
-        } else if (value instanceof Boolean b) {
-            element = new JsonPrimitive(b);
-        } else if (value instanceof Character c) {
-            element = new JsonPrimitive(c);
-        } else if (value == null) {
-            element = JsonNull.INSTANCE;
-        } else {
-            logger.warning("Unsupported type: " + value.getClass());
-            return;
+        switch (value) {
+            case String s -> element = new JsonPrimitive(s);
+            case Number n -> element = new JsonPrimitive(n);
+            case Boolean b -> element = new JsonPrimitive(b);
+            case Character c -> element = new JsonPrimitive(c);
+            case null -> element = JsonNull.INSTANCE;
+            default -> {
+                logger.warning("Unsupported type: " + value.getClass());
+                return;
+            }
         }
 
         setValue(path, element);
@@ -138,6 +120,29 @@ public class ConfigFile extends SvgFile {
             GSON.toJson(data, writer);
         } catch (IOException e) {
             logger.error("Failed to save config.json", e);
+        }
+    }
+
+    @Override
+    public void reload() {
+        if (!file.exists()) {
+            logger.warning("[Config] Reload failed: file does not exist.");
+            return;
+        }
+
+        try (FileReader reader = new FileReader(file)) {
+
+            JsonElement element = JsonParser.parseReader(reader);
+
+            if (element == null || !element.isJsonObject()) {
+                logger.warning("[Config] Reload failed: invalid JSON, keeping current state.");
+                return;
+            }
+
+            this.data = element.getAsJsonObject();
+
+        } catch (Exception e) {
+            logger.error("[Config] Failed to reload config.json", e);
         }
     }
 

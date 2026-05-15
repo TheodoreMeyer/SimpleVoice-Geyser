@@ -11,9 +11,14 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Platform independant Player system
+ * Platform independent Player system
  */
 public final class PlayerManager {
+
+    /**
+     * Create the player manager
+     */
+    public PlayerManager() {}
 
     //PLAYER CACHE
     /**

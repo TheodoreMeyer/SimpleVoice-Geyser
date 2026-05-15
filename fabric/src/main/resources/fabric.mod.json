@@ -23,7 +23,7 @@
   "depends": {
     "minecraft": ">=${mc_min}",
     "fabricloader": ">=0.15.0",
-    "fabric-api": ">=${fabric_api_version}",
+    "fabric-api": "*",
     "voicechat_api": ">=${voicechat_api_version}"
   }
 }

@@ -39,29 +39,8 @@ function createSocket(onStatusChange) {
             try {
 
                 const data = JSON.parse(event.data);
-
-                // 🔴 detect auth failure BEFORE logging
-                const msg = (data.message || "").toLowerCase();
-
-                if (data.type === "error") {
-
-                    const isFatalError = msg.includes("bedrock player to join") ||
-                        msg.includes("Use /svg pswd") ||
-                        msg.includes("access denied:") ||
-                        msg.includes("timeout") ||
-                        msg.includes("left the game.")
-                    if (isFatalError) {
-                        stopReconnection(); // prevent any further reconnect attempts
-
-                        // optional: immediately close so onclose handles it cleanly
-                        if (ws && ws.readyState === WebSocket.OPEN) {
-                            ws.close();
-                        }
-                    }
-                }
-
-                if (msg.includes("left the game.")) {
-                    stopReconnection(); // stop trying to reconnect if explicitly kicked
+                if (data?.fatal === true) {
+                    stopReconnection();
                 }
 
                 log((data.type || "info") + ": " + (data.message || JSON.stringify(data)));
@@ -82,10 +61,14 @@ function createSocket(onStatusChange) {
         }
     };
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
         log("Disconnected.");
         resetAudioState();
         onStatusChange(false);
+
+        if (event?.code === 4003 || event?.reason === "fatal") {
+            stopReconnection();
+        }
 
         if (!manualClose && lastCredentials && reOpen) {
             reconnectTimeout = setTimeout(() => {
@@ -132,5 +115,6 @@ export function isConnected() {
 
 function stopReconnection() {
     reOpen = false;
+    clearTimeout(reconnectTimeout);
     reconnectTimeout = null; // prevent any pending reconnects
 }

@@ -25,12 +25,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class VoiceChatBridge implements VoicechatPlugin {
 
     /**
-     * VoiceChatApi
-     * @apiNote not currently used
-     * @see VoicechatApi api
-     */
-    private VoicechatApi api;
-    /**
      * The VoiceChatSeverApi
      * @see VoicechatServerApi server api
      */
@@ -78,7 +72,6 @@ public class VoiceChatBridge implements VoicechatPlugin {
      */
     @Override
     public void initialize(VoicechatApi api) {
-        this.api = api;
         SvgCore.getLogger().info("[VCBridge] VoiceChat API initialized");
 
     }
@@ -215,9 +208,8 @@ public class VoiceChatBridge implements VoicechatPlugin {
 
         SvgAudioListener listener = audioListeners.remove(uuid); //remove the listener from the map
         if (listener != null) {
-            serverApi.unregisterAudioListener(listener); //unregister the listener
-            SvgCore.debug("VCBridge", "Unregistered audio listener for: " + uuid);
             listener.unRegister();
+            SvgCore.debug("VCBridge", "Unregistered audio listener for: " + uuid);
         } else {
             if (SvgCore.getPlayerManager().getPlayer(uuid) != null) {
                 SvgCore.getLogger().warning("[VCBridge] No audio listener found for: " + uuid);

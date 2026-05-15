@@ -25,6 +25,7 @@ public record ConfigKey<T>(SvgConfig config, String path, T def) {
             default -> throw new IllegalStateException("Unsupported type: " + def.getClass());
         };
 
+        if (value == null) return def;
         return (T) value;
     }
 

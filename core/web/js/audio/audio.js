@@ -1,3 +1,5 @@
+import {log} from "../utils/logger.js";
+
 let audioContext;
 let audioWorkletNode;
 
@@ -61,7 +63,7 @@ export async function startMic(deviceId) {
 
     microphoneStream = await navigator.mediaDevices.getUserMedia({
         audio: {
-            deviceId,
+            deviceId: deviceId,
             noiseSuppression: true,
             echoCancellation: true,
             autoGainControl: true,
@@ -194,20 +196,63 @@ export function resetAudioState() {
     available = 0;
 }
 
+// audio.js
+export async function getAudioDevices() {
+    let permissionStream = null;
+
+    try {
+        // Required so device labels are available
+        permissionStream = await navigator.mediaDevices.getUserMedia({
+            audio: true
+        });
+
+        const devices = await navigator.mediaDevices.enumerateDevices();
+
+        return {
+            microphones: devices.filter(
+                device => device.kind === "audioinput"
+            ),
+            speakers: devices.filter(
+                device => device.kind === "audiooutput"
+            )
+        };
+
+    } catch (error) {
+        console.warn("Microphone permission denied:", error);
+
+        return {
+            microphones: [],
+            speakers: []
+        };
+
+    } finally {
+        permissionStream?.getTracks().forEach(track => track.stop());
+    }
+}
+
 export async function setOutputDevice(deviceId) {
     if (audioContext.setSinkId) {
         try {
             await audioContext.setSinkId(deviceId);
+            log(`AudioContext output set to device ${deviceId}`);
             return true;
-        } catch {}
+        } catch {
+            log("Failed to set audio context sink ID, falling back to audio element");
+        }
+    } else {
+        log("AudioContext does not support setSinkId, falling back to audio element");
     }
 
     if (window.audioElement?.setSinkId) {
         try {
-            await audioElement.setSinkId(deviceId);
+            await window.audioElement.setSinkId(deviceId);
+            log(`AudioElement output set to device ${deviceId}`);
             return true;
-        } catch {}
-    }
+        } catch {
+            log("Failed to set audio context sink ID");
+        }
+    } else {log("Audio element does not support setSinkId, cannot set output device");}
+    log("No method available to set audio output device");
 
     return false;
 }

@@ -5,6 +5,8 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
 
+import java.io.File;
+
 /**
  * Represents the bridge between a platform like spigot and SVG core
  */
@@ -20,6 +22,18 @@ public interface Platform {
      * @return the prefix
      */
     String getPrefix();
+
+    /**
+     * The server's mc version
+     * @return mc version (x.x.x)
+     */
+    String getServerMcVersion();
+
+    /**
+     * The Server platform
+     * @return platform: bukkit, fabric, etc
+     */
+    String getServerPlatform();
 
     /**
      * Register VoiceChatBridge
@@ -39,6 +53,12 @@ public interface Platform {
      * @return the file
      */
     SvgFile getFile(DataType type);
+
+    /**
+     * Get the DataFolder to save internal data in
+     * @return datafolder
+     */
+    File getDataFolder();
 
     /**
      * Figure out if a mod/plugin is enabled

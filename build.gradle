@@ -1,4 +1,4 @@
-plugins {
+ plugins {
     id("base")
 }
 
@@ -45,7 +45,7 @@ allprojects {
     }
 }
 
-subprojects {\
+subprojects {
     apply plugin: "java"
 
     java {

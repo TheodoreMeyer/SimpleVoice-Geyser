@@ -13,11 +13,13 @@ import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricLogger;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricVcBridge;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.SvgListener;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data.ConfigFile;
-import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data.PasswordFile;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.SharedConstants;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 /**
  * Fabric entrypoint for SimpleVoiceGeyser
@@ -29,7 +31,6 @@ public class SvgMod implements ModInitializer, Platform {
 
     private static LuckPermsHook luckPermsHook;
 
-    private PasswordFile passwordFile;
     private ConfigFile configFile;
 
     private final FabricLogger logger = new FabricLogger();
@@ -94,21 +95,15 @@ public class SvgMod implements ModInitializer, Platform {
     }
 
     public void createFiles() {
-        File dir = getDataFolder();
+        File dir = getDataFolder().getAbsoluteFile();
 
-        // 1. Guarantee base directory exists
-        if (!dir.exists()) {
-            boolean created = dir.mkdirs();
-            if (!created && !dir.exists()) {
-                logger.severe(getPrefix() + "Failed to create data directory: " + dir.getAbsolutePath());
-            }
+        try {
+            Files.createDirectories(dir.toPath());
+        } catch (IOException e) {
+            logger.error(getPrefix() + "Failed to create data directory: " + dir.getAbsolutePath(), e);
+            return;
         }
 
-        // 2. Optional: normalize to absolute path
-        dir = dir.getAbsoluteFile();
-
-        // 3. Now safe to construct files (NO file existence logic inside them anymore)
-        this.passwordFile = new PasswordFile(dir, logger);
         this.configFile = new ConfigFile(dir, logger);
     }
 
@@ -120,6 +115,16 @@ public class SvgMod implements ModInitializer, Platform {
     @Override
     public String getPrefix() {
         return SvgColor.GREEN + "[" + SvgColor.AQUA + "SVG" + SvgColor.GREEN + "] " + SvgColor.RESET;
+    }
+
+    @Override
+    public String getServerMcVersion() {
+        return SharedConstants.getCurrentVersion().name();
+    }
+
+    @Override
+    public String getServerPlatform() {
+        return "fabric";
     }
 
     @Override
@@ -136,8 +141,6 @@ public class SvgMod implements ModInitializer, Platform {
     public SvgFile getFile(DataType type) {
         if (type == DataType.CONFIG) {
             return configFile;
-        } else if (type == DataType.PASSWORD) {
-            return passwordFile;
         }
         return null;
     }
