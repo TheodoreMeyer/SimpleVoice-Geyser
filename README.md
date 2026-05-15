@@ -38,7 +38,7 @@ A Geyser Extension to allow Bedrock Clients to connect with Simple voice Chat.
 - old wiki: [wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki).
 
 ## Coming Soon
-- Dev Release (v 1.1.1-Dev)
+- Dev Release (v 0.1.2-Dev)
 - Initial Release (v 1.0.0)
 
 ## Features to be worked on
@@ -61,8 +61,6 @@ Reach out through issues!
 - GeyserMC 2.9.0-SNAPSHOT or compatible is required to work, It must run on the server.
 - Java 21 or newer is required to build this project from source.
 
-- Releases/versions/jars ending with -Dev{version} mean this is a dev/test version and not meant for productional use.
-   - you are welcome to test these, but no guarantee they will work.
 - Microphone/Speaker options may or may not work, depending on your browser, as this was built for Google Chrome.
 
 ## Developer Notes

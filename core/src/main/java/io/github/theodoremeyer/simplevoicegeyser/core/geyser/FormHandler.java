@@ -197,7 +197,7 @@ public final class FormHandler {
      */
     public void adminMenu(SvgPlayer p) {
         DropdownComponent.@NonNull Builder dropdown = DropdownComponent.builder("Commands");
-        dropdown.option("Reload Config"); //TODO
+        dropdown.option("Reload Config");
         dropdown.option("Check for Updates");
 
         Form form = CustomForm.builder()

@@ -10,7 +10,6 @@ import java.util.UUID;
 
 /**
  * Class that Handles SVG Passwords
- * TODO: Test
  */
 public final class PlayerVcPswd {
 
