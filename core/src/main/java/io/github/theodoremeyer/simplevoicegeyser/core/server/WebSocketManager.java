@@ -144,6 +144,13 @@ public final class WebSocketManager {
         sendJson(uuid, type, message, false);
     }
 
+    /**
+     * Send a message to client
+     * @param uuid client uuid
+     * @param type type of message
+     * @param message message to send
+     * @param fatal if it causes a fatal error
+     */
     public void sendJson(UUID uuid, String type, String message, boolean fatal) {
         Session session = clients.get(uuid); // get session to send to
         if (session == null || !session.isOpen()) {
