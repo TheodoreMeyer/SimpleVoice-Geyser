@@ -8,6 +8,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.SubCommand;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.FormHandler;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.servlets.JettyWebSocket;
 
 import java.util.UUID;
 
@@ -64,6 +65,7 @@ public final class PswdCommand implements SubCommand {
         }
 
         SvgCore.getPasswordManager().setPassword(player, password);
+        JettyWebSocket.clearAuthFailures(player.getName());
         return true;
     }
 }

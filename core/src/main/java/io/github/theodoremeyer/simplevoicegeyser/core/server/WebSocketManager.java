@@ -98,13 +98,17 @@ public final class WebSocketManager {
         return false;
     }
 
-    public boolean disconnectClient(UUID uuid, int statusCode, String reason) {
+    /**
+     * Remove a client
+     * @param uuid client's uuid
+     * @param statusCode code
+     * @param reason why
+     */
+    public void disconnectClient(UUID uuid, int statusCode, String reason) {
         Session session = clients.remove(uuid);
         if (session != null && session.isOpen()) {
             session.close(statusCode, reason);
-            return true;
         }
-        return false;
     }
 
     /**
@@ -114,7 +118,7 @@ public final class WebSocketManager {
     public void playerLeave(SvgPlayer player) {
         UUID uuid = player.getUniqueId();
         sendJson(uuid, "error", player.getName() + " left the game.", true);
-        disconnectClient(uuid, 4003, "fatal");
+        disconnectClient(uuid, 4003, "Player left the game.");
     }
 
     /**
