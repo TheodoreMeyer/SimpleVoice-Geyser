@@ -15,7 +15,6 @@ import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.SvgListener;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data.ConfigFile;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.SharedConstants;
 
 import java.io.File;
 import java.io.IOException;
@@ -119,7 +118,10 @@ public class SvgMod implements ModInitializer, Platform {
 
     @Override
     public String getServerMcVersion() {
-        return SharedConstants.getCurrentVersion().name();
+        return FabricLoader.getInstance()
+                .getModContainer("minecraft")
+                .map(container -> container.getMetadata().getVersion().getFriendlyString())
+                .orElse(null);
     }
 
     @Override
