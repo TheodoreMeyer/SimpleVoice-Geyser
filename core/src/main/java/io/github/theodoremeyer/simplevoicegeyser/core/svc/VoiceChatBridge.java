@@ -141,12 +141,12 @@ public class VoiceChatBridge implements VoicechatPlugin {
         try {
             SvgAudioSender sender = new SvgAudioSender(serverApi, uuid); //create the sender
             audioSenders.put(uuid, sender);
-            SvgCore.debug("VCBridge", "SvgAudioSender created and registered for: " + uuid);
+            SvgCore.getLogger().debug("SvgAudioSender created and registered for: " + uuid);
             SvgPlayer.sendMessage(SvgCore.getPrefix() + SvgColor.AQUA + "AudioSender Registered!");
 
             return sender;
         } catch (RuntimeException e) {
-            SvgCore.debug("VCBridge", "Unable to register AudioSender for: " + uuid, e);
+            SvgCore.getLogger().debug("VCBridge: Unable to register AudioSender for: " + uuid, e);
             SvgPlayer.sendMessage(SvgCore.getPrefix() + SvgColor.RED + "Failed to register AudioSender");
         }
         return null;
@@ -163,13 +163,13 @@ public class VoiceChatBridge implements VoicechatPlugin {
 
         if (sender != null) {
             sender.unregister(); //unregister the sender
-            SvgCore.debug("VCBridge", "SvgAudioSender unregistered for: " + uuid);
+            SvgCore.getLogger().debug("VcBridge: SvgAudioSender unregistered for: " + uuid);
             if (SvgPlayer != null) { SvgPlayer.sendMessage(SvgCore.getPrefix() + "audioSender unregistered."); }
         } else {
             if (SvgPlayer != null) {
                 SvgCore.getLogger().warning("[VCBridge] No SvgAudioSender found to unregister for: " + uuid);
             } else {
-                SvgCore.debug("VCBridge", "No SvgAudioSender found to unregister for: " + uuid);
+                SvgCore.getLogger().debug("VcBridge: No SvgAudioSender found to unregister for: " + uuid);
             }
         }
     }
@@ -193,7 +193,7 @@ public class VoiceChatBridge implements VoicechatPlugin {
         SvgAudioListener listener = new SvgAudioListener(uuid, session, serverApi); //create a new audio listener
         listener.registerListener();
         audioListeners.put(uuid, listener); //add it to the listener map
-        SvgCore.debug("VCBridge", "Registered audio listener for: " + uuid);
+        SvgCore.getLogger().debug("VcBridge: Registered audio listener for: " + uuid);
     }
 
     /**
@@ -209,12 +209,12 @@ public class VoiceChatBridge implements VoicechatPlugin {
         SvgAudioListener listener = audioListeners.remove(uuid); //remove the listener from the map
         if (listener != null) {
             listener.unRegister();
-            SvgCore.debug("VCBridge", "Unregistered audio listener for: " + uuid);
+            SvgCore.getLogger().debug("VCBridge: Unregistered audio listener for: " + uuid);
         } else {
             if (SvgCore.getPlayerManager().getPlayer(uuid) != null) {
                 SvgCore.getLogger().warning("[VCBridge] No audio listener found for: " + uuid);
             } else {
-                SvgCore.debug("VCBridge", "No audio listener found for: " + uuid);
+                SvgCore.getLogger().debug("VCBridge: No audio listener found for: " + uuid);
             }
         }
     }

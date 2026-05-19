@@ -63,10 +63,7 @@ public final class SvgCore {
 
     private Command command;
 
-    /**
-     * Whether debug is enabled
-     */
-    private boolean debug = false;
+    private State state = State.NEW;
 
     /**
      * Initialize the Core of SimpleVoice-Geyser
@@ -99,43 +96,60 @@ public final class SvgCore {
     /**
      * Start SVG server and handling with SVC
      */
-    public void init() {
-        this.debug = getConfig().DEBUG.get();
-        if (debug) {
-            getLogger().info("Debug mode enabled.");
+    public synchronized boolean init() {
+
+        if (state == State.RUNNING) {
+            return true;
         }
 
-        this.playerVcPswd = new PlayerVcPswd(this);
-
-        this.vcBridge = platform.registerVcBridge();
-
-
-        if (this.vcBridge == null) {
-            getLogger().severe("Failed to register VoiceChatBridge. Disabling SimpleVoice-Geyser.");
-            platform.disable();
-            AudioThread.shutdown();
-            return;
+        if (state == State.SHUTDOWN || state == State.FAILED) {
+            return false;
         }
-        this.groupManager = new GroupManager(vcBridge);
-
-        this.command = new Command(groupManager, this);
-
-        int port = getConfig().PORT.get();
-        String host = getConfig().BIND_ADDRESS.get();
 
         try {
-            jettyServer = new JettyServer(host, port); //start the jetty server
-            jettyServer.start();
-            getLogger().info("Jetty server started on port: " + port);
-        } catch (Exception e) {
-            getLogger().severe("Failed to start Jetty server: " + e.getMessage());
-            shutdown();
-        }
+            if (getConfig().DEBUG.get()) {
+                getLogger().info("Debug mode enabled.");
+                getLogger().setDebug(true);
+            }
 
-        if (GeyserHook.isGeyser()) {
-            new GeyserEventHook();
-        }  else {
-            getLogger().warning("Geyser is not installed. Skipping Bedrock Events");
+            this.playerVcPswd = new PlayerVcPswd(this);
+
+            int port = getConfig().PORT.get();
+            String host = getConfig().BIND_ADDRESS.get();
+
+            this.jettyServer = new JettyServer(host, port);
+            this.jettyServer.start();
+
+            getLogger().info("Jetty server started on port: " + port);
+
+            this.vcBridge = platform.registerVcBridge();
+
+            if (this.vcBridge == null) {
+                getLogger().severe("Failed to register VoiceChatBridge.");
+                shutdown();
+                state = State.FAILED;
+                return false;
+            }
+
+            this.groupManager = new GroupManager(vcBridge);
+            this.command = new Command(groupManager, this);
+
+            if (GeyserHook.isGeyser()) {
+                new GeyserEventHook();
+            } else {
+                getLogger().warning("Geyser is not installed. Skipping Bedrock events.");
+            }
+
+            state = State.RUNNING;
+            return true;
+
+        } catch (Exception e) {
+
+            getLogger().severe("Init failed: " + e.getMessage());
+
+            shutdown();
+            state = State.FAILED;
+            return false;
         }
     }
 
@@ -143,24 +157,44 @@ public final class SvgCore {
      * Disable SVG
      */
     public static void disable() {
-        getInstance().shutdown();
+        if (getInstance() != null) {
+            getInstance().shutdown();
+        }
     }
 
     /**
      * Stops itself
      */
-    private void shutdown() {
-        if (jettyServer != null) {
-            try {
-                jettyServer.stop();
-                getLogger().info("Jetty server stopped successfully.");
-            } catch (Exception e) {
-                getLogger().severe("Failed to stop Jetty server: " + e.getMessage());
-            }
+    private synchronized void shutdown() {
+
+        if (state == State.SHUTDOWN) {
+            return;
         }
-        platform.disable();
+
+        state = State.SHUTDOWN;
+
+        webSocketManager.disconnectAllClients();
+
+        try {
+            if (jettyServer != null) {
+                jettyServer.stop();
+                getLogger().info("Jetty server stopped.");
+            }
+        } catch (Exception e) {
+            getLogger().severe("Failed to stop Jetty server: " + e.getMessage());
+            getLogger().debug("Jetty stop failed", e);
+        }
+
         AudioThread.shutdown();
-        playerVcPswd.shutdown();
+
+        if (playerVcPswd != null) {
+            playerVcPswd.shutdown();
+        }
+
+        vcBridge = null;
+        jettyServer = null;
+        groupManager = null;
+        command = null;
     }
 
     //-----
@@ -182,29 +216,6 @@ public final class SvgCore {
      */
     public static String getPrefix() {
         return getInstance().platform.getPrefix();
-    }
-
-    /**
-     * debug option with no throwable
-     * @param section the part of plugin debugging
-     * @param message the message
-     */
-    public static void debug(String section, String message) {
-        if (instance != null && getInstance().debug) {
-            getLogger().info("[Debug][" + section + "] " + message);
-        }
-    }
-
-    /**
-     * debug option with a throwable
-     * @param section the part of plugin debugging
-     * @param message the message
-     * @param t the throwable/error thrown
-     */
-    public static void debug(String section, String message, Throwable t) {
-        if (instance != null && getInstance().debug) {
-            getLogger().info("[Debug][" + section + "] " + message + ", " + t);
-        }
     }
 
     //-----
@@ -277,4 +288,8 @@ public final class SvgCore {
      * @return SvgCommand
      */
     public static Command getCommand() { return getInstance().command; }
+
+    private enum State {
+        NEW, RUNNING, FAILED, SHUTDOWN
+    }
 }

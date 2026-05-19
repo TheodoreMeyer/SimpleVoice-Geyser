@@ -171,7 +171,7 @@ public final class GroupManager {
         }
 
         // Debug getLogger password state
-        SvgCore.debug("[GROUPS]", "svgPlayer: " + svgPlayer.getName()
+        SvgCore.getLogger().debug("[GROUPS]: svgPlayer: " + svgPlayer.getName()
                 + " | Group: " + groupName
                 + " | Provided Password: " + password
                 + " | Actual Password: " + groupPassword);
@@ -190,7 +190,7 @@ public final class GroupManager {
 
         // Leave previous group
         if (connection.isInGroup()) {
-            SvgCore.debug("[SVG] ", svgPlayer.getName()
+            SvgCore.getLogger().debug("[SVG] " + svgPlayer.getName()
                     + " left group " + connection.getGroup().getName());
             svgPlayer.sendMessage("You left group: "
                     + connection.getGroup().getName());
@@ -198,7 +198,7 @@ public final class GroupManager {
 
         connection.setGroup(group);
 
-        SvgCore.debug("[SVG]", svgPlayer.getName()
+        SvgCore.getLogger().debug("[SVG]" + svgPlayer.getName()
                 + " successfully joined group '" + groupName + "'");
 
         return true;

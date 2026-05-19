@@ -38,43 +38,60 @@ public class SvgMod implements ModInitializer, Platform {
 
     @Override
     public void onInitialize() {
+
         if (ready) {
             logger.severe("Already Initialized!");
             return;
         }
 
         logger.info(getPrefix() + "Initializing Fabric platform...");
+
         try {
+
             createFiles();
 
-            // Init core AFTER filesystem is ready
             core = new SvgCore(this);
-
-            new FabricCommand();
-            new SvgListener();
 
             luckPermsHook = new LuckPermsHook();
 
             ready = true;
+
+            logger.info(getPrefix() + "Fabric bootstrap complete.");
+
             if (voiceChatBridge != null) {
-                core.init();
+
+                if (!core.init()) {
+                    logger.severe(getPrefix() + "Core init failed.");
+                    disable();
+                    return;
+                }
+
+                new FabricCommand();
+                new SvgListener();
             }
 
-            logger.info(getPrefix() + "Initialization complete.");
-
         } catch (Exception e) {
-            logger.error(getPrefix() + "Failed to initialize. ", e);
+            logger.error(getPrefix() + "Failed to initialize.", e);
             disable();
         }
     }
 
     public static void injectBridge(FabricVcBridge bridge) {
-        if (voiceChatBridge == null) {
-            voiceChatBridge = bridge;
-            if (ready) {
-                core.init();
-            }
+        if (voiceChatBridge != null) { return; }
+        voiceChatBridge = bridge;
+
+        if (!ready || core == null) {
+            return;
         }
+
+        if (!core.init()) {
+            SvgCore.getLogger().severe("Core init failed after VC injection.");
+            SvgCore.disable();
+            return;
+        }
+
+        new FabricCommand();
+        new SvgListener();
     }
 
     //Permissions

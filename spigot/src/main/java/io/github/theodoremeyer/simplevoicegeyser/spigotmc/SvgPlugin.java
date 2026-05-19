@@ -55,23 +55,34 @@ public class SvgPlugin extends JavaPlugin implements Platform {
 
     @Override
     public void onEnable() {
-        core.init();
+
+        this.core = new SvgCore(this);
+
+        if (!core.init()) {
+
+            logger.severe("Core initialization failed. Disabling plugin.");
+            Bukkit.getPluginManager().disablePlugin(this);
+            return;
+        }
 
         PluginCommand command = getCommand("svg");
+
         if (command == null) {
+
             logger.severe("Failed to register command: 'svg' not found in plugin.yml");
+
             SvgCore.disable();
             return;
         }
+
         command.setExecutor(new SvgCommand());
 
-        SvgListener listener = new SvgListener();
-        Bukkit.getPluginManager().registerEvents(listener, this);
+        Bukkit.getPluginManager().registerEvents(new SvgListener(), this);
     }
 
     @Override
     public void onDisable() {
-        SvgCore.getWsManager().disconnectAllClients();
+        SvgCore.disable();
     }
 
     @Override
@@ -96,18 +107,21 @@ public class SvgPlugin extends JavaPlugin implements Platform {
 
     @Override
     public VoiceChatBridge registerVcBridge() {
-        BukkitVoicechatService service = Bukkit.getServicesManager().load(BukkitVoicechatService.class);
-        VoiceChatBridge bridge = null;
 
-        if (service != null) { //make sure BukkitVoicechatService exists
-            VoiceChatBridge voicechatBridge = new VoiceChatBridge();
-            service.registerPlugin(voicechatBridge); //register the main api class
-            bridge = voicechatBridge;
-            getLogger().info("Registered plugin with Simple Voice Chat.");
-        } else {
-            getLogger().severe("Disabling due to: no voice chat found.");
-            Bukkit.getPluginManager().disablePlugin(this);
+        BukkitVoicechatService service =
+                Bukkit.getServicesManager().load(BukkitVoicechatService.class);
+
+        if (service == null) {
+            logger.severe("No Voice Chat service found. Disabling plugin.");
+            SvgCore.disable();
+            return null;
         }
+
+        VoiceChatBridge bridge = new VoiceChatBridge();
+
+        service.registerPlugin(bridge);
+
+        logger.info("Registered plugin with Simple Voice Chat.");
 
         return bridge;
     }

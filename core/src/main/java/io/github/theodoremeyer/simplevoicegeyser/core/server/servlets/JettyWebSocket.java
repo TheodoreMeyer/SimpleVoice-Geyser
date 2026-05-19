@@ -124,7 +124,7 @@ public final class JettyWebSocket {
 
         } catch (Exception e) {
             SvgCore.getLogger().severe("[VCBridge] code: 1, Exception: " + e.getMessage());
-            SvgCore.debug("VCBridge", "error reading client data", e);
+            SvgCore.getLogger().debug("VCBridge: error reading client data", e);
         }
 
     }
@@ -171,7 +171,7 @@ public final class JettyWebSocket {
      */
     @OnWebSocketError
     public void onError(Throwable error) {
-        SvgCore.debug("WebSocket", "websocket error", error);
+        SvgCore.getLogger().debug("WebSocket: websocket error", error);
         SvgCore.getLogger().info("Error: " + error.getMessage());
     }
 

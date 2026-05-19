@@ -36,7 +36,6 @@ public final class JettyServer {
         this.server = new Server();
 
         double idleTimeoutMinutes = SvgCore.getConfig().IDLE_TIMEOUT.get();
-                //core.getConfig().getDouble("client.idletimeout", 2.0);
 
         idleTimeoutMinutes = Math.clamp(idleTimeoutMinutes, 0.5, 10.0);
 

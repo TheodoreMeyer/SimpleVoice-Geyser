@@ -39,7 +39,7 @@ public final class WebSocketManager {
             try {
                 old.close(); // kill old connection
             } catch (Exception e) {
-                SvgCore.debug("WS", "Failed to close old session for UUID: " + uuid, e);
+                SvgCore.getLogger().debug("WS: Failed to close old session for UUID: " + uuid, e);
                 return false;
             }
         }

@@ -48,7 +48,7 @@ public final class SvgAudioListener {
      * @param soundPacket packet received to send to Client
      */
     public void onAudioReceived(SoundPacket soundPacket) {
-        SvgCore.debug("AudioListener", "received audio from SVG server!");
+        SvgCore.getLogger().debug("AudioListener: received audio from SVG server!");
 
         if (session.isOpen()) {
 
@@ -59,13 +59,13 @@ public final class SvgAudioListener {
                     short[] pcm = decoder.decode(opusData);
                     byte[] bytes = serverApi.getAudioConverter().shortsToBytes(pcm); //convert audio to a usable type
                     session.getRemote().sendBytes(ByteBuffer.wrap(bytes));//send the decoded audio
-                    SvgCore.debug("AudioListener", "Sent audio to websocket client!");
+                    SvgCore.getLogger().debug("AudioListener: Sent audio to websocket client!");
                 } catch (Exception e) {
-                    SvgCore.debug("AudioListener", "Error sending audio to client" + listenerId, e);
+                    SvgCore.getLogger().debug("AudioListener: Error sending audio to client" + listenerId, e);
                 }
             });
         } else {
-            SvgCore.debug("AudioListener","Session Not Open.");
+            SvgCore.getLogger().debug("AudioListener: Session Not Open.");
             SvgCore.getBridge().unregisterAudioListener(listenerId);
         }
     }
