@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/ptt.css">
     <link rel="icon" href="images/svg-temp.png" type="image/x-icon">
+    <link rel="stylesheet" href="css/presets.css">
 </head>
 
 <body>
@@ -112,7 +113,7 @@
     </div>
     <div style="display: flex; align-items: center; gap: 8px;">
         <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank">
-            <img src="images/github.svg" alt="GitHub Link" class="githubicon">
+            <img src="https://github.com/favicon.ico" alt="GitHub Link" class="githubicon">
             <span>Theodore Meyer</span>
         </a>
     </div>
@@ -121,7 +122,33 @@
         <button id="pushToTalkFullscreenBtn" class="pttButton" type="button">Hold to Talk</button>
         <button id="exitFullscreenPttBtn" type="button">Exit Fullscreen</button>
     </div>
+    <div id="color-editor">
+        <h2>Color Customization</h2>
+        <div class="preset-btn" id="preset-field"></div>
+    </div>
+    <script>
+        const availablePresets = ['default', 'dark', 'light', 'green', 'blue', 'purple', 'red', 'yellow', 'cyan', 'monochrome', 'monokai'];
+        const savedPreset = localStorage.getItem('preset');
+        applyPreset(availablePresets.includes(savedPreset) ? savedPreset : 'default');
+        availablePresets.forEach(preset => {
+            document.getElementById('preset-field').insertAdjacentHTML('beforeend', `<button class="preset-btn" data-preset="${preset}">${preset.charAt(0).toUpperCase() + preset.slice(1)}</button>`);
+        });
 
+        document.querySelectorAll('#color-editor button[data-preset]').forEach(button => {
+            button.addEventListener('click', () => {
+                const preset = button.getAttribute('data-preset');
+                applyPreset(preset);
+            });
+        });
+
+        function applyPreset(preset) {
+            for (const name of availablePresets) {
+                document.body.classList.remove(`preset-${name}`);
+            }
+            document.body.classList.add(`preset-${preset}`);
+            localStorage.setItem('preset', preset);
+        }
+    </script>
     <script type="module">
         import { start } from '/js/client.js';
         start(); // manually triggers it
