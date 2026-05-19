@@ -322,7 +322,7 @@ select:hover {
 input:active,
 .githubicon:active,
 select:active {
-  transform: scaleY(1.1) scaleX(1)
+  transform: scaleY(1.1) scaleX(1);
 }
 
 input {
