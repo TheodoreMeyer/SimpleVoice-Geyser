@@ -129,10 +129,10 @@
     <script>
         const availablePresets = ['default', 'dark', 'light', 'green', 'blue', 'purple', 'red', 'yellow', 'cyan', 'monochrome', 'monokai'];
         const savedPreset = localStorage.getItem('preset');
-        applyPreset(availablePresets.includes(savedPreset) ? savedPreset : 'default');
         availablePresets.forEach(preset => {
             document.getElementById('preset-field').insertAdjacentHTML('beforeend', `<button class="preset-btn" data-preset="${preset}">${preset.charAt(0).toUpperCase() + preset.slice(1)}</button>`);
         });
+        applyPreset(availablePresets.includes(savedPreset) ? savedPreset : 'default');
 
         document.querySelectorAll('#color-editor button[data-preset]').forEach(button => {
             button.addEventListener('click', () => {
