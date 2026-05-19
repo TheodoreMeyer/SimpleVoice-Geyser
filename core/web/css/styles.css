@@ -49,6 +49,7 @@ select {
   padding: 8px;
   border-radius: 4px;
   border: none;
+  transition: all 0.3s cubic-bezier(0.5, 0.5, 0, 1);
 }
 
 #joinbtn {
@@ -66,17 +67,17 @@ button {
   color: #000;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.3s cubic-bezier(0.5, 0.5, 0, 1);
 }
 
 button:hover {
   background-color: #00aacc;
-  transform: scale(1.04);
+  transform: scaleY(1.2) scaleX(1.05);
 }
 
 button:active {
   background-color: #008ca8;
-  transform: scale(1.15);
+  transform: scaleY(1.1) scaleX(1);
 }
 
 /*
@@ -250,7 +251,7 @@ MIC
   padding: 10px 18px;
   font-weight: bold;
   border-radius: 6px;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: all 0.3s cubic-bezier(0.5, 0.5, 0, 1);
 }
 
 #muteBtn.muted {
@@ -314,17 +315,19 @@ MISC
 input:hover,
 .githubicon:hover,
 select:hover {
-  transform: scale(1.1);
+  transform: scaleY(1.2) scaleX(1.05);
+  cursor: pointer;
 }
 
 input:active,
 .githubicon:active,
 select:active {
-  transform: scale(1.06);
+  transform: scaleY(1.1) scaleX(1)
 }
 
 input {
   width: 96%;
+  transition: all 0.3s cubic-bezier(0.5, 0.5, 0, 1);
 }
 
 a {
@@ -346,4 +349,11 @@ a {
 a:hover {
   color: #00d4ff;
   text-decoration: underline;
+}
+
+#preset-field {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
 }
