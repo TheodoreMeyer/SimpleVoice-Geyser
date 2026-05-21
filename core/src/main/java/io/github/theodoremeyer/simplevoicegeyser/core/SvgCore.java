@@ -13,6 +13,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.PlayerManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.JettyServer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.WebSocketManager;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
 import io.github.theodoremeyer.simplevoicegeyser.core.update.UpdateChecker;
 
@@ -46,6 +47,11 @@ public final class SvgCore {
      * The Link to the SVC system
      */
     private VoiceChatBridge vcBridge;
+
+    /**
+     * Connection System
+     */
+    private final ConnectionManager connectionManager;
 
     /**
      * Server
@@ -87,6 +93,7 @@ public final class SvgCore {
         //Managers
         this.playerManager = new PlayerManager();
         this.webSocketManager = new WebSocketManager();
+        this.connectionManager = new ConnectionManager();
     }
     
     private static SvgCore getInstance() {
@@ -253,6 +260,15 @@ public final class SvgCore {
      */
     public static PlayerManager getPlayerManager() {
         return getInstance().playerManager;
+    }
+
+    /**
+     * Gets the Connection Manager
+     * @see ConnectionManager
+     * @return connectionManager
+     */
+    public static ConnectionManager getConnectionManager() {
+        return getInstance().connectionManager;
     }
 
     /**
