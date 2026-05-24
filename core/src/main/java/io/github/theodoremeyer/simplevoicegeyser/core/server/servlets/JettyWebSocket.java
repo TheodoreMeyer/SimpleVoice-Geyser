@@ -35,7 +35,7 @@ public final class JettyWebSocket {
 
     /**
      * The authenticated connection.
-     *
+     * <p>
      * Null until login succeeds.
      */
     private SvgConnection connection;
@@ -93,8 +93,8 @@ public final class JettyWebSocket {
                         );
             }
 
-        } catch (Exception e) {
-            SvgCore.getLogger().severe("[VCBridge] code: 1, Exception: " + e.getMessage());
+        } catch (IllegalStateException e) {
+            SvgCore.getLogger().severe("[VCBridge] Exception: " + e.getMessage());
             SvgCore.getLogger().debug("VCBridge: error reading client data", e);
         }
 
@@ -183,25 +183,11 @@ public final class JettyWebSocket {
             return;
         }
 
-        SvgConnection newConnection =
-                connectionManager.connect(
-                        response.uuid(),
-                        session,
-                        response.player()
-                );
-
-        if (newConnection == null) {
-
-            sendRaw(
-                    ConnectionStates.MessageType.ERROR,
-                    "Failed to create connection.",
-                    true
-            );
-
-            return;
-        }
-
-        this.connection = newConnection;
+        this.connection = connectionManager.connect(
+                response.uuid(),
+                session,
+                response.player()
+        );
 
         try {
             connection.authenticate();
@@ -210,7 +196,8 @@ public final class JettyWebSocket {
             SvgCore.getLogger().debug("WebSocket: Failed to authenticate voice connection", e);
 
             connection.sendFatal("Failed to initialize voice chat.",
-                    4003, "voice_init_failure"
+                    ConnectionStates.DisconnectCodes.FATAL_ERROR.getCode(),
+                    "voice_init_failure"
             );
 
             return;

@@ -19,4 +19,28 @@ public class ConnectionStates {
             return jsonString;
         }
     }
+
+    public enum DisconnectCodes {
+
+        SERVER_SHUTDOWN(1001),
+        REPLACED(4001),
+        TIMEOUT(4002),
+        PLAYER_LEAVE(4003),
+        FATAL_ERROR(4004),
+        PACKET_ERROR(4005),
+        CLOSED_SESSION(4006);
+
+        private final int code;
+
+        DisconnectCodes(int code) {
+            this.code = code;
+        }
+
+        public int getCode() { return code; }
+
+        @Override
+        public String toString() {
+            return String.valueOf(code);
+        }
+    }
 }

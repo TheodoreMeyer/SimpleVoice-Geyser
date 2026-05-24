@@ -180,7 +180,8 @@ public final class SvgCore {
 
         state = State.SHUTDOWN;
 
-        webSocketManager.disconnectAllClients();
+        connectionManager.disconnectAll();
+        //webSocketManager.disconnectAllClients();
 
         try {
             if (jettyServer != null) {

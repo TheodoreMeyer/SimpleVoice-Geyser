@@ -15,7 +15,7 @@ import java.util.UUID;
 
 /**
  * Represents a single active websocket + voice connection.
- *
+ * <p>
  * This is the authoritative runtime state for a client.
  */
 public final class SvgConnection {
@@ -72,7 +72,7 @@ public final class SvgConnection {
     /**
      * Initializes voice chat state.
      */
-    public synchronized void authenticate() {
+    public synchronized void authenticate() throws IllegalStateException {
 
         if (authenticated) {
             return;
@@ -102,20 +102,13 @@ public final class SvgConnection {
             );
         }
 
-        audioListener =
-                new SvgAudioListener(
-                        uuid,
-                        session,
-                        api
-                );
+        audioListener = new SvgAudioListener(
+                uuid, session, api);
 
         audioListener.registerListener();
 
-        audioSender =
-                new SvgAudioSender(
-                        api,
-                        uuid
-                );
+        audioSender = new SvgAudioSender(
+                api, uuid);
 
         authenticated = true;
 
@@ -126,23 +119,18 @@ public final class SvgConnection {
 
     /**
      * Disconnects and cleans up this connection.
-     *
+     * <p>
      * Safe to call multiple times.
      *
      * @param code websocket close code
      * @param reason websocket close reason
      */
-    public synchronized void disconnect(
-            int code,
-            String reason
-    ) {
-
+    public synchronized void disconnect(int code, String reason) {
         if (closed) {
             return;
         }
 
         closed = true;
-
         authenticated = false;
 
         if (audioSender != null) {
@@ -169,8 +157,6 @@ public final class SvgConnection {
             }
         }
 
-        SvgCore.getConnectionManager().remove(this);
-
         SvgCore.getLogger().debug("SvgConnection: Disconnected connection: " +
                         uuid + " (" + reason + ")"
         );
@@ -192,13 +178,8 @@ public final class SvgConnection {
                     json.toString()
             );
         } catch (IOException e) {
-
             SvgCore.getLogger().debug("SvgConnection: Failed to send json packet", e);
-
-            disconnect(
-                    4002,
-                    "Packet send failure"
-            );
+            disconnect(ConnectionStates.DisconnectCodes.FATAL_ERROR.getCode(), "Packet send failure");
         }
     }
 

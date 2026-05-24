@@ -52,7 +52,7 @@ public final class ConnectionManager {
             );
 
             oldConnection.disconnect(
-                    4001,
+                    ConnectionStates.DisconnectCodes.REPLACED.getCode(),
                     "Replaced by new session"
             );
         }
@@ -153,9 +153,7 @@ public final class ConnectionManager {
      */
     public void disconnectAll() {
 
-        for (SvgConnection connection :
-                connections.values()) {
-
+        for (SvgConnection connection : connections.values()) {
             connection.disconnect(
                     1001,
                     "Server shutting down"

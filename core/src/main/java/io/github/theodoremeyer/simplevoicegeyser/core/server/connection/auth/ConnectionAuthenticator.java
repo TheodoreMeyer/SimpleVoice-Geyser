@@ -42,10 +42,10 @@ public final class ConnectionAuthenticator {
 
     /**
      * Attempts to authenticate a websocket client.
-     *
+     * <p>
      * This method NEVER throws user-facing auth failures.
      * It returns structured responses instead.
-     *
+     * <p>
      * Exceptions are reserved for unexpected server faults.
      *
      * @param username username
@@ -184,8 +184,7 @@ public final class ConnectionAuthenticator {
             authRateLimiter.recordFailure(authKey);
 
             return AuthResponse.failure(
-                    "Access Denied: " +
-                            "You must be a Bedrock player to join!"
+                    "Access Denied: " + "You must be a Bedrock player to join!"
             );
         }
 
@@ -223,9 +222,7 @@ public final class ConnectionAuthenticator {
             UUID uuid
     ) {
 
-        if (SvgCore.getBridge()
-                .getVcServerApi() == null) {
-
+        if (SvgCore.getBridge().getVcServerApi() == null) {
             SvgCore.getLogger().warning(
                     "[Authenticator] VoiceChatServerApi is null."
             );
@@ -236,20 +233,15 @@ public final class ConnectionAuthenticator {
         }
 
         VoicechatConnection connection =
-                SvgCore.getBridge()
-                        .getVcServerApi()
-                        .getConnectionOf(uuid);
+                SvgCore.getBridge().getVcServerApi().getConnectionOf(uuid);
 
         if (connection == null) {
-
             return AuthResponse.failure(
-                    "Access Denied: " +
-                            "Voice chat connection unavailable."
+                    "Access Denied: " + "Voice chat connection unavailable."
             );
         }
 
         if (connection.isInstalled()) {
-
             return AuthResponse.failure(
                     "Access Denied: " + "Please remove the Simple Voice Chat mod."
             );
@@ -264,14 +256,11 @@ public final class ConnectionAuthenticator {
      * @param username username
      */
     public void clearFailures(String username) {
-
         if (username == null) {
             return;
         }
 
-        authRateLimiter.reset(
-                username.toLowerCase(Locale.ROOT)
-        );
+        authRateLimiter.reset(username.toLowerCase(Locale.ROOT));
     }
 
     /**
@@ -280,10 +269,7 @@ public final class ConnectionAuthenticator {
      * @param username raw username
      * @return normalized username
      */
-    private String normalizeUsername(
-            String username
-    ) {
-
+    private String normalizeUsername(String username) {
         if (username == null) {
             return "";
         }
@@ -294,11 +280,8 @@ public final class ConnectionAuthenticator {
     /**
      * Result of an authentication attempt.
      */
-    public record AuthResponse(
-            boolean success,
-            String message,
-            UUID uuid,
-            SvgPlayer player
+    public record AuthResponse(boolean success, String message,
+            UUID uuid, SvgPlayer player
     ) {
 
         /**
@@ -308,16 +291,10 @@ public final class ConnectionAuthenticator {
          * @param player player
          * @return auth response
          */
-        public static AuthResponse success(
-                UUID uuid,
-                SvgPlayer player
-        ) {
-
+        public static AuthResponse success(UUID uuid, SvgPlayer player) {
             return new AuthResponse(
-                    true,
-                    null,
-                    uuid,
-                    player
+                    true, null,
+                    uuid, player
             );
         }
 
@@ -332,16 +309,14 @@ public final class ConnectionAuthenticator {
         ) {
 
             return new AuthResponse(
-                    false,
-                    message,
-                    null,
-                    null
+                    false, message,
+                    null, null
             );
         }
 
         /**
          * Generic success helper.
-         *
+         * <p>
          * Used for validation helper methods.
          *
          * @return auth response
@@ -349,10 +324,8 @@ public final class ConnectionAuthenticator {
         public static AuthResponse ok() {
 
             return new AuthResponse(
-                    true,
-                    null,
-                    null,
-                    null
+                    true, null,
+                    null, null
             );
         }
     }
@@ -446,9 +419,7 @@ public final class ConnectionAuthenticator {
          *
          * @param username username
          */
-        private void recordFailure(
-                String username
-        ) {
+        private void recordFailure(String username) {
 
             long now = System.currentTimeMillis();
 

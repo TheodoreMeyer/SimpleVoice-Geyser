@@ -7,6 +7,7 @@ import de.maxhenkel.voicechat.api.packets.SoundPacket;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
 import org.eclipse.jetty.websocket.api.Session;
 
 import java.nio.ByteBuffer;
@@ -66,7 +67,10 @@ public final class SvgAudioListener {
             });
         } else {
             SvgCore.getLogger().debug("AudioListener: Session Not Open.");
-            SvgCore.getBridge().unregisterAudioListener(listenerId);
+
+            SvgCore.getConnectionManager().get(listenerId).disconnect(
+                    ConnectionStates.DisconnectCodes.CLOSED_SESSION.getCode(), "AudioListener session closed"
+            );
         }
     }
 
