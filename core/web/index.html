@@ -111,6 +111,10 @@
             </div>
         </div>
     </div>
+    <div id="color-editor">
+        <h2>Color Customization</h2>
+        <div id="preset-field"></div>
+    </div>
     <div style="display: flex; align-items: center; gap: 8px;">
         <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank">
             <img src="https://github.com/favicon.ico" alt="GitHub Link" class="githubicon">
@@ -122,12 +126,8 @@
         <button id="pushToTalkFullscreenBtn" class="pttButton" type="button">Hold to Talk</button>
         <button id="exitFullscreenPttBtn" type="button">Exit Fullscreen</button>
     </div>
-    <div id="color-editor">
-        <h2>Color Customization</h2>
-        <div id="preset-field"></div>
-    </div>
     <script>
-        const availablePresets = ['default', 'dark', 'light', 'green', 'blue', 'purple', 'red', 'yellow', 'cyan', 'monochrome', 'monokai'];
+        const availablePresets = ['default', 'dark', 'light', 'green', 'blue', 'purple', 'red', 'yellow', 'cyan', 'monochrome', 'monokai', 'orange', 'mint', 'rose'];
         const savedPreset = localStorage.getItem('preset');
         availablePresets.forEach(preset => {
             document.getElementById('preset-field').insertAdjacentHTML('beforeend', `<button class="preset-btn" data-preset="${preset}">${preset.charAt(0).toUpperCase() + preset.slice(1)}</button>`);
