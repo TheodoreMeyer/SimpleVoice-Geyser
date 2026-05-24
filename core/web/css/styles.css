@@ -1,1641 +1,404 @@
 /*
-PRESETS - Color Scheme Overrides
+GLOBAL
 */
-
-/* DEFAULT PRESET */
-.preset-default {
+body {
+  font-family: Arial, sans-serif;
   background: #1e1e1e;
   color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  margin: 0;
+  min-height: 100vh;
 }
 
-.preset-default h1 {
+h1 {
   color: #00d4ff;
 }
 
-.preset-default form {
+/*
+FORM
+*/
+#form-container {
+  width: 60%;
+  display: flex;
+  justify-content: center;
+}
+
+form {
   background: #2a2a2a;
+  padding: 20px;
+  border-radius: 8px;
   box-shadow: 0 0 15px #000000;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.preset-default button {
+label,
+select {
+  display: block;
+  width: 100%;
+  font-size: 14px;
+}
+
+input,
+select {
+  padding: 8px;
+  border-radius: 4px;
+  border: none;
+  transition: all 0.3s cubic-bezier(0.5, 0.5, 0, 1);
+}
+
+#joinbtn {
+  width: 100%;
+  margin: 2% 0 0 0;
+}
+
+/*
+BUTTONS
+*/
+button {
+  padding: 10px 15px;
   background-color: #00d4ff;
+  border: none;
   color: #000;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.5, 0.5, 0, 1);
 }
 
-.preset-default button:hover {
+button:hover {
   background-color: #00aacc;
+  transform: scaleY(1.2) scaleX(1.05);
 }
 
-.preset-default button:active {
+button:active {
   background-color: #008ca8;
+  transform: scaleY(1.1) scaleX(1);
 }
 
-.preset-default #status {
+/*
+MAIN VC
+*/
+#main-vc-container {
+  background: #2a2a2a;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px #000000;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+#status {
+  margin: 10px auto;
+  padding: 8px 12px;
+  border-radius: 4px;
   background: #333;
   border: 1px solid #666;
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  justify-content: center;
 }
 
-.preset-default #log {
+#log {
+  height: 350px;
+  width: 95%;
+  overflow-y: auto;
   background: #2c2c2c;
   border: 1px solid #555;
+  padding: 10px;
+  margin: 10px 0;
+  white-space: pre-wrap;
+  font-family: monospace;
 }
 
-.preset-default #main-vc-container {
+/*
+Controls
+*/
+#controls {
   background: #2a2a2a;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-default #controls {
-  background: #2a2a2a;
+  padding: 25px;
+  border-radius: 10px;
   box-shadow: 0 0 20px #000000;
+
+  width: 100%;
+  max-width: 700px;
+  margin: 15px auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.preset-default #color-editor {
-  background: #2a2a2a;
-  box-shadow: 0 0 20px #000000;
+.controls-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    #666,
+    transparent
+  );
+  margin: 5px 0;
 }
 
-.preset-default .controls-divider {
-  background: linear-gradient(to right, transparent, #666, transparent);
+#controls-main {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.preset-default .controls-card {
+.controls-card {
   background: #2f2f2f;
   border: 1px solid #3f3f3f;
+  border-radius: 10px;
+  padding: 14px;
+  min-width: 220px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-.preset-default .control-label {
+.controls-card-ptt {
+  flex: 1 1 100%;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 140px;
+}
+
+.control-label {
+  font-size: 13px;
   color: #aaa;
 }
 
-.preset-default .dev-toggle {
-  background: #333;
-  color: #ccc;
+/* DEV CONTROLS */
+#controls-dev {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.preset-default .dev-toggle:hover {
+.dev-hidden {
+  display: none !important;
+}
+
+#devContent {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  margin-top: 10px;
+  padding: 10px;
+  gap: 12px;
+
+  animation: fadeIn 0.15s ease;
+}
+
+.dev-toggle {
+  width: 100%;
+  background: #333;
+  color: #ccc;
+  font-size: 13px;
+  padding: 8px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.dev-toggle:hover {
   background: #3f3f3f;
   color: #fff;
 }
 
-.preset-default input,
-.preset-default select {
-  background: #2a2a2a;
-  color: #f5f5f5;
-  border: none;
+#controls-dev .control-label {
+  color: #888;
+  font-size: 12px;
 }
 
-.preset-default #muteBtn.muted {
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/*
+MIC
+*/
+#micControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+#muteBtn {
+  padding: 10px 18px;
+  font-weight: bold;
+  border-radius: 6px;
+  transition: all 0.3s cubic-bezier(0.5, 0.5, 0, 1);
+}
+
+#muteBtn.muted {
   background-color: #aa3333;
   color: #fff;
 }
 
-.preset-default #muteBtn.unmuted {
+#muteBtn.unmuted {
   background-color: #33aa55;
   color: #000;
 }
 
-.preset-default #micIndicator {
+#micIndicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
   background-color: #444;
   border: 1px solid #666;
 }
 
-.preset-default #micIndicator.active {
+#micIndicator.active {
   background-color: #33ff66;
 }
 
-.preset-default a {
+#inputArea {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 10px auto;
+  width: 90%;
+  max-width: 600px;
+}
+
+#testSound {
+  width: 100%;
+}
+
+#msgInput {
+  width: 100%;
+}
+
+#messageButton {
+  width: 20%;
+  margin: 0 0 0 2%;
+}
+
+label {
+  margin: 0;
+}
+
+/*
+MISC
+*/
+.githubicon {
+  width: 30px;
+  height: 30px;
+  margin: 25px 0 0 0;
+}
+
+input:hover,
+.githubicon:hover,
+select:hover {
+  transform: scaleY(1.2) scaleX(1.05);
+  cursor: pointer;
+}
+
+input:active,
+.githubicon:active,
+select:active {
+  transform: scaleY(1.1) scaleX(1);
+}
+
+input {
+  width: 96%;
+  transition: all 0.3s cubic-bezier(0.5, 0.5, 0, 1);
+}
+
+a {
   color: #f5f5f5;
+  text-decoration: none;
 }
 
-.preset-default a:hover {
+@media (max-width: 760px) {
+  #controls {
+    padding: 16px;
+  }
+
+  .controls-card {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+a:hover {
   color: #00d4ff;
+  text-decoration: underline;
 }
 
-/* DARK PRESET */
-.preset-dark {
-  background: #0a0a0a;
-  color: #e0e0e0;
+#preset-field {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  width: 100%;
 }
 
-.preset-dark h1 {
-  color: #0099cc;
-}
-
-.preset-dark form {
-  background: #1a1a1a;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-dark button {
-  background-color: #0099cc;
-  color: #000;
-}
-
-.preset-dark button:hover {
-  background-color: #0077aa;
-}
-
-.preset-dark button:active {
-  background-color: #005588;
-}
-
-.preset-dark #status {
-  background: #1f1f1f;
-  border: 1px solid #444;
-}
-
-.preset-dark #log {
-  background: #1a1a1a;
-  border: 1px solid #444;
-}
-
-.preset-dark #main-vc-container {
-  background: #1a1a1a;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-dark #controls {
-  background: #1a1a1a;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-dark #color-editor {
-  background: #1a1a1a;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-dark .controls-divider {
-  background: linear-gradient(to right, transparent, #444, transparent);
-}
-
-.preset-dark .controls-card {
-  background: #252525;
-  border: 1px solid #333;
-}
-
-.preset-dark .control-label {
-  color: #999;
-}
-
-.preset-dark .dev-toggle {
-  background: #1f1f1f;
-  color: #999;
-  border: 1px solid #333;
-}
-
-.preset-dark .dev-toggle:hover {
+#color-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  justify-content: center;
+  align-items: stretch;
   background: #2a2a2a;
-  color: #ccc;
-}
-
-.preset-dark input,
-.preset-dark select {
-  background: #1a1a1a;
-  color: #e0e0e0;
-  border: none;
-}
-
-.preset-dark #muteBtn.muted {
-  background-color: #882222;
-  color: #fff;
-}
-
-.preset-dark #muteBtn.unmuted {
-  background-color: #228822;
-  color: #000;
-}
-
-.preset-dark #micIndicator {
-  background-color: #333;
-  border: 1px solid #444;
-}
-
-.preset-dark #micIndicator.active {
-  background-color: #00ff44;
-}
-
-.preset-dark a {
-  color: #e0e0e0;
-}
-
-.preset-dark a:hover {
-  color: #0099cc;
-}
-
-/* LIGHT PRESET */
-.preset-light {
-  background: #f5f5f5;
-  color: #1a1a1a;
-}
-
-.preset-light h1 {
-  color: #0088cc;
-}
-
-.preset-light form {
-  background: #e8e8e8;
-  box-shadow: 0 0 15px #333333;
-}
-
-.preset-light button {
-  background-color: #0088cc;
-  color: #fff;
-}
-
-.preset-light button:hover {
-  background-color: #0066aa;
-}
-
-.preset-light button:active {
-  background-color: #004488;
-}
-
-.preset-light #status {
-  background: #e0e0e0;
-  border: 1px solid #ccc;
-}
-
-.preset-light #log {
-  background: #ececec;
-  border: 1px solid #bbb;
-}
-
-.preset-light #main-vc-container {
-  background: #e8e8e8;
-  box-shadow: 0 0 15px #333333;
-}
-
-.preset-light #controls {
-  background: #e8e8e8;
-  box-shadow: 0 0 20px #333333;
-}
-
-.preset-light #color-editor {
-  background: #e8e8e8;
-  box-shadow: 0 0 20px #333333;
-}
-
-.preset-light .controls-divider {
-  background: linear-gradient(to right, transparent, #bbb, transparent);
-}
-
-.preset-light .controls-card {
-  background: #e0e0e0;
-  border: 1px solid #ddd;
-}
-
-.preset-light .control-label {
-  color: #555;
-}
-
-.preset-light .dev-toggle {
-  background: #d0d0d0;
-  color: #333;
-  border: 1px solid #bbb;
-}
-
-.preset-light .dev-toggle:hover {
-  background: #c0c0c0;
-  color: #1a1a1a;
-}
-
-.preset-light input,
-.preset-light select {
-  background: #e8e8e8;
-  color: #1a1a1a;
-  border: none;
-}
-
-.preset-light #muteBtn.muted {
-  background-color: #cc4444;
-  color: #fff;
-}
-
-.preset-light #muteBtn.unmuted {
-  background-color: #44cc44;
-  color: #000;
-}
-
-.preset-light #micIndicator {
-  background-color: #ccc;
-  border: 1px solid #bbb;
-}
-
-.preset-light #micIndicator.active {
-  background-color: #22dd44;
-}
-
-.preset-light a {
-  color: #1a1a1a;
-}
-
-.preset-light a:hover {
-  color: #0088cc;
-}
-
-/* GREEN PRESET */
-.preset-green {
-  background: #0d1f0a;
-  color: #d4f5d4;
-}
-
-.preset-green h1 {
-  color: #22ff44;
-}
-
-.preset-green form {
-  background: #1a3a14;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-green button {
-  background-color: #22ff44;
-  color: #000;
-}
-
-.preset-green button:hover {
-  background-color: #1acc33;
-}
-
-.preset-green button:active {
-  background-color: #119922;
-}
-
-.preset-green #status {
-  background: #1a3d15;
-  border: 1px solid #3a6633;
-}
-
-.preset-green #log {
-  background: #1a3d15;
-  border: 1px solid #3a6633;
-}
-
-.preset-green #main-vc-container {
-  background: #1a3a14;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-green #controls {
-  background: #1a3a14;
+  padding: 25px;
+  border-radius: 10px;
   box-shadow: 0 0 20px #000000;
+  width: 100%;
+  max-width: 700px;
+  margin: 15px auto;
+  text-align: center;
 }
 
-.preset-green #color-editor {
-  background: #1a3a14;
-  box-shadow: 0 0 20px #000000;
+#color-editor h2 {
+  margin: 0;
+  color: inherit;
 }
 
-.preset-green .controls-divider {
-  background: linear-gradient(to right, transparent, #3a6633, transparent);
-}
-
-.preset-green .controls-card {
-  background: #1f4419;
-  border: 1px solid #2a5522;
-}
-
-.preset-green .control-label {
-  color: #8aaa8a;
-}
-
-.preset-green .dev-toggle {
-  background: #1a3d15;
-  color: #8aaa8a;
-  border: 1px solid #2a5522;
-}
-
-.preset-green .dev-toggle:hover {
-  background: #245520;
-  color: #d4f5d4;
-}
-
-.preset-green input,
-.preset-green select {
-  background: #1a3a14;
-  color: #d4f5d4;
-  border: none;
-}
-
-.preset-green #muteBtn.muted {
-  background-color: #aa3333;
-  color: #fff;
-}
-
-.preset-green #muteBtn.unmuted {
-  background-color: #33ff44;
-  color: #000;
-}
-
-.preset-green #micIndicator {
-  background-color: #2a5522;
-  border: 1px solid #3a6633;
-}
-
-.preset-green #micIndicator.active {
-  background-color: #33ff66;
-}
-
-.preset-green a {
-  color: #d4f5d4;
-}
-
-.preset-green a:hover {
-  color: #22ff44;
-}
-
-/* BLUE PRESET */
-.preset-blue {
-  background: #0a1226;
-  color: #d8e7ff;
-}
-
-.preset-blue h1 {
-  color: #4ea1ff;
-}
-
-.preset-blue form {
-  background: #152240;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-blue button {
-  background-color: #4ea1ff;
-  color: #001225;
-}
-
-.preset-blue button:hover {
-  background-color: #2f86ea;
-}
-
-.preset-blue button:active {
-  background-color: #1c6fcd;
-}
-
-.preset-blue #status {
-  background: #17294d;
-  border: 1px solid #3b5f96;
-}
-
-.preset-blue #log {
-  background: #142443;
-  border: 1px solid #35598d;
-}
-
-.preset-blue #main-vc-container {
-  background: #152240;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-blue #controls {
-  background: #152240;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-blue #color-editor {
-  background: #152240;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-blue .controls-divider {
-  background: linear-gradient(to right, transparent, #3b5f96, transparent);
-}
-
-.preset-blue .controls-card {
-  background: #1b2e54;
-  border: 1px solid #2b4a7a;
-}
-
-.preset-blue .control-label {
-  color: #9fc2f3;
-}
-
-.preset-blue .dev-toggle {
-  background: #17294d;
-  color: #9fc2f3;
-  border: 1px solid #2b4a7a;
-}
-
-.preset-blue .dev-toggle:hover {
-  background: #21407a;
-  color: #d8e7ff;
-}
-
-.preset-blue input,
-.preset-blue select {
-  background: #152240;
-  color: #d8e7ff;
-  border: none;
-}
-
-.preset-blue #muteBtn.muted {
-  background-color: #b23939;
-  color: #fff;
-}
-
-.preset-blue #muteBtn.unmuted {
-  background-color: #4fcf7f;
-  color: #000;
-}
-
-.preset-blue #micIndicator {
-  background-color: #2b4a7a;
-  border: 1px solid #3b5f96;
-}
-
-.preset-blue #micIndicator.active {
-  background-color: #4fcf7f;
-}
-
-.preset-blue a {
-  color: #d8e7ff;
-}
-
-.preset-blue a:hover {
-  color: #4ea1ff;
-}
-
-/* PURPLE PRESET */
-.preset-purple {
-  background: #1a1026;
-  color: #eadcff;
-}
-
-.preset-purple h1 {
-  color: #c67dff;
-}
-
-.preset-purple form {
-  background: #2a1b40;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-purple button {
-  background-color: #c67dff;
-  color: #1b0930;
-}
-
-.preset-purple button:hover {
-  background-color: #ad62ea;
-}
-
-.preset-purple button:active {
-  background-color: #9348cd;
-}
-
-.preset-purple #status {
-  background: #34204f;
-  border: 1px solid #684591;
-}
-
-.preset-purple #log {
-  background: #2d1d45;
-  border: 1px solid #5f3f85;
-}
-
-.preset-purple #main-vc-container {
-  background: #2a1b40;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-purple #controls {
-  background: #2a1b40;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-purple #color-editor {
-  background: #2a1b40;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-purple .controls-divider {
-  background: linear-gradient(to right, transparent, #684591, transparent);
-}
-
-.preset-purple .controls-card {
-  background: #352151;
-  border: 1px solid #56377a;
-}
-
-.preset-purple .control-label {
-  color: #cba7ef;
-}
-
-.preset-purple .dev-toggle {
-  background: #34204f;
-  color: #cba7ef;
-  border: 1px solid #56377a;
-}
-
-.preset-purple .dev-toggle:hover {
-  background: #4b2f6d;
-  color: #eadcff;
-}
-
-.preset-purple input,
-.preset-purple select {
-  background: #2a1b40;
-  color: #eadcff;
-  border: none;
-}
-
-.preset-purple #muteBtn.muted {
-  background-color: #b23939;
-  color: #fff;
-}
-
-.preset-purple #muteBtn.unmuted {
-  background-color: #54cf86;
-  color: #000;
-}
-
-.preset-purple #micIndicator {
-  background-color: #56377a;
-  border: 1px solid #684591;
-}
-
-.preset-purple #micIndicator.active {
-  background-color: #54cf86;
-}
-
-.preset-purple a {
-  color: #eadcff;
-}
-
-.preset-purple a:hover {
-  color: #c67dff;
-}
-
-/* RED PRESET */
-.preset-red {
-  background: #2a0f12;
-  color: #ffe1e1;
-}
-
-.preset-red h1 {
-  color: #ff5b6b;
-}
-
-.preset-red form {
-  background: #3d171d;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-red button {
-  background-color: #ff5b6b;
-  color: #2b050a;
-}
-
-.preset-red button:hover {
-  background-color: #ea4455;
-}
-
-.preset-red button:active {
-  background-color: #cc3241;
-}
-
-.preset-red #status {
-  background: #4a1a21;
-  border: 1px solid #8a3b46;
-}
-
-.preset-red #log {
-  background: #3f171d;
-  border: 1px solid #7a343d;
-}
-
-.preset-red #main-vc-container {
-  background: #3d171d;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-red #controls {
-  background: #3d171d;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-red #color-editor {
-  background: #3d171d;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-red .controls-divider {
-  background: linear-gradient(to right, transparent, #8a3b46, transparent);
-}
-
-.preset-red .controls-card {
-  background: #4a1c23;
-  border: 1px solid #6c2d36;
-}
-
-.preset-red .control-label {
-  color: #efadb3;
-}
-
-.preset-red .dev-toggle {
-  background: #4a1a21;
-  color: #efadb3;
-  border: 1px solid #6c2d36;
-}
-
-.preset-red .dev-toggle:hover {
-  background: #64242d;
-  color: #ffe1e1;
-}
-
-.preset-red input,
-.preset-red select {
-  background: #3d171d;
-  color: #ffe1e1;
-  border: none;
-}
-
-.preset-red #muteBtn.muted {
-  background-color: #c13139;
-  color: #fff;
-}
-
-.preset-red #muteBtn.unmuted {
-  background-color: #59d087;
-  color: #000;
-}
-
-.preset-red #micIndicator {
-  background-color: #6c2d36;
-  border: 1px solid #8a3b46;
-}
-
-.preset-red #micIndicator.active {
-  background-color: #59d087;
-}
-
-.preset-red a {
-  color: #ffe1e1;
-}
-
-.preset-red a:hover {
-  color: #ff5b6b;
-}
-
-/* YELLOW PRESET */
-.preset-yellow {
-  background: #2b260c;
-  color: #fff6cf;
-}
-
-.preset-yellow h1 {
-  color: #ffd84d;
-}
-
-.preset-yellow form {
-  background: #3d3514;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-yellow button {
-  background-color: #ffd84d;
-  color: #2f2200;
-}
-
-.preset-yellow button:hover {
-  background-color: #eac33b;
-}
-
-.preset-yellow button:active {
-  background-color: #d1aa26;
-}
-
-.preset-yellow #status {
-  background: #4a4116;
-  border: 1px solid #8a7830;
-}
-
-.preset-yellow #log {
-  background: #403816;
-  border: 1px solid #78682b;
-}
-
-.preset-yellow #main-vc-container {
-  background: #3d3514;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-yellow #controls {
-  background: #3d3514;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-yellow #color-editor {
-  background: #3d3514;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-yellow .controls-divider {
-  background: linear-gradient(to right, transparent, #8a7830, transparent);
-}
-
-.preset-yellow .controls-card {
-  background: #4b421a;
-  border: 1px solid #685a27;
-}
-
-.preset-yellow .control-label {
-  color: #e6d89c;
-}
-
-.preset-yellow .dev-toggle {
-  background: #4a4116;
-  color: #e6d89c;
-  border: 1px solid #685a27;
-}
-
-.preset-yellow .dev-toggle:hover {
-  background: #635724;
-  color: #fff6cf;
-}
-
-.preset-yellow input,
-.preset-yellow select {
-  background: #3d3514;
-  color: #fff6cf;
-  border: none;
-}
-
-.preset-yellow #muteBtn.muted {
-  background-color: #b53a3a;
-  color: #fff;
-}
-
-.preset-yellow #muteBtn.unmuted {
-  background-color: #58cd81;
-  color: #000;
-}
-
-.preset-yellow #micIndicator {
-  background-color: #685a27;
-  border: 1px solid #8a7830;
-}
-
-.preset-yellow #micIndicator.active {
-  background-color: #58cd81;
-}
-
-.preset-yellow a {
-  color: #fff6cf;
-}
-
-.preset-yellow a:hover {
-  color: #ffd84d;
-}
-
-/* CYAN PRESET */
-.preset-cyan {
-  background: #0c2327;
-  color: #d6fbff;
-}
-
-.preset-cyan h1 {
-  color: #39e7ff;
-}
-
-.preset-cyan form {
-  background: #124047;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-cyan button {
-  background-color: #39e7ff;
-  color: #012228;
-}
-
-.preset-cyan button:hover {
-  background-color: #22cade;
-}
-
-.preset-cyan button:active {
-  background-color: #11adc0;
-}
-
-.preset-cyan #status {
-  background: #14505a;
-  border: 1px solid #2f8f9f;
-}
-
-.preset-cyan #log {
-  background: #12444d;
-  border: 1px solid #2a7d8a;
-}
-
-.preset-cyan #main-vc-container {
-  background: #124047;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-cyan #controls {
-  background: #124047;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-cyan #color-editor {
-  background: #124047;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-cyan .controls-divider {
-  background: linear-gradient(to right, transparent, #2f8f9f, transparent);
-}
-
-.preset-cyan .controls-card {
-  background: #16515c;
-  border: 1px solid #226c78;
-}
-
-.preset-cyan .control-label {
-  color: #9adbe4;
-}
-
-.preset-cyan .dev-toggle {
-  background: #14505a;
-  color: #9adbe4;
-  border: 1px solid #226c78;
-}
-
-.preset-cyan .dev-toggle:hover {
-  background: #1f6b78;
-  color: #d6fbff;
-}
-
-.preset-cyan input,
-.preset-cyan select {
-  background: #124047;
-  color: #d6fbff;
-  border: none;
-}
-
-.preset-cyan #muteBtn.muted {
-  background-color: #b43a3a;
-  color: #fff;
-}
-
-.preset-cyan #muteBtn.unmuted {
-  background-color: #51d47f;
-  color: #000;
-}
-
-.preset-cyan #micIndicator {
-  background-color: #226c78;
-  border: 1px solid #2f8f9f;
-}
-
-.preset-cyan #micIndicator.active {
-  background-color: #51d47f;
-}
-
-.preset-cyan a {
-  color: #d6fbff;
-}
-
-.preset-cyan a:hover {
-  color: #39e7ff;
-}
-
-/* MONOCHROME PRESET */
-.preset-monochrome {
-  background: #101010;
-  color: #efefef;
-}
-
-.preset-monochrome h1 {
-  color: #d0d0d0;
-}
-
-.preset-monochrome form {
-  background: #1d1d1d;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-monochrome button {
-  background-color: #cfcfcf;
-  color: #111;
-}
-
-.preset-monochrome button:hover {
-  background-color: #b5b5b5;
-}
-
-.preset-monochrome button:active {
-  background-color: #9a9a9a;
-}
-
-.preset-monochrome #status {
-  background: #252525;
-  border: 1px solid #5f5f5f;
-}
-
-.preset-monochrome #log {
-  background: #202020;
-  border: 1px solid #515151;
-}
-
-.preset-monochrome #main-vc-container {
-  background: #1d1d1d;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-monochrome #controls {
-  background: #1d1d1d;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-monochrome #color-editor {
-  background: #1d1d1d;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-monochrome .controls-divider {
-  background: linear-gradient(to right, transparent, #5f5f5f, transparent);
-}
-
-.preset-monochrome .controls-card {
-  background: #2a2a2a;
-  border: 1px solid #454545;
-}
-
-.preset-monochrome .control-label {
-  color: #b1b1b1;
-}
-
-.preset-monochrome .dev-toggle {
-  background: #252525;
-  color: #b1b1b1;
-  border: 1px solid #454545;
-}
-
-.preset-monochrome .dev-toggle:hover {
-  background: #343434;
-  color: #efefef;
-}
-
-.preset-monochrome input,
-.preset-monochrome select {
-  background: #1d1d1d;
-  color: #efefef;
-  border: none;
-}
-
-.preset-monochrome #muteBtn.muted {
-  background-color: #8f3b3b;
-  color: #fff;
-}
-
-.preset-monochrome #muteBtn.unmuted {
-  background-color: #59b56d;
-  color: #000;
-}
-
-.preset-monochrome #micIndicator {
-  background-color: #454545;
-  border: 1px solid #5f5f5f;
-}
-
-.preset-monochrome #micIndicator.active {
-  background-color: #59b56d;
-}
-
-.preset-monochrome a {
-  color: #efefef;
-}
-
-.preset-monochrome a:hover {
-  color: #d0d0d0;
-}
-
-/* MONOKAI PRESET */
-.preset-monokai {
-  background: #272822;
-  color: #f8f8f2;
-}
-
-.preset-monokai h1 {
-  color: #66d9ef;
-}
-
-.preset-monokai form {
-  background: #383830;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-monokai button {
-  background-color: #a6e22e;
-  color: #1f220f;
-}
-
-.preset-monokai button:hover {
-  background-color: #8dcf20;
-}
-
-.preset-monokai button:active {
-  background-color: #73b018;
-}
-
-.preset-monokai #status {
-  background: #403f36;
-  border: 1px solid #75715e;
-}
-
-.preset-monokai #log {
-  background: #32332c;
-  border: 1px solid #6a6654;
-}
-
-.preset-monokai #main-vc-container {
-  background: #383830;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-monokai #controls {
-  background: #383830;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-monokai #color-editor {
-  background: #383830;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-monokai .controls-divider {
-  background: linear-gradient(to right, transparent, #75715e, transparent);
-}
-
-.preset-monokai .controls-card {
-  background: #44443a;
-  border: 1px solid #5d5a4b;
-}
-
-.preset-monokai .control-label {
-  color: #d0cebe;
-}
-
-.preset-monokai .dev-toggle {
-  background: #403f36;
-  color: #d0cebe;
-  border: 1px solid #5d5a4b;
-}
-
-.preset-monokai .dev-toggle:hover {
-  background: #515045;
-  color: #f8f8f2;
-}
-
-.preset-monokai input,
-.preset-monokai select {
-  background: #383830;
-  color: #f8f8f2;
-  border: none;
-}
-
-.preset-monokai #muteBtn.muted {
-  background-color: #f92672;
-  color: #fff;
-}
-
-.preset-monokai #muteBtn.unmuted {
-  background-color: #a6e22e;
-  color: #1f220f;
-}
-
-.preset-monokai #micIndicator {
-  background-color: #5d5a4b;
-  border: 1px solid #75715e;
-}
-
-.preset-monokai #micIndicator.active {
-  background-color: #a6e22e;
-}
-
-.preset-monokai a {
-  color: #f8f8f2;
-}
-
-.preset-monokai a:hover {
-  color: #66d9ef;
-}
-
-/* ORANGE PRESET */
-.preset-orange {
-  background: #24140c;
-  color: #ffe8d8;
-}
-
-.preset-orange h1 {
-  color: #ff9d4d;
-}
-
-.preset-orange form {
-  background: #351d12;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-orange button {
-  background-color: #ff9d4d;
-  color: #2a1200;
-}
-
-.preset-orange button:hover {
-  background-color: #e88735;
-}
-
-.preset-orange button:active {
-  background-color: #c96d20;
-}
-
-.preset-orange #status {
-  background: #3c2315;
-  border: 1px solid #7e5130;
-}
-
-.preset-orange #log {
-  background: #321b11;
-  border: 1px solid #6d4529;
-}
-
-.preset-orange #main-vc-container {
-  background: #351d12;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-orange #controls {
-  background: #351d12;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-orange #color-editor {
-  background: #351d12;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-orange .controls-divider {
-  background: linear-gradient(to right, transparent, #7e5130, transparent);
-}
-
-.preset-orange .controls-card {
-  background: #402417;
-  border: 1px solid #5f3920;
-}
-
-.preset-orange .control-label {
-  color: #e8b693;
-}
-
-.preset-orange .dev-toggle {
-  background: #3c2315;
-  color: #e8b693;
-  border: 1px solid #5f3920;
-}
-
-.preset-orange .dev-toggle:hover {
-  background: #55311e;
-  color: #ffe8d8;
-}
-
-.preset-orange input,
-.preset-orange select {
-  background: #351d12;
-  color: #ffe8d8;
-  border: none;
-}
-
-.preset-orange #muteBtn.muted {
-  background-color: #b94236;
-  color: #fff;
-}
-
-.preset-orange #muteBtn.unmuted {
-  background-color: #5dc97d;
-  color: #000;
-}
-
-.preset-orange #micIndicator {
-  background-color: #5f3920;
-  border: 1px solid #7e5130;
-}
-
-.preset-orange #micIndicator.active {
-  background-color: #5dc97d;
-}
-
-.preset-orange a {
-  color: #ffe8d8;
-}
-
-.preset-orange a:hover {
-  color: #ff9d4d;
-}
-
-/* MINT PRESET */
-.preset-mint {
-  background: #10241f;
-  color: #dbfff4;
-}
-
-.preset-mint h1 {
-  color: #4ee6b8;
-}
-
-.preset-mint form {
-  background: #18352f;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-mint button {
-  background-color: #4ee6b8;
-  color: #082019;
-}
-
-.preset-mint button:hover {
-  background-color: #35c99d;
-}
-
-.preset-mint button:active {
-  background-color: #1fa57e;
-}
-
-.preset-mint #status {
-  background: #1f4038;
-  border: 1px solid #4d7d73;
-}
-
-.preset-mint #log {
-  background: #17322d;
-  border: 1px solid #3e6d63;
-}
-
-.preset-mint #main-vc-container {
-  background: #18352f;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-mint #controls {
-  background: #18352f;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-mint #color-editor {
-  background: #18352f;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-mint .controls-divider {
-  background: linear-gradient(to right, transparent, #4d7d73, transparent);
-}
-
-.preset-mint .controls-card {
-  background: #1f433b;
-  border: 1px solid #305d53;
-}
-
-.preset-mint .control-label {
-  color: #a0d9cb;
-}
-
-.preset-mint .dev-toggle {
-  background: #1f4038;
-  color: #a0d9cb;
-  border: 1px solid #305d53;
-}
-
-.preset-mint .dev-toggle:hover {
-  background: #255148;
-  color: #dbfff4;
-}
-
-.preset-mint input,
-.preset-mint select {
-  background: #18352f;
-  color: #dbfff4;
-  border: none;
-}
-
-.preset-mint #muteBtn.muted {
-  background-color: #c04a4a;
-  color: #fff;
-}
-
-.preset-mint #muteBtn.unmuted {
-  background-color: #4ee6b8;
-  color: #082019;
-}
-
-.preset-mint #micIndicator {
-  background-color: #305d53;
-  border: 1px solid #4d7d73;
-}
-
-.preset-mint #micIndicator.active {
-  background-color: #4ee6b8;
-}
-
-.preset-mint a {
-  color: #dbfff4;
-}
-
-.preset-mint a:hover {
-  color: #4ee6b8;
-}
-
-/* ROSE PRESET */
-.preset-rose {
-  background: #26131a;
-  color: #ffe4ef;
-}
-
-.preset-rose h1 {
-  color: #ff6b9c;
-}
-
-.preset-rose form {
-  background: #3a1c29;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-rose button {
-  background-color: #ff6b9c;
-  color: #2a0914;
-}
-
-.preset-rose button:hover {
-  background-color: #e85386;
-}
-
-.preset-rose button:active {
-  background-color: #c83d70;
-}
-
-.preset-rose #status {
-  background: #42212f;
-  border: 1px solid #7d4a5f;
-}
-
-.preset-rose #log {
-  background: #341825;
-  border: 1px solid #6a3e52;
-}
-
-.preset-rose #main-vc-container {
-  background: #3a1c29;
-  box-shadow: 0 0 15px #000000;
-}
-
-.preset-rose #controls {
-  background: #3a1c29;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-rose #color-editor {
-  background: #3a1c29;
-  box-shadow: 0 0 20px #000000;
-}
-
-.preset-rose .controls-divider {
-  background: linear-gradient(to right, transparent, #7d4a5f, transparent);
-}
-
-.preset-rose .controls-card {
-  background: #452130;
-  border: 1px solid #603447;
-}
-
-.preset-rose .control-label {
-  color: #efadc4;
-}
-
-.preset-rose .dev-toggle {
-  background: #42212f;
-  color: #efadc4;
-  border: 1px solid #603447;
-}
-
-.preset-rose .dev-toggle:hover {
-  background: #593045;
-  color: #ffe4ef;
-}
-
-.preset-rose input,
-.preset-rose select {
-  background: #3a1c29;
-  color: #ffe4ef;
-  border: none;
-}
-
-.preset-rose #muteBtn.muted {
-  background-color: #bd436a;
-  color: #fff;
-}
-
-.preset-rose #muteBtn.unmuted {
-  background-color: #56cb8d;
-  color: #000;
-}
-
-.preset-rose #micIndicator {
-  background-color: #603447;
-  border: 1px solid #7d4a5f;
-}
-
-.preset-rose #micIndicator.active {
-  background-color: #56cb8d;
-}
-
-.preset-rose a {
-  color: #ffe4ef;
-}
-
-.preset-rose a:hover {
-  color: #ff6b9c;
-}
-
-/* TOP FORM INPUT CONTRAST */
-.preset-default #joinForm input,
-.preset-default #joinForm select {
-  background: #1f1f1f;
+.preset-btn {
+  min-width: 120px;
+  padding: 10px 14px;
   border: 1px solid #4a4a4a;
+  border-radius: 999px;
+  background: #2a2a2a;
+  color: #f5f5f5;
+  font-weight: 600;
+  text-transform: capitalize;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-.preset-dark #joinForm input,
-.preset-dark #joinForm select {
-  background: #111111;
-  border: 1px solid #3a3a3a;
+.preset-btn:hover {
+  background: #383838;
+  transform: translateY(-2px) scale(1.03);
 }
 
-.preset-light #joinForm input,
-.preset-light #joinForm select {
-  background: #cfcfcf;
-  border: 1px solid #9a9a9a;
-}
-
-.preset-green #joinForm input,
-.preset-green #joinForm select {
-  background: #10270e;
-  border: 1px solid #2f5a2a;
-}
-
-.preset-blue #joinForm input,
-.preset-blue #joinForm select {
-  background: #101b33;
-  border: 1px solid #35598d;
-}
-
-.preset-purple #joinForm input,
-.preset-purple #joinForm select {
-  background: #211533;
-  border: 1px solid #5f3f85;
-}
-
-.preset-red #joinForm input,
-.preset-red #joinForm select {
-  background: #311217;
-  border: 1px solid #7a343d;
-}
-
-.preset-yellow #joinForm input,
-.preset-yellow #joinForm select {
-  background: #322b11;
-  border: 1px solid #78682b;
-}
-
-.preset-cyan #joinForm input,
-.preset-cyan #joinForm select {
-  background: #0f343a;
-  border: 1px solid #2a7d8a;
-}
-
-.preset-monochrome #joinForm input,
-.preset-monochrome #joinForm select {
-  background: #171717;
-  border: 1px solid #515151;
-}
-
-.preset-monokai #joinForm input,
-.preset-monokai #joinForm select {
-  background: #2f2f29;
-  border: 1px solid #6a6654;
-}
-
-.preset-orange #joinForm input,
-.preset-orange #joinForm select {
-  background: #28160d;
-  border: 1px solid #6d4529;
-}
-
-.preset-mint #joinForm input,
-.preset-mint #joinForm select {
-  background: #122a25;
-  border: 1px solid #3e6d63;
-}
-
-.preset-rose #joinForm input,
-.preset-rose #joinForm select {
-  background: #2b1520;
-  border: 1px solid #6a3e52;
+.preset-btn:active {
+  transform: translateY(0) scale(0.98);
 }
