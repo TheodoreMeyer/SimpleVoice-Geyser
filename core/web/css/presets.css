@@ -50,6 +50,11 @@ PRESETS - Color Scheme Overrides
   box-shadow: 0 0 20px #000000;
 }
 
+.preset-default #color-editor {
+  background: #2a2a2a;
+  box-shadow: 0 0 20px #000000;
+}
+
 .preset-default .controls-divider {
   background: linear-gradient(to right, transparent, #666, transparent);
 }
@@ -151,6 +156,11 @@ PRESETS - Color Scheme Overrides
 }
 
 .preset-dark #controls {
+  background: #1a1a1a;
+  box-shadow: 0 0 20px #000000;
+}
+
+.preset-dark #color-editor {
   background: #1a1a1a;
   box-shadow: 0 0 20px #000000;
 }
@@ -261,6 +271,11 @@ PRESETS - Color Scheme Overrides
   box-shadow: 0 0 20px #333333;
 }
 
+.preset-light #color-editor {
+  background: #e8e8e8;
+  box-shadow: 0 0 20px #333333;
+}
+
 .preset-light .controls-divider {
   background: linear-gradient(to right, transparent, #bbb, transparent);
 }
@@ -363,6 +378,11 @@ PRESETS - Color Scheme Overrides
 }
 
 .preset-green #controls {
+  background: #1a3a14;
+  box-shadow: 0 0 20px #000000;
+}
+
+.preset-green #color-editor {
   background: #1a3a14;
   box-shadow: 0 0 20px #000000;
 }
@@ -473,6 +493,11 @@ PRESETS - Color Scheme Overrides
   box-shadow: 0 0 20px #000000;
 }
 
+.preset-blue #color-editor {
+  background: #152240;
+  box-shadow: 0 0 20px #000000;
+}
+
 .preset-blue .controls-divider {
   background: linear-gradient(to right, transparent, #3b5f96, transparent);
 }
@@ -575,6 +600,11 @@ PRESETS - Color Scheme Overrides
 }
 
 .preset-purple #controls {
+  background: #2a1b40;
+  box-shadow: 0 0 20px #000000;
+}
+
+.preset-purple #color-editor {
   background: #2a1b40;
   box-shadow: 0 0 20px #000000;
 }
@@ -685,6 +715,11 @@ PRESETS - Color Scheme Overrides
   box-shadow: 0 0 20px #000000;
 }
 
+.preset-red #color-editor {
+  background: #3d171d;
+  box-shadow: 0 0 20px #000000;
+}
+
 .preset-red .controls-divider {
   background: linear-gradient(to right, transparent, #8a3b46, transparent);
 }
@@ -787,6 +822,11 @@ PRESETS - Color Scheme Overrides
 }
 
 .preset-yellow #controls {
+  background: #3d3514;
+  box-shadow: 0 0 20px #000000;
+}
+
+.preset-yellow #color-editor {
   background: #3d3514;
   box-shadow: 0 0 20px #000000;
 }
@@ -897,6 +937,11 @@ PRESETS - Color Scheme Overrides
   box-shadow: 0 0 20px #000000;
 }
 
+.preset-cyan #color-editor {
+  background: #124047;
+  box-shadow: 0 0 20px #000000;
+}
+
 .preset-cyan .controls-divider {
   background: linear-gradient(to right, transparent, #2f8f9f, transparent);
 }
@@ -999,6 +1044,11 @@ PRESETS - Color Scheme Overrides
 }
 
 .preset-monochrome #controls {
+  background: #1d1d1d;
+  box-shadow: 0 0 20px #000000;
+}
+
+.preset-monochrome #color-editor {
   background: #1d1d1d;
   box-shadow: 0 0 20px #000000;
 }
@@ -1109,6 +1159,11 @@ PRESETS - Color Scheme Overrides
   box-shadow: 0 0 20px #000000;
 }
 
+.preset-monokai #color-editor {
+  background: #383830;
+  box-shadow: 0 0 20px #000000;
+}
+
 .preset-monokai .controls-divider {
   background: linear-gradient(to right, transparent, #75715e, transparent);
 }
@@ -1165,6 +1220,339 @@ PRESETS - Color Scheme Overrides
 
 .preset-monokai a:hover {
   color: #66d9ef;
+}
+
+/* ORANGE PRESET */
+.preset-orange {
+  background: #24140c;
+  color: #ffe8d8;
+}
+
+.preset-orange h1 {
+  color: #ff9d4d;
+}
+
+.preset-orange form {
+  background: #351d12;
+  box-shadow: 0 0 15px #000000;
+}
+
+.preset-orange button {
+  background-color: #ff9d4d;
+  color: #2a1200;
+}
+
+.preset-orange button:hover {
+  background-color: #e88735;
+}
+
+.preset-orange button:active {
+  background-color: #c96d20;
+}
+
+.preset-orange #status {
+  background: #3c2315;
+  border: 1px solid #7e5130;
+}
+
+.preset-orange #log {
+  background: #321b11;
+  border: 1px solid #6d4529;
+}
+
+.preset-orange #main-vc-container {
+  background: #351d12;
+  box-shadow: 0 0 15px #000000;
+}
+
+.preset-orange #controls {
+  background: #351d12;
+  box-shadow: 0 0 20px #000000;
+}
+
+.preset-orange #color-editor {
+  background: #351d12;
+  box-shadow: 0 0 20px #000000;
+}
+
+.preset-orange .controls-divider {
+  background: linear-gradient(to right, transparent, #7e5130, transparent);
+}
+
+.preset-orange .controls-card {
+  background: #402417;
+  border: 1px solid #5f3920;
+}
+
+.preset-orange .control-label {
+  color: #e8b693;
+}
+
+.preset-orange .dev-toggle {
+  background: #3c2315;
+  color: #e8b693;
+  border: 1px solid #5f3920;
+}
+
+.preset-orange .dev-toggle:hover {
+  background: #55311e;
+  color: #ffe8d8;
+}
+
+.preset-orange input,
+.preset-orange select {
+  background: #351d12;
+  color: #ffe8d8;
+  border: none;
+}
+
+.preset-orange #muteBtn.muted {
+  background-color: #b94236;
+  color: #fff;
+}
+
+.preset-orange #muteBtn.unmuted {
+  background-color: #5dc97d;
+  color: #000;
+}
+
+.preset-orange #micIndicator {
+  background-color: #5f3920;
+  border: 1px solid #7e5130;
+}
+
+.preset-orange #micIndicator.active {
+  background-color: #5dc97d;
+}
+
+.preset-orange a {
+  color: #ffe8d8;
+}
+
+.preset-orange a:hover {
+  color: #ff9d4d;
+}
+
+/* MINT PRESET */
+.preset-mint {
+  background: #10241f;
+  color: #dbfff4;
+}
+
+.preset-mint h1 {
+  color: #4ee6b8;
+}
+
+.preset-mint form {
+  background: #18352f;
+  box-shadow: 0 0 15px #000000;
+}
+
+.preset-mint button {
+  background-color: #4ee6b8;
+  color: #082019;
+}
+
+.preset-mint button:hover {
+  background-color: #35c99d;
+}
+
+.preset-mint button:active {
+  background-color: #1fa57e;
+}
+
+.preset-mint #status {
+  background: #1f4038;
+  border: 1px solid #4d7d73;
+}
+
+.preset-mint #log {
+  background: #17322d;
+  border: 1px solid #3e6d63;
+}
+
+.preset-mint #main-vc-container {
+  background: #18352f;
+  box-shadow: 0 0 15px #000000;
+}
+
+.preset-mint #controls {
+  background: #18352f;
+  box-shadow: 0 0 20px #000000;
+}
+
+.preset-mint #color-editor {
+  background: #18352f;
+  box-shadow: 0 0 20px #000000;
+}
+
+.preset-mint .controls-divider {
+  background: linear-gradient(to right, transparent, #4d7d73, transparent);
+}
+
+.preset-mint .controls-card {
+  background: #1f433b;
+  border: 1px solid #305d53;
+}
+
+.preset-mint .control-label {
+  color: #a0d9cb;
+}
+
+.preset-mint .dev-toggle {
+  background: #1f4038;
+  color: #a0d9cb;
+  border: 1px solid #305d53;
+}
+
+.preset-mint .dev-toggle:hover {
+  background: #255148;
+  color: #dbfff4;
+}
+
+.preset-mint input,
+.preset-mint select {
+  background: #18352f;
+  color: #dbfff4;
+  border: none;
+}
+
+.preset-mint #muteBtn.muted {
+  background-color: #c04a4a;
+  color: #fff;
+}
+
+.preset-mint #muteBtn.unmuted {
+  background-color: #4ee6b8;
+  color: #082019;
+}
+
+.preset-mint #micIndicator {
+  background-color: #305d53;
+  border: 1px solid #4d7d73;
+}
+
+.preset-mint #micIndicator.active {
+  background-color: #4ee6b8;
+}
+
+.preset-mint a {
+  color: #dbfff4;
+}
+
+.preset-mint a:hover {
+  color: #4ee6b8;
+}
+
+/* ROSE PRESET */
+.preset-rose {
+  background: #26131a;
+  color: #ffe4ef;
+}
+
+.preset-rose h1 {
+  color: #ff6b9c;
+}
+
+.preset-rose form {
+  background: #3a1c29;
+  box-shadow: 0 0 15px #000000;
+}
+
+.preset-rose button {
+  background-color: #ff6b9c;
+  color: #2a0914;
+}
+
+.preset-rose button:hover {
+  background-color: #e85386;
+}
+
+.preset-rose button:active {
+  background-color: #c83d70;
+}
+
+.preset-rose #status {
+  background: #42212f;
+  border: 1px solid #7d4a5f;
+}
+
+.preset-rose #log {
+  background: #341825;
+  border: 1px solid #6a3e52;
+}
+
+.preset-rose #main-vc-container {
+  background: #3a1c29;
+  box-shadow: 0 0 15px #000000;
+}
+
+.preset-rose #controls {
+  background: #3a1c29;
+  box-shadow: 0 0 20px #000000;
+}
+
+.preset-rose #color-editor {
+  background: #3a1c29;
+  box-shadow: 0 0 20px #000000;
+}
+
+.preset-rose .controls-divider {
+  background: linear-gradient(to right, transparent, #7d4a5f, transparent);
+}
+
+.preset-rose .controls-card {
+  background: #452130;
+  border: 1px solid #603447;
+}
+
+.preset-rose .control-label {
+  color: #efadc4;
+}
+
+.preset-rose .dev-toggle {
+  background: #42212f;
+  color: #efadc4;
+  border: 1px solid #603447;
+}
+
+.preset-rose .dev-toggle:hover {
+  background: #593045;
+  color: #ffe4ef;
+}
+
+.preset-rose input,
+.preset-rose select {
+  background: #3a1c29;
+  color: #ffe4ef;
+  border: none;
+}
+
+.preset-rose #muteBtn.muted {
+  background-color: #bd436a;
+  color: #fff;
+}
+
+.preset-rose #muteBtn.unmuted {
+  background-color: #56cb8d;
+  color: #000;
+}
+
+.preset-rose #micIndicator {
+  background-color: #603447;
+  border: 1px solid #7d4a5f;
+}
+
+.preset-rose #micIndicator.active {
+  background-color: #56cb8d;
+}
+
+.preset-rose a {
+  color: #ffe4ef;
+}
+
+.preset-rose a:hover {
+  color: #ff6b9c;
 }
 
 /* TOP FORM INPUT CONTRAST */
@@ -1232,4 +1620,22 @@ PRESETS - Color Scheme Overrides
 .preset-monokai #joinForm select {
   background: #2f2f29;
   border: 1px solid #6a6654;
+}
+
+.preset-orange #joinForm input,
+.preset-orange #joinForm select {
+  background: #28160d;
+  border: 1px solid #6d4529;
+}
+
+.preset-mint #joinForm input,
+.preset-mint #joinForm select {
+  background: #122a25;
+  border: 1px solid #3e6d63;
+}
+
+.preset-rose #joinForm input,
+.preset-rose #joinForm select {
+  background: #2b1520;
+  border: 1px solid #6a3e52;
 }
