@@ -23,6 +23,24 @@ let readIndex = 0;
 let available = 0;
 
 let micIndicator = null;
+// VAD threshold (default matches microphone.js defaults)
+let vadStartThreshold = 0.00008;
+let vadStopThreshold  = 0.00004;
+
+// Energy callback for UI meter
+let onEnergyUpdate = null;
+
+export function setVadThreshold(start, stop) {
+    vadStartThreshold = start;
+    vadStopThreshold  = stop;
+    if (micNode) {
+        micNode.port.postMessage({ type: 'setThreshold', start, stop });
+    }
+}
+
+export function setEnergyCallback(fn) {
+    onEnergyUpdate = fn;
+}
 let isPttActive = () => true;
 let getTransmitMode = () => "voice"; // injected from controller
 
@@ -76,10 +94,14 @@ export async function startMic(deviceId) {
 
     micSource.connect(micNode);
     micNode.port.onmessage = handleMicMessage;
+    micNode.port.postMessage({ type: 'setThreshold', start: vadStartThreshold, stop: vadStopThreshold });
 }
 
 function handleMicMessage(event) {
-    const { samples, speech } = event.data;
+    const { samples, speech, energy } = event.data;
+    if (onEnergyUpdate && energy !== undefined) {
+    onEnergyUpdate(energy);
+    } 
     const now = performance.now();
 
     const mode = getTransmitMode();   // "voice" | "ptt"
