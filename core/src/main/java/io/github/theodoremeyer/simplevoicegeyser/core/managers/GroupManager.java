@@ -129,6 +129,12 @@ public final class GroupManager {
      */
     public boolean joinGroup(SvgPlayer svgPlayer, String groupName, String password) {
 
+        if (!svgPlayer.hasPermission("svg.vc.group.join")) {
+            svgPlayer.sendMessage(SvgCore.getPrefix() + SvgColor.RED +
+                    "You do not have permission to join groups.");
+            return false;
+        }
+
         VoicechatServerApi api = getApi();
         VoicechatConnection connection = api.getConnectionOf(svgPlayer.getUniqueId());
 

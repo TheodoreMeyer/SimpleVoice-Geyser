@@ -10,6 +10,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.Con
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
+import org.eclipse.jetty.websocket.api.exceptions.WebSocketException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -110,11 +111,15 @@ public final class JettyWebSocket {
     @OnWebSocketMessage
     public void onMessage(byte[] buffer, int offset, int length) {
         if (connection == null || !connection.isAuthenticated()) {
+            SvgCore.getLogger().debug("[VCBridge] Connection is null or not authenticated.");
             return;
         }
 
         if (connection.getAudioSender() != null) { //make sure the sender is not null
             connection.getAudioSender().sendOpus(Arrays.copyOfRange(buffer, offset, offset + length));
+            SvgCore.getLogger().debug("[VCBridge] recieved audio sender packet.");
+        } else {
+            SvgCore.getLogger().debug("[VCBridge] Audio sender is null.");
         }
     }
 
@@ -151,6 +156,10 @@ public final class JettyWebSocket {
      */
     @OnWebSocketError
     public void onError(Throwable error) {
+        if (error instanceof WebSocketException) {
+            SvgCore.getLogger().debug("Websocket Timeout: " + error.getMessage());
+        }
+
         SvgCore.getLogger().debug("WebSocket: websocket error", error);
         SvgCore.getLogger().info("Error: " + error.getMessage());
     }

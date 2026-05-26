@@ -51,7 +51,7 @@ public final class CreateGroupCommand implements SubCommand {
             return true;
         }
 
-        if (!player.hasPermission("svg.vc.svg.create")) {
+        if (!player.hasPermission("svg.vc.group.create")) {
             sender.sendMessage(SvgCore.getPrefix() + SvgColor.RED +
                     "You do not have permission to create groups.");
             return true;
@@ -69,6 +69,12 @@ public final class CreateGroupCommand implements SubCommand {
             return true;
         }
 
+        if (!groupManager.canCreate(player, typeStr, persistent)) {
+            sender.sendMessage(SvgCore.getPrefix() + SvgColor.RED +
+                    "You don't have permission to create this group.");
+            return true;
+        }
+
         Group.Type type = groupManager.stringToType(typeStr);
 
         boolean created = groupManager.createGroup(
@@ -82,7 +88,7 @@ public final class CreateGroupCommand implements SubCommand {
 
         if (!created) {
             sender.sendMessage(SvgCore.getPrefix() + SvgColor.RED +
-                    "Failed to create svg.");
+                    "Failed to create svg group.");
             return true;
         }
 

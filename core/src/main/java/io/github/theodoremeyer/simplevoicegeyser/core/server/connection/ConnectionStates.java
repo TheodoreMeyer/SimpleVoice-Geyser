@@ -22,13 +22,14 @@ public class ConnectionStates {
 
     public enum DisconnectCodes {
 
-        SERVER_SHUTDOWN(1001),
+        GENERIC(1001),
         REPLACED(4001),
         TIMEOUT(4002),
         PLAYER_LEAVE(4003),
         FATAL_ERROR(4004),
         PACKET_ERROR(4005),
-        CLOSED_SESSION(4006);
+        SERVER_SHUTDOWN(4006),
+        CLOSED_SESSION(4007);
 
         private final int code;
 

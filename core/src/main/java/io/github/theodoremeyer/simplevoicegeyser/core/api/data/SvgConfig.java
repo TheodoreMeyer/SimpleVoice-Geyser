@@ -90,6 +90,24 @@ public final class SvgConfig {
             new ConfigKey <>(this, "server.bind-address", "0.0.0.0");
 
     /**
+     * Config path: server.security.max-auth-failures
+     */
+    public final ConfigKey<Integer> MAX_AUTH_FAILURES =
+            new ConfigKey <>(this, "server.security.max-auth-failures", 5);
+
+    /**
+     * Config path: server.security.auth-fail-duration
+     */
+    public final ConfigKey<Integer> AUTH_FAILURE_DURATION =
+            new ConfigKey <>(this, "server.security.auth-fail-duration", 3);
+
+    /**
+     * Config path: server.security.auth-lock-duration
+     */
+    public final ConfigKey<Integer> AUTH_LOCK_DURATION =
+            new ConfigKey <>(this, "server.security.auth-lock-duration", 8);
+
+    /**
      * Config path: debug
      */
     public final ConfigKey<Boolean> DEBUG =
@@ -121,6 +139,9 @@ public final class SvgConfig {
             DEFAULT_GROUP_PASSWORD,
             PORT,
             BIND_ADDRESS,
+            AUTH_FAILURE_DURATION,
+            AUTH_LOCK_DURATION,
+            MAX_AUTH_FAILURES,
             UPDATE_CHECKER_ENABLED,
             DEBUG,
             CONFIG_VERSION

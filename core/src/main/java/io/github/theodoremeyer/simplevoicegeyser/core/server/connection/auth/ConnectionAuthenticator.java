@@ -30,9 +30,9 @@ public final class ConnectionAuthenticator {
      */
     private final AuthRateLimiter authRateLimiter =
             new AuthRateLimiter(
-                    5,
-                    Duration.ofMinutes(1),
-                    Duration.ofMinutes(5)
+                    SvgCore.getConfig().MAX_AUTH_FAILURES.get(),
+                    Duration.ofMinutes(SvgCore.getConfig().AUTH_FAILURE_DURATION.get()),
+                    Duration.ofMinutes(SvgCore.getConfig().AUTH_LOCK_DURATION.get())
             );
 
     /**
@@ -161,9 +161,7 @@ public final class ConnectionAuthenticator {
                 GeyserHook.isBedrock(uuid);
 
         boolean requireBedrock =
-                SvgCore.getConfig()
-                        .REQUIRE_BEDROCK
-                        .get();
+                SvgCore.getConfig().REQUIRE_BEDROCK.get();
 
         if (bedrock == null) {
 

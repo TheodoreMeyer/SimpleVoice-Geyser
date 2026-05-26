@@ -8,6 +8,13 @@ let manualClose = false;
 
 let reOpen = true; // flag to control auto-reopening
 
+const DisconnectPolicy = {
+    FATAL: new Set([4004, 4005]),
+    NO_RECONNECT: new Set([4006, 4001, 4004, 4005]),
+    TIMEOUT: 4002,
+    SERVER_SHUTDOWN: 4006
+};
+
 export function initWebSocket() {
     onMicData((packet) => {
         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -62,20 +69,51 @@ function createSocket(onStatusChange) {
     };
 
     ws.onclose = (event) => {
+        const code = event.code;
+        const reason = event.reason || "";
+
         log("Disconnected.");
+        console.log("WebSocket closed:", code, reason);
+
         resetAudioState();
         onStatusChange(false);
 
-        if (event?.code === 4003 || event?.reason === "fatal") {
+        // Fatal disconnect → hard stop
+        if (DisconnectPolicy.FATAL.has(code) || reason === "fatal") {
             stopReconnection();
+            log("Fatal disconnect. Reconnect disabled.");
+            return;
         }
 
-        if (!manualClose && lastCredentials && reOpen) {
-            reconnectTimeout = setTimeout(() => {
-                log("Reconnecting...");
-                createSocket(onStatusChange);
-            }, 3000);
+        // Server shutdown → hard stop
+        if (code === DisconnectPolicy.SERVER_SHUTDOWN) {
+            stopReconnection();
+            log("Server shutdown: " + reason);
+            return;
         }
+
+        // Timeout (informational only)
+        if (code === DisconnectPolicy.TIMEOUT) {
+            log("Timeout disconnect.");
+        }
+
+        // Explicit no-reconnect codes
+        if (DisconnectPolicy.NO_RECONNECT.has(code)) {
+            stopReconnection();
+            return;
+        }
+
+        // Manual or invalid reconnect conditions
+        if (manualClose || !lastCredentials || !reOpen) {
+            stopReconnection();
+            return;
+        }
+
+        // Reconnect
+        reconnectTimeout = setTimeout(() => {
+            log("Reconnecting...");
+            createSocket(onStatusChange);
+        }, 3000);
     };
 
     ws.onerror = () => {

@@ -64,10 +64,11 @@ export async function startMic(deviceId) {
     microphoneStream = await navigator.mediaDevices.getUserMedia({
         audio: {
             deviceId: deviceId,
-            noiseSuppression: true,
-            echoCancellation: true,
-            autoGainControl: true,
-            channelCount: 1
+            noiseSuppression: false,
+            echoCancellation: false,
+            autoGainControl: false,
+            channelCount: 1,
+            sampleRate: 48000,
         }
     });
 
