@@ -5,6 +5,8 @@ import {
     setOutputDevice,
     setPttActiveProvider,
     setTransmitModeProvider,
+    setVadThreshold,
+    setEnergyCallback,
     startMic,
     stopMic,
     toggleMute
@@ -52,6 +54,31 @@ export function initUI() {
     });
 
     setMicIndicator(micIndicator);
+    // VAD Sensitivity Slider
+const vadSlider = document.getElementById('vadSlider');
+const vadEnergyBar = document.getElementById('vadEnergyBar');
+const vadThresholdMarker = document.getElementById('vadThresholdMarker');
+
+function sliderToThreshold(val) {
+    return Math.pow(10, -6 + (val - 1) / 99 * 4);
+}
+
+function applyVadSlider() {
+    const start = sliderToThreshold(parseInt(vadSlider.value));
+    const stop  = start * 0.5;
+    setVadThreshold(start, stop);
+    const pct = (parseInt(vadSlider.value) - 1) / 99 * 100;
+    vadThresholdMarker.style.left = pct + '%';
+}
+
+vadSlider.addEventListener('input', applyVadSlider);
+applyVadSlider();
+
+const MAX_DISPLAY_ENERGY = 0.01;
+setEnergyCallback((energy) => {
+    const pct = Math.min(energy / MAX_DISPLAY_ENERGY * 100, 100);
+    vadEnergyBar.style.width = pct + '%';
+});
 
     async function populateAudioDevices() {
         const { microphones, speakers } = await getAudioDevices();
