@@ -60,6 +60,20 @@
                         <span id="micIndicator" title="Mic activity"></span>
                     </div>
                 </div>
+                <div class="control-group" id="vadGroup">
+                    <span class="control-label">Input Sensitivity</span>
+                    <div class="vad-meter-wrap">
+                        <div class="vad-bar-bg">
+                            <div id="vadEnergyBar" class="vad-bar-energy"></div>
+                            <div id="vadThresholdMarker" class="vad-threshold-marker"></div>
+                        </div>
+                    </div>
+                    <input type="range" id="vadSlider" min="1" max="100" value="50" class="vad-slider">
+                    <div class="vad-labels">
+                        <span>Sensitive</span>
+                        <span>Less Sensitive</span>
+                    </div>
+                </div>
             </div>
 
             <div class="controls-card">
@@ -110,10 +124,14 @@
             </div>
         </div>
     </div>
-    <div style="display: flex; align-items: center; gap: 8px;">
-        <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank">
+    <div style="display: flex; align-items: center; gap: 16px;">
+        <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank" style="display:flex;align-items:center;gap:8px;">
             <img src="images/github.svg" alt="GitHub Link" class="githubicon">
             <span>Theodore Meyer</span>
+        </a>
+        <a href="https://github.com/paper-the-best" target="_blank" style="display:flex;align-items:center;gap:8px;">
+            <img src="images/github.svg" alt="GitHub Link" class="githubicon">
+            <span>paper-the-best</span>
         </a>
     </div>
 
