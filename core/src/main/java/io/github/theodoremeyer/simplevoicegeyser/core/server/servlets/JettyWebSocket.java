@@ -6,6 +6,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.SvgConnection;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.AuthResponse;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.ConnectionAuthenticator;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.jetty.websocket.api.Session;
@@ -23,6 +24,9 @@ import java.util.Arrays;
 @WebSocket
 public final class JettyWebSocket {
 
+    /**
+     * Holds authenticator for players.
+     */
     public static final ConnectionAuthenticator AUTHENTICATOR =
             new ConnectionAuthenticator();
 
@@ -177,7 +181,7 @@ public final class JettyWebSocket {
         String username = json.optString("username", "").trim();
         String password = json.optString("password", "");
 
-        ConnectionAuthenticator.AuthResponse response =
+        AuthResponse response =
                 AUTHENTICATOR.authenticate(
                         username,
                         password
@@ -192,11 +196,7 @@ public final class JettyWebSocket {
             return;
         }
 
-        this.connection = connectionManager.connect(
-                response.uuid(),
-                session,
-                response.player()
-        );
+        this.connection = connectionManager.connect(response.uuid(), session, response.player());
 
         try {
             connection.authenticate();

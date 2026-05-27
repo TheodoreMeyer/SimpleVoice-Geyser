@@ -8,6 +8,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public interface SvgLogger {
 
+    /**
+     * Whether Debug is enabled
+     */
     AtomicBoolean debug  = new AtomicBoolean();
 
     /**
@@ -53,6 +56,7 @@ public interface SvgLogger {
 
     /**
      * Updated debug to true or false.
+     * @param enabled whether debug is enabled
      */
     default void setDebug(boolean enabled) {
         debug.set(enabled);
@@ -70,6 +74,8 @@ public interface SvgLogger {
 
     /**
      * Logs a debug message + error to logger
+     * @param msg the debug message to log
+     * @param t the throwable associated with the error
      */
     default void debug(String msg, Throwable t) {
         if (debug.get()) {

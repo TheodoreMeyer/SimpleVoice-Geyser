@@ -98,6 +98,7 @@ public final class SvgCore {
 
     /**
      * Start SVG server and handling with SVC
+     * @return success
      */
     public synchronized boolean init() {
 

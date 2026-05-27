@@ -58,14 +58,13 @@ public final class SvgConnection {
     /**
      * Creates a new active connection.
      *
-     * @param uuid player uuid
      * @param session websocket session
      * @param player associated player
      */
-    public SvgConnection(UUID uuid, Session session, SvgPlayer player) {
-        this.uuid = uuid;
-        this.session = session;
+    SvgConnection(Session session, SvgPlayer player) {
         this.player = player;
+        this.uuid = player.getUniqueId();
+        this.session = session;
     }
 
 
@@ -102,13 +101,11 @@ public final class SvgConnection {
             );
         }
 
-        audioListener = new SvgAudioListener(
-                uuid, session, api);
+        audioListener = new SvgAudioListener(uuid, session, api);
 
         audioListener.registerListener();
 
-        audioSender = new SvgAudioSender(
-                api, uuid);
+        audioSender = new SvgAudioSender(api, uuid);
 
         authenticated = true;
 
@@ -190,11 +187,7 @@ public final class SvgConnection {
      * @param message message
      * @param fatal fatal error
      */
-    public void sendMessage(
-            ConnectionStates.MessageType type,
-            String message,
-            boolean fatal
-    ) {
+    public void sendMessage(ConnectionStates.MessageType type, String message, boolean fatal) {
 
         JSONObject json = new JSONObject();
 
@@ -249,7 +242,6 @@ public final class SvgConnection {
 
     /**
      * Sends a synced in-game message.
-     *
      * @param message message
      */
     public void sendPlayerMessage(String message) {
@@ -262,40 +254,61 @@ public final class SvgConnection {
         );
     }
 
-    public void sendFatal(
-            String message,
-            int closeCode,
-            String closeReason
-    ) {
-
+    /**
+     * Send a fatal message to client
+     * @param message message to send
+     * @param closeCode code for closing
+     * @param closeReason reason for closing
+     */
+    public void sendFatal(String message, int closeCode, String closeReason) {
         sendError(message, true);
-
-        disconnect(
-                closeCode,
-                closeReason
-        );
+        disconnect(closeCode, closeReason);
     }
 
+    /**
+     * Gets the UUID associated with this connection.
+     * @return player's uuid
+     */
     public UUID getUuid() {
         return uuid;
     }
 
+    /**
+     * Gets the Session related to the Connection
+     * @return session
+     */
     public Session getSession() {
         return session;
     }
 
+    /**
+     * Gets the player related the Connection
+     * @return the player
+     */
     public SvgPlayer getPlayer() {
         return player;
     }
 
+    /**
+     * Checks if the connection is authenticated
+     * @return isAuthenticated
+     */
     public boolean isAuthenticated() {
         return authenticated;
     }
 
+    /**
+     * Checks if the connection is closed
+     * @return isClosed
+     */
     public boolean isClosed() {
         return closed;
     }
 
+    /**
+     * Get the AudioSender related to a player
+     * @return the audio sender
+     */
     public SvgAudioSender getAudioSender() {
         return audioSender;
     }
