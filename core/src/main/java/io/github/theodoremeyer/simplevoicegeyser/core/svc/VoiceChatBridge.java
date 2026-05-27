@@ -9,15 +9,6 @@ import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.RemoveGroupEvent;
 import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
-import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
-import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
-import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioListener;
-import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioSender;
-import org.eclipse.jetty.websocket.api.Session;
-
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The Class Bridging with Simple Voice Chat
@@ -29,20 +20,11 @@ public class VoiceChatBridge implements VoicechatPlugin {
      * @see VoicechatServerApi server api
      */
     private VoicechatServerApi serverApi;
-    /**
-     * Map Containing all the audioSenders
-     */
-    private final Map<UUID, SvgAudioSender> audioSenders = new ConcurrentHashMap<>();
-    /**
-     * Map containing all the audioListeners
-     */
-    private final Map<UUID, SvgAudioListener> audioListeners = new ConcurrentHashMap<>();
 
     /**
      * Initializes the plugin's connection with SVC.
      */
-    public VoiceChatBridge() {
-    }
+    public VoiceChatBridge() {}
 
     /**
      * The SVC plugin id
@@ -117,105 +99,5 @@ public class VoiceChatBridge implements VoicechatPlugin {
      */
     public VoicechatServerApi getVcServerApi() {
         return serverApi;
-    }
-
-    /**
-     * Creates an AudioSender
-     * @param uuid uuid to link sender too
-     * @return the registered Sender
-     */
-    public SvgAudioSender registerAudioSender(UUID uuid) {
-        if (serverApi == null) {
-            SvgCore.getLogger().warning("[VCBridge] Cannot register SvgAudioSender: Server API is null");
-            return null;
-        }
-
-        if (audioSenders.containsKey(uuid)) {
-            SvgCore.getLogger().warning("[VCBridge] SvgAudioSender already registered for: " + uuid);
-            return null;
-        }
-
-        SvgPlayer SvgPlayer = SvgCore.getPlayerManager().getPlayer(uuid);
-        if (SvgPlayer == null) throw  new IllegalStateException("SvgPlayer not found: " + uuid);
-
-        try {
-            SvgAudioSender sender = new SvgAudioSender(serverApi, uuid); //create the sender
-            audioSenders.put(uuid, sender);
-            SvgCore.getLogger().debug("SvgAudioSender created and registered for: " + uuid);
-            SvgPlayer.sendMessage(SvgCore.getPrefix() + SvgColor.AQUA + "AudioSender Registered!");
-
-            return sender;
-        } catch (RuntimeException e) {
-            SvgCore.getLogger().debug("VCBridge: Unable to register AudioSender for: " + uuid, e);
-            SvgPlayer.sendMessage(SvgCore.getPrefix() + SvgColor.RED + "Failed to register AudioSender");
-        }
-        return null;
-    }
-
-    /**
-     * Stops an AudioSender
-     * @param uuid uuid of AudioSender to stop
-     */
-    public void unregisterAudioSender(UUID uuid) {
-        SvgAudioSender sender = audioSenders.remove(uuid); //remove the sender from the map
-
-        SvgPlayer SvgPlayer = SvgCore.getPlayerManager().getPlayer(uuid);
-
-        if (sender != null) {
-            sender.unregister(); //unregister the sender
-            SvgCore.getLogger().debug("VcBridge: SvgAudioSender unregistered for: " + uuid);
-            if (SvgPlayer != null) { SvgPlayer.sendMessage(SvgCore.getPrefix() + "audioSender unregistered."); }
-        } else {
-            if (SvgPlayer != null) {
-                SvgCore.getLogger().warning("[VCBridge] No SvgAudioSender found to unregister for: " + uuid);
-            } else {
-                SvgCore.getLogger().debug("VcBridge: No SvgAudioSender found to unregister for: " + uuid);
-            }
-        }
-    }
-
-    /**
-     * Creates an AudioListener
-     * @param uuid uuid to associate listener to
-     * @param session the associated session of the player
-     */
-    public void registerAudioListener(UUID uuid, Session session) {
-        if (serverApi == null) {
-            SvgCore.getLogger().warning("[VCBridge] Cannot register listener: Server API is null");
-            return;
-        }
-
-        if (audioListeners.containsKey(uuid)) {
-            SvgCore.getLogger().info("[VCBridge] Listener already registered for: " + uuid);
-            return;
-        }
-
-        SvgAudioListener listener = new SvgAudioListener(uuid, session, serverApi); //create a new audio listener
-        listener.registerListener();
-        audioListeners.put(uuid, listener); //add it to the listener map
-        SvgCore.getLogger().debug("VcBridge: Registered audio listener for: " + uuid);
-    }
-
-    /**
-     * Stops an AudioListener
-     * @param uuid uuid of the audioListener to stop
-     */
-    public void unregisterAudioListener(UUID uuid) {
-        if (serverApi == null) {
-            SvgCore.getLogger().warning("[VCBridge] Cannot unregister listener: Server API is null");
-            return;
-        }
-
-        SvgAudioListener listener = audioListeners.remove(uuid); //remove the listener from the map
-        if (listener != null) {
-            listener.unRegister();
-            SvgCore.getLogger().debug("VCBridge: Unregistered audio listener for: " + uuid);
-        } else {
-            if (SvgCore.getPlayerManager().getPlayer(uuid) != null) {
-                SvgCore.getLogger().warning("[VCBridge] No audio listener found for: " + uuid);
-            } else {
-                SvgCore.getLogger().debug("VCBridge: No audio listener found for: " + uuid);
-            }
-        }
     }
 }

@@ -9,7 +9,6 @@ import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
 import java.time.Duration;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Handles websocket authentication and connection validation.
@@ -28,17 +27,18 @@ public final class ConnectionAuthenticator {
     /**
      * Authentication rate limiter.
      */
-    private final AuthRateLimiter authRateLimiter =
-            new AuthRateLimiter(
-                    SvgCore.getConfig().MAX_AUTH_FAILURES.get(),
-                    Duration.ofMinutes(SvgCore.getConfig().AUTH_FAILURE_DURATION.get()),
-                    Duration.ofMinutes(SvgCore.getConfig().AUTH_LOCK_DURATION.get())
-            );
+    private final AuthRateLimiter authRateLimiter;
 
     /**
      * Creates the authenticator.
      */
-    public ConnectionAuthenticator() {}
+    public ConnectionAuthenticator() {
+        this.authRateLimiter = new AuthRateLimiter(
+                SvgCore.getConfig().MAX_AUTH_FAILURES.get(),
+                Duration.ofMinutes(SvgCore.getConfig().AUTH_FAILURE_DURATION.get()),
+                Duration.ofMinutes(SvgCore.getConfig().AUTH_LOCK_DURATION.get())
+        );
+    }
 
     /**
      * Attempts to authenticate a websocket client.
@@ -137,7 +137,7 @@ public final class ConnectionAuthenticator {
 
         } catch (Exception e) {
 
-            SvgCore.getLogger().debug("Authenticator: Unexpected authentication failure", e);
+            SvgCore.getLogger().error("Authenticator: Unexpected authentication failure", e);
 
             return AuthResponse.failure(
                     "Internal server error."
@@ -273,248 +273,5 @@ public final class ConnectionAuthenticator {
         }
 
         return username.trim();
-    }
-
-    /**
-     * Result of an authentication attempt.
-     */
-    public record AuthResponse(boolean success, String message,
-            UUID uuid, SvgPlayer player
-    ) {
-
-        /**
-         * Successful auth result.
-         *
-         * @param uuid player uuid
-         * @param player player
-         * @return auth response
-         */
-        public static AuthResponse success(UUID uuid, SvgPlayer player) {
-            return new AuthResponse(
-                    true, null,
-                    uuid, player
-            );
-        }
-
-        /**
-         * Failed auth result.
-         *
-         * @param message failure message
-         * @return auth response
-         */
-        public static AuthResponse failure(
-                String message
-        ) {
-
-            return new AuthResponse(
-                    false, message,
-                    null, null
-            );
-        }
-
-        /**
-         * Generic success helper.
-         * <p>
-         * Used for validation helper methods.
-         *
-         * @return auth response
-         */
-        public static AuthResponse ok() {
-
-            return new AuthResponse(
-                    true, null,
-                    null, null
-            );
-        }
-    }
-
-    /**
-     * Simple rolling auth limiter.
-     */
-    private static final class AuthRateLimiter {
-
-        /**
-         * Maximum failures before lock.
-         */
-        private final int maxFailures;
-
-        /**
-         * Rolling auth window.
-         */
-        private final long windowMillis;
-
-        /**
-         * Lock duration.
-         */
-        private final long lockMillis;
-
-        /**
-         * Auth entries.
-         */
-        private final ConcurrentHashMap<String, Entry>
-                entries = new ConcurrentHashMap<>();
-
-        /**
-         * Creates the limiter.
-         *
-         * @param maxFailures max failures
-         * @param window window duration
-         * @param lockDuration lock duration
-         */
-        private AuthRateLimiter(
-                int maxFailures,
-                Duration window,
-                Duration lockDuration
-        ) {
-
-            this.maxFailures = maxFailures;
-            this.windowMillis = window.toMillis();
-            this.lockMillis = lockDuration.toMillis();
-        }
-
-        /**
-         * Gets whether login is allowed.
-         *
-         * @param username username
-         * @return true if allowed
-         */
-        private boolean allow(String username) {
-
-            long now = System.currentTimeMillis();
-
-            cleanup(now);
-
-            Entry entry =
-                    entries.computeIfAbsent(
-                            username,
-                            ignored -> new Entry()
-                    );
-
-            synchronized (entry) {
-
-                entry.lastSeen = now;
-
-                // lock still active
-                if (now < entry.lockUntil) {
-                    return false;
-                }
-
-                // reset expired rolling window
-                if (now - entry.windowStart >
-                        windowMillis) {
-
-                    entry.windowStart = now;
-                    entry.failures = 0;
-                    entry.lockUntil = 0;
-                }
-
-                return true;
-            }
-        }
-
-        /**
-         * Records failed auth attempt.
-         *
-         * @param username username
-         */
-        private void recordFailure(String username) {
-
-            long now = System.currentTimeMillis();
-
-            cleanup(now);
-
-            Entry entry =
-                    entries.computeIfAbsent(
-                            username,
-                            ignored -> new Entry()
-                    );
-
-            synchronized (entry) {
-
-                entry.lastSeen = now;
-
-                // reset expired rolling window
-                if (now - entry.windowStart >
-                        windowMillis) {
-
-                    entry.windowStart = now;
-                    entry.failures = 0;
-                    entry.lockUntil = 0;
-                }
-
-                entry.failures++;
-
-                if (entry.failures >= maxFailures) {
-
-                    entry.lockUntil =
-                            now + lockMillis;
-
-                    entry.failures = 0;
-                    entry.windowStart = now;
-
-                    SvgCore.getLogger().warning(
-                            "[Authenticator] " +
-                                    "Account temporarily locked: " +
-                                    username
-                    );
-                }
-            }
-        }
-
-        /**
-         * Clears failures for a username.
-         *
-         * @param username username
-         */
-        private void reset(String username) {
-            entries.remove(username);
-        }
-
-        /**
-         * Removes stale entries.
-         *
-         * @param now current timestamp
-         */
-        private void cleanup(long now) {
-
-            long maxAge =
-                    windowMillis + lockMillis;
-
-            entries.entrySet().removeIf(entry ->
-
-                    now - entry.getValue().lastSeen >
-                            maxAge &&
-
-                            now >= entry.getValue().lockUntil
-            );
-        }
-
-        /**
-         * Rate limit entry.
-         */
-        private static final class Entry {
-
-            /**
-             * Window start timestamp.
-             */
-            private long windowStart =
-                    System.currentTimeMillis();
-
-            /**
-             * Failure count.
-             */
-            private int failures = 0;
-
-            /**
-             * Lock expiration timestamp.
-             */
-            private long lockUntil = 0;
-
-            /**
-             * Last seen timestamp.
-             */
-            private long lastSeen =
-                    System.currentTimeMillis();
-        }
     }
 }

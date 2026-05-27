@@ -59,7 +59,6 @@ public final class ConnectionManager {
 
         SvgConnection connection =
                 new SvgConnection(
-                        uuid,
                         session,
                         player
                 );

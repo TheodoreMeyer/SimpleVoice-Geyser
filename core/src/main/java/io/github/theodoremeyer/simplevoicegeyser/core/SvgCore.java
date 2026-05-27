@@ -12,7 +12,6 @@ import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.PlayerManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.JettyServer;
-import io.github.theodoremeyer.simplevoicegeyser.core.server.WebSocketManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
 import io.github.theodoremeyer.simplevoicegeyser.core.update.UpdateChecker;
@@ -65,8 +64,6 @@ public final class SvgCore {
 
     private PlayerVcPswd playerVcPswd;
 
-    private final WebSocketManager webSocketManager;
-
     private Command command;
 
     private State state = State.NEW;
@@ -92,7 +89,6 @@ public final class SvgCore {
 
         //Managers
         this.playerManager = new PlayerManager();
-        this.webSocketManager = new WebSocketManager();
         this.connectionManager = new ConnectionManager();
     }
     
@@ -288,15 +284,6 @@ public final class SvgCore {
      */
     public static VoiceChatBridge getBridge() {
         return getInstance().vcBridge;
-    }
-
-    /**
-     * Get the Ws Manager
-     * @see WebSocketManager
-     * @return WebsocketManager
-     */
-    public static WebSocketManager getWsManager() {
-        return getInstance().webSocketManager;
     }
 
     /**
