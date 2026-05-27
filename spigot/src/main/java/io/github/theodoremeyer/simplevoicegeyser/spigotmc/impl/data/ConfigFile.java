@@ -1,14 +1,12 @@
 package io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
@@ -117,14 +115,9 @@ public class ConfigFile extends SvgFile {
     }
 
     private FileConfiguration loadBundledDefaults() {
-        try (InputStream in = getClass().getClassLoader().getResourceAsStream("config.yml")) {
-            if (in == null) {
-                return null;
-            }
-            return YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            throw new RuntimeException("Failed loading bundled config.yml defaults", e);
-        }
+        YamlConfiguration defaults = new YamlConfiguration();
+        SvgConfig.codeDefaults().forEach(defaults::set);
+        return defaults;
     }
 
     private int countAddedLeafKeys(FileConfiguration existing, FileConfiguration defaults) {

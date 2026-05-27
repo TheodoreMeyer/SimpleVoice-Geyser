@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * The Class Sending Audio to Client
  */
-public final class SvgAudioListener implements PlayerAudioListener {
+public final class SvgAudioListener {
 
     private final UUID listenerId;
     private final VoicechatServerApi serverApi;
@@ -51,45 +51,20 @@ public final class SvgAudioListener implements PlayerAudioListener {
     private long packetSentLegacyCount = 0;
     private long packetSentSvgV2Count = 0;
 
-    /**
-     * Session, used for less method checks
-     */
     private final Session session;
     private final AudioSessionNegotiation negotiation;
     private final AudioByteCompiler audioByteCompiler;
+    private PlayerAudioListener registeredListener;
 
-    /**
-     * Class constructor to set id
-     * @param listenerId the id of this listener
-     * @param session the Session to link to
-     * @param serverApi the VcServer API
-     */
     public SvgAudioListener(UUID listenerId, Session session, VoicechatServerApi serverApi, AudioSessionNegotiation negotiation) {
         this.listenerId = listenerId;
         this.session = session;
         this.serverApi = serverApi;
         this.negotiation = negotiation;
         this.audioByteCompiler = SvgCore.getAudioByteCompiler();
-
-        // Decoder for opus to raw PCM (16-bit signed, little-endian)
         decoder = serverApi.createDecoder();
     }
 
-    /**
-     * Get the uuid of this listener
-     * The id of the listener is currently the id of the player it is listening for
-     * @return UUID of the listener
-     */
-    @Override
-    public UUID getListenerId() {
-        return listenerId;
-    }
-
-    /**
-     * Called when audio data is received for the player.
-     * This method forwards audio to the player's WebSocket session.
-     * @param soundPacket packet received to send to Client
-     */
     public void onAudioReceived(SoundPacket soundPacket) {
         packetReceivedCount++;
 
@@ -101,7 +76,7 @@ public final class SvgAudioListener implements PlayerAudioListener {
 
         if (!session.isOpen()) {
             packetClosedDropCount++;
-            SvgCore.debug("AudioListener", "Dropping packet while websocket not open for " + listenerId);
+            SvgCore.getLogger().debug("AudioListener: Dropping packet while websocket not open for " + listenerId);
             logStatsIfNeeded();
             return;
         }
@@ -161,7 +136,7 @@ public final class SvgAudioListener implements PlayerAudioListener {
                     }
                     if (pcm == null || pcm.length == 0) {
                         packetDecodeFailedCount++;
-                        SvgCore.debug("AudioListener", "Decoded empty PCM packet for " + listenerId);
+                        SvgCore.getLogger().debug("AudioListener: Decoded empty PCM packet for " + listenerId);
                         return;
                     }
                     decodedSampleCount += pcm.length;
@@ -189,7 +164,7 @@ public final class SvgAudioListener implements PlayerAudioListener {
                 packetSentCount++;
             } catch (Exception e) {
                 packetSendFailedCount++;
-                SvgCore.debug("AudioListener", "Error sending audio to client " + listenerId, e);
+                SvgCore.getLogger().debug("AudioListener: Error sending audio to client " + listenerId, e);
             } finally {
                 logStatsIfNeeded();
             }
@@ -200,8 +175,8 @@ public final class SvgAudioListener implements PlayerAudioListener {
         if (packetReceivedCount % 200 != 0) {
             return;
         }
-        SvgCore.debug("AudioListener",
-                "stats uuid=" + listenerId
+        SvgCore.getLogger().debug(
+                "AudioListener: stats uuid=" + listenerId
                         + " recv=" + packetReceivedCount
                         + " decodeFail=" + packetDecodeFailedCount
                         + " sent=" + packetSentCount
@@ -221,7 +196,8 @@ public final class SvgAudioListener implements PlayerAudioListener {
                         + " fallbackCount=" + (negotiation == null ? 0 : negotiation.getFallbackCount())
                         + " avgWireBytes=" + (packetSentCount == 0 ? 0 : (packetSentByteCount / packetSentCount))
                         + " avgStereoSamples=" + (packetSentCount == 0 ? 0 : (packetSentStereoSampleCount / packetSentCount))
-                        + " avgSamples=" + (packetSentCount == 0 ? 0 : (decodedSampleCount / packetSentCount)));
+                        + " avgSamples=" + (packetSentCount == 0 ? 0 : (decodedSampleCount / packetSentCount))
+        );
     }
 
     private float computeDistanceGain(VoicechatConnection receiverConnection, Position receiverPosition, SpatialContext context) {
@@ -258,16 +234,16 @@ public final class SvgAudioListener implements PlayerAudioListener {
 
         if (distance > maxDistance) {
             if (packetReceivedCount % 200 == 0) {
-                SvgCore.debug("AudioListener",
-                        "attenuation packet=" + packetType
+                SvgCore.getLogger().debug(
+                        "AudioListener: attenuation packet=" + packetType
                                 + " distance=" + String.format(Locale.ROOT, "%.2f", distance)
                                 + " maxDistance=" + String.format(Locale.ROOT, "%.2f", (double) maxDistance)
-                                + " gain=0.000");
+                                + " gain=0.000"
+                );
             }
             return 0.0f;
         }
 
-        // Smooth fade: full near source, down to 0 at max distance with an edge ramp to avoid abrupt cutoff.
         float normalized = (float) Math.max(0.0D, Math.min(1.0D, distance / maxDistance));
         float edgeStart = 0.97f;
         float gain;
@@ -278,11 +254,12 @@ public final class SvgAudioListener implements PlayerAudioListener {
             gain = (float) Math.pow(Math.cos(normalized * (Math.PI / 2.0D)), 2.0D);
         }
         if (packetReceivedCount % 200 == 0) {
-            SvgCore.debug("AudioListener",
-                    "attenuation packet=" + packetType
+            SvgCore.getLogger().debug(
+                    "AudioListener: attenuation packet=" + packetType
                             + " distance=" + String.format(Locale.ROOT, "%.2f", distance)
                             + " maxDistance=" + String.format(Locale.ROOT, "%.2f", (double) maxDistance)
-                            + " gain=" + String.format(Locale.ROOT, "%.3f", gain));
+                            + " gain=" + String.format(Locale.ROOT, "%.3f", gain)
+            );
         }
         return gain;
     }
@@ -321,10 +298,11 @@ public final class SvgAudioListener implements PlayerAudioListener {
         pan = Math.max(-1.0f, Math.min(1.0f, pan));
 
         if (packetReceivedCount % 400 == 0) {
-            SvgCore.debug("AudioListener",
-                    "pan packet=" + context.packetType
+            SvgCore.getLogger().debug(
+                    "AudioListener: pan packet=" + context.packetType
                             + " yaw=" + String.format(Locale.ROOT, "%.2f", yaw)
-                            + " pan=" + String.format(Locale.ROOT, "%.3f", pan));
+                            + " pan=" + String.format(Locale.ROOT, "%.3f", pan)
+            );
         }
         return pan;
     }
@@ -486,7 +464,6 @@ public final class SvgAudioListener implements PlayerAudioListener {
             return null;
         }
 
-        // Bukkit: Player#getLocation().getYaw()
         try {
             Method getLocation = platformPlayer.getClass().getMethod("getLocation");
             Object location = getLocation.invoke(platformPlayer);
@@ -499,7 +476,6 @@ public final class SvgAudioListener implements PlayerAudioListener {
         } catch (Exception ignored) {
         }
 
-        // Fabric/NMS fallback
         Double yaw = invokeNumericNoArgs(platformPlayer, "getYRot");
         if (yaw != null) {
             return yaw;
@@ -576,11 +552,6 @@ public final class SvgAudioListener implements PlayerAudioListener {
         }
     }
 
-
-    /**
-     * Registers the listener with the VoiceChat server.
-     * May be moved to class constructor
-     */
     public boolean registerListener() {
         PlayerAudioListener listener = serverApi.playerAudioListenerBuilder()
                 .setPlayer(listenerId)
@@ -588,7 +559,8 @@ public final class SvgAudioListener implements PlayerAudioListener {
                 .build();
 
         SvgPlayer player = SvgCore.getPlayerManager().getPlayer(listenerId);
-        if (serverApi.registerAudioListener(listener)) { //make sure SVC successfully registered
+        if (serverApi.registerAudioListener(listener)) {
+            registeredListener = listener;
             SvgCore.getLogger().info("[VCBridge] Registered audio listener for: " + listenerId);
             if (player != null) {
                 player.sendMessage(SvgCore.getPrefix() + SvgColor.AQUA + "Registered Audio listener!");
@@ -603,9 +575,6 @@ public final class SvgAudioListener implements PlayerAudioListener {
         }
     }
 
-    /**
-     * Closes the decoder
-     */
     public void unRegister() {
         if (closed.getAndSet(true)) {
             return;
@@ -616,17 +585,15 @@ public final class SvgAudioListener implements PlayerAudioListener {
                 decoder.resetState();
                 decoder.close();
             }
+            if (registeredListener != null) {
+                serverApi.unregisterAudioListener(registeredListener);
+                registeredListener = null;
+            }
         } catch (Exception e) {
-            SvgCore.debug("AudioListener", "Failed closing decoder for " + listenerId, e);
+            SvgCore.getLogger().debug("AudioListener: Failed closing decoder for " + listenerId, e);
         }
     }
 
-    /**
-     * Returns the UUID that the listener is associated with
-     * Is the same as listener id
-     * @return UUID the player's uuid
-     */
-    @Override
     public UUID getPlayerUuid() {
         return listenerId;
     }

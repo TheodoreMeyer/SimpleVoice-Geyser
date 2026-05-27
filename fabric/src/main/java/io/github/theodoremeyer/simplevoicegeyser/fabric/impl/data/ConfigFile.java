@@ -1,6 +1,7 @@
 package io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data;
 
 import com.google.gson.*;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricLogger;
 
@@ -10,6 +11,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 public class ConfigFile extends SvgFile {
@@ -211,61 +213,46 @@ public class ConfigFile extends SvgFile {
     }
 
     private JsonObject loadBundledDefaults() {
-        try (InputStream in = getClass().getClassLoader().getResourceAsStream("config.json")) {
-            if (in == null) {
-                logger.info("[Config] No bundled config.json found. Using SvgConfig code defaults for migration.");
-                return buildCodeDefaults();
-            }
-            try (InputStreamReader reader = new InputStreamReader(in)) {
-                JsonElement parsed = JsonParser.parseReader(reader);
-                if (parsed == null || !parsed.isJsonObject()) {
-                    logger.warning("[Config] Bundled config.json is invalid. Using SvgConfig code defaults.");
-                    return buildCodeDefaults();
-                }
-                return parsed.getAsJsonObject();
-            }
-        } catch (Exception e) {
-            logger.error("[Config] Failed loading bundled config.json. Using SvgConfig code defaults.", e);
-            return buildCodeDefaults();
-        }
+        return buildCodeDefaults();
     }
 
     private JsonObject buildCodeDefaults() {
         JsonObject root = new JsonObject();
-        root.addProperty("config-info",
-                "This file is used to configure Simple Voice Geyser. For more information, see the wiki: "
-                        + "https://theodoremeyer.github.io/projects/simplevoicegeyser/");
-
-        JsonObject client = new JsonObject();
-        client.addProperty("vctimeout", 30);
-        client.addProperty("idletimeout", 2);
-        client.addProperty("requireBedrock", false);
-        client.addProperty("useEmoteForSVG", true);
-        root.add("client", client);
-
-        JsonObject server = new JsonObject();
-        JsonObject group = new JsonObject();
-        JsonObject defaults = new JsonObject();
-        defaults.addProperty("enabled", true);
-        defaults.addProperty("password", "1a2b");
-        defaults.addProperty("force-on-web-join", false);
-        group.add("default", defaults);
-        server.add("group", group);
-        server.addProperty("port", 8080);
-        server.addProperty("bind-address", "0.0.0.0");
-        server.addProperty("context-path", "/");
-        JsonObject audio = new JsonObject();
-        audio.addProperty("transport-mode", "auto");
-        audio.addProperty("allow-legacy-fallback", true);
-        server.add("audio", audio);
-        root.add("server", server);
-
-        root.addProperty("debug", false);
-        JsonObject updateChecker = new JsonObject();
-        updateChecker.addProperty("enable", true);
-        root.add("updatechecker", updateChecker);
-        root.addProperty("config-version", "0.1.1-dev-migration1");
+        for (Map.Entry<String, Object> entry : SvgConfig.codeDefaults().entrySet()) {
+            setJsonPath(root, entry.getKey(), entry.getValue());
+        }
         return root;
+    }
+
+    private void setJsonPath(JsonObject root, String path, Object value) {
+        String[] parts = path.split("\\.");
+        JsonObject current = root;
+        for (int i = 0; i < parts.length - 1; i++) {
+            String key = parts[i];
+            JsonElement existing = current.get(key);
+            if (!(existing instanceof JsonObject)) {
+                JsonObject next = new JsonObject();
+                current.add(key, next);
+                current = next;
+            } else {
+                current = existing.getAsJsonObject();
+            }
+        }
+
+        JsonElement element;
+        if (value == null) {
+            element = JsonNull.INSTANCE;
+        } else if (value instanceof Number number) {
+            element = new JsonPrimitive(number);
+        } else if (value instanceof Boolean bool) {
+            element = new JsonPrimitive(bool);
+        } else if (value instanceof Character ch) {
+            element = new JsonPrimitive(ch);
+        } else {
+            element = new JsonPrimitive(String.valueOf(value));
+        }
+
+        current.add(parts[parts.length - 1], element);
     }
 
     private String backupCurrentConfig() {
