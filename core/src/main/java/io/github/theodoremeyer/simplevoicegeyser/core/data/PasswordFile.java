@@ -43,7 +43,11 @@ final class PasswordFile {
 
         if (!file.exists()) {
             try {
-                file.createNewFile();
+                 if (file.createNewFile()) {
+                     logger.debug("[SVG] Created account file");
+                 } else {
+                     logger.error("Failed to create accounts file");
+                 }
                 save();
             } catch (IOException e) {
                 logger.error("Failed to create accounts file", e);
@@ -152,7 +156,11 @@ final class PasswordFile {
 
     void cleanup() {
         if (tempFile.exists() && tempFile.length() == 0) {
-            tempFile.delete();
+            if (tempFile.delete()) {
+                logger.debug("[SVG] Deleted temp accounts file");
+            } else {
+                logger.warning("Failed to delete temp accounts file");
+            }
         }
     }
 }
