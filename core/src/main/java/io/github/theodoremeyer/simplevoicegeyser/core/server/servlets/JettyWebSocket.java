@@ -169,6 +169,10 @@ public final class JettyWebSocket {
     }
 
     private void join(@NonNull JSONObject json) {
+        if (!checkClientBuild(json)) {
+            return;
+        }
+
         if (connection != null) {
             connection.sendError(
                     "Already authenticated.",
@@ -236,6 +240,42 @@ public final class JettyWebSocket {
         SvgCore.getLogger().info("[WebSocket] "
                 + connection.getPlayer().getName() + " authenticated."
         );
+    }
+
+    private boolean checkClientBuild(JSONObject json) {
+
+        String clientBuild = json.optString("build", "");
+
+        if (clientBuild.isEmpty()) {
+            sendRaw(
+                    ConnectionStates.MessageType.ERROR,
+                    "Client missing build id. Update required.",
+                    false
+            );
+            closeUpdateRequired();
+            return false;
+        }
+
+        if (!SvgCore.BUILD_ID.equals(clientBuild)) {
+            sendRaw(
+                    ConnectionStates.MessageType.ERROR,
+                    "Outdated client. Please refresh.",
+                    false
+            );
+
+            closeUpdateRequired();
+            return false;
+        }
+
+        return true;
+    }
+
+    private void closeUpdateRequired() {
+        if (session == null || !session.isOpen()) return;
+
+        try {
+            session.close(ConnectionStates.DisconnectCodes.OUTDATED_CLIENT.getCode(), "update_required");
+        } catch (Exception ignored) {}
     }
 
 

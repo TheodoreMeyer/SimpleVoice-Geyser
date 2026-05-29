@@ -95,7 +95,12 @@ public final class ConnectionStates {
         /**
          * Code indicating that the session is closed, as far as the server knows.
          */
-        CLOSED_SESSION(4007);
+        CLOSED_SESSION(4007),
+
+        /**
+         * Code indicating client needs to update local code
+         */
+        OUTDATED_CLIENT(4008);
 
         private final int code;
 

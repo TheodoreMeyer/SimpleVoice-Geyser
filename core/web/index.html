@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="build-id" content="${gitCommit}">
     <title>SimpleVoice-Geyser</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/ptt.css">
@@ -123,6 +124,7 @@
     </div>
 
     <script type="module">
+        window.BUILD_ID = "${gitCommit}";
         import { start } from '/js/client.js';
         start(); // manually triggers it
     </script>

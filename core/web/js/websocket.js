@@ -12,7 +12,8 @@ const DisconnectPolicy = {
     FATAL: new Set([4004, 4005]),
     NO_RECONNECT: new Set([4006, 4001, 4004, 4005]),
     TIMEOUT: 4002,
-    SERVER_SHUTDOWN: 4006
+    SERVER_SHUTDOWN: 4006,
+    OUTDATED: 4008
 };
 
 export function initWebSocket() {
@@ -36,7 +37,11 @@ function createSocket(onStatusChange) {
     ws.binaryType = "arraybuffer";
 
     ws.onopen = () => {
-        ws.send(JSON.stringify({ type: "join", ...lastCredentials }));
+        ws.send(JSON.stringify({
+            type: "join",
+            ...lastCredentials,
+            build: window.BUILD_ID || "unknown"
+        }));
         log("Connected.");
         onStatusChange(true, lastCredentials.username);
     };
@@ -77,6 +82,14 @@ function createSocket(onStatusChange) {
 
         resetAudioState();
         onStatusChange(false);
+
+        if (code === DisconnectPolicy.OUTDATED || reason === "update_required") {
+            stopReconnection();
+            log("Outdated client. Reloading...");
+            alert("Update required. Reloading page.");
+            location.reload();
+            return;
+        }
 
         // Fatal disconnect → hard stop
         if (DisconnectPolicy.FATAL.has(code) || reason === "fatal") {
