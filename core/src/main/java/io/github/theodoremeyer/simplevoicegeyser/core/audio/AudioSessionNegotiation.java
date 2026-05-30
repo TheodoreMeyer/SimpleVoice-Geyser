@@ -74,8 +74,7 @@ public final class AudioSessionNegotiation {
 
         boolean v2Capable = clientCapsReceived
                 && clientSupportsSvgV2
-                && clientSupportsOpusDecoder
-                && secureContext;
+                && clientSupportsOpusDecoder;
 
         if (serverPreference == AudioTransportPreference.SVG_V2) {
             if (v2Capable) {

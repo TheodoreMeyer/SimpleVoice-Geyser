@@ -16,42 +16,8 @@ let rxSvgV2Frames = 0;
 let rxSvgV2Malformed = 0;
 let rxSvgV2DecodeErrors = 0;
 
-let webCodecsProbeDone = false;
-let webCodecsSupported = false;
-let webCodecsProbeError = null;
-
-let webCodecDecoder = null;
-let webCodecQueue = [];
-let webCodecTimestampUs = 0;
-
-function supportsWebCodecsPrimitives() {
-    return typeof AudioDecoder !== "undefined"
-        && typeof EncodedAudioChunk !== "undefined"
-        && typeof AudioData !== "undefined";
-}
-
-async function probeWebCodecsSupport() {
-    if (webCodecsProbeDone) {
-        return webCodecsSupported;
-    }
-    webCodecsProbeDone = true;
-    if (!window.isSecureContext || !supportsWebCodecsPrimitives()) {
-        webCodecsSupported = false;
-        return false;
-    }
-    try {
-        const result = await AudioDecoder.isConfigSupported({
-            codec: "opus",
-            sampleRate: 48000,
-            numberOfChannels: 1
-        });
-        webCodecsSupported = !!result?.supported;
-    } catch (err) {
-        webCodecsProbeError = err?.message || String(err);
-        webCodecsSupported = false;
-    }
-    return webCodecsSupported;
-}
+const webCodecsSupported = false;
+const webCodecsProbeError = "disabled_by_policy_wasm_only";
 
 async function initWasmDecoder() {
     if (wasmReady || wasmInitError) {
@@ -79,8 +45,7 @@ async function initWasmDecoder() {
 export async function warmupAudioDecompiler() {
     if (!decompilerInitPromise) {
         decompilerInitPromise = Promise.all([
-            initWasmDecoder(),
-            probeWebCodecsSupport()
+            initWasmDecoder()
         ]).catch(() => {
             // Keep runtime alive even if one probe fails.
         });
@@ -93,8 +58,8 @@ export async function getAudioCapabilities() {
     return {
         secureContext: !!window.isSecureContext,
         supportsLegacy: true,
-        supportsSvgV2: wasmReady || webCodecsSupported,
-        supportsOpusDecoder: wasmReady || webCodecsSupported,
+        supportsSvgV2: wasmReady,
+        supportsOpusDecoder: wasmReady,
         decoder: {
             opusWasm: wasmReady,
             webCodecs: webCodecsSupported,
@@ -216,76 +181,7 @@ async function decodeOpus(opusPayload) {
         return channelData;
     }
 
-    if (webCodecsSupported) {
-        return await decodeWithWebCodecs(opusPayload);
-    }
     return null;
-}
-
-async function decodeWithWebCodecs(opusPayload) {
-    if (!webCodecDecoder) {
-        webCodecDecoder = new AudioDecoder({
-            output: (audioData) => {
-                try {
-                    webCodecQueue.push(audioDataToChannelData(audioData));
-                } finally {
-                    audioData.close();
-                }
-            },
-            error: (err) => {
-                log(`[AudioRX] WebCodecs decode error: ${err?.message || err}`);
-            }
-        });
-        webCodecDecoder.configure({
-            codec: "opus",
-            sampleRate: 48000,
-            numberOfChannels: 1
-        });
-    }
-
-    const durationUs = 20_000;
-    const chunk = new EncodedAudioChunk({
-        type: "key",
-        timestamp: webCodecTimestampUs,
-        duration: durationUs,
-        data: opusPayload
-    });
-    webCodecTimestampUs += durationUs;
-
-    webCodecDecoder.decode(chunk);
-    await webCodecDecoder.flush();
-
-    if (webCodecQueue.length === 0) {
-        throw new Error("WebCodecs did not emit decoded frames");
-    }
-    return webCodecQueue.shift();
-}
-
-function audioDataToChannelData(audioData) {
-    const channels = audioData.numberOfChannels || 1;
-    const frames = audioData.numberOfFrames || 0;
-    const planeCount = audioData.numberOfChannels || 1;
-
-    const out = [];
-    if (planeCount >= channels) {
-        for (let c = 0; c < channels; c++) {
-            const plane = new Float32Array(frames);
-            audioData.copyTo(plane, { planeIndex: c });
-            out.push(plane);
-        }
-        return out;
-    }
-
-    const interleaved = new Float32Array(frames * channels);
-    audioData.copyTo(interleaved);
-    for (let c = 0; c < channels; c++) {
-        const plane = new Float32Array(frames);
-        for (let i = 0; i < frames; i++) {
-            plane[i] = interleaved[i * channels + c] || 0;
-        }
-        out.push(plane);
-    }
-    return out;
 }
 
 function applySpatial(channelData, pan, gain) {
