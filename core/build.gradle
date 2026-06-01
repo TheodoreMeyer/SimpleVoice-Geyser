@@ -83,6 +83,8 @@ tasks.register("generateBuildInfo") {
 
     outputs.dir(outputDir)
 
+    inputs.property("gitCommit", gitCommit)
+
     doLast {
 
         def file = outputDir.get()
