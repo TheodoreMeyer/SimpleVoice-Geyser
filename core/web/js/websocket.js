@@ -148,7 +148,6 @@ function createSocket(onStatusChange) {
         const reason = event.reason || "";
 
         log("Disconnected.");
-        console.log("WebSocket closed:", code, reason);
 
         resetAudioState();
         onStatusChange(false);
@@ -257,11 +256,13 @@ async function sendCapabilitiesOnce() {
         const runtime = getAudioRuntime();
         const canUseSvgV2 = caps.supportsSvgV2 && runtime.workletSupported;
         const canDecodeOpus = caps.supportsOpusDecoder && runtime.workletSupported;
+        const canEncodeOpus = !!runtime.canEncodeOpus;
         ws.send(JSON.stringify({
             type: "capabilities",
             audio: {
                 protocols: canUseSvgV2 ? ["legacy", "svg-v2"] : ["legacy"],
                 supportsOpusDecoder: canDecodeOpus,
+                supportsOpusEncoder: canEncodeOpus,
                 secureContext: caps.secureContext,
                 decoder: caps.decoder
             }
@@ -269,7 +270,7 @@ async function sendCapabilitiesOnce() {
 
         log(
             `[AudioRX] Client capabilities sent: ` +
-            `svg-v2=${canUseSvgV2} opusDecoder=${canDecodeOpus} secure=${caps.secureContext}`
+            `v2=${canUseSvgV2} dec=${canDecodeOpus} enc=${canEncodeOpus} secure=${caps.secureContext}`
         );
     } catch (err) {
         rxDecoderFallbacks++;
