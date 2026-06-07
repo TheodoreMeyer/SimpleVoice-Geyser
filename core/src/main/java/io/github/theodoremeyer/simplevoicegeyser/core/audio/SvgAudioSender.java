@@ -12,8 +12,6 @@ import java.util.UUID;
  * Audio Sender to send Clients Audio to server
  */
 public final class SvgAudioSender {
-    private static final int TX_CODEC_PCM16 = 0;
-    private static final int TX_CODEC_OPUS = 1;
 
     /**
      * The simple voice chat api
@@ -60,59 +58,40 @@ public final class SvgAudioSender {
     }
 
     /**
-     * Sends a client audio packet to SVC, supporting both marked Opus and legacy/raw PCM payloads.
-     *
-     * @param packetData client packet payload (optional 1-byte codec marker + audio payload)
+     * Sends Opus-encoded audio to the player if conditions are met.
+     * @param pcmData data to send for player
      */
-    public void sendOpus(byte[] packetData) {
-        SvgCore.getLogger().debug("AudioSender: received audio data from websocket!");
+    public void sendOpus(byte[] pcmData) {
 
-        if (packetData == null || packetData.length == 0) {
-            return;
-        }
+        SvgCore.getLogger().debug( "AudioSender: received audio data from websocket!");
 
-        int codecMarker = packetData[0] & 0xFF;
-        byte[] payload = packetData;
-        if (codecMarker == TX_CODEC_PCM16 || codecMarker == TX_CODEC_OPUS) {
-            payload = new byte[packetData.length - 1];
-            System.arraycopy(packetData, 1, payload, 0, payload.length);
-        } else {
-            // Backward compatibility with older web clients that send raw PCM without marker.
-            codecMarker = TX_CODEC_PCM16;
-        }
+        //AudioThread.execute(() -> {
 
-        if (codecMarker == TX_CODEC_OPUS) {
-            boolean success = delegate.send(payload);
+            byte[] encoded;
+            try {
+                short[] pcmShorts = serverApi.getAudioConverter().bytesToShorts(pcmData);
+                if (pcmShorts.length != 960) {
+                    SvgCore.getLogger().warning(
+                            "[AudioSender] Invalid frame size: " + pcmShorts.length + " (expected 960)"
+                    );
+                    return;
+                }
+
+                encoded = encoder.encode(pcmShorts); // PCM to Opus encoded
+                if (encoded == null || encoded.length == 0) {
+                    SvgCore.getLogger().warning("[AudioSender] Encoder returned empty data for: " + playerUuid);
+                    return;
+                }
+            } catch (Exception e) {
+                SvgCore.getLogger().debug("AudioSender: Encoding failed for " + playerUuid, e);
+                return;
+            }
+
+            boolean success = delegate.send(encoded);
             if (!success) {
-                SvgCore.getLogger().warning("[AudioSender] Failed to send opus payload for: " + playerUuid);
+                SvgCore.getLogger().warning("[AudioSender] Failed to send audio for: " + playerUuid);
             }
-            return;
-        }
-
-        byte[] encoded;
-        try {
-            short[] pcmShorts = serverApi.getAudioConverter().bytesToShorts(payload);
-            if (pcmShorts.length != 960) {
-                SvgCore.getLogger().warning(
-                        "[AudioSender] Invalid frame size: " + pcmShorts.length + " (expected 960)"
-                );
-                return;
-            }
-
-            encoded = encoder.encode(pcmShorts); // PCM to Opus encoded
-            if (encoded == null || encoded.length == 0) {
-                SvgCore.getLogger().warning("[AudioSender] Encoder returned empty data for: " + playerUuid);
-                return;
-            }
-        } catch (Exception e) {
-            SvgCore.getLogger().debug("AudioSender: Encoding failed for " + playerUuid, e);
-            return;
-        }
-
-        boolean success = delegate.send(encoded);
-        if (!success) {
-            SvgCore.getLogger().warning("[AudioSender] Failed to send audio for: " + playerUuid);
-        }
+        //});
     }
 
     /**

@@ -25,19 +25,12 @@ let available = 0;
 let micIndicator = null;
 let isPttActive = () => true;
 let getTransmitMode = () => "voice";
-const TX_CODEC_PCM16 = 0;
-const TX_CODEC_OPUS = 1;
-
-let micOpusEncoder = null;
-let micOpusReady = false;
-let micOpusInitError = null;
 
 const audioRuntime = {
     audioContextSupported: false,
     workletSupported: false,
     mediaDevicesSupported: false,
     canCaptureMic: false,
-    canEncodeOpus: false,
     canSelectOutput: false,
     degradedReason: ""
 };
@@ -151,9 +144,6 @@ export async function startMic(deviceId) {
 
     micSource.connect(micNode);
     micNode.port.onmessage = handleMicMessage;
-
-    await initMicOpusEncoder();
-    audioRuntime.canEncodeOpus = micOpusReady;
 }
 
 function handleMicMessage(event) {
@@ -204,54 +194,9 @@ function handleMicMessage(event) {
         available -= PACKET_SIZE;
 
         if (shouldSendPacket(mode, packetHasSpeech, pttActive)) {
-            sendMicPacket(packet);
+            micHandler?.(packet.slice().buffer);
         }
     }
-}
-
-async function initMicOpusEncoder() {
-    if (micOpusReady || micOpusInitError) {
-        return;
-    }
-    try {
-        const mod = await import("https://cdn.jsdelivr.net/npm/opus-encoder@0.7.3/+esm");
-        const OpusEncoder = mod?.default || mod?.OpusEncoder;
-        if (!OpusEncoder) {
-            throw new Error("OpusEncoder export not found");
-        }
-        micOpusEncoder = new OpusEncoder(48000, 1);
-        micOpusReady = true;
-        micOpusInitError = null;
-        log("[AudioTX] Opus WASM encoder ready.");
-    } catch (err) {
-        micOpusReady = false;
-        micOpusInitError = err?.message || String(err);
-        log(`[AudioTX] Opus WASM encoder unavailable, using PCM fallback: ${micOpusInitError}`);
-    }
-}
-
-function sendMicPacket(packet) {
-    if (micOpusReady && micOpusEncoder) {
-        try {
-            const encoded = micOpusEncoder.encode(packet);
-            if (encoded && encoded.length > 0) {
-                const payload = encoded instanceof Uint8Array ? encoded : new Uint8Array(encoded);
-                const frame = new Uint8Array(payload.length + 1);
-                frame[0] = TX_CODEC_OPUS;
-                frame.set(payload, 1);
-                micHandler?.(frame.buffer);
-                return;
-            }
-        } catch (err) {
-            log(`[AudioTX] Opus encode failed, fallback to PCM: ${err?.message || err}`);
-        }
-    }
-
-    const pcmBytes = new Uint8Array(packet.buffer.slice(0));
-    const frame = new Uint8Array(pcmBytes.length + 1);
-    frame[0] = TX_CODEC_PCM16;
-    frame.set(pcmBytes, 1);
-    micHandler?.(frame.buffer);
 }
 
 function shouldSendPacket(mode, speech, pttActive) {
@@ -282,9 +227,6 @@ export function stopMic() {
     readIndex = 0;
     available = 0;
     speechBuffer.fill(0);
-    if (micOpusEncoder && typeof micOpusEncoder.reset === "function") {
-        micOpusEncoder.reset();
-    }
 
     if (micIndicator) {
         micIndicator.classList.remove("active");
@@ -412,8 +354,5 @@ export async function setOutputDevice(deviceId) {
 }
 
 export function getAudioRuntime() {
-    return {
-        ...audioRuntime,
-        micOpusError: micOpusInitError
-    };
+    return { ...audioRuntime };
 }

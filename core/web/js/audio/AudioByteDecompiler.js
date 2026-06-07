@@ -16,7 +16,6 @@ let rxSvgV2Frames = 0;
 let rxSvgV2Malformed = 0;
 let rxSvgV2DecodeErrors = 0;
 
-// Browser decode is WASM-only today; keep explicit false fields for future app/non-browser capability reporting.
 const webCodecsSupported = false;
 const webCodecsProbeError = "disabled_by_policy_wasm_only";
 
