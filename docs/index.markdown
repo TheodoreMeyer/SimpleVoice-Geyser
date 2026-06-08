@@ -1,6 +1,6 @@
 ---
 title: Simple Voice Geyser
-layout: project
+layout: projects
 project: simplevoicegeyser
 ---
 

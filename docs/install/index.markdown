@@ -1,6 +1,6 @@
 ---
 title: Installation
-layout: project
+layout: projects
 project: simplevoicegeyser
 ---
 

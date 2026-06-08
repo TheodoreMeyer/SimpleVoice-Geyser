@@ -1,6 +1,6 @@
 ---
 title: API
-layout: project
+layout: projects
 project: simplevoicegeyser
 ---
 # API
