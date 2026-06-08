@@ -145,7 +145,7 @@ function shouldSendPacket(mode, speech, pttActive) {
         return pttActive;
     }
 
-    return false;
+    return true;
 }
 
 export function stopMic() {

@@ -31,13 +31,13 @@ If applicable, add screenshots to help explain your problem.
 **Minecraft Versions affected**
 - etc (1.21.5)
 
-**Desktop (please complete the following information):**
+**Desktop (please complete the following information if applicable):**
  - OS: [e.g. Kubuntu Linux]
  - Browser [e.g. chrome, firefox]
  - OS-Version [e.g. 24.01]
 - Java Version: [e.g. 21, only if this is serverside]
 
-**Smartphone (please complete the following information):**
+**Smartphone (please complete the following information if applicable):**
  - Device: [e.g. iPhone 16]
  - OS: [e.g. iOS8.1]
  - Browser [e.g. stock browser, safari]
