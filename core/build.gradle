@@ -35,9 +35,7 @@ tasks.processResources {
 
         filesMatching("index.html") {
             expand(
-                    gitCommit: providers.exec {
-                        commandLine("git", "rev-parse", "--short", "HEAD")
-                    }.standardOutput.asText.get().trim()
+                    gitCommit: currentGitCommit()
             )
         }
     }
@@ -72,9 +70,12 @@ publishing {
 //-----------
 //Build Identifier
 //-----------
-def gitCommit = providers.exec {
-    commandLine("git", "rev-parse", "--short", "HEAD")
-}.standardOutput.asText.get().trim()
+def currentGitCommit() {
+    providers.exec {
+        commandLine("git", "rev-parse", "--short", "HEAD")
+    }.standardOutput.asText.get().trim()
+}
+println("Gradle sees commit: ${currentGitCommit()}")
 
 // BuildInfo.java generation
 tasks.register("generateBuildInfo") {
@@ -83,9 +84,10 @@ tasks.register("generateBuildInfo") {
 
     outputs.dir(outputDir)
 
-    inputs.property("gitCommit", gitCommit)
+    inputs.property("gitCommit", currentGitCommit())
 
     doLast {
+        def gitCommit = currentGitCommit()
 
         def file = outputDir.get()
                 .file("io/github/theodoremeyer/simplevoicegeyser/core/BuildInfo.java")
