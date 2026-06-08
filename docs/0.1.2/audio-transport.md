@@ -64,4 +64,6 @@ The browser path currently uses the WASM decoder path for `svg-v2`. WebCodecs fi
 | `payloadLen` | 4 bytes | Payload length |
 | `payload` | variable | Codec payload |
 
+See [Protocol reference](protocol.md) for the full websocket message flow, join payload, capability packet, and audio packet formats.
+
 Client mic Opus encoding is intentionally split into a future PR. PR #45 does not require client mic Opus encoding for `svg-v2` receive-audio transport to work.
