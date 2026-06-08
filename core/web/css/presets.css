@@ -6,6 +6,17 @@ PRESETS - Color Scheme Overrides
 .preset-default {
   background: #1e1e1e;
   color: #f5f5f5;
+  --theme-input-bg: #1f1f1f;
+  --theme-input-text: #f5f5f5;
+  --theme-input-border: #4a4a4a;
+  --theme-button-bg: #00d4ff;
+  --theme-button-text: #000;
+  --theme-button-hover: #00aacc;
+  --theme-button-active: #008ca8;
+  --theme-muted-bg: #aa3333;
+  --theme-muted-text: #fff;
+  --theme-unmuted-bg: #33aa55;
+  --theme-unmuted-text: #000;
 }
 
 .preset-default h1 {
@@ -116,6 +127,17 @@ PRESETS - Color Scheme Overrides
 .preset-dark {
   background: #0a0a0a;
   color: #e0e0e0;
+  --theme-input-bg: #111111;
+  --theme-input-text: #e0e0e0;
+  --theme-input-border: #3a3a3a;
+  --theme-button-bg: #0099cc;
+  --theme-button-text: #000;
+  --theme-button-hover: #0077aa;
+  --theme-button-active: #005588;
+  --theme-muted-bg: #882222;
+  --theme-muted-text: #fff;
+  --theme-unmuted-bg: #228822;
+  --theme-unmuted-text: #000;
 }
 
 .preset-dark h1 {
@@ -227,6 +249,17 @@ PRESETS - Color Scheme Overrides
 .preset-light {
   background: #f5f5f5;
   color: #1a1a1a;
+  --theme-input-bg: #cfcfcf;
+  --theme-input-text: #1a1a1a;
+  --theme-input-border: #9a9a9a;
+  --theme-button-bg: #0088cc;
+  --theme-button-text: #fff;
+  --theme-button-hover: #0066aa;
+  --theme-button-active: #004488;
+  --theme-muted-bg: #cc4444;
+  --theme-muted-text: #fff;
+  --theme-unmuted-bg: #44cc44;
+  --theme-unmuted-text: #000;
 }
 
 .preset-light h1 {
@@ -338,6 +371,17 @@ PRESETS - Color Scheme Overrides
 .preset-green {
   background: #0d1f0a;
   color: #d4f5d4;
+  --theme-input-bg: #10270e;
+  --theme-input-text: #d4f5d4;
+  --theme-input-border: #2f5a2a;
+  --theme-button-bg: #22ff44;
+  --theme-button-text: #000;
+  --theme-button-hover: #1acc33;
+  --theme-button-active: #119922;
+  --theme-muted-bg: #aa3333;
+  --theme-muted-text: #fff;
+  --theme-unmuted-bg: #33ff44;
+  --theme-unmuted-text: #000;
 }
 
 .preset-green h1 {
@@ -449,6 +493,17 @@ PRESETS - Color Scheme Overrides
 .preset-blue {
   background: #0a1226;
   color: #d8e7ff;
+  --theme-input-bg: #101b33;
+  --theme-input-text: #d8e7ff;
+  --theme-input-border: #35598d;
+  --theme-button-bg: #4ea1ff;
+  --theme-button-text: #001225;
+  --theme-button-hover: #2f86ea;
+  --theme-button-active: #1c6fcd;
+  --theme-muted-bg: #b23939;
+  --theme-muted-text: #fff;
+  --theme-unmuted-bg: #4fcf7f;
+  --theme-unmuted-text: #000;
 }
 
 .preset-blue h1 {
@@ -560,6 +615,17 @@ PRESETS - Color Scheme Overrides
 .preset-purple {
   background: #1a1026;
   color: #eadcff;
+  --theme-input-bg: #211533;
+  --theme-input-text: #eadcff;
+  --theme-input-border: #5f3f85;
+  --theme-button-bg: #c67dff;
+  --theme-button-text: #1b0930;
+  --theme-button-hover: #ad62ea;
+  --theme-button-active: #9348cd;
+  --theme-muted-bg: #b23939;
+  --theme-muted-text: #fff;
+  --theme-unmuted-bg: #54cf86;
+  --theme-unmuted-text: #000;
 }
 
 .preset-purple h1 {
@@ -671,6 +737,17 @@ PRESETS - Color Scheme Overrides
 .preset-red {
   background: #2a0f12;
   color: #ffe1e1;
+  --theme-input-bg: #311217;
+  --theme-input-text: #ffe1e1;
+  --theme-input-border: #7a343d;
+  --theme-button-bg: #ff5b6b;
+  --theme-button-text: #2b050a;
+  --theme-button-hover: #ea4455;
+  --theme-button-active: #cc3241;
+  --theme-muted-bg: #c13139;
+  --theme-muted-text: #fff;
+  --theme-unmuted-bg: #59d087;
+  --theme-unmuted-text: #000;
 }
 
 .preset-red h1 {
@@ -782,6 +859,17 @@ PRESETS - Color Scheme Overrides
 .preset-yellow {
   background: #2b260c;
   color: #fff6cf;
+  --theme-input-bg: #322b11;
+  --theme-input-text: #fff6cf;
+  --theme-input-border: #78682b;
+  --theme-button-bg: #ffd84d;
+  --theme-button-text: #2f2200;
+  --theme-button-hover: #eac33b;
+  --theme-button-active: #d1aa26;
+  --theme-muted-bg: #b53a3a;
+  --theme-muted-text: #fff;
+  --theme-unmuted-bg: #58cd81;
+  --theme-unmuted-text: #000;
 }
 
 .preset-yellow h1 {
@@ -893,6 +981,17 @@ PRESETS - Color Scheme Overrides
 .preset-cyan {
   background: #0c2327;
   color: #d6fbff;
+  --theme-input-bg: #0f343a;
+  --theme-input-text: #d6fbff;
+  --theme-input-border: #2a7d8a;
+  --theme-button-bg: #39e7ff;
+  --theme-button-text: #012228;
+  --theme-button-hover: #22cade;
+  --theme-button-active: #11adc0;
+  --theme-muted-bg: #b43a3a;
+  --theme-muted-text: #fff;
+  --theme-unmuted-bg: #51d47f;
+  --theme-unmuted-text: #000;
 }
 
 .preset-cyan h1 {
@@ -1004,6 +1103,17 @@ PRESETS - Color Scheme Overrides
 .preset-monochrome {
   background: #101010;
   color: #efefef;
+  --theme-input-bg: #171717;
+  --theme-input-text: #efefef;
+  --theme-input-border: #515151;
+  --theme-button-bg: #cfcfcf;
+  --theme-button-text: #111;
+  --theme-button-hover: #b5b5b5;
+  --theme-button-active: #9a9a9a;
+  --theme-muted-bg: #8f3b3b;
+  --theme-muted-text: #fff;
+  --theme-unmuted-bg: #59b56d;
+  --theme-unmuted-text: #000;
 }
 
 .preset-monochrome h1 {
@@ -1115,6 +1225,17 @@ PRESETS - Color Scheme Overrides
 .preset-monokai {
   background: #272822;
   color: #f8f8f2;
+  --theme-input-bg: #2f2f29;
+  --theme-input-text: #f8f8f2;
+  --theme-input-border: #6a6654;
+  --theme-button-bg: #a6e22e;
+  --theme-button-text: #1f220f;
+  --theme-button-hover: #8dcf20;
+  --theme-button-active: #73b018;
+  --theme-muted-bg: #f92672;
+  --theme-muted-text: #fff;
+  --theme-unmuted-bg: #a6e22e;
+  --theme-unmuted-text: #1f220f;
 }
 
 .preset-monokai h1 {
@@ -1226,6 +1347,17 @@ PRESETS - Color Scheme Overrides
 .preset-orange {
   background: #24140c;
   color: #ffe8d8;
+  --theme-input-bg: #28160d;
+  --theme-input-text: #ffe8d8;
+  --theme-input-border: #6d4529;
+  --theme-button-bg: #ff9d4d;
+  --theme-button-text: #2a1200;
+  --theme-button-hover: #e88735;
+  --theme-button-active: #c96d20;
+  --theme-muted-bg: #b94236;
+  --theme-muted-text: #fff;
+  --theme-unmuted-bg: #5dc97d;
+  --theme-unmuted-text: #000;
 }
 
 .preset-orange h1 {
@@ -1337,6 +1469,17 @@ PRESETS - Color Scheme Overrides
 .preset-mint {
   background: #10241f;
   color: #dbfff4;
+  --theme-input-bg: #122a25;
+  --theme-input-text: #dbfff4;
+  --theme-input-border: #3e6d63;
+  --theme-button-bg: #4ee6b8;
+  --theme-button-text: #082019;
+  --theme-button-hover: #35c99d;
+  --theme-button-active: #1fa57e;
+  --theme-muted-bg: #c04a4a;
+  --theme-muted-text: #fff;
+  --theme-unmuted-bg: #4ee6b8;
+  --theme-unmuted-text: #082019;
 }
 
 .preset-mint h1 {
@@ -1448,6 +1591,17 @@ PRESETS - Color Scheme Overrides
 .preset-rose {
   background: #26131a;
   color: #ffe4ef;
+  --theme-input-bg: #2b1520;
+  --theme-input-text: #ffe4ef;
+  --theme-input-border: #6a3e52;
+  --theme-button-bg: #ff6b9c;
+  --theme-button-text: #2a0914;
+  --theme-button-hover: #e85386;
+  --theme-button-active: #c83d70;
+  --theme-muted-bg: #bd436a;
+  --theme-muted-text: #fff;
+  --theme-unmuted-bg: #56cb8d;
+  --theme-unmuted-text: #000;
 }
 
 .preset-rose h1 {
@@ -1553,6 +1707,74 @@ PRESETS - Color Scheme Overrides
 
 .preset-rose a:hover {
   color: #ff6b9c;
+}
+
+/* SHARED OVERRIDES FOR AUTOFILL AND PTT CONTROLS */
+body[class^="preset-"] #joinForm input,
+body[class^="preset-"] #joinForm select,
+body[class^="preset-"] input#username,
+body[class^="preset-"] input#password,
+body[class^="preset-"] #msgInput {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--theme-input-bg) !important;
+  color: var(--theme-input-text) !important;
+  border-color: var(--theme-input-border) !important;
+  caret-color: var(--theme-input-text);
+}
+
+body[class^="preset-"] #joinForm input:-webkit-autofill,
+body[class^="preset-"] #joinForm input:-webkit-autofill:hover,
+body[class^="preset-"] #joinForm input:-webkit-autofill:focus,
+body[class^="preset-"] #joinForm input:-webkit-autofill:active,
+body[class^="preset-"] #joinForm input:autofill,
+body[class^="preset-"] #joinForm input:-internal-autofill-selected,
+body[class^="preset-"] #joinForm select:-webkit-autofill,
+body[class^="preset-"] #joinForm select:-webkit-autofill:hover,
+body[class^="preset-"] #joinForm select:-webkit-autofill:focus,
+body[class^="preset-"] #joinForm select:-webkit-autofill:active,
+body[class^="preset-"] #joinForm select:-internal-autofill-selected {
+  -webkit-text-fill-color: var(--theme-input-text) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--theme-input-bg) inset !important;
+  box-shadow: 0 0 0 1000px var(--theme-input-bg) inset !important;
+  background: var(--theme-input-bg) !important;
+  caret-color: var(--theme-input-text);
+}
+
+body[class^="preset-"] #muteBtn.muted {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--theme-muted-bg) !important;
+  color: var(--theme-muted-text) !important;
+}
+
+body[class^="preset-"] #muteBtn.unmuted {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--theme-unmuted-bg) !important;
+  color: var(--theme-unmuted-text) !important;
+}
+
+body[class^="preset-"] :is(#bindPttBtn, #clearPttBtn, #pushToTalkBtn, #fullscreenPttBtn, #pushToTalkFullscreenBtn, #exitFullscreenPttBtn, #testSound, #devToggle, .pttButton, .ptt-action-row button) {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--theme-button-bg) !important;
+  color: var(--theme-button-text) !important;
+  border-color: var(--theme-input-border) !important;
+}
+
+body[class^="preset-"] :is(#bindPttBtn, #clearPttBtn, #pushToTalkBtn, #fullscreenPttBtn, #pushToTalkFullscreenBtn, #exitFullscreenPttBtn, #testSound, #devToggle, .pttButton, .ptt-action-row button):hover {
+  background: var(--theme-button-hover) !important;
+  color: var(--theme-button-text) !important;
+}
+
+body[class^="preset-"] :is(#bindPttBtn, #clearPttBtn, #pushToTalkBtn, #fullscreenPttBtn, #pushToTalkFullscreenBtn, #exitFullscreenPttBtn, #testSound, #devToggle, .pttButton, .ptt-action-row button):active {
+  background: var(--theme-button-active) !important;
+  color: var(--theme-button-text) !important;
+}
+
+body[class^="preset-"] #allowBackgroundPtt {
+  accent-color: var(--theme-button-bg);
 }
 
 /* TOP FORM INPUT CONTRAST */
