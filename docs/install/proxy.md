@@ -1,5 +1,7 @@
 ---
 title: HTTPS / Reverse Proxy Setup
+layout: project
+project: simplevoicegeyser
 ---
 
 # HTTPS / Reverse Proxy Setup

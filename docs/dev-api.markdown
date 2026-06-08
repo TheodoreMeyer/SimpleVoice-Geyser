@@ -1,5 +1,7 @@
 ---
 title: API
+layout: project
+project: simplevoicegeyser
 ---
 # API
 This plugin/addon to SVG is not planning (currently) to have a large API. Instead, developers will be expected to connect over websocket to the server, via the server's configured address.
