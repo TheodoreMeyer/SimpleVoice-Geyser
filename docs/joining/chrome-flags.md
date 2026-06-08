@@ -1,5 +1,7 @@
 ---
 title: Chrome Flags
+layout: projects
+project: simplevoicegeyser
 ---
 
 # Fix: Insecure Context (HTTP)

@@ -1,5 +1,7 @@
 ---
 title: Upgrading
+layout: projects
+project: simplevoicegeyser
 ---
 
 # Upgrading

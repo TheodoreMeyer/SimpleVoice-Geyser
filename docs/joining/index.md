@@ -1,5 +1,7 @@
 ---
 title: Joining via SVG
+layout: projects
+project: simplevoicegeyser
 ---
 ## This page shows the best way, and main steps to join the voice chat using Simple Voice Chat Geyser.
 

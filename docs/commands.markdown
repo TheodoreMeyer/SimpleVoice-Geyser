@@ -1,5 +1,7 @@
 ---
 title: Commands
+layout: projects
+project: simplevoicegeyser
 ---
 
 # SimpleVoiceGeyser Commands

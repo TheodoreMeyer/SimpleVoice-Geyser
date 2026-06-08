@@ -1,5 +1,7 @@
 ---
 title: Security
+layout: projects
+project: simplevoicegeyser
 ---
 
 # Security

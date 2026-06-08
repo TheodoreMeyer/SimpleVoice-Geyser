@@ -1,5 +1,7 @@
 ---
 title: Test Section
+layout: projects
+project: simplevoicegeyser
 ---
 
 # Test page

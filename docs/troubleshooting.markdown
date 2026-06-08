@@ -1,5 +1,7 @@
 ---
 title: TroubleShooting
+layout: projects
+project: simplevoicegeyser
 ---
 
 # Trouble Shooting

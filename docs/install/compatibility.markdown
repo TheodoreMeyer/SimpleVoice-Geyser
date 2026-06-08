@@ -1,5 +1,7 @@
 ---
 title: Compatibility
+layout: projects
+project: simplevoicegeyser
 ---
 
 # Compatibility
