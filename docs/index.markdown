@@ -1,8 +1,5 @@
 ---
-layout: projects
 title: Simple Voice Geyser
-permalink: /projects/simplevoicegeyser/
-sidebar: simplevoicegeyser
 ---
 
 # Simple Voice Geyser

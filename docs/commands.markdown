@@ -1,8 +1,5 @@
 ---
-layout: projects
 title: Commands
-permalink: /projects/simplevoicegeyser/commands/
-sidebar: simplevoicegeyser
 ---
 
 # SimpleVoiceGeyser Commands

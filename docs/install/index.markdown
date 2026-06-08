@@ -1,8 +1,5 @@
 ---
-layout: projects
 title: Installation
-permalink: /projects/simplevoicegeyser/install/
-sidebar: simplevoicegeyser
 ---
 
 # Installation

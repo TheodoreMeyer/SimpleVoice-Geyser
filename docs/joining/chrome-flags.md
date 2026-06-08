@@ -1,8 +1,5 @@
 ---
-layout: projects
 title: Chrome Flags
-sidebar: simplevoicegeyser
-permalink: /projects/simplevoicegeyser/join/chrome-flags/
 ---
 
 # Fix: Insecure Context (HTTP)

@@ -1,8 +1,5 @@
 ---
-layout: projects
 title: HTTPS / Reverse Proxy Setup
-sidebar: simplevoicegeyser
-permalink: /projects/simplevoicegeyser/install/proxy/
 ---
 
 # HTTPS / Reverse Proxy Setup

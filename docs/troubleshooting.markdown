@@ -1,8 +1,5 @@
 ---
-layout: projects
 title: TroubleShooting
-sidebar: simplevoicegeyser
-permalink: /projects/simplevoicegeyser/troubleshooting/
 ---
 
 # Trouble Shooting

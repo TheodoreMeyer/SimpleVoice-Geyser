@@ -1,8 +1,5 @@
 ---
-layout: projects
 title: Upgrading
-permalink: /projects/simplevoicegeyser/install/upgrading/
-sidebar: simplevoicegeyser
 ---
 
 # Upgrading

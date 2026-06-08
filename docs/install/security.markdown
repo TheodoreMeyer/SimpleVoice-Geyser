@@ -1,8 +1,5 @@
 ---
-layout: projects
 title: Security
-sidebar: simplevoicegeyser
-permalink: /projects/simplevoicegeyser/install/security/
 ---
 
 # Security

@@ -1,8 +1,5 @@
 ---
-layout: projects
 title: Joining via SVG
-sidebar: simplevoicegeyser
-permalink: /projects/simplevoicegeyser/join/
 ---
 ## This page shows the best way, and main steps to join the voice chat using Simple Voice Chat Geyser.
 
