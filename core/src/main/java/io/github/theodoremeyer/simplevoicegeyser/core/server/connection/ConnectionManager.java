@@ -5,8 +5,6 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiation;
 import org.eclipse.jetty.websocket.api.Session;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,20 +18,29 @@ public final class ConnectionManager {
     private final Map<UUID, SvgConnection> connections =
             new ConcurrentHashMap<>();
 
+    /**
+     * No-var contructor, as there is no state to initialize beyond the empty connections map.
+     */
     public ConnectionManager() {}
 
+    /**
+     * Connect a player to the system
+     * @param session session player is connected through
+     * @param player player itself
+     * @param audioNegotiation the known info negotiator for the session
+     * @return the player Connection
+     */
     public SvgConnection connect(
-            UUID uuid,
             Session session,
             SvgPlayer player,
             AudioSessionNegotiation audioNegotiation
     ) {
 
-        SvgConnection oldConnection = connections.remove(uuid);
+        SvgConnection oldConnection = connections.remove(player.getUniqueId());
 
         if (oldConnection != null) {
             SvgCore.getLogger().debug(
-                    "ConnectionManager: Replacing existing connection for: " + uuid
+                    "ConnectionManager: Replacing existing connection for: " + player.getUniqueId()
             );
 
             oldConnection.disconnect(
@@ -43,23 +50,30 @@ public final class ConnectionManager {
         }
 
         SvgConnection connection = new SvgConnection(session, player, audioNegotiation);
-        connections.put(uuid, connection);
+        connections.put(player.getUniqueId(), connection);
 
         SvgCore.getLogger().info(
-                "[ConnectionManager] Connected: " + player.getName() + " (" + uuid + ")"
+                "[ConnectionManager] Connected: " + player.getName() + " (" + player.getUniqueId() + ")"
         );
 
         return connection;
     }
 
+    /**
+     * Get a connection using a uuid
+     * @param uuid player/connection Uuid
+     * @return the Connection if found.
+     */
     public SvgConnection get(UUID uuid) {
         return connections.get(uuid);
     }
 
-    public boolean isConnected(UUID uuid) {
-        return connections.containsKey(uuid);
-    }
-
+    /**
+     * Disconnect a player's audio connection
+     * @param uuid player uuid
+     * @param code close code
+     * @param reason reason
+     */
     public void disconnect(UUID uuid, int code, String reason) {
         SvgConnection connection = connections.remove(uuid);
 
@@ -74,6 +88,10 @@ public final class ConnectionManager {
         );
     }
 
+    /**
+     * Remove a connection from the manager, without sending a disconnect packet. Used for cleanup after a disconnect has already been sent.
+     * @param connection connection to close
+     */
     public void remove(SvgConnection connection) {
         if (connection == null) {
             return;
@@ -83,6 +101,9 @@ public final class ConnectionManager {
         connections.computeIfPresent(uuid, (ignored, current) -> current != connection ? current : null);
     }
 
+    /**
+     * Disconnect all connections
+     */
     public void disconnectAll() {
         for (SvgConnection connection : connections.values()) {
             connection.disconnect(1001, "Server shutting down");
@@ -90,13 +111,5 @@ public final class ConnectionManager {
 
         connections.clear();
         SvgCore.getLogger().info("[ConnectionManager] Disconnected all clients");
-    }
-
-    public Collection<SvgConnection> getConnections() {
-        return Collections.unmodifiableCollection(connections.values());
-    }
-
-    public int size() {
-        return connections.size();
     }
 }

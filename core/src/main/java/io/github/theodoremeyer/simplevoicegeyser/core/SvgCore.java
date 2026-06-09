@@ -17,19 +17,28 @@ import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.Connecti
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
 import io.github.theodoremeyer.simplevoicegeyser.core.update.UpdateChecker;
 
-import java.util.logging.Logger;
-
 /**
  * Driving class for Simple Voice Geyser
  */
 public final class SvgCore {
+
+    /**
+     * The interface to server platform
+     */
     public final Platform platform;
     private static SvgCore instance;
+
+    /**
+     * Version of the plugin.
+     */
     public static final String VERSION = "0.1.1-Dev";
 
     /**
-     * Build Git Commit ID
+     * Build Git Commit ID. Generated during Gradle Build. This is always the latest commit hash of the branch.
+     * <p>
+     * Please note that 'Gradle clean' may have to get run if caches don't fix themselves,
      */
+    @SuppressWarnings("ConstantConditions")
     public static final String BUILD_ID = BuildInfo.BUILD_ID;
 
     /**
@@ -44,13 +53,15 @@ public final class SvgCore {
     private PlayerVcPswd playerVcPswd;
     private Command command;
     private final AudioByteCompiler audioByteCompiler;
-    private final String buildToken;
     private State state = State.NEW;
 
+    /**
+     * Create the Core engine running the project
+     * @param platform interface to server
+     */
     public SvgCore(Platform platform) {
         this.platform = platform;
         instance = this;
-        this.buildToken = createBuildToken();
         this.config = new SvgConfig(platform.getFile(DataType.CONFIG));
 
         Boolean checkUpdate = config.UPDATE_CHECKER_ENABLED.get();
@@ -68,6 +79,10 @@ public final class SvgCore {
         return instance;
     }
 
+    /**
+     * Initialize the project
+     * @return success
+     */
     public synchronized boolean init() {
         if (state == State.RUNNING) {
             return true;
@@ -82,7 +97,6 @@ public final class SvgCore {
                 getLogger().setDebug(true);
             }
 
-            getLogger().info("Web UI build token: " + getBuildToken());
             getLogger().info("client.vctimeout is currently documented but inactive in this dev build.");
 
             this.playerVcPswd = new PlayerVcPswd(this);
@@ -125,12 +139,18 @@ public final class SvgCore {
         }
     }
 
+    /**
+     * Disable the project
+     */
     public static void disable() {
         if (getInstance() != null) {
             getInstance().shutdown();
         }
     }
 
+    /**
+     * Shutdown the project
+     */
     private synchronized void shutdown() {
         if (state == State.SHUTDOWN) {
             return;
@@ -161,65 +181,92 @@ public final class SvgCore {
         command = null;
     }
 
+    /**
+     * Get the logger for the project
+     * @return Logger
+     */
     public static SvgLogger getLogger() {
         return getInstance().platform.getSvgLogger();
     }
 
+    /**
+     * Get prefix of the system
+     * @return prefix
+     */
     public static String getPrefix() {
         return getInstance().platform.getPrefix();
     }
 
+    /**
+     * Get interface to minecraft server platform
+     * @return platform
+     */
     public static Platform getPlatform() {
         return getInstance().platform;
     }
 
+    /**
+     * Get Config system of the project
+     * @return SvgConfig instance
+     */
     public static SvgConfig getConfig() {
         return getInstance().config;
     }
 
+    /**
+     * Get the Password Manager
+     * @return password manager
+     */
     public static PlayerVcPswd getPasswordManager() {
         return getInstance().playerVcPswd;
     }
 
+    /**
+     * Get class managing player connections
+     * @return player manager
+     */
     public static PlayerManager getPlayerManager() {
         return getInstance().playerManager;
     }
 
+    /**
+     * Get class handling all websocket connection lifetime.
+     * @return connection Manager
+     */
     public static ConnectionManager getConnectionManager() {
         return getInstance().connectionManager;
     }
 
+    /**
+     * Get class managing groups
+     * @return group manager
+     */
     public static GroupManager getGroupManager() {
         return getInstance().groupManager;
     }
 
+    /**
+     * Get the interface to SVC
+     * @return voice chat bridge
+     */
     public static VoiceChatBridge getBridge() {
         return getInstance().vcBridge;
     }
 
+    /**
+     * Get the command handler
+     * @return command handler
+     */
     public static Command getCommand() {
         return getInstance().command;
     }
 
+    /**
+     * get the compiler for audio packets
+     * @return audio Byte Compiler
+     */
     public static AudioByteCompiler getAudioByteCompiler() {
         return getInstance().audioByteCompiler;
-    }
-
-    public static String getBuildToken() {
-        return getInstance().buildToken;
-    }
-
-    private String createBuildToken() {
-        String version = null;
-        Package pkg = getClass().getPackage();
-        if (pkg != null) {
-            version = pkg.getImplementationVersion();
-        }
-        if (version == null || version.isBlank()) {
-            version = "dev";
-        }
-        version = version.replaceAll("[^A-Za-z0-9._-]", "_");
-        return version + "-" + Long.toString(System.currentTimeMillis(), 36);
     }
 
     private enum State {

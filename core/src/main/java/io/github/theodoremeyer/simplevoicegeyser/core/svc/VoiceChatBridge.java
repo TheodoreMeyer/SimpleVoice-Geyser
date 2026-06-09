@@ -17,6 +17,9 @@ public class VoiceChatBridge implements VoicechatPlugin {
 
     private VoicechatServerApi serverApi;
 
+    /**
+     * No arg constructor
+     */
     public VoiceChatBridge() {}
 
     @Override
@@ -60,6 +63,10 @@ public class VoiceChatBridge implements VoicechatPlugin {
         }
     }
 
+    /**
+     * Get the Server API of SVC
+     * @return the server API, or null if the server hasn't started yet.
+     */
     public VoicechatServerApi getVcServerApi() {
         return serverApi;
     }

@@ -56,6 +56,13 @@ public final class SvgAudioListener {
     private final AudioByteCompiler audioByteCompiler;
     private PlayerAudioListener registeredListener;
 
+    /**
+     * Create a listener
+     * @param listenerId player ID
+     * @param session session to send to
+     * @param serverApi SVC api
+     * @param negotiation the negotiation
+     */
     public SvgAudioListener(UUID listenerId, Session session, VoicechatServerApi serverApi, AudioSessionNegotiation negotiation) {
         this.listenerId = listenerId;
         this.session = session;
@@ -65,6 +72,10 @@ public final class SvgAudioListener {
         decoder = serverApi.createDecoder();
     }
 
+    /**
+     * What to do with received audio
+     * @param soundPacket received packet
+     */
     public void onAudioReceived(SoundPacket soundPacket) {
         packetReceivedCount++;
 
@@ -520,18 +531,7 @@ public final class SvgAudioListener {
         return stereo;
     }
 
-    private static final class SpatialContext {
-        private final Position sourcePosition;
-        private final float maxDistance;
-        private final String packetType;
-        private final boolean staticPacket;
-
-        private SpatialContext(Position sourcePosition, float maxDistance, String packetType, boolean staticPacket) {
-            this.sourcePosition = sourcePosition;
-            this.maxDistance = maxDistance;
-            this.packetType = packetType;
-            this.staticPacket = staticPacket;
-        }
+    private record SpatialContext(Position sourcePosition, float maxDistance, String packetType, boolean staticPacket) {
     }
 
     private void applyGain(short[] pcm, float gain) {
@@ -552,6 +552,10 @@ public final class SvgAudioListener {
         }
     }
 
+    /**
+     * Register the listener with the SVC API. Must be called before any audio will be received.
+     * @return success
+     */
     public boolean registerListener() {
         PlayerAudioListener listener = serverApi.playerAudioListenerBuilder()
                 .setPlayer(listenerId)
@@ -575,6 +579,9 @@ public final class SvgAudioListener {
         }
     }
 
+    /**
+     * Unregister the Listener from SVC
+     */
     public void unRegister() {
         if (closed.getAndSet(true)) {
             return;
@@ -592,9 +599,5 @@ public final class SvgAudioListener {
         } catch (Exception e) {
             SvgCore.getLogger().debug("AudioListener: Failed closing decoder for " + listenerId, e);
         }
-    }
-
-    public UUID getPlayerUuid() {
-        return listenerId;
     }
 }

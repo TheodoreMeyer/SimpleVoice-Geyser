@@ -3,7 +3,6 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.connection;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
-import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiation;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioListener;
@@ -30,6 +29,12 @@ public final class SvgConnection {
     private volatile boolean authenticated;
     private volatile boolean closed;
 
+    /**
+     * Create a connection
+     * @param session session to connect with
+     * @param player player connecting
+     * @param audioNegotiation negotiation
+     */
     SvgConnection(Session session, SvgPlayer player, AudioSessionNegotiation audioNegotiation) {
         this.player = player;
         this.uuid = player.getUniqueId();
@@ -37,6 +42,10 @@ public final class SvgConnection {
         this.audioNegotiation = audioNegotiation;
     }
 
+    /**
+     * Authenticate the player
+     * @throws IllegalStateException if something is wrong
+     */
     public synchronized void authenticate() throws IllegalStateException {
         if (authenticated) {
             return;
@@ -67,6 +76,11 @@ public final class SvgConnection {
         SvgCore.getLogger().debug("SvgConnection: Authenticated connection: " + uuid);
     }
 
+    /**
+     * Disconnect the player's session
+     * @param code code
+     * @param reason reason
+     */
     public synchronized void disconnect(int code, String reason) {
         if (closed) {
             return;
@@ -102,6 +116,10 @@ public final class SvgConnection {
         SvgCore.getLogger().debug("SvgConnection: Disconnected connection: " + uuid + " (" + reason + ")");
     }
 
+    /**
+     * Send a JSON message to the player
+     * @param json JSON to send
+     */
     public void sendJson(JSONObject json) {
         if (closed || !session.isOpen()) {
             return;
@@ -115,6 +133,12 @@ public final class SvgConnection {
         }
     }
 
+    /**
+     * Send a message to the player
+     * @param type type
+     * @param message string message
+     * @param fatal if it causes a closure
+     */
     public void sendMessage(ConnectionStates.MessageType type, String message, boolean fatal) {
         JSONObject json = new JSONObject();
         json.put("type", type);
@@ -123,51 +147,70 @@ public final class SvgConnection {
         sendJson(json);
     }
 
+    /**
+     * Send an error to the client
+     * @param message error message
+     * @param fatal if its fatal
+     */
     public void sendError(String message, boolean fatal) {
         sendMessage(ConnectionStates.MessageType.ERROR, message, fatal);
     }
 
+    /**
+     * Send a status message to the client
+     * @param message message to send
+     */
     public void sendStatus(String message) {
         sendMessage(ConnectionStates.MessageType.STATUS, message, false);
     }
 
+    /**
+     * Send a chat message to the client
+     * @param message message to send
+     */
     public void sendChat(String message) {
         sendMessage(ConnectionStates.MessageType.CHAT, message, false);
     }
 
-    public void sendPlayerMessage(String message) {
-        if (player == null) {
-            return;
-        }
-
-        player.sendMessage(SvgCore.getPrefix() + SvgColor.translateAltColorCodes('&', message));
-    }
-
+    /**
+     * Send a fatal error to client
+     * @param message error message
+     * @param closeCode code
+     * @param closeReason reason
+     */
     public void sendFatal(String message, int closeCode, String closeReason) {
         sendError(message, true);
         disconnect(closeCode, closeReason);
     }
 
+    /**
+     * get player uuid
+     * @return associated player uuid
+     */
     public UUID getUuid() {
         return uuid;
     }
 
-    public Session getSession() {
-        return session;
-    }
-
+    /**
+     * Get associated player
+     * @return SvgPlayer
+     */
     public SvgPlayer getPlayer() {
         return player;
     }
 
+    /**
+     * Find whether the player is authenticated
+     * @return authenticated
+     */
     public boolean isAuthenticated() {
         return authenticated;
     }
 
-    public boolean isClosed() {
-        return closed;
-    }
-
+    /**
+     * Get AudioSender connected to this connection
+     * @return SvgAudioSender
+     */
     public SvgAudioSender getAudioSender() {
         return audioSender;
     }

@@ -8,11 +8,29 @@ import java.nio.ByteOrder;
  */
 public final class AudioByteCompiler {
 
+    /**
+     * Code for Opus
+     */
     public static final byte CODEC_OPUS = 1;
+
+    /**
+     * Code for Legacy Pcm audio
+     */
     public static final byte CODEC_PCM16_LE = 2;
 
+    /**
+     * Code to say it's a static packet
+     */
     public static final byte FLAG_STATIC_PACKET = 0x01;
+
+    /**
+     * Code to say It has distance data
+     */
     public static final byte FLAG_DISTANCE_ATTENUATED = 0x02;
+
+    /**
+     * Code to say the packet has a pan
+     */
     public static final byte FLAG_HAS_PAN = 0x04;
 
     private static final byte MAGIC_0 = 'S';
@@ -21,6 +39,17 @@ public final class AudioByteCompiler {
     private static final int HEADER_SIZE = 20;
     private static final int DEFAULT_SAMPLE_RATE = 48_000;
 
+    /**
+     * No arg-constructor for the class
+     */
+    public AudioByteCompiler() {}
+
+
+    /**
+     * Compile audio for older clients that can't use the audio.
+     * @param stereoPcm audio to compile
+     * @return compiled audio as a packet
+     */
     public byte[] compileLegacyStereoPcm(short[] stereoPcm) {
         ByteBuffer buffer = ByteBuffer.allocate(stereoPcm.length * 2).order(ByteOrder.LITTLE_ENDIAN);
         for (short sample : stereoPcm) {
@@ -29,6 +58,15 @@ public final class AudioByteCompiler {
         return buffer.array();
     }
 
+    /**
+     * Compile audio into Bytes
+     * @param sequenceNumber number of the packet
+     * @param pan audio pan
+     * @param gain audio gain
+     * @param flags any flags
+     * @param opusPayload the audio itseld
+     * @return a byte array ready to be sent to the client
+     */
     public byte[] compileSvgV2Opus(
             long sequenceNumber,
             float pan,

@@ -11,10 +11,12 @@ public final class SvgConfig {
 
     /**
      * Canonical config defaults used by all platforms.
-     *
      * @return map of dotted config paths to default values
+     * <p>
+     * May be removed
      */
     public static Map<String, Object> codeDefaults() {
+
         Map<String, Object> defaults = new LinkedHashMap<>();
         defaults.put("config-info", "This file is used to configure Simple Voice Geyser. "
                 + "For more information, see the wiki: https://theodoremeyer.github.io/projects/simplevoicegeyser/");

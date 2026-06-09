@@ -11,36 +11,12 @@ public abstract class SvgFile {
 
     /**
      * Result object for config migration routines.
+     * @param mode the migration mode used (e.g. "backup_and_replace", "merge", "none")
+     * @param backupPath if applicable, the path to the backup file created during migration
+     * @param addedKeys the number of keys added to the config as a result of migration
+     * @param migrated whether any migration actually occurred
      */
-    public static final class MigrationReport {
-        private final String mode;
-        private final String backupPath;
-        private final int addedKeys;
-        private final boolean migrated;
-
-        public MigrationReport(String mode, String backupPath, int addedKeys, boolean migrated) {
-            this.mode = mode;
-            this.backupPath = backupPath;
-            this.addedKeys = addedKeys;
-            this.migrated = migrated;
-        }
-
-        public String mode() {
-            return mode;
-        }
-
-        public String backupPath() {
-            return backupPath;
-        }
-
-        public int addedKeys() {
-            return addedKeys;
-        }
-
-        public boolean migrated() {
-            return migrated;
-        }
-    }
+    public record MigrationReport(String mode, String backupPath, int addedKeys, boolean migrated) {}
 
     /**
      * Create something that represents a file

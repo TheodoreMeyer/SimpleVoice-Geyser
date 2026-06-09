@@ -14,11 +14,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.Aut
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.ConnectionAuthenticator;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketError;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
-import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import org.eclipse.jetty.websocket.api.annotations.*;
 import org.eclipse.jetty.websocket.api.exceptions.WebSocketException;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -28,9 +24,15 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Locale;
 
+/**
+ * Wrapper for handling the session with player
+ */
 @WebSocket
 public final class JettyWebSocket {
 
+    /**
+     * The authenticator instance used for validating join attempts. This is static and shared across all connections, but is designed to be thread-safe and handle concurrent requests appropriately.
+     */
     public static final ConnectionAuthenticator AUTHENTICATOR =
             new ConnectionAuthenticator();
 
@@ -48,8 +50,15 @@ public final class JettyWebSocket {
     private long capabilityMessageCount = 0;
     private AudioSessionNegotiation audioNegotiation;
 
+    /**
+     * Create an instance of the class
+     */
     public JettyWebSocket() {}
 
+    /**
+     * What to do when a player connects
+     * @param session the connected session
+     */
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
@@ -63,6 +72,10 @@ public final class JettyWebSocket {
         SvgCore.getLogger().debug("WebSocket: Session opened remote=" + session.getRemoteAddress());
     }
 
+    /**
+     * Handles string messages from client
+     * @param message message from client
+     */
     @OnWebSocketMessage
     public void onMessage(String message) {
         controlMessageCount++;
@@ -108,6 +121,12 @@ public final class JettyWebSocket {
         }
     }
 
+    /**
+     * Handles byte messages from client
+     * @param buffer byte buffer
+     * @param offset offset
+     * @param length length
+     */
     @OnWebSocketMessage
     public void onMessage(byte[] buffer, int offset, int length) {
         if (connection == null || !connection.isAuthenticated()) {
@@ -132,6 +151,11 @@ public final class JettyWebSocket {
         }
     }
 
+    /**
+     * Runs to close everything when websocket closes
+     * @param statusCode code
+     * @param reason why it closed
+     */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
         SvgCore.getLogger().debug(
@@ -160,6 +184,10 @@ public final class JettyWebSocket {
         }
     }
 
+    /**
+     * What to do on an error
+     * @param error error thrown
+     */
     @OnWebSocketError
     public void onError(Throwable error) {
         if (error instanceof WebSocketException) {
@@ -194,7 +222,7 @@ public final class JettyWebSocket {
             return;
         }
 
-        this.connection = connectionManager.connect(response.uuid(), session, response.player(), audioNegotiation);
+        this.connection = connectionManager.connect(session, response.player(), audioNegotiation);
 
         try {
             connection.authenticate();

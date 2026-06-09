@@ -18,12 +18,24 @@ public final class AudioSessionNegotiation {
     private volatile AudioTransportMode selectedMode = AudioTransportMode.LEGACY;
     private volatile long fallbackCount = 0;
 
+    /**
+     * Create a new negotiation instance with the given server preference and fallback policy.
+     * @param serverPreference the server preference of type
+     * @param allowLegacyFallback whether to allow backwards compatibility.
+     */
     public AudioSessionNegotiation(AudioTransportPreference serverPreference, boolean allowLegacyFallback) {
         this.serverPreference = serverPreference;
         this.allowLegacyFallback = allowLegacyFallback;
         this.selectedMode = resolveMode();
     }
 
+    /**
+     * Update known capabilities of the client
+     * @param supportsLegacy whether client supports legacy
+     * @param supportsSvgV2 whether client supports v2
+     * @param supportsOpusDecoder whether client can decode opus
+     * @param isSecureContext whether client is running in secure context
+     */
     public synchronized void updateClientCapabilities(
             boolean supportsLegacy,
             boolean supportsSvgV2,
@@ -43,18 +55,34 @@ public final class AudioSessionNegotiation {
         }
     }
 
+    /**
+     * Get chosen mode/protocol for client
+     * @return selected mode
+     */
     public AudioTransportMode getSelectedMode() {
         return selectedMode;
     }
 
+    /**
+     * Has client caps been received
+     * @return clientCapsReceived
+     */
     public boolean isClientCapsReceived() {
         return clientCapsReceived;
     }
 
+    /**
+     * Get the amount of audio sent through legacy
+     * @return long, the count
+     */
     public long getFallbackCount() {
         return fallbackCount;
     }
 
+    /**
+     * Get a summary of all client capability data.
+     * @return returns summary as a string
+     */
     public String summary() {
         return "pref=" + serverPreference.name().toLowerCase(Locale.ROOT)
                 + " selected=" + selectedMode.name().toLowerCase(Locale.ROOT)
