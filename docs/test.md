@@ -1,8 +1,7 @@
 ---
+title: Test Section
 layout: projects
-title: Test page
-permalink: /projects/simplevoicegeyser/test/
-sidebar: simplevoicegeyser
+project: simplevoicegeyser
 ---
 
 # Test page
