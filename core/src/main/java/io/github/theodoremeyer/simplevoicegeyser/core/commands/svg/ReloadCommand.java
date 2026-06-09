@@ -39,10 +39,15 @@ public class ReloadCommand implements SubCommand {
     }
 
     private void reload(Sender sender) {
-        SvgCore.getPlatform().getFile(DataType.CONFIG).reload();
+        var configFile = SvgCore.getPlatform().getFile(DataType.CONFIG);
+        configFile.reload();
+        var migration = configFile.migrateFromBundledDefaults("reload");
         SvgCore.getConfig().applyDefaults();
 
         sender.sendMessage(SvgCore.getPrefix() + "Reloaded SimpleVoiceGeyser Config");
+        sender.sendMessage("Config migration: mode=" + migration.mode()
+                + ", addedKeys=" + migration.addedKeys()
+                + ", backup=" + (migration.backupPath().isBlank() ? "none" : migration.backupPath()));
         sender.sendMessage("The reload will not update all config values used, several (like server port) require" +
                 " the server to be restarted to take effect.");
 

@@ -121,6 +121,10 @@ public class SvgMod implements ModInitializer, Platform {
         }
 
         this.configFile = new ConfigFile(dir, logger);
+        SvgFile.MigrationReport migration = this.configFile.migrateFromBundledDefaults("startup");
+        logger.info("[Config] migration trigger=startup mode=" + migration.mode()
+                + " addedKeys=" + migration.addedKeys()
+                + " backup=" + (migration.backupPath().isBlank() ? "none" : migration.backupPath()));
     }
 
     @Override

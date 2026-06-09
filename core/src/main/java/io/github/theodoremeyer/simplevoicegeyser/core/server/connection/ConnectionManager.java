@@ -2,10 +2,9 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.connection;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
+import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiation;
 import org.eclipse.jetty.websocket.api.Session;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,39 +15,32 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class ConnectionManager {
 
-    /**
-     * Active live connections.
-     */
     private final Map<UUID, SvgConnection> connections =
             new ConcurrentHashMap<>();
 
     /**
-     * Creates the connection manager.
+     * No-var contructor, as there is no state to initialize beyond the empty connections map.
      */
     public ConnectionManager() {}
 
     /**
-     * Registers a new connection.
-     * If a connection already exists for the UUID,
-     * the old connection is disconnected and replaced.
-     *
-     * @param uuid player uuid
-     * @param session websocket session
-     * @param player associated player
-     * @return newly created connection
+     * Connect a player to the system
+     * @param session session player is connected through
+     * @param player player itself
+     * @param audioNegotiation the known info negotiator for the session
+     * @return the player Connection
      */
     public SvgConnection connect(
-            UUID uuid,
             Session session,
-            SvgPlayer player
+            SvgPlayer player,
+            AudioSessionNegotiation audioNegotiation
     ) {
 
-        SvgConnection oldConnection = connections.remove(uuid);
+        SvgConnection oldConnection = connections.remove(player.getUniqueId());
 
         if (oldConnection != null) {
-
             SvgCore.getLogger().debug(
-                    "ConnectionManager: Replacing existing connection for: " + uuid
+                    "ConnectionManager: Replacing existing connection for: " + player.getUniqueId()
             );
 
             oldConnection.disconnect(
@@ -57,58 +49,33 @@ public final class ConnectionManager {
             );
         }
 
-        SvgConnection connection =
-                new SvgConnection(
-                        session,
-                        player
-                );
-
-        connections.put(uuid, connection);
+        SvgConnection connection = new SvgConnection(session, player, audioNegotiation);
+        connections.put(player.getUniqueId(), connection);
 
         SvgCore.getLogger().info(
-                "[ConnectionManager] Connected: " +
-                        player.getName() +
-                        " (" + uuid + ")"
+                "[ConnectionManager] Connected: " + player.getName() + " (" + player.getUniqueId() + ")"
         );
 
         return connection;
     }
 
     /**
-     * Gets a connection by UUID.
-     *
-     * @param uuid uuid to lookup
-     * @return connection or null
+     * Get a connection using a uuid
+     * @param uuid player/connection Uuid
+     * @return the Connection if found.
      */
     public SvgConnection get(UUID uuid) {
         return connections.get(uuid);
     }
 
     /**
-     * Gets whether a player is connected.
-     *
+     * Disconnect a player's audio connection
      * @param uuid player uuid
-     * @return true if connected
+     * @param code close code
+     * @param reason reason
      */
-    public boolean isConnected(UUID uuid) {
-        return connections.containsKey(uuid);
-    }
-
-    /**
-     * Removes and disconnects a connection.
-     *
-     * @param uuid uuid to disconnect
-     * @param code websocket close code
-     * @param reason close reason
-     */
-    public void disconnect(
-            UUID uuid,
-            int code,
-            String reason
-    ) {
-
-        SvgConnection connection =
-                connections.remove(uuid);
+    public void disconnect(UUID uuid, int code, String reason) {
+        SvgConnection connection = connections.remove(uuid);
 
         if (connection == null) {
             return;
@@ -117,72 +84,32 @@ public final class ConnectionManager {
         connection.disconnect(code, reason);
 
         SvgCore.getLogger().info(
-                "[ConnectionManager] Disconnected: " +
-                        uuid +
-                        " (" + reason + ")"
+                "[ConnectionManager] Disconnected: " + uuid + " (" + reason + ")"
         );
     }
 
     /**
-     * Removes a connection ONLY if it matches the provided session.
-     * Prevents stale websocket sessions from disconnecting newer sessions.
-     *
-     * @param connection connection attempting removal
+     * Remove a connection from the manager, without sending a disconnect packet. Used for cleanup after a disconnect has already been sent.
+     * @param connection connection to close
      */
     public void remove(SvgConnection connection) {
-
         if (connection == null) {
             return;
         }
 
         UUID uuid = connection.getUuid();
-
-        connections.computeIfPresent(uuid, (ignored, current) -> {
-
-            if (current != connection) {
-                return current;
-            }
-
-            return null;
-        });
+        connections.computeIfPresent(uuid, (ignored, current) -> current != connection ? current : null);
     }
 
     /**
-     * Disconnects all active clients.
+     * Disconnect all connections
      */
     public void disconnectAll() {
-
         for (SvgConnection connection : connections.values()) {
-            connection.disconnect(
-                    1001,
-                    "Server shutting down"
-            );
+            connection.disconnect(1001, "Server shutting down");
         }
 
         connections.clear();
-
-        SvgCore.getLogger().info(
-                "[ConnectionManager] Disconnected all clients"
-        );
-    }
-
-    /**
-     * Gets all active connections.
-     *
-     * @return immutable collection of connections
-     */
-    public Collection<SvgConnection> getConnections() {
-        return Collections.unmodifiableCollection(
-                connections.values()
-        );
-    }
-
-    /**
-     * Gets the amount of connected clients.
-     *
-     * @return online websocket count
-     */
-    public int size() {
-        return connections.size();
+        SvgCore.getLogger().info("[ConnectionManager] Disconnected all clients");
     }
 }
