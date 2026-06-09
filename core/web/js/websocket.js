@@ -5,7 +5,7 @@ import {
     getAudioDecompileStats,
     warmupAudioDecompiler
 } from "./audio/AudioByteDecompiler.js";
-import {log} from "./utils/logger.js";
+import {debug, log} from "./utils/logger.js";
 
 let ws = null;
 let reconnectTimeout = null;
@@ -285,7 +285,7 @@ async function handleIncomingBinaryFrame(arrayBuffer) {
     if (v2Result) {
         if (v2Result.malformed) {
             rxMalformedFrames++;
-            log(`[AudioRX] svg-v2 frame ignored: ${v2Result.reason || "malformed"}`);
+            debug(`[AudioRX] svg-v2 frame ignored: ${v2Result.reason || "malformed"}`);
             return;
         }
 
@@ -317,7 +317,7 @@ function maybeLogAudioStats() {
         return;
     }
     const decompile = getAudioDecompileStats();
-    log(
+    debug(
         `[AudioRX] frames=${rxBinaryFrames} bytes=${rxBinaryBytes} ` +
         `legacy=${rxLegacyFrames} svgV2=${rxSvgV2Frames} ` +
         `stereo=${rxStereoFrames} mono=${rxMonoFrames} malformed=${rxMalformedFrames} ` +

@@ -1,7 +1,7 @@
 import {connect, disconnect, isConnected, sendChat} from "./websocket.js";
 import {
-    getAudioRuntime,
     getAudioDevices,
+    getAudioRuntime,
     setMicIndicator,
     setOutputDevice,
     setPttActiveProvider,
@@ -10,7 +10,7 @@ import {
     stopMic,
     toggleMute
 } from "./audio/audio.js";
-import {log, setLogger} from "./utils/logger.js";
+import {debug, log, setLogger} from "./utils/logger.js";
 import {createPttController} from "./ptt.js";
 
 export function initUI(initialAudioRuntime) {
@@ -248,7 +248,7 @@ export function initUI(initialAudioRuntime) {
         if (isConnected()) {
             const runtime = getAudioRuntime();
             if (!runtime.canCaptureMic) {
-                log("[Audio] Mic capture unavailable, cannot switch microphone.");
+                debug("[Audio] Mic capture unavailable, cannot switch microphone.");
                 return;
             }
             stopMic();
