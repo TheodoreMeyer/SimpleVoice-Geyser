@@ -129,6 +129,10 @@ public class ConfigFile extends SvgFile {
         AddedCounter counter = new AddedCounter();
         JsonObject merged = mergeObject(defaults, existing, counter);
 
+        if (counter.count == 0) {
+            return new MigrationReport("json", "", 0, false);
+        }
+
         String backupPath = backupCurrentConfig();
         this.data = merged;
         save();

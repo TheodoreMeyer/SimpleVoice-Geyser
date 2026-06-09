@@ -71,9 +71,13 @@ publishing {
 //Build Identifier
 //-----------
 def currentGitCommit() {
-    providers.exec {
-        commandLine("git", "rev-parse", "--short", "HEAD")
-    }.standardOutput.asText.get().trim()
+    try {
+        return providers.exec {
+            commandLine("git", "rev-parse", "--short", "HEAD")
+        }.standardOutput.asText.get().trim()
+    } catch (Exception ignored) {
+        return "unknown"
+    }
 }
 println("Gradle sees commit: ${currentGitCommit()}")
 

@@ -60,7 +60,7 @@ public class SvgPlugin extends JavaPlugin implements Platform {
     @Override
     public void onEnable() {
 
-        this.core = new SvgCore(this);
+        // core is already constructed in onLoad()
 
         if (!core.init()) {
 

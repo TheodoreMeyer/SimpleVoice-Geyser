@@ -142,7 +142,7 @@ public class SvgMod implements ModInitializer, Platform {
         return FabricLoader.getInstance()
                 .getModContainer("minecraft")
                 .map(container -> container.getMetadata().getVersion().getFriendlyString())
-                .orElse(null);
+                .orElse("unknown");
     }
 
     @Override

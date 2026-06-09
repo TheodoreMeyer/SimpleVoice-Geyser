@@ -99,6 +99,9 @@ public class ConfigFile extends SvgFile {
 
         FileConfiguration existing = YamlConfiguration.loadConfiguration(configFile);
         int addedKeys = countAddedLeafKeys(existing, defaults);
+        if (addedKeys == 0) {
+            return new MigrationReport("yml", "", 0, false);
+        }
 
         YamlConfiguration merged = new YamlConfiguration();
         copyAllLeafValues(defaults, merged);
@@ -112,7 +115,6 @@ public class ConfigFile extends SvgFile {
             throw new RuntimeException("Failed saving merged config.yml", e);
         }
         return new MigrationReport("yml", backupPath, addedKeys, true);
-    }
 
     private FileConfiguration loadBundledDefaults() {
         YamlConfiguration defaults = new YamlConfiguration();

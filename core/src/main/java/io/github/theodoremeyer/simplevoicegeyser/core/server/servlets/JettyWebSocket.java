@@ -115,7 +115,7 @@ public final class JettyWebSocket {
                 );
             }
 
-        } catch (IllegalStateException e) {
+        } catch (Exception e) {
             SvgCore.getLogger().severe("[VCBridge] Exception: " + e.getMessage());
             SvgCore.getLogger().debug("VCBridge: error reading client data", e);
         }
