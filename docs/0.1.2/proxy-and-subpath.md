@@ -34,10 +34,10 @@ The reverse proxy must forward both normal HTTP requests and websocket upgrade r
 
 Required behavior:
 
-| Requirement | Reason |
-| --- | --- |
-| Preserve the configured path/subpath | Static assets and websocket routes are resolved relative to the web UI path. |
-| Forward websocket upgrades | The voice web client connects over WebSocket. |
+| Requirement                          | Reason                                                                                              |
+|--------------------------------------|-----------------------------------------------------------------------------------------------------|
+| Preserve the configured path/subpath | Static assets and websocket routes are resolved relative to the web UI path.                        |
+| Forward websocket upgrades           | The voice web client connects over WebSocket.                                                       |
 | Use HTTPS/WSS for public deployments | Browsers restrict microphone access outside secure contexts, and HTTPS protects traffic in transit. |
 
 ## Root vs Subpath

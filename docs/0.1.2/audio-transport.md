@@ -17,11 +17,11 @@ server:
 
 ## Transport Modes
 
-| Mode | Behavior |
-| --- | --- |
+| Mode     | Behavior                                                                                                                                     |
+|----------|----------------------------------------------------------------------------------------------------------------------------------------------|
 | `legacy` | Server decodes incoming Simple Voice Chat Opus audio, applies distance/pan handling, converts to PCM, and sends PCM audio to the web client. |
-| `svg-v2` | Server sends the original Opus payload plus compact spatial metadata. The web client decodes and applies spatial gain/pan locally. |
-| `auto` | Server chooses `svg-v2` only when the web client reports compatible support. Otherwise it falls back to `legacy` when fallback is allowed. |
+| `svg-v2` | Server sends the original Opus payload plus compact spatial metadata. The web client decodes and applies spatial gain/pan locally.           |
+| `auto`   | Server chooses `svg-v2` only when the web client reports compatible support. Otherwise it falls back to `legacy` when fallback is allowed.   |
 
 ## Fallback Behavior
 
@@ -37,12 +37,12 @@ After joining, the web client sends a capability message that includes supported
 
 The server stores the selected transport mode for that websocket session:
 
-| Client capability | Server result in `auto` |
-| --- | --- |
-| Supports `svg-v2` and Opus WASM decode | `svg-v2` |
-| Missing capabilities | `legacy` |
-| Unsupported decoder | `legacy` if fallback is enabled |
-| Old client | `legacy` if fallback is enabled |
+| Client capability                      | Server result in `auto`         |
+|----------------------------------------|---------------------------------|
+| Supports `svg-v2` and Opus WASM decode | `svg-v2`                        |
+| Missing capabilities                   | `legacy`                        |
+| Unsupported decoder                    | `legacy` if fallback is enabled |
+| Old client                             | `legacy` if fallback is enabled |
 
 The browser path currently uses the WASM decoder path for `svg-v2`. WebCodecs fields may appear in capability metadata for future app/non-browser clients, but they are not the active browser decode path.
 
@@ -50,19 +50,19 @@ The browser path currently uses the WASM decoder path for `svg-v2`. WebCodecs fi
 
 `svg-v2` binary frames use little-endian multibyte fields:
 
-| Field | Size | Description |
-| --- | ---: | --- |
-| `magic` | 2 bytes | ASCII `SV` |
-| `version` | 1 byte | `2` |
-| `flags` | 1 byte | Packet flags |
-| `sequence` | 4 bytes | Packet sequence number |
-| `panQ15` | 2 bytes | Signed Q15 pan metadata |
-| `gainQ15` | 2 bytes | Unsigned Q15 gain metadata |
-| `sampleRate` | 2 bytes | Sample rate, normally `48000` |
-| `channels` | 1 byte | Channel count |
-| `codec` | 1 byte | `1=opus`, `2=pcm16le` |
-| `payloadLen` | 4 bytes | Payload length |
-| `payload` | variable | Codec payload |
+| Field        |     Size | Description                   |
+|--------------|---------:|-------------------------------|
+| `magic`      |  2 bytes | ASCII `SV`                    |
+| `version`    |   1 byte | `2`                           |
+| `flags`      |   1 byte | Packet flags                  |
+| `sequence`   |  4 bytes | Packet sequence number        |
+| `panQ15`     |  2 bytes | Signed Q15 pan metadata       |
+| `gainQ15`    |  2 bytes | Unsigned Q15 gain metadata    |
+| `sampleRate` |  2 bytes | Sample rate, normally `48000` |
+| `channels`   |   1 byte | Channel count                 |
+| `codec`      |   1 byte | `1=opus`, `2=pcm16le`         |
+| `payloadLen` |  4 bytes | Payload length                |
+| `payload`    | variable | Codec payload                 |
 
 See [Protocol reference](protocol.md) for the full websocket message flow, join payload, capability packet, and audio packet formats.
 

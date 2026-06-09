@@ -14,22 +14,22 @@ On startup and `/svg reload`, the plugin runs a migration pass that:
 
 The migration report includes:
 
-| Field | Meaning |
-| --- | --- |
-| `mode` | Config format or migration mode, such as YAML/JSON platform behavior. |
-| `addedKeys` | Number of missing keys restored from defaults. |
-| `backup` | Backup path, or `none` if no backup was created. |
+| Field       | Meaning                                                               |
+|-------------|-----------------------------------------------------------------------|
+| `mode`      | Config format or migration mode, such as YAML/JSON platform behavior. |
+| `addedKeys` | Number of missing keys restored from defaults.                        |
+| `backup`    | Backup path, or `none` if no backup was created.                      |
 
 ## Important Config Keys
 
-| Key | Default | Notes |
-| --- | --- | --- |
-| `server.context-path` | `/` | Web UI context path for root or subpath deployments. |
-| `server.group.default.force-on-web-join` | `false` | Forces the default SVG group when a web user joins. |
-| `server.audio.transport-mode` | `auto` | `auto`, `legacy`, or `svg-v2`. |
-| `server.audio.allow-legacy-fallback` | `true` | Keeps old/unsupported clients working during migration. |
-| `updatechecker.enable` | `true` | Enables startup update checks. |
-| `config-version` | `0.1.1-dev-migration1` | Internal config schema marker. |
+| Key                                      | Default                | Notes                                                   |
+|------------------------------------------|------------------------|---------------------------------------------------------|
+| `server.context-path`                    | `/`                    | Web UI context path for root or subpath deployments.    |
+| `server.group.default.force-on-web-join` | `false`                | Forces the default SVG group when a web user joins.     |
+| `server.audio.transport-mode`            | `auto`                 | `auto`, `legacy`, or `svg-v2`.                          |
+| `server.audio.allow-legacy-fallback`     | `true`                 | Keeps old/unsupported clients working during migration. |
+| `updatechecker.enable`                   | `true`                 | Enables startup update checks.                          |
+| `config-version`                         | `0.1.1-dev-migration1` | Internal config schema marker.                          |
 
 ## `/svg reload`
 
