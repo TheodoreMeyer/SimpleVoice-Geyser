@@ -15,7 +15,6 @@ import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.SvgListener;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data.ConfigFile;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.SharedConstants;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,43 +38,60 @@ public class SvgMod implements ModInitializer, Platform {
 
     @Override
     public void onInitialize() {
+
         if (ready) {
             logger.severe("Already Initialized!");
             return;
         }
 
         logger.info(getPrefix() + "Initializing Fabric platform...");
+
         try {
+
             createFiles();
 
-            // Init core AFTER filesystem is ready
             core = new SvgCore(this);
-
-            new FabricCommand();
-            new SvgListener();
 
             luckPermsHook = new LuckPermsHook();
 
             ready = true;
+
+            logger.info(getPrefix() + "Fabric bootstrap complete.");
+
             if (voiceChatBridge != null) {
-                core.init();
+
+                if (!core.init()) {
+                    logger.severe(getPrefix() + "Core init failed.");
+                    disable();
+                    return;
+                }
+
+                new FabricCommand();
+                new SvgListener();
             }
 
-            logger.info(getPrefix() + "Initialization complete.");
-
         } catch (Exception e) {
-            logger.error(getPrefix() + "Failed to initialize. ", e);
+            logger.error(getPrefix() + "Failed to initialize.", e);
             disable();
         }
     }
 
     public static void injectBridge(FabricVcBridge bridge) {
-        if (voiceChatBridge == null) {
-            voiceChatBridge = bridge;
-            if (ready) {
-                core.init();
-            }
+        if (voiceChatBridge != null) { return; }
+        voiceChatBridge = bridge;
+
+        if (!ready || core == null) {
+            return;
         }
+
+        if (!core.init()) {
+            SvgCore.getLogger().severe("Core init failed after VC injection.");
+            SvgCore.disable();
+            return;
+        }
+
+        new FabricCommand();
+        new SvgListener();
     }
 
     //Permissions
@@ -105,6 +121,10 @@ public class SvgMod implements ModInitializer, Platform {
         }
 
         this.configFile = new ConfigFile(dir, logger);
+        SvgFile.MigrationReport migration = this.configFile.migrateFromBundledDefaults("startup");
+        logger.info("[Config] migration trigger=startup mode=" + migration.mode()
+                + " addedKeys=" + migration.addedKeys()
+                + " backup=" + (migration.backupPath().isBlank() ? "none" : migration.backupPath()));
     }
 
     @Override
@@ -119,7 +139,10 @@ public class SvgMod implements ModInitializer, Platform {
 
     @Override
     public String getServerMcVersion() {
-        return SharedConstants.getCurrentVersion().name();
+        return FabricLoader.getInstance()
+                .getModContainer("minecraft")
+                .map(container -> container.getMetadata().getVersion().getFriendlyString())
+                .orElse("unknown");
     }
 
     @Override

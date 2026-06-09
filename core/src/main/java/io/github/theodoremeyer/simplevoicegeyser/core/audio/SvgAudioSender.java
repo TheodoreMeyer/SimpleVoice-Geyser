@@ -63,7 +63,7 @@ public final class SvgAudioSender {
      */
     public void sendOpus(byte[] pcmData) {
 
-        SvgCore.debug( "AudioSender","received audio data from websocket!");
+        SvgCore.getLogger().debug( "AudioSender: received audio data from websocket!");
 
         //AudioThread.execute(() -> {
 
@@ -83,7 +83,7 @@ public final class SvgAudioSender {
                     return;
                 }
             } catch (Exception e) {
-                SvgCore.debug("AudioSender", "Encoding failed for " + playerUuid, e);
+                SvgCore.getLogger().debug("AudioSender: Encoding failed for " + playerUuid, e);
                 return;
             }
 

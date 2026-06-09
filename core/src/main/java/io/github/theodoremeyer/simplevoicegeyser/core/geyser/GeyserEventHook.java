@@ -43,7 +43,7 @@ public final class GeyserEventHook implements EventRegistrar {
         UUID uuid = event.connection().playerUuid();
         String playerName = event.connection().name();
 
-        SvgCore.debug("GEYSER", "UUID for Emote: " + uuid);
+        SvgCore.getLogger().debug("Geyser: UUID for Emote: " + uuid);
 
         if (uuid == null) {
             SvgCore.getLogger().warning("Could not resolve UUID for: " + playerName);

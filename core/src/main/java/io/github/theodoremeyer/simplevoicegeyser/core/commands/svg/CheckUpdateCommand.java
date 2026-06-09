@@ -49,7 +49,7 @@ public final class CheckUpdateCommand implements SubCommand {
                 return true;
             }
         }
-        UpdateChecker checker = new UpdateChecker(SvgCore.VERSION, core.platform);
+        UpdateChecker checker = new UpdateChecker(SvgCore.VERSION, SvgCore.BUILD_ID, core.platform);
         checker.check();
 
         // TODO: Make UpdateChecker send update message to sender

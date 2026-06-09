@@ -65,7 +65,7 @@ public final class PswdCommand implements SubCommand {
         }
 
         SvgCore.getPasswordManager().setPassword(player, password);
-        JettyWebSocket.clearAuthFailures(player.getName());
+        JettyWebSocket.AUTHENTICATOR.clearFailures(player.getName());
         return true;
     }
 }

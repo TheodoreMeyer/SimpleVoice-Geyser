@@ -28,6 +28,7 @@ public final class UpdateChecker {
 
     private static final HttpClient HTTP = HttpClient.newHttpClient();
 
+    private final String buildID;
     private final SemanticVersion currentVersion;
     private final String serverMcVersion;
     private final Platform platform;
@@ -36,10 +37,12 @@ public final class UpdateChecker {
     /**
      * Create an UpdateChecker
      * @param currentVersion current project version
+     * @param buildID current build ID (git commit hash)
      * @param platform the platform to check for (used for filtering and logging)
      */
-    public UpdateChecker(String currentVersion, Platform platform) {
+    public UpdateChecker(String currentVersion, String buildID, Platform platform) {
 
+        this.buildID = buildID;
         this.currentVersion = SemanticVersion.parse(
                 Objects.requireNonNull(currentVersion, "currentVersion")
         );
@@ -157,13 +160,16 @@ public final class UpdateChecker {
         }
 
         if (!latest.semantic.isNewerThan(currentVersion)) {
-            logger.info("You are running the latest version of SimpleVoice-Geyser (" + currentVersion + ")!");
+            logger.info(
+                    "You are running the latest version of SimpleVoice-Geyser ("
+                            + currentVersion + "+"
+                            + buildID +")!");
             return;
         }
 
         String message = String.join("\n",
                 "A new version of SimpleVoice-Geyser is available!",
-                "   Current Version: " + currentVersion,
+                "   Current Version: " + currentVersion + "+" + buildID,
                 "   Latest Version:  " + latest.versionRaw,
                 "   Download Here:   " + DOWNLOAD_URL
         );

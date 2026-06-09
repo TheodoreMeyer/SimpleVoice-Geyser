@@ -2,6 +2,7 @@ package io.github.theodoremeyer.simplevoicegeyser.core.managers;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collection;
@@ -76,7 +77,12 @@ public final class PlayerManager {
      * @param player the player to remove
      */
     public void removePlayer(SvgPlayer player) {
-        SvgCore.getWsManager().playerLeave(player);
+        SvgCore.getConnectionManager().disconnect(
+                player.getUniqueId(),
+                ConnectionStates.DisconnectCodes.PLAYER_LEAVE.getCode(),
+                "Player left the game."
+        );
+        //SvgCore.getWsManager().playerLeave(player);
 
         players.remove(player.getUniqueId());
         playersByName.remove(player.getName());
