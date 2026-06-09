@@ -7,31 +7,34 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/ptt.css">
     <link rel="icon" href="images/svg-temp.png" type="image/x-icon">
+    <link rel="stylesheet" href="css/presets.css">
+    <script src="js/lang.js"></script>
 </head>
 
 <body>
-    <h1>Join Simple Voice Chat</h1>
+    <h1><span class="lang" id="joinLabel"></span></h1>
     <div id="form-container">
         <form id="joinForm">
-            <label for="username">Username:</label>
+            <label for="username"><span class="lang" id="usernameInput"></span>:</label>
             <input type="text" id="username" name="username" required autocomplete="username">
 
-            <label for="password">Password:</label>
+            <label for="password"><span class="lang" id="passwordInput"></span>:</label>
             <input type="password" id="password" name="password" required autocomplete="svg-password">
 
-            <label for="mic">Select Microphone:</label>
+            <label for="mic"><span class="lang" id="micSelect"></span>:</label>
             <select id="mic" name="mic">
-                <option disabled selected>Loading Mics</option>
+                <option disabled selected><span class="lang" id="micLoad"></span></option>
             </select>
 
-            <label for="speaker">Select Speaker:</label>
+            <label for="speaker"><span class="lang" id="speakSelect"></span>:</label>
             <select id="speaker" name="speaker">
-                <option disabled selected>Loading Speakers</option>
+                <option disabled selected><span class="lang" id="speakLoad"></span></option>
             </select>
 
-            <button type="submit" id="joinbtn">Join</button>
+            <button type="submit" id="joinbtn"><span class="lang" id="joinBtnText"></span></button>
         </form>
     </div>
+    <!-- error is left in english cause if javascript isn't enablet it won't load the language -->
     <noscript>
         <div style="background:red; color:white; padding:10px; text-align:center; font-weight: bolder;">
             <h2>Error:</h2>
@@ -40,13 +43,13 @@
     </noscript>
     <div id="main-vc-container">
         <br>
-        <div id="status">Waiting to join...</div>
+        <div id="status"><span class="lang" id="joinWait"></span></div>
         <div id="log"></div>
         <br>
         <div id="inputArea">
-            <label for="msgInput">Message</label>
+            <label for="msgInput"><span class="lang" id="msgText"></span></label>
             <input type="text" id="msgInput" placeholder="Type a message..." />
-            <button id="messageButton">Send</button>
+            <button id="messageButton"><span class="lang" id="sendBtnText"></span></button>
         </div>
     </div>
     <br>
@@ -54,9 +57,9 @@
         <div id="controls-main">
             <div class="controls-card" id="micCard">
                 <div class="control-group">
-                    <span class="control-label">Microphone</span>
+                    <span class="control-label"><span class="lang" id="micSLabel"></span></span>
                     <div id="micControls">
-                        <button id="muteBtn" class="unmuted">Mute</button>
+                        <button id="muteBtn" class="unmuted"><span class="lang" id="muteBtnText"></span></button>
                         <span id="micIndicator" title="Mic activity"></span>
                     </div>
                 </div>
@@ -64,33 +67,33 @@
 
             <div class="controls-card">
                 <div class="control-group">
-                    <span class="control-label">Transmit Mode</span>
+                    <span class="control-label"><span class="lang" id="transmitModeLabel"></span></span>
                     <select id="transmitModeSelect" aria-label="Transmit mode">
-                        <option value="voice">Voice Activity</option>
-                        <option value="ptt">Push-To-Talk</option>
+                        <option value="voice"><span class="lang" id="voiceActivityText"></span></option>
+                        <option value="ptt"><span class="lang" id="pushToTalkText"></span></option>
                     </select>
                 </div>
             </div>
 
             <div class="controls-card controls-card-ptt dev-hidden" id="pttCard">
                 <div class="control-group" id="pttBindingControls">
-                    <span class="control-label">PTT Binding</span>
+                    <span class="control-label"><span class="lang" id="pttBindingLabel"></span></span>
                     <div class="ptt-action-row">
-                        <button id="bindPttBtn" type="button">Bind Push-to-Talk</button>
-                        <button id="clearPttBtn" type="button">Clear Binding</button>
+                        <button id="bindPttBtn" type="button"><span class="lang" id="bindPttBtnText"></span></button>
+                        <button id="clearPttBtn" type="button"><span class="lang" id="clearPttBtnText"></span></button>
                     </div>
-                    <small id="pttBindingLabel">No binding set. Use the hold button or add a binding.</small>
+                    <small id="pttBindingLabel"><span class="lang" id="pttBindingDescription"></span></small>
                     <label class="ptt-background-toggle">
                         <input type="checkbox" id="allowBackgroundPtt">
-                        <span>Allow background controller PTT</span>
+                        <span><span class="lang" id="allowBackgroundPttText"></span></span>
                     </label>
                 </div>
 
                 <div class="control-group" id="pttControls">
-                    <span class="control-label">Push-to-Talk</span>
+                    <span class="control-label"><span class="lang" id="pttLabel"></span></span>
                     <div>
-                        <button id="pushToTalkBtn" class="pttButton" type="button">Hold to Talk</button>
-                        <button id="fullscreenPttBtn" type="button">Fullscreen PTT</button>
+                        <button id="pushToTalkBtn" class="pttButton" type="button"><span class="lang" id="pushToTalkBtnText"></span></button>
+                        <button id="fullscreenPttBtn" type="button"><span class="lang" id="fullscreenPttBtnText"></span></button>
                     </div>
                 </div>
             </div>
@@ -100,28 +103,54 @@
         <div class="controls-divider"></div>
         <div id="controls-dev">
             <button id="devToggle" class="dev-toggle">
-                Developer Tools ▼
+                <span class="lang" id="devToolsLabel"></span> ▼
             </button>
             <div id="devContent">
                 <div class="control-group">
-                    <span class="control-label">Debug Audio</span>
-                    <button id="testSound" type="button">Test Sound</button>
+                    <span class="control-label"><span class="lang" id="debugAudioLabel"></span></span>
+                    <button id="testSound" type="button"><span class="lang" id="testSoundBtnText"></span></button>
                 </div>
             </div>
         </div>
     </div>
+    <div id="color-editor">
+        <h2><span class="lang" id="colorEditorLabel"></span></h2>
+        <div id="preset-field"></div>
+    </div>
     <div style="display: flex; align-items: center; gap: 8px;">
         <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank">
-            <img src="images/github.svg" alt="GitHub Link" class="githubicon">
+            <img src="https://github.com/favicon.ico" alt="GitHub Link" class="githubicon">
             <span>Theodore Meyer</span>
         </a>
     </div>
 
     <div id="pttFullscreenOverlay" aria-hidden="true">
-        <button id="pushToTalkFullscreenBtn" class="pttButton" type="button">Hold to Talk</button>
-        <button id="exitFullscreenPttBtn" type="button">Exit Fullscreen</button>
+        <button id="pushToTalkFullscreenBtn" class="pttButton" type="button"><span class="lang" id="pushToTalkFullscreenBtnText"></span></button>
+        <button id="exitFullscreenPttBtn" type="button"><span class="lang" id="exitFullscreenPttBtnText"></span></button>
     </div>
+    <script>
+        const availablePresets = ['default', 'dark', 'light', 'green', 'blue', 'purple', 'red', 'yellow', 'cyan', 'monochrome', 'monokai', 'orange', 'mint', 'rose'];
+        const savedPreset = localStorage.getItem('preset');
+        availablePresets.forEach(preset => {
+            document.getElementById('preset-field').insertAdjacentHTML('beforeend', `<button class="preset-btn" data-preset="${preset}">${preset.charAt(0).toUpperCase() + preset.slice(1)}</button>`);
+        });
+        applyPreset(availablePresets.includes(savedPreset) ? savedPreset : 'default');
 
+        document.querySelectorAll('#color-editor button[data-preset]').forEach(button => {
+            button.addEventListener('click', () => {
+                const preset = button.getAttribute('data-preset');
+                applyPreset(preset);
+            });
+        });
+
+        function applyPreset(preset) {
+            for (const name of availablePresets) {
+                document.body.classList.remove(`preset-${name}`);
+            }
+            document.body.classList.add(`preset-${preset}`);
+            localStorage.setItem('preset', preset);
+        }
+    </script>
     <script type="module">
         import { start } from '/js/client.js';
         start(); // manually triggers it
