@@ -1,7 +1,7 @@
 package io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data;
 
-import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -115,6 +115,7 @@ public class ConfigFile extends SvgFile {
             throw new RuntimeException("Failed saving merged config.yml", e);
         }
         return new MigrationReport("yml", backupPath, addedKeys, true);
+    }
 
     private FileConfiguration loadBundledDefaults() {
         YamlConfiguration defaults = new YamlConfiguration();
