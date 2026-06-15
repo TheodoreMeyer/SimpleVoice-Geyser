@@ -32,8 +32,8 @@ Required:
 * Simple Voice Chat 2.6.0 or later
 
 Optional:
-* GeyserMC 2.9.0-SNAPSHOT or later
-* Floodgate 2.2.4-SNAPSHOT or later
+* GeyserMC 2.10.0-SNAPSHOT or later
+* Floodgate 2.2.5-SNAPSHOT or later
 
 ### Bukkit-based servers (Paper, Purpur, Spigot)
 
@@ -69,6 +69,8 @@ Feedback, issues, and contributions are welcome.
 
 * [Releases](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/releases)
   → See [Installation](installation/index.markdown) for setup instructions.
+
+* Note- latest documentation changes can be found at [0.1.2 release docs](https://theodoremeyer.github.io/projects/simplevoicegeyser/0.1.2/) for now, until the public website is fully updated.
 
 ## Repository
 
