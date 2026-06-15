@@ -26,17 +26,18 @@ dependencies {
 }
 
 tasks.processResources {
-    // include all normal resources
     from(sourceSets.main.resources.srcDirs)
 
-    // include web/ folder into the JAR under "web/"
     from("web") {
         into("web")
 
         filesMatching("index.html") {
-            expand(
-                    gitCommit: currentGitCommit()
-            )
+            filter { line ->
+                line.replace(
+                        "@@GIT_COMMIT@@",
+                        currentGitCommit()
+                )
+            }
         }
     }
 }

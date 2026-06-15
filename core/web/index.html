@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="build-id" content="${gitCommit}">
+    <meta name="build-id" content="@@GIT_COMMIT@@">
     <title>SimpleVoice-Geyser</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/ptt.css">
@@ -83,7 +83,7 @@
                         <button id="bindPttBtn" type="button"><span class="lang" id="bindPttBtnText"></span></button>
                         <button id="clearPttBtn" type="button"><span class="lang" id="clearPttBtnText"></span></button>
                     </div>
-                    <small id="pttBindingLabel"><span class="lang" id="pttBindingDescription"></span></small>
+                    <small id="control-label"><span class="lang" id="pttBindingDescription"></span></small>
                     <label class="ptt-background-toggle">
                         <input type="checkbox" id="allowBackgroundPtt">
                         <span><span class="lang" id="allowBackgroundPttText"></span></span>
@@ -153,7 +153,7 @@
         }
     </script>
     <script type="module">
-        window.BUILD_ID = "${gitCommit}";
+        window.BUILD_ID = "@@GIT_COMMIT@@";
         import { start } from './js/client.js';
         start(); // manually triggers it
     </script>
