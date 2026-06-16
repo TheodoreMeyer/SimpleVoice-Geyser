@@ -1,3 +1,9 @@
+---
+title: Server Protocol Reference
+layout: projects
+project: simplevoicegeyser
+---
+
 # Protocol Reference
 
 This page documents the 0.1.2 web client/server packet flow. It covers the browser web UI protocol used by Simple Voice Geyser, not the internal Simple Voice Chat protocol.

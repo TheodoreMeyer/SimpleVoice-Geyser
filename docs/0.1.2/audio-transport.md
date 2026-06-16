@@ -1,3 +1,9 @@
+---
+title: Audio Transport
+layout: projects
+project: simplevoicegeyser
+---
+
 # Audio Transport
 
 Simple Voice Geyser can send audio to the web client using either the legacy transport or the newer `svg-v2` transport.

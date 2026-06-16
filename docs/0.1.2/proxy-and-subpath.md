@@ -1,6 +1,14 @@
+---
+title: Proxy and Sub-path Deployment
+layout: projects
+project: simplevoicegeyser
+---
+
 # Proxy And Subpath Deployment
 
-Simple Voice Geyser can be served from the web server root or from a configured subpath.
+- Simple Voice Geyser can be served from the web server root or from a configured subpath.
+- This shows project config got setting up proxy and sub-path stuff.
+    - Please note this does not include nginx or proxy config.
 
 ## Context Path
 

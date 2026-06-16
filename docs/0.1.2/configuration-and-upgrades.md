@@ -1,3 +1,9 @@
+---
+title: 0.1.2 Configuration And Upgrades
+layout: projects
+project: simplevoicegeyser
+---
+
 # Configuration And Upgrades
 
 Simple Voice Geyser now includes config migration behavior for update-time key additions. The goal is to add missing defaults without overwriting server-owner choices.
