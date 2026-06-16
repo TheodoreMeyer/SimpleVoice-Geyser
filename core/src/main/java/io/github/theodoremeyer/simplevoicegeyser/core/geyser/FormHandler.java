@@ -167,6 +167,7 @@ public final class FormHandler {
                     int dropdownIndex = response.next();
                     String gName = groupManager.getGroupNames().get(dropdownIndex);
                     String pswd = response.asInput(1);
+
                     SvgCore.getGroupManager().joinGroup(player, gName, pswd);
                 })
                 .build();

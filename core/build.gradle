@@ -26,12 +26,19 @@ dependencies {
 }
 
 tasks.processResources {
-    // include all normal resources
     from(sourceSets.main.resources.srcDirs)
 
-    // include web/ folder into the JAR under "web/"
     from("web") {
         into("web")
+
+        filesMatching("index.html") {
+            filter { line ->
+                line.replace(
+                        "@@GIT_COMMIT@@",
+                        currentGitCommit()
+                )
+            }
+        }
     }
 }
 
@@ -61,3 +68,67 @@ publishing {
         }
     }
 }
+//-----------
+//Build Identifier
+//-----------
+def currentGitCommit() {
+    try {
+        return providers.exec {
+            commandLine("git", "rev-parse", "--short", "HEAD")
+        }.standardOutput.asText.get().trim()
+    } catch (Exception ignored) {
+        return "unknown"
+    }
+}
+println("Gradle sees commit: ${currentGitCommit()}")
+
+// BuildInfo.java generation
+tasks.register("generateBuildInfo") {
+
+    def outputDir = layout.buildDirectory.dir("generated/sources/buildinfo")
+
+    outputs.dir(outputDir)
+
+    inputs.property("gitCommit", currentGitCommit())
+
+    doLast {
+        def gitCommit = currentGitCommit()
+
+        def file = outputDir.get()
+                .file("io/github/theodoremeyer/simplevoicegeyser/core/BuildInfo.java")
+                .asFile
+
+        file.parentFile.mkdirs()
+
+        file.text = """
+package io.github.theodoremeyer.simplevoicegeyser.core;
+
+/**
+ * Auto-generated build metadata.
+ */
+public final class BuildInfo {
+
+    private BuildInfo() {}
+
+    /**
+     * Git commit hash used for this build.
+     */
+    public static final String BUILD_ID = "${gitCommit}";
+
+    /**
+    * Project version used for this build.
+    */
+    public static final String PROJECT_VERSION = "${project.version}";
+}
+"""
+    }
+}
+
+// make Gradle compile generated source
+sourceSets.main.java.srcDir(
+        layout.buildDirectory.dir("generated/sources/buildinfo")
+)
+
+tasks.compileJava.dependsOn(tasks.generateBuildInfo)
+tasks.sourcesJar.dependsOn(tasks.generateBuildInfo)
+tasks.javadocJar.dependsOn(tasks.generateBuildInfo)

@@ -3,440 +3,491 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.servlets;
 import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
-import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
-import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioSender;
-import io.github.theodoremeyer.simplevoicegeyser.core.data.PlayerVcPswd;
-import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
+import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiation;
+import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioTransportMode;
+import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioTransportPreference;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionManager;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.SvgConnection;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.AuthResponse;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.ConnectionAuthenticator;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
+import org.eclipse.jetty.websocket.api.exceptions.WebSocketException;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Locale;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Websocket session Class.
+ * Wrapper for handling the session with player
  */
 @WebSocket
 public final class JettyWebSocket {
-    /**
-     * Standard code for fatal errors
-     */
-    private static final int FATAL_CLOSE_CODE = 4003;
 
     /**
-     * Automatic reason, if it's not defined.
+     * The authenticator instance used for validating join attempts. This is static and shared across all connections, but is designed to be thread-safe and handle concurrent requests appropriately.
      */
-    private static final String FATAL_CLOSE_REASON = "fatal";
+    public static final ConnectionAuthenticator AUTHENTICATOR =
+            new ConnectionAuthenticator();
 
-    /**
-     * AuthLimiter to limit login tries per user
-     * Max 5 failed attempts per minute, with a lockout duration of 5 minutes after reaching the limit.
-     * This helps protect against brute-force attacks while allowing legitimate users to retry after a short period.
-     * If this is triggered, easy reset of /svg pswd
-     */
-    private static final AuthRateLimiter AUTH_RATE_LIMITER =
-            new AuthRateLimiter(5, Duration.ofMinutes(1), Duration.ofMinutes(5));
+    private static final int MAX_WEB_CHAT_LENGTH = 200;
 
-    /**
-     * The Session that is the audio client.
-     */
+    private final ConnectionManager connectionManager =
+            SvgCore.getConnectionManager();
+
     private Session session;
+    private SvgConnection connection;
+    private long binaryFrameCount = 0;
+    private long binaryByteCount = 0;
+    private long controlMessageCount = 0;
+    private long joinAttemptCount = 0;
+    private long capabilityMessageCount = 0;
+    private AudioSessionNegotiation audioNegotiation;
 
     /**
-     * UUID associated with this websocket/user
-     */
-    private UUID uuid;
-    /**
-     * Player that this websocket does audio for
-     */
-    private SvgPlayer player;
-    /**
-     * Whether the user has logged in
-     */
-    private boolean authenticated = false;
-    /**
-     * AudioSender associated with this.
-     */
-    private SvgAudioSender audioSender;
-
-    /**
-     * Create a websocket connection with a client
+     * Create an instance of the class
      */
     public JettyWebSocket() {}
 
     /**
-     * When the client connects.
-     * @param session the websocket session associated with this class.
+     * What to do when a player connects
+     * @param session the connected session
      */
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
         session.setIdleTimeout(Duration.ofMinutes(SvgCore.getConfig().IDLE_TIMEOUT.get()));
+        AudioTransportPreference preference = AudioTransportPreference.fromConfig(
+                SvgCore.getConfig().AUDIO_TRANSPORT_MODE.get()
+        );
+        boolean allowLegacyFallback = Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_ALLOW_LEGACY_FALLBACK.get());
+        this.audioNegotiation = new AudioSessionNegotiation(preference, allowLegacyFallback);
         SvgCore.getLogger().info("[Websocket] WebSocket connected: " + session.getRemoteAddress());
+        SvgCore.getLogger().debug("WebSocket: Session opened remote=" + session.getRemoteAddress());
     }
 
     /**
-     * Handles all NON vc messages sent by client.
-     * @param message message sent by client.
+     * Handles string messages from client
+     * @param message message from client
      */
     @OnWebSocketMessage
     public void onMessage(String message) {
+        controlMessageCount++;
 
-        //ignore empty messages
-        if (message == null || message.trim().isEmpty()) { //make sure the message is not empty
+        if (message == null || message.trim().isEmpty()) {
             return;
         }
 
         message = message.trim();
 
-        //reject non JSON messages early
         if (!message.startsWith("{")) {
-            sendMessage("error", "Invalid input. Expected a JSON object.", false);
+            sendRaw(ConnectionStates.MessageType.ERROR,
+                    "Invalid input. Expected a JSON object.", false);
             return;
         }
 
         try {
             JSONObject json = new JSONObject(message);
             String type = json.getString("type");
+            SvgCore.getLogger().debug("WebSocket: Control message #" + controlMessageCount + " type=" + type);
 
             switch (type) {
-                case "join": { //handle the join form
+                case "join" -> {
+                    joinAttemptCount++;
+                    SvgCore.getLogger().debug("WebSocket: Join attempt #" + joinAttemptCount + " from " + session.getRemoteAddress());
                     join(json);
-                    return;
                 }
-
-                case "chat": { //handle chat inputs.
-                    chat(json);
-                    return;
+                case "chat" -> chat(json);
+                case "capabilities" -> {
+                    capabilityMessageCount++;
+                    capabilities(json);
                 }
-
-                //handle unknown types
-                case null, default:
-                    sendMessage("error", "unknown type: " + type, false);
+                default -> sendRaw(
+                        ConnectionStates.MessageType.ERROR,
+                        "Unknown message type: " + type,
+                        false
+                );
             }
 
         } catch (Exception e) {
-            SvgCore.getLogger().severe("[VCBridge] code: 1, Exception: " + e.getMessage());
-            SvgCore.debug("VCBridge", "error reading client data", e);
+            SvgCore.getLogger().severe("[VCBridge] Exception: " + e.getMessage());
+            SvgCore.getLogger().debug("VCBridge: error reading client data", e);
         }
-
     }
 
     /**
-     * this copy is to handle audio data from the client.
-     * I Don't really know too much about how to get pcmData from sent byte, all I know is that this is how Simple Voice Chat, and research wants me to do it
-     * @param buffer the byte to process
-     * @param offset the offset of the byte
-     * @param length the int.
+     * Handles byte messages from client
+     * @param buffer byte buffer
+     * @param offset offset
+     * @param length length
      */
     @OnWebSocketMessage
     public void onMessage(byte[] buffer, int offset, int length) {
-        if (!authenticated || uuid == null) return; //make sure they signed in
+        if (connection == null || !connection.isAuthenticated()) {
+            SvgCore.getLogger().debug("WebSocket: Dropping pre-auth binary frame bytes=" + length);
+            return;
+        }
 
-        if (audioSender != null) { //make sure the sender is not null
-            audioSender.sendOpus(Arrays.copyOfRange(buffer, offset, offset + length));
+        binaryFrameCount++;
+        binaryByteCount += length;
+        if (binaryFrameCount % 100 == 0) {
+            SvgCore.getLogger().debug(
+                    "WebSocket: binary stats uuid=" + connection.getUuid()
+                            + " frames=" + binaryFrameCount
+                            + " bytes=" + binaryByteCount
+            );
+        }
+
+        if (connection.getAudioSender() != null) {
+            connection.getAudioSender().sendOpus(Arrays.copyOfRange(buffer, offset, offset + length));
+        } else {
+            SvgCore.getLogger().debug("WebSocket: audioSender is null for uuid=" + connection.getUuid() + ", dropping binary frame");
         }
     }
 
     /**
-     * What to do when the websocket closes
-     * @param statusCode code of how it exited
-     * @param reason why the websocket closed
+     * Runs to close everything when websocket closes
+     * @param statusCode code
+     * @param reason why it closed
      */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
-        if (uuid != null) { //make sure the uuid for the session is not null, needed to close senders/listeners
-            String username = SvgCore.getPasswordManager().getUsername(uuid);
-            String displayName = (username != null) ? username : uuid.toString();
-            SvgCore.getLogger().info("[WebSocket] WebSocket for " + displayName + " closed: " + statusCode + " - " + reason);
+        SvgCore.getLogger().debug(
+                "WebSocket: Session close status=" + statusCode
+                        + " reason=" + reason
+                        + " authenticated=" + (connection != null && connection.isAuthenticated())
+                        + " controlMessages=" + controlMessageCount
+                        + " binaryFrames=" + binaryFrameCount
+                        + " transport=" + (audioNegotiation == null ? "n/a" : audioNegotiation.summary())
+        );
 
-            SvgCore.getBridge().unregisterAudioSender(uuid);
-            SvgCore.getBridge().unregisterAudioListener(uuid);
+        if (connection != null) {
+            SvgCore.getLogger().info(
+                    "[WebSocket] Closed for "
+                            + connection.getPlayer().getName()
+                            + ": "
+                            + statusCode
+                            + " - "
+                            + reason
+            );
+
+            connection.disconnect(statusCode, reason);
+            connectionManager.remove(connection);
         } else {
-            SvgCore.getLogger().warning("[WebSocket] Disconnected: unknown client for " + reason + ".");
+            SvgCore.getLogger().info("[WebSocket] Closed unknown session: " + reason);
         }
-        SvgCore.getWsManager().removeClient(uuid, session);
     }
 
     /**
-     * What to do on a websocket error
-     * @param error the error thrown
+     * What to do on an error
+     * @param error error thrown
      */
     @OnWebSocketError
     public void onError(Throwable error) {
-        SvgCore.debug("WebSocket", "websocket error", error);
+        if (error instanceof WebSocketException) {
+            SvgCore.getLogger().debug("Websocket Timeout: " + error.getMessage());
+        }
+
+        SvgCore.getLogger().debug("WebSocket: websocket error", error);
         SvgCore.getLogger().info("Error: " + error.getMessage());
     }
 
     private void join(@NonNull JSONObject json) {
-        PlayerVcPswd playerVcPswd = SvgCore.getPasswordManager();
-        String username = json.optString("username", "").trim();
-        String password = json.optString("password", "");
-        String authKey = username.toLowerCase(Locale.ROOT);
-
-        if (username.isEmpty()) {
-            closeOnError("Username required.", false);
+        if (!checkClientBuild(json)) {
             return;
         }
 
-        if (!AUTH_RATE_LIMITER.allow(authKey)) {
-            closeOnError("Too many failed login attempts. Reset your password in-game with /svg pswd [password].",
+        if (connection != null) {
+            connection.sendError("Already authenticated.", false);
+            return;
+        }
+
+        String username = json.optString("username", "").trim();
+        String password = json.optString("password", "");
+
+        AuthResponse response = AUTHENTICATOR.authenticate(username, password);
+
+        if (!response.success()) {
+            sendRaw(
+                    ConnectionStates.MessageType.ERROR,
+                    "Authentication failed: " + response.message(),
                     false
             );
             return;
         }
 
-        UUID storedUuid = playerVcPswd.getUUID(username);
+        this.connection = connectionManager.connect(session, response.player(), audioNegotiation);
 
-        // Generic auth failure message
-        if (storedUuid == null ||
-                !playerVcPswd.isPasswordSet(username) ||
-                !playerVcPswd.validatePassword(username, password)) {
+        try {
+            connection.authenticate();
+        } catch (Exception e) {
+            SvgCore.getLogger().debug("WebSocket: Failed to authenticate voice connection", e);
 
-            AUTH_RATE_LIMITER.recordFailure(authKey);
-
-            closeOnError("Access Denied: Invalid username or password.", false);
-            return;
-        }
-
-        Boolean bedrock = GeyserHook.isBedrock(storedUuid);
-        boolean bedrockRequired = SvgCore.getConfig().REQUIRE_BEDROCK.get();
-
-        if (bedrock == null) {
-            if (bedrockRequired) {
-                SvgCore.getLogger().warning(
-                        "Unable to enforce: client.requireBedrock. Please install floodgate or geyser"
-                );
-            }
-        } else if (!bedrock && bedrockRequired) {
-            AUTH_RATE_LIMITER.recordFailure(authKey);
-
-            closeOnError("Access Denied: You must be a Bedrock player to join!", false);
-            return;
-        }
-
-        // Move uuid assignment until AFTER validation succeeds
-        this.uuid = storedUuid;
-
-        if (!SvgCore.getWsManager().addClient(uuid, this.session)) {
-            AUTH_RATE_LIMITER.recordFailure(authKey);
-
-            closeOnError("Access Denied: Failed to Join.", false);
-            return;
-        }
-
-        this.player = SvgCore.getPlayerManager().getPlayer(uuid);
-
-        if (player == null) {
-            closeOnError("Timeout: You didn’t join the server in time.", false);
-            return;
-        }
-
-        if (!player.hasPermission("svg.vc.join")) {
-            closeOnError("Access Denied. You may have been banned from vc.", true);
-            return;
-        }
-
-        VoicechatConnection connection =
-                SvgCore.getBridge().getVcServerApi().getConnectionOf(uuid);
-
-        if (connection == null || connection.isInstalled()) {
-            closeOnError("Access Denied: Can't Join server with mod installed or Connection is Null", false);
-            return;
-        }
-
-        if (SvgCore.getConfig().DEFAULT_GROUP_ENABLED.get()) {
-            String gPswd = SvgCore.getConfig().DEFAULT_GROUP_PASSWORD.get();
-
-            SvgCore.getGroupManager().createGroup(
-                    player, "Svg", gPswd, Group.Type.OPEN, false, true
+            connection.sendFatal(
+                    "Failed to initialize voice chat.",
+                    ConnectionStates.DisconnectCodes.FATAL_ERROR.getCode(),
+                    "voice_init_failure"
             );
+            return;
         }
 
-        SvgCore.getBridge().registerAudioListener(uuid, session);
-        this.audioSender = SvgCore.getBridge().registerAudioSender(uuid);
+        VoicechatConnection vcConnection = SvgCore.getBridge().getVcServerApi().getConnectionOf(response.uuid());
+        if (SvgCore.getConfig().DEFAULT_GROUP_ENABLED.get() && vcConnection != null) {
+            boolean forceDefaultGroup = SvgCore.getConfig().DEFAULT_GROUP_FORCE_ON_WEB_JOIN.get();
+            boolean alreadyInGroup = vcConnection.isInGroup() && vcConnection.getGroup() != null;
 
-        authenticated = true;
-        AUTH_RATE_LIMITER.reset(authKey);
+            if (!alreadyInGroup || forceDefaultGroup) {
+                SvgCore.getGroupManager().createGroup(
+                        response.player(),
+                        "Svg",
+                        SvgCore.getConfig().DEFAULT_GROUP_PASSWORD.get(),
+                        Group.Type.OPEN,
+                        false,
+                        true
+                );
+            } else {
+                SvgCore.getLogger().debug("WebSocket: Preserving existing group for " + response.uuid() + " on web join");
+            }
+        }
 
-        sendMessage("status", "Connected as " + username + ".", false);
+        connection.sendMessage(
+                ConnectionStates.MessageType.STATUS,
+                "Connected as " + connection.getPlayer().getName() + ".",
+                false
+        );
 
-        SvgCore.getLogger().info("[WebSocket] " + username + " joined with UUID: " + uuid);
+        SvgCore.getLogger().info("[WebSocket] " + connection.getPlayer().getName() + " authenticated.");
     }
 
-    private void chat(JSONObject json) {
-        String chatMessage = json.optString("message", "").trim();
-        if (!authenticated) { //if they are signed in
-            sendMessage("error", "Access Denied: You must be authenticated.", false);
+    private boolean checkClientBuild(JSONObject json) {
+
+        String clientBuild = json.optString("build", "");
+
+        if (clientBuild.isEmpty()) {
+            sendRaw(
+                    ConnectionStates.MessageType.ERROR,
+                    "Client missing build id. Update required.",
+                    false
+            );
+            closeUpdateRequired();
+            return false;
+        }
+
+        if (!SvgCore.BUILD_ID.equals(clientBuild)) {
+            sendRaw(
+                    ConnectionStates.MessageType.ERROR,
+                    "Outdated client. Please refresh.",
+                    false
+            );
+
+            closeUpdateRequired();
+            return false;
+        }
+
+        return true;
+    }
+
+    private void closeUpdateRequired() {
+        if (session == null || !session.isOpen()) return;
+
+        try {
+            session.close(ConnectionStates.DisconnectCodes.OUTDATED_CLIENT.getCode(), "update_required");
+        } catch (Exception ignored) {}
+    }
+
+    private void capabilities(JSONObject json) {
+        JSONObject audio = json.optJSONObject("audio");
+        if (audio == null) {
+            sendRaw(ConnectionStates.MessageType.ERROR, "Invalid capabilities payload.", false);
             return;
         }
 
-        if (!chatMessage.isEmpty()) {
-            String savedName = SvgCore.getPasswordManager().getUsername(uuid);
-            String displayName = (player != null) ? player.getName() :
-                    savedName != null ? savedName : uuid.toString();
-
-            if (player != null) {
-                sendMessage("chat", "You: " + chatMessage, false);
-                player.chat("[Web Chat] " + displayName + ": " + SvgColor.BLUE + chatMessage);
-            } else {
-                sendMessage("error", "You are Not in Game. Sent message", false);
-                for (SvgPlayer p : SvgCore.getPlayerManager().getAllPlayers()) {
-                    p.sendMessage("[Web Chat] " + displayName + ": " + SvgColor.BLUE + chatMessage);
+        JSONArray protocols = audio.optJSONArray("protocols");
+        boolean supportsLegacy = true;
+        boolean supportsSvgV2 = false;
+        if (protocols != null) {
+            supportsLegacy = false;
+            for (int i = 0; i < protocols.length(); i++) {
+                String protocol = String.valueOf(protocols.opt(i)).trim().toLowerCase(Locale.ROOT);
+                if ("legacy".equals(protocol)) {
+                    supportsLegacy = true;
+                } else if ("svg-v2".equals(protocol) || "svg_v2".equals(protocol) || "v2".equals(protocol)) {
+                    supportsSvgV2 = true;
                 }
             }
         }
+
+        JSONObject decoder = audio.optJSONObject("decoder");
+        boolean wasm = decoder != null && decoder.optBoolean("opusWasm", false);
+        boolean webCodecs = decoder != null && decoder.optBoolean("webCodecs", false);
+        boolean supportsOpusDecoder = wasm || webCodecs || audio.optBoolean("supportsOpusDecoder", false);
+        boolean secureContext = audio.optBoolean("secureContext", false);
+
+        if (audioNegotiation == null) {
+            AudioTransportPreference preference = AudioTransportPreference.fromConfig(
+                    SvgCore.getConfig().AUDIO_TRANSPORT_MODE.get()
+            );
+            boolean allowLegacyFallback = Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_ALLOW_LEGACY_FALLBACK.get());
+            audioNegotiation = new AudioSessionNegotiation(preference, allowLegacyFallback);
+        }
+
+        audioNegotiation.updateClientCapabilities(
+                supportsLegacy,
+                supportsSvgV2,
+                supportsOpusDecoder,
+                secureContext
+        );
+
+        AudioTransportMode selected = audioNegotiation.getSelectedMode();
+        JSONObject ack = new JSONObject();
+        ack.put("type", "capabilities_ack");
+        ack.put("selectedMode", selected == AudioTransportMode.SVG_V2 ? "svg-v2" : "legacy");
+        ack.put("fallbackCount", audioNegotiation.getFallbackCount());
+
+        try {
+            session.getRemote().sendString(ack.toString());
+        } catch (IOException e) {
+            SvgCore.getLogger().debug("WebSocket: Failed to send capabilities ack", e);
+        }
+
+        SvgCore.getLogger().debug(
+                "WebSocket: Capabilities #" + capabilityMessageCount
+                        + " uuid=" + (connection == null ? "pending" : connection.getUuid())
+                        + " legacy=" + supportsLegacy
+                        + " svgV2=" + supportsSvgV2
+                        + " opusDecoder=" + supportsOpusDecoder
+                        + " secure=" + secureContext
+                        + " selected=" + selected.name().toLowerCase(Locale.ROOT)
+        );
     }
 
-    private void sendMessage(String type, String message, boolean log) {
-        sendMessage(type, message, log, false);
+    private void chat(JSONObject json) {
+        if (connection == null || !connection.isAuthenticated()) {
+            sendRaw(ConnectionStates.MessageType.ERROR,
+                    "Access Denied: Not authenticated.", false
+            );
+            return;
+        }
+
+        SanitizedChat sanitized = sanitizeChatMessage(json.optString("message", ""));
+        SvgCore.getLogger().debug(
+                "WebChat: uuid=" + connection.getUuid()
+                        + " originalLen=" + sanitized.originalLength
+                        + " sanitizedLen=" + sanitized.sanitized.length()
+                        + " removed=" + sanitized.removedCount
+                        + " truncated=" + sanitized.truncated
+                        + " dropped=" + sanitized.sanitized.isEmpty()
+        );
+
+        if (sanitized.sanitized.isEmpty()) {
+            connection.sendError("Message contained unsupported characters and was not sent.", false);
+            return;
+        }
+
+        SvgPlayer player = connection.getPlayer();
+        String displayName = player != null ? player.getName() : connection.getUuid().toString();
+        String outbound = "[Web Chat] " + displayName + ": " + sanitized.sanitized;
+
+        try {
+            connection.sendChat("You: " + sanitized.sanitized);
+
+            if (player != null) {
+                player.chat(outbound);
+            } else {
+                connection.sendStatus("You are not in-game. Message was broadcast.");
+                for (SvgPlayer other : SvgCore.getPlayerManager().getAllPlayers()) {
+                    other.sendMessage(outbound);
+                }
+            }
+        } catch (Exception e) {
+            SvgCore.getLogger().debug("WebChat: Failed to forward chat for uuid=" + connection.getUuid(), e);
+            connection.sendError("Failed to send chat message safely.", false);
+        }
     }
 
-    private void sendMessage(String type, String message, boolean log, boolean fatal) {
+    private void sendRaw(ConnectionStates.MessageType type, String message, boolean fatal) {
+        if (session == null || !session.isOpen()) {
+            return;
+        }
+
         JSONObject json = new JSONObject();
         json.put("type", type);
         json.put("message", message);
         json.put("fatal", fatal);
+
         try {
             session.getRemote().sendString(json.toString());
         } catch (IOException e) {
-            SvgCore.getLogger().severe(e.toString());
-        }
-
-
-        if (player != null) {
-            player.sendMessage(SvgCore.getPrefix() + SvgColor.translateAltColorCodes('&', message));
-        }
-        if (log) {
-            SvgCore.getLogger().info("[WebSocket] " + type + ": " + uuid + ": " + message);
+            SvgCore.getLogger().debug("WebSocket: Failed to send raw packet", e);
         }
     }
 
-    private void closeOnError(String message, boolean log) {
-        sendMessage("error", message, log, true);
-        if (session != null && session.isOpen()) {
-            session.close(FATAL_CLOSE_CODE, FATAL_CLOSE_REASON);
-        }
-    }
-
-    /**
-     * Clear the user from the tracked failure list
-     * @param username username to clear
-     */
-    public static void clearAuthFailures(String username) {
-        AUTH_RATE_LIMITER.reset(username);
-    }
-
-    private static final class AuthRateLimiter {
-
-        private final int maxFailures;
-        private final long windowMillis;
-        private final long lockMillis;
-
-        private final ConcurrentHashMap<String, Entry> entries =
-                new ConcurrentHashMap<>();
-
-        private AuthRateLimiter(
-                int maxFailures,
-                Duration window,
-                Duration lockDuration
-        ) {
-            this.maxFailures = maxFailures;
-            this.windowMillis = window.toMillis();
-            this.lockMillis = lockDuration.toMillis();
+    private SanitizedChat sanitizeChatMessage(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return new SanitizedChat("", 0, false, 0);
         }
 
-        private boolean allow(String username) {
-            long now = System.currentTimeMillis();
+        int originalLength = raw.length();
+        StringBuilder sanitized = new StringBuilder(Math.min(originalLength, MAX_WEB_CHAT_LENGTH));
+        int removedCount = 0;
+        boolean truncated = false;
+        boolean prevSpace = false;
 
-            cleanupStaleEntries(now);
+        for (int i = 0; i < raw.length(); i++) {
+            char ch = raw.charAt(i);
 
-            Entry entry = entries.computeIfAbsent(
-                    username,
-                    unused -> new Entry()
-            );
-
-            synchronized (entry) {
-
-                entry.lastSeen = now;
-
-                // Lock still active
-                if (now < entry.lockUntil) {
-                    return false;
-                }
-
-                // Reset rolling window
-                if (now - entry.windowStart > windowMillis) {
-                    entry.windowStart = now;
-                    entry.failures = 0;
-                    entry.lockUntil = 0;
-                }
-
-                return true;
+            if (ch == '\r' || ch == '\n' || ch == '\t') {
+                ch = ' ';
             }
-        }
 
-        private void recordFailure(String username) {
-            long now = System.currentTimeMillis();
-
-            cleanupStaleEntries(now);
-
-            Entry entry = entries.computeIfAbsent(
-                    username,
-                    unused -> new Entry()
-            );
-
-            synchronized (entry) {
-
-                entry.lastSeen = now;
-
-                // Reset expired window
-                if (now - entry.windowStart > windowMillis) {
-                    entry.windowStart = now;
-                    entry.failures = 0;
-                    entry.lockUntil = 0;
-                }
-
-                entry.failures++;
-
-                if (entry.failures >= maxFailures) {
-
-                    entry.lockUntil = now + lockMillis;
-
-                    entry.failures = 0;
-                    entry.windowStart = now;
-
-                    SvgCore.getLogger().warning(
-                            "[WebSocket] Account temporarily locked due to repeated failed logins: "
-                                    + username
-                    );
-                }
+            if (ch == '\u00A7' || ch < 0x20 || ch == 0x7F) {
+                removedCount++;
+                continue;
             }
+
+            if (ch > 0x7E) {
+                removedCount++;
+                continue;
+            }
+
+            if (ch == ' ') {
+                if (prevSpace) {
+                    continue;
+                }
+                prevSpace = true;
+            } else {
+                prevSpace = false;
+            }
+
+            if (sanitized.length() >= MAX_WEB_CHAT_LENGTH) {
+                truncated = true;
+                break;
+            }
+
+            sanitized.append(ch);
         }
 
-        private void reset(String username) { entries.remove(username.toLowerCase(Locale.ROOT)); }
+        String result = sanitized.toString().trim();
+        return new SanitizedChat(result, originalLength, truncated, removedCount);
+    }
 
-        private void cleanupStaleEntries(long now) {
-            long maxAge = windowMillis + lockMillis;
+    private static final class SanitizedChat {
+        private final String sanitized;
+        private final int originalLength;
+        private final boolean truncated;
+        private final int removedCount;
 
-            entries.entrySet().removeIf(entry ->
-                    now - entry.getValue().lastSeen > maxAge &&
-                            now >= entry.getValue().lockUntil
-            );
-        }
-
-        private static final class Entry {
-            private long windowStart = System.currentTimeMillis();
-            private int failures = 0;
-            private long lockUntil = 0;
-            private long lastSeen = System.currentTimeMillis();
+        private SanitizedChat(String sanitized, int originalLength, boolean truncated, int removedCount) {
+            this.sanitized = sanitized;
+            this.originalLength = originalLength;
+            this.truncated = truncated;
+            this.removedCount = removedCount;
         }
     }
 }

@@ -1,6 +1,7 @@
 import {connect, disconnect, isConnected, sendChat} from "./websocket.js";
 import {
     getAudioDevices,
+    getAudioRuntime,
     setMicIndicator,
     setOutputDevice,
     setPttActiveProvider,
@@ -9,10 +10,10 @@ import {
     stopMic,
     toggleMute
 } from "./audio/audio.js";
-import {log, setLogger} from "./utils/logger.js";
+import {debug, log, setLogger} from "./utils/logger.js";
 import {createPttController} from "./ptt.js";
 
-export function initUI() {
+export function initUI(initialAudioRuntime) {
     const form = document.getElementById('joinForm');
     const logEl = document.getElementById('log');
     const statusEl = document.getElementById('status');
@@ -53,11 +54,29 @@ export function initUI() {
 
     setMicIndicator(micIndicator);
 
+    function setSelectUnavailable(select, label) {
+        select.innerHTML = "";
+        const option = document.createElement("option");
+        option.disabled = true;
+        option.selected = true;
+        option.textContent = label;
+        select.appendChild(option);
+        select.disabled = true;
+    }
+
     async function populateAudioDevices() {
-        const { microphones, speakers } = await getAudioDevices();
+        const { microphones, speakers, available, reason } = await getAudioDevices();
 
         micSelect.innerHTML = "";
         speakerSelect.innerHTML = "";
+
+        if (!available) {
+            const fallbackReason = reason || "Audio device APIs are unavailable.";
+            setSelectUnavailable(micSelect, "Microphone unavailable");
+            setSelectUnavailable(speakerSelect, "Speaker unavailable");
+            log(`[Audio] ${fallbackReason}`);
+            return;
+        }
 
         for (const mic of microphones) {
             const option = document.createElement("option");
@@ -73,6 +92,18 @@ export function initUI() {
             option.textContent =
                 speaker.label || `Speaker ${speakerSelect.options.length + 1}`;
             speakerSelect.appendChild(option);
+        }
+
+        if (microphones.length === 0) {
+            setSelectUnavailable(micSelect, "No microphones detected");
+        } else {
+            micSelect.disabled = false;
+        }
+
+        if (speakers.length === 0) {
+            setSelectUnavailable(speakerSelect, "No speakers detected");
+        } else {
+            speakerSelect.disabled = false;
         }
 
         const savedMic = localStorage.getItem("preferredMic");
@@ -97,16 +128,18 @@ export function initUI() {
             log("Failed to load audio devices.");
         });
 
-    navigator.mediaDevices.addEventListener("devicechange", () => {
-        populateAudioDevices()
-            .then(() => {
-                log("Audio device list refreshed.");
-            })
-            .catch(error => {
-                console.error(error);
-                log("Failed to refresh audio devices.");
-            });
-    });
+    if (navigator.mediaDevices && typeof navigator.mediaDevices.addEventListener === "function") {
+        navigator.mediaDevices.addEventListener("devicechange", () => {
+            populateAudioDevices()
+                .then(() => {
+                    log("Audio device list refreshed.");
+                })
+                .catch(error => {
+                    console.error(error);
+                    log("Failed to refresh audio devices.");
+                });
+        });
+    }
 
     setLogger((msg) => {
         const time = new Date().toLocaleTimeString();
@@ -163,12 +196,16 @@ export function initUI() {
                 micSelect.disabled = true;
                 speakerSelect.disabled = true;
 
-                try {
-                    await startMic(micSelect.value);
-                } catch (error) {
-                    console.error(error);
-                    log("Failed to start microphone. Check permissions/device and try again.");
-                    disconnect();
+                const runtime = getAudioRuntime();
+                if (runtime.canCaptureMic) {
+                    try {
+                        await startMic(micSelect.value);
+                    } catch (error) {
+                        console.error(error);
+                        log("Failed to start microphone. Receive/chat still available.");
+                    }
+                } else {
+                    log("[Audio] Mic capture unsupported in this browser/context. Joined in compatibility mode.");
                 }
             } else {
                 statusEl.textContent = "Disconnected";
@@ -209,8 +246,18 @@ export function initUI() {
     micSelect.addEventListener("change", async () => {
         localStorage.setItem("preferredMic", micSelect.value);
         if (isConnected()) {
+            const runtime = getAudioRuntime();
+            if (!runtime.canCaptureMic) {
+                debug("[Audio] Mic capture unavailable, cannot switch microphone.");
+                return;
+            }
             stopMic();
             await startMic(micSelect.value);
         }
     });
+
+    const runtime = initialAudioRuntime || getAudioRuntime();
+    if (runtime.degradedReason) {
+        log(`[Audio] ${runtime.degradedReason}`);
+    }
 }

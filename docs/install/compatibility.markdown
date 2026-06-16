@@ -21,34 +21,37 @@ Simple Voice Geyser uses a web-based client that relies on WebRTC. Browser suppo
 | 0.0.3-DEV | ✅      | 🚧      | ❌    |
 | 0.1.0-DEV | ✅      | ✅       | 🚧   |
 | 0.1.1     | ✅      | ✅       | 🚧   |
+| 0.1.2     | ✅      | ✅       | 🚧   |
 
 ---
 
 ## Bukkit-based Servers (Paper / Purpur / Spigot)
 
-| Version   | MC Version | Voice Chat | Geyser          | Floodgate       | Status |
-|-----------|------------|------------|-----------------|-----------------|--------|
-| 0.0.1-DEV | 1.21.8     | 2.5.27     | NONE            | NONE            | ❌      |
-| 0.0.2-DEV | 1.21.8+    | 2.6.x      | NONE            | NONE            | ❌      |
-| 0.0.3-DEV | 1.21.8+    | 2.6.x      | 2.9.0-SNAPSHOT  | 2.2.4-SNAPSHOT+ | ❌      |
-| 0.1.0-DEV | 1.20.1+    | 2.6.x      | 2.9.0-SNAPSHOT+ | 2.2.4-SNAPSHOT+ | ⚠️     |
-| 0.1.1     | 1.20.1+    | 2.6.x      | 2.9.0-SNAPSHOT+ | 2.2.4-SNAPSHOT+ | ✅      |
+| Version   | MC Version | Voice Chat | Geyser           | Floodgate       | Status |
+|-----------|------------|------------|------------------|-----------------|--------|
+| 0.0.1-DEV | 1.21.8     | 2.5.27     | NONE             | NONE            | ❌      |
+| 0.0.2-DEV | 1.21.8+    | 2.6.x      | NONE             | NONE            | ❌      |
+| 0.0.3-DEV | 1.21.8+    | 2.6.x      | 2.9.0-SNAPSHOT   | 2.2.4-SNAPSHOT+ | ❌      |
+| 0.1.0-DEV | 1.20.1+    | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | ❌      |
+| 0.1.1     | 1.20.1+    | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | ⚠️     |
+| 0.1.2     | 1.20.1+    | 2.6.x      | 2.10.0-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
 
 ### Requirements
 
 * Minecraft 1.20.1+
 * Simple Voice Chat 2.6.x+
-* GeyserMC 2.9.0-SNAPSHOT+ (Optional)
-* Floodgate (optional)
+* GeyserMC 2.10.0-SNAPSHOT+ (Optional)
+* Floodgate 2.2.5-SNAPSHOT+ (optional)
 
 ---
 
 ## Fabric
 
-| Version   | MC Version | Voice Chat | Geyser          | Floodgate       | LuckPerms             | Status |
-|-----------|------------|------------|-----------------|-----------------|-----------------------|--------|
-| 0.1.0-DEV | 1.21.11+   | 2.6.x      | 2.9.0-SNAPSHOT+ | 2.2.4-SNAPSHOT+ | compatible w/ 5.4 api | ✅      |
-| 0.1.1-DEV | 1.21.11+   | 2.6.x      | 2.9.0-SNAPSHOT+ | 2.2.4-SNAPSHOT+ | compatible w/ 5.4 api | ✅      |
+| Version   | MC Version | Voice Chat | Geyser           | Floodgate       | LuckPerms             | Status |
+|-----------|------------|------------|------------------|-----------------|-----------------------|--------|
+| 0.1.0-DEV | 1.21.11+   | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | compatible w/ 5.4 api | ❌      |
+| 0.1.1-DEV | 1.21.11+   | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | compatible w/ 5.4 api | ❌      |
+| 0.1.1-DEV | 26.1+      | 2.6.x      | 2.10.0-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.4 api | ✅      |
 
 ### Requirements
 

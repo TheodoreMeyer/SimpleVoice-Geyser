@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'java-library'
-    id 'fabric-loom' version '1.15-SNAPSHOT'
+    id 'net.fabricmc.fabric-loom' version '1.16-SNAPSHOT'
     id 'com.gradleup.shadow' version '9.4.0'
 }
 
@@ -17,10 +17,9 @@ dependencies {
     // FABRIC
     // =========================
     minecraft "com.mojang:minecraft:${project.fabric_mc_version}"
-    mappings loom.officialMojangMappings()
 
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     // =========================
     // SHARED CORE
@@ -56,9 +55,7 @@ tasks.processResources {
 tasks.shadowJar {
     mergeServiceFiles()
 
-    archiveClassifier.set("")
-
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set("") // remove "-dev-shadow"
 
     configurations = [project.configurations.shadow]
 
@@ -66,14 +63,5 @@ tasks.shadowJar {
 }
 
 tasks.jar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    dependsOn(tasks.shadowJar)
-    from {
-        zipTree(tasks.shadowJar.archiveFile.get().asFile)
-    }
-}
-
-tasks.remapJar {
- dependsOn(tasks.jar)
-    archiveClassifier.set("")
+    enabled = false
 }

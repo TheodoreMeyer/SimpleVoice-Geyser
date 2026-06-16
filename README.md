@@ -1,6 +1,7 @@
 # Simple Voice Geyser
 [![GitHub release](https://img.shields.io/github/v/release/TheodoreMeyer/SimpleVoice-Geyser?include_prereleases)](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/releases)
 [![License](https://img.shields.io/github/license/TheodoreMeyer/SimpleVoice-Geyser)](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/blob/master/LICENSE)
+[Contributors](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/blob/master/Contributors.md)
 
 **Supports:**
 - [![Spigot](https://img.shields.io/badge/Spigot-1.20.1–26.1.2-orange?logo=spigotmc&logoColor=white)](https://www.spigotmc.org/resources/132386)
@@ -34,6 +35,7 @@ A Geyser Extension to allow Bedrock Clients to connect with Simple voice Chat.
 
 ## Documentation
 - Our [wiki](https://theodoremeyer.github.io/projects/simplevoicegeyser/) can help!
+- Release-focused docs for current development changes are available in [docs](docs/README.md).
 
 - old wiki: [wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki).
 
@@ -58,10 +60,17 @@ Reach out through issues!
 
 ## Important Notes
 - Simple Voice Chat 2.6.0 or compatible is required to work, It must run on the server.
-- GeyserMC 2.9.0-SNAPSHOT or compatible is required to work, It must run on the server.
-- Java 21 or newer is required to build this project from source.
+- GeyserMC 2.10.0-SNAPSHOT
+- Java 25 or newer is required to build this project from source.
 
 - Microphone/Speaker options may or may not work, depending on your browser, as this was built for Google Chrome.
+
+## Audio Transport Migration (PR #45)
+- `server.audio.transport-mode`: `auto` (default), `legacy`, `svg-v2`
+- `server.audio.allow-legacy-fallback`: `true` (default during migration)
+
+`auto` keeps compatibility by defaulting to legacy PCM transport when client capabilities are missing or unsupported, and uses `svg-v2` only when the client reports compatible decoder support.
+See [Audio Transport](docs/0.1.2/audio-transport.md) for current transport and fallback behavior.
 
 ## Developer Notes
 - Please see the contributing.md before contributing to this project.

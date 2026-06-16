@@ -100,7 +100,6 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
         String sub = args[0].toLowerCase();
 
         return switch (sub) {
-            case "pswd" -> Collections.emptyList();
             case "cgroup" -> suggestCreateGroup(args);
             default -> Collections.emptyList();
         };

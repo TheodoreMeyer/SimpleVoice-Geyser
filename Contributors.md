@@ -1,0 +1,6 @@
+- [TheodoreMeyer](https://github.com/theodoremeyer): Head of Project
+- [pbarrera813](https://github.com/pbarrera813): Contributor
+- [supergamer66000](https://github.com/supergamer66000): Contributor
+- [SzaBee13](https://github.com/SzaBee13): Contributor
+- [cat-cat2](https://github.com/cat-cat2): Contributor
+- [ck5414](https://github.com/ck5414): Contributor

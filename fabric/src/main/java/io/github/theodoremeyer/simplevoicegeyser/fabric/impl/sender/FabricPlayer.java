@@ -32,6 +32,7 @@ public class FabricPlayer extends SvgPlayer {
         }
     }
 
+    @SuppressWarnings("resource")
     @Override
     public void chat(String message) {
         player.level().getServer().getPlayerList().broadcastSystemMessage(

@@ -3,12 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="build-id" content="@@GIT_COMMIT@@">
     <title>SimpleVoice-Geyser</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/ptt.css">
     <link rel="icon" href="images/svg-temp.png" type="image/x-icon">
     <link rel="stylesheet" href="css/presets.css">
-    <script src="js/lang.js"></script>
+    <script src="js/utils/lang.js"></script>
 </head>
 
 <body>
@@ -82,7 +83,7 @@
                         <button id="bindPttBtn" type="button"><span class="lang" id="bindPttBtnText"></span></button>
                         <button id="clearPttBtn" type="button"><span class="lang" id="clearPttBtnText"></span></button>
                     </div>
-                    <small id="pttBindingLabel"><span class="lang" id="pttBindingDescription"></span></small>
+                    <small id="control-label"><span class="lang" id="pttBindingDescription"></span></small>
                     <label class="ptt-background-toggle">
                         <input type="checkbox" id="allowBackgroundPtt">
                         <span><span class="lang" id="allowBackgroundPttText"></span></span>
@@ -152,7 +153,8 @@
         }
     </script>
     <script type="module">
-        import { start } from '/js/client.js';
+        window.BUILD_ID = "@@GIT_COMMIT@@";
+        import { start } from './js/client.js';
         start(); // manually triggers it
     </script>
 
