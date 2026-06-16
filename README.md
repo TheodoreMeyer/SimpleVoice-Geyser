@@ -1,6 +1,7 @@
 # Simple Voice Geyser
 [![GitHub release](https://img.shields.io/github/v/release/TheodoreMeyer/SimpleVoice-Geyser?include_prereleases)](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/releases)
 [![License](https://img.shields.io/github/license/TheodoreMeyer/SimpleVoice-Geyser)](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/blob/master/LICENSE)
+[Contributors](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/blob/master/Contributors.md)
 
 **Supports:**
 - [![Spigot](https://img.shields.io/badge/Spigot-1.20.1–26.1.2-orange?logo=spigotmc&logoColor=white)](https://www.spigotmc.org/resources/132386)
@@ -59,8 +60,8 @@ Reach out through issues!
 
 ## Important Notes
 - Simple Voice Chat 2.6.0 or compatible is required to work, It must run on the server.
-- GeyserMC 2.9.0-SNAPSHOT or compatible is required to work, It must run on the server.
-- Java 21 or newer is required to build this project from source.
+- GeyserMC 2.10.0-SNAPSHOT
+- Java 25 or newer is required to build this project from source.
 
 - Microphone/Speaker options may or may not work, depending on your browser, as this was built for Google Chrome.
 

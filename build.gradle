@@ -68,6 +68,10 @@ subprojects {
             into("META-INF")
             rename { "SVG_NOTICE" }
         }
+        from(rootProject.layout.projectDirectory.file("Contributors.md")) {
+            into("META-INF")
+            rename { "SVG_CONTRIBUTORS" }
+        }
     }
 }
 
