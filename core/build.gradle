@@ -114,6 +114,11 @@ public final class BuildInfo {
      * Git commit hash used for this build.
      */
     public static final String BUILD_ID = "${gitCommit}";
+
+    /**
+    * Project version used for this build.
+    */
+    public static final String PROJECT_VERSION = "${project.version}";
 }
 """
     }

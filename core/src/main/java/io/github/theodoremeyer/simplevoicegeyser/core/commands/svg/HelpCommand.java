@@ -51,6 +51,12 @@ public final class HelpCommand implements SubCommand {
         sender.sendMessage(SvgColor.YELLOW + "/svg help "
                 + SvgColor.GRAY + "- Show this help menu");
 
+        sender.sendMessage(SvgColor.YELLOW + "/svg reload "
+                + SvgColor.GRAY + "- Reload the plugin");
+
+        sender.sendMessage(SvgColor.YELLOW + "/svg checkUpdate "
+                + SvgColor.GRAY + "- Check for a update on modrinth");
+
         return true;
     }
 }

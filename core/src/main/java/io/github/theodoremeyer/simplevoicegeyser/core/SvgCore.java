@@ -31,7 +31,7 @@ public final class SvgCore {
     /**
      * Version of the plugin.
      */
-    public static final String VERSION = "0.1.1-Dev";
+    public static final String VERSION = BuildInfo.PROJECT_VERSION;
 
     /**
      * Build Git Commit ID. Generated during Gradle Build. This is always the latest commit hash of the branch.
