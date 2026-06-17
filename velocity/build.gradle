@@ -1,0 +1,51 @@
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'com.gradleup.shadow' version '9.4.0'
+}
+
+repositories {
+    maven {
+        url = uri('https://nexus.velocitypowered.com/repository/maven-public/')
+    }
+}
+
+dependencies {
+    compileOnly("com.velocitypowered:velocity-api:${velocity_api_version}")
+    annotationProcessor("com.velocitypowered:velocity-api:${velocity_api_version}")
+
+    implementation(project(":core"))
+
+    implementation("org.json:json:20250107")
+
+    compileOnly("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
+}
+
+tasks.processResources {
+    inputs.property("version", version)
+
+    filesMatching('velocity-plugin.json') {
+        expand(
+                plugin_version: version
+        )
+    }
+}
+
+tasks.shadowJar {
+    archiveClassifier.set("")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    mergeServiceFiles()
+
+    rootProject.applySvgRelocations(delegate)
+
+    from(project(":core").sourceSets.main.output)
+}
+
+tasks.withType(Jar).configureEach {
+    archiveBaseName.set("Svg-Velocity")
+}
+
+tasks.jar {
+    enabled = false
+}
