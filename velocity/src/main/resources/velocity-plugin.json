@@ -1,0 +1,8 @@
+{
+    "id": "simplevoice-geyser",
+    "name": "SimpleVoice-Geyser",
+    "version": "${plugin_version}",
+    "description": "Plugin to allow Bedrock clients to join Simple Voice Chat.",
+    "authors": ["TheodoreMeyer"],
+    "main": "io.github.theodoremeyer.simplevoicegeyser.velocity.VelocityPlugin"
+}
