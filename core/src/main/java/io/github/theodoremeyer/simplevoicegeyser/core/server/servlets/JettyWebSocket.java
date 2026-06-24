@@ -12,6 +12,9 @@ import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.Connecti
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.SvgConnection;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.AuthResponse;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.ConnectionAuthenticator;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.compatibility.ClientCompatibilityResult;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.compatibility.ClientCompatibilityValidator;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.compatibility.ClientIdentity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
@@ -24,9 +27,6 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Locale;
 
-/**
- * Wrapper for handling the session with player
- */
 @WebSocket
 public final class JettyWebSocket {
 
@@ -50,15 +50,8 @@ public final class JettyWebSocket {
     private long capabilityMessageCount = 0;
     private AudioSessionNegotiation audioNegotiation;
 
-    /**
-     * Create an instance of the class
-     */
     public JettyWebSocket() {}
 
-    /**
-     * What to do when a player connects
-     * @param session the connected session
-     */
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
@@ -72,10 +65,6 @@ public final class JettyWebSocket {
         SvgCore.getLogger().debug("WebSocket: Session opened remote=" + session.getRemoteAddress());
     }
 
-    /**
-     * Handles string messages from client
-     * @param message message from client
-     */
     @OnWebSocketMessage
     public void onMessage(String message) {
         controlMessageCount++;
@@ -121,12 +110,6 @@ public final class JettyWebSocket {
         }
     }
 
-    /**
-     * Handles byte messages from client
-     * @param buffer byte buffer
-     * @param offset offset
-     * @param length length
-     */
     @OnWebSocketMessage
     public void onMessage(byte[] buffer, int offset, int length) {
         if (connection == null || !connection.isAuthenticated()) {
@@ -151,11 +134,6 @@ public final class JettyWebSocket {
         }
     }
 
-    /**
-     * Runs to close everything when websocket closes
-     * @param statusCode code
-     * @param reason why it closed
-     */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
         SvgCore.getLogger().debug(
@@ -184,10 +162,6 @@ public final class JettyWebSocket {
         }
     }
 
-    /**
-     * What to do on an error
-     * @param error error thrown
-     */
     @OnWebSocketError
     public void onError(Throwable error) {
         if (error instanceof WebSocketException) {
@@ -199,9 +173,24 @@ public final class JettyWebSocket {
     }
 
     private void join(@NonNull JSONObject json) {
-        if (!checkClientBuild(json)) {
+        ClientCompatibilityResult compatibility =
+                ClientCompatibilityValidator.validate(json, SvgCore.BUILD_ID);
+
+        if (!compatibility.accepted()) {
+            SvgCore.getLogger().debug(
+                    "WebSocket: Join rejected by compatibility gate reason="
+                            + compatibility.closeReason()
+            );
+            sendRaw(ConnectionStates.MessageType.ERROR, compatibility.message(), false);
+            closeCompatibilityFailure(compatibility);
             return;
         }
+
+        ClientIdentity clientIdentity = compatibility.identity();
+        SvgCore.getLogger().debug(
+                "WebSocket: Join compatibility accepted client="
+                        + clientIdentity.toLogString()
+        );
 
         if (connection != null) {
             connection.sendError("Already authenticated.", false);
@@ -222,7 +211,12 @@ public final class JettyWebSocket {
             return;
         }
 
-        this.connection = connectionManager.connect(session, response.player(), audioNegotiation);
+        this.connection = connectionManager.connect(
+                session,
+                response.player(),
+                audioNegotiation,
+                clientIdentity
+        );
 
         try {
             connection.authenticate();
@@ -265,39 +259,11 @@ public final class JettyWebSocket {
         SvgCore.getLogger().info("[WebSocket] " + connection.getPlayer().getName() + " authenticated.");
     }
 
-    private boolean checkClientBuild(JSONObject json) {
-
-        String clientBuild = json.optString("build", "");
-
-        if (clientBuild.isEmpty()) {
-            sendRaw(
-                    ConnectionStates.MessageType.ERROR,
-                    "Client missing build id. Update required.",
-                    false
-            );
-            closeUpdateRequired();
-            return false;
-        }
-
-        if (!SvgCore.BUILD_ID.equals(clientBuild)) {
-            sendRaw(
-                    ConnectionStates.MessageType.ERROR,
-                    "Outdated client. Please refresh.",
-                    false
-            );
-
-            closeUpdateRequired();
-            return false;
-        }
-
-        return true;
-    }
-
-    private void closeUpdateRequired() {
+    private void closeCompatibilityFailure(ClientCompatibilityResult compatibility) {
         if (session == null || !session.isOpen()) return;
 
         try {
-            session.close(ConnectionStates.DisconnectCodes.OUTDATED_CLIENT.getCode(), "update_required");
+            session.close(compatibility.closeCode(), compatibility.closeReason());
         } catch (Exception ignored) {}
     }
 
