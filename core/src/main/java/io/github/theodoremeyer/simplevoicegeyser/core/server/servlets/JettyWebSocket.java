@@ -20,9 +20,6 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Locale;
 
-/**
- * Wrapper for handling the session with player
- */
 @WebSocket
 public final class JettyWebSocket {
 
@@ -46,15 +43,8 @@ public final class JettyWebSocket {
     private long capabilityMessageCount = 0;
     private AudioSessionNegotiation audioNegotiation;
 
-    /**
-     * Create an instance of the class
-     */
     public JettyWebSocket() {}
 
-    /**
-     * What to do when a player connects
-     * @param session the connected session
-     */
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
@@ -68,10 +58,6 @@ public final class JettyWebSocket {
         SvgCore.getLogger().debug("WebSocket: Session opened remote=" + session.getRemoteAddress());
     }
 
-    /**
-     * Handles string messages from client
-     * @param message message from client
-     */
     @OnWebSocketMessage
     public void onMessage(String message) {
         controlMessageCount++;
@@ -101,12 +87,6 @@ public final class JettyWebSocket {
         }
     }
 
-    /**
-     * Handles byte messages from client
-     * @param buffer byte buffer
-     * @param offset offset
-     * @param length length
-     */
     @OnWebSocketMessage
     public void onMessage(byte[] buffer, int offset, int length) {
         if (connection == null || !connection.isAuthenticated()) {
@@ -131,11 +111,6 @@ public final class JettyWebSocket {
         }
     }
 
-    /**
-     * Runs to close everything when websocket closes
-     * @param statusCode code
-     * @param reason why it closed
-     */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
         SvgCore.getLogger().debug(
@@ -164,10 +139,6 @@ public final class JettyWebSocket {
         }
     }
 
-    /**
-     * What to do on an error
-     * @param error error thrown
-     */
     @OnWebSocketError
     public void onError(Throwable error) {
         if (error instanceof WebSocketException) {

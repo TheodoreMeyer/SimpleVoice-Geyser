@@ -18,6 +18,16 @@ client:
   # WARNING: Make sure off-hand-emote is disabled in Geyser to avoid conflicts.
   useEmoteForSVG: true
 
+  allowedTypes:
+
+    # default: true
+    # When true, listed client types are blocked. When false, only listed client types are allowed.
+    isBlackList: true
+
+    # default: []
+    # Client type names to use with the blacklist/whitelist mode above, for example Web or Svg-App.
+    list: []
+
 server:
 
   group:

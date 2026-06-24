@@ -10,7 +10,9 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -78,6 +80,11 @@ public class ConfigFile extends SvgFile {
             case Number n -> element = new JsonPrimitive(n);
             case Boolean b -> element = new JsonPrimitive(b);
             case Character c -> element = new JsonPrimitive(c);
+            case Iterable<?> iterable -> {
+                JsonArray array = new JsonArray();
+                iterable.forEach(item -> array.add(String.valueOf(item)));
+                element = array;
+            }
             case null -> element = JsonNull.INSTANCE;
             default -> {
                 logger.warning("Unsupported type: " + value.getClass());
@@ -116,6 +123,22 @@ public class ConfigFile extends SvgFile {
     public double getDouble(String path, double def) {
         JsonElement el = getValue(path);
         return el != null && el.isJsonPrimitive() ? el.getAsDouble() : def;
+    }
+
+    @Override
+    public List<String> getStringList(String path, List<String> def) {
+        JsonElement el = getValue(path);
+        if (el == null || !el.isJsonArray()) {
+            return def;
+        }
+
+        List<String> values = new ArrayList<>();
+        for (JsonElement value : el.getAsJsonArray()) {
+            if (value != null && value.isJsonPrimitive()) {
+                values.add(value.getAsString());
+            }
+        }
+        return values;
     }
 
     @Override
@@ -252,6 +275,10 @@ public class ConfigFile extends SvgFile {
             element = new JsonPrimitive(bool);
         } else if (value instanceof Character ch) {
             element = new JsonPrimitive(ch);
+        } else if (value instanceof Iterable<?> iterable) {
+            JsonArray array = new JsonArray();
+            iterable.forEach(item -> array.add(String.valueOf(item)));
+            element = array;
         } else {
             element = new JsonPrimitive(String.valueOf(value));
         }

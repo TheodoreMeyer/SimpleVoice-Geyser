@@ -24,6 +24,8 @@ public final class SvgConfig {
         defaults.put("client.idletimeout", 2);
         defaults.put("client.requireBedrock", false);
         defaults.put("client.useEmoteForSVG", true);
+        defaults.put("client.allowedTypes.isBlackList", true);
+        defaults.put("client.allowedTypes.list", List.of());
         defaults.put("server.group.default.enabled", true);
         defaults.put("server.group.default.password", "1a2b");
         defaults.put("server.group.default.force-on-web-join", false);
@@ -70,6 +72,12 @@ public final class SvgConfig {
 
     public final ConfigKey<Boolean> USE_EMOTE =
             new ConfigKey <>(this, "client.useEmoteForSVG", true);
+
+    public final ConfigKey<Boolean> CLIENT_ALLOWED_TYPES_BLACKLIST =
+            new ConfigKey<>(this, "client.allowedTypes.isBlackList", true);
+
+    public final ConfigKey<List<String>> CLIENT_ALLOWED_TYPES_LIST =
+            new ConfigKey<>(this, "client.allowedTypes.list", List.of());
 
     public final ConfigKey<Boolean> DEFAULT_GROUP_ENABLED =
             new ConfigKey <>(this, "server.group.default.enabled", true);
@@ -119,6 +127,8 @@ public final class SvgConfig {
             IDLE_TIMEOUT,
             REQUIRE_BEDROCK,
             USE_EMOTE,
+            CLIENT_ALLOWED_TYPES_BLACKLIST,
+            CLIENT_ALLOWED_TYPES_LIST,
             DEFAULT_GROUP_ENABLED,
             DEFAULT_GROUP_PASSWORD,
             DEFAULT_GROUP_FORCE_ON_WEB_JOIN,
