@@ -35,11 +35,14 @@
             <button type="submit" id="joinbtn"><span class="lang" id="joinBtnText"></span></button>
         </form>
     </div>
-    <!-- error is left in english cause if javascript isn't enablet it won't load the language -->
+    <!-- Added translated spanish to noscript text and moved its css into styles.css-->
     <noscript>
-        <div style="background:red; color:white; padding:10px; text-align:center; font-weight: bolder;">
+        <div class="noscript-container">
             <h2>Error:</h2>
             <p>JavaScript is required to use this application.</p>
+            <br>
+            <h2>Error:</h2>
+            <p>Se requiere JavaScript para utilizar esta aplicación.</p>
         </div>
     </noscript>
     <div id="main-vc-container">
@@ -93,8 +96,10 @@
                 <div class="control-group" id="pttControls">
                     <span class="control-label"><span class="lang" id="pttLabel"></span></span>
                     <div>
-                        <button id="pushToTalkBtn" class="pttButton" type="button"><span class="lang" id="pushToTalkBtnText"></span></button>
-                        <button id="fullscreenPttBtn" type="button"><span class="lang" id="fullscreenPttBtnText"></span></button>
+                        <button id="pushToTalkBtn" class="pttButton" type="button"><span class="lang"
+                                id="pushToTalkBtnText"></span></button>
+                        <button id="fullscreenPttBtn" type="button"><span class="lang"
+                                id="fullscreenPttBtnText"></span></button>
                     </div>
                 </div>
             </div>
@@ -118,16 +123,75 @@
         <h2><span class="lang" id="colorEditorLabel"></span></h2>
         <div id="preset-field"></div>
     </div>
-    <div style="display: flex; align-items: center; gap: 8px;">
-        <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank">
-            <img src="https://github.com/favicon.ico" alt="GitHub Link" class="githubicon">
-            <span>Theodore Meyer</span>
-        </a>
-    </div>
+    <!--Added more links and tweaked github image-->
+    <div style="margin-left: auto; margin-right: auto;">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
 
+            <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank"
+                style="display: flex; align-items: center; gap: 10px; text-decoration: none; line-height: 1;">
+                <span
+                    style="width: 25px !important; height: 25px !important; max-width: 25px !important; min-width: 25px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16"
+                        style="width: 100% !important; height: 100% !important; max-width: 100% !important; display: block;">
+                        <path
+                            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8" />
+                    </svg>
+                </span>
+                <span>Theodore Meyer</span>
+            </a>
+
+            <a href="https://www.spigotmc.org/resources/simplevoice-geyser.132386/" target="_blank"
+                style="display: flex; align-items: center; gap: 10px; text-decoration: none; line-height: 1;">
+                <span
+                    style="width: 25px !important; height: 25px !important; max-width: 25px !important; min-width: 25px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                    <img src="/images/spigot.ico" alt="spigot logo"
+                        style="width: 100% !important; height: 100% !important; max-width: 100% !important; object-fit: contain; display: block;">
+                </span>
+                <span>SimpleVoice-Geyser</span>
+            </a>
+
+            <a href="https://modrinth.com/plugin/simplevoice-geyser" target="_blank"
+                style="display: flex; align-items: center; gap: 10px; text-decoration: none; line-height: 1;">
+                <span
+                    style="width: 25px !important; height: 25px !important; max-width: 25px !important; min-width: 25px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                    <img src="/images/modrinth.ico" alt="modrinth logo"
+                        style="width: 100% !important; height: 100% !important; max-width: 100% !important; object-fit: contain; display: block;">
+                </span>
+                <span>SimpleVoice-Geyser</span>
+            </a>
+
+            <a href="https://theodoremeyer.github.io/projects/simplevoicegeyser/" target="_blank"
+                style="display: flex; align-items: center; gap: 10px; text-decoration: none; line-height: 1;">
+                <span
+                    style="width: 25px !important; height: 25px !important; max-width: 25px !important; min-width: 25px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-file-earmark-fill"
+                        viewBox="0 0 16 16"
+                        style="width: 100% !important; height: 100% !important; max-width: 100% !important; display: block;">
+                        <path
+                            d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2m5.5 1.5v2a1 1 0 0 0 1 1h2z" />
+                    </svg>
+                </span>
+                <span>Docs</span>
+            </a>
+
+        </div>
+    </div>
+    <!--bug report button-->
+    <button class="report-button" title="Click to report a bug"
+        onclick="window.open('https://github.com/TheodoreMeyer/SimpleVoice-Geyser/issues', '_blank');">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-bug"
+            viewBox="0 0 16 16">
+            <path
+                d="M4.355.522a.5.5 0 0 1 .623.333l.291.956A5 5 0 0 1 8 1c1.007 0 1.946.298 2.731.811l.29-.956a.5.5 0 1 1 .957.29l-.41 1.352A5 5 0 0 1 13 6h.5a.5.5 0 0 0 .5-.5V5a.5.5 0 0 1 1 0v.5A1.5 1.5 0 0 1 13.5 7H13v1h1.5a.5.5 0 0 1 0 1H13v1h.5a1.5 1.5 0 0 1 1.5 1.5v.5a.5.5 0 1 1-1 0v-.5a.5.5 0 0 0-.5-.5H13a5 5 0 0 1-10 0h-.5a.5.5 0 0 0-.5.5v.5a.5.5 0 1 1-1 0v-.5A1.5 1.5 0 0 1 2.5 10H3V9H1.5a.5.5 0 0 1 0-1H3V7h-.5A1.5 1.5 0 0 1 1 5.5V5a.5.5 0 0 1 1 0v.5a.5.5 0 0 0 .5.5H3c0-1.364.547-2.601 1.432-3.503l-.41-1.352a.5.5 0 0 1 .333-.623M4 7v4a4 4 0 0 0 3.5 3.97V7zm4.5 0v7.97A4 4 0 0 0 12 11V7zM12 6a4 4 0 0 0-1.334-2.982A3.98 3.98 0 0 0 8 2a3.98 3.98 0 0 0-2.667 1.018A4 4 0 0 0 4 6z" />
+        </svg>
+    </button>
+    <!--fixed when hovering over hold to talk button covering up exit full screen button-->
     <div id="pttFullscreenOverlay" aria-hidden="true">
-        <button id="pushToTalkFullscreenBtn" class="pttButton" type="button"><span class="lang" id="pushToTalkFullscreenBtnText"></span></button>
-        <button id="exitFullscreenPttBtn" type="button"><span class="lang" id="exitFullscreenPttBtnText"></span></button>
+        <button id="pushToTalkFullscreenBtn" class="pttButton" type="button"><span class="lang"
+                id="pushToTalkFullscreenBtnText"></span></button>
+        <br>
+        <button id="exitFullscreenPttBtn" type="button" style="margin-top: 5px;"><span class="lang"
+                id="exitFullscreenPttBtnText"></span></button>
     </div>
     <script>
         const availablePresets = ['default', 'dark', 'light', 'green', 'blue', 'purple', 'red', 'yellow', 'cyan', 'monochrome', 'monokai', 'orange', 'mint', 'rose'];
@@ -159,4 +223,5 @@
     </script>
 
 </body>
+
 </html>
