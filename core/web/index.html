@@ -35,7 +35,7 @@
             <button type="submit" id="joinbtn"><span class="lang" id="joinBtnText"></span></button>
         </form>
     </div>
-    <!-- error is left in english cause if javascript isn't enablet it won't load the language -->
+    <!-- error is left in english cause if JavaScript isn't enablet it won't load the language -->
     <noscript>
         <div style="background:red; color:white; padding:10px; text-align:center; font-weight: bolder;">
             <h2>Error:</h2>
@@ -99,7 +99,6 @@
                 </div>
             </div>
 
-            <!-- Add more real controls here later -->
         </div>
         <div class="controls-divider"></div>
         <div id="controls-dev">
@@ -154,8 +153,65 @@
     </script>
     <script type="module">
         window.BUILD_ID = "@@GIT_COMMIT@@";
-        import { start } from './js/client.js';
-        start(); // manually triggers it
+
+        /** @import {SvgClientOptions} from './js/types.js' */
+        import { SvgClient } from './js/client.js';
+
+        const client = new SvgClient(/** @type {SvgClientOptions} */{
+            ui: {
+                form: {
+                    formEl: document.getElementById("joinForm"),
+                    joinButton: document.getElementById("joinbtn"),
+                    statusEl: document.getElementById("status"),
+                    usernameInput: document.getElementById("username"),
+                    passwordInput: document.getElementById("password")
+                },
+                audio: {
+                    speakerSelect: document.getElementById("speaker"),
+                    micSelect: document.getElementById("mic"),
+                    muteBtn: document.getElementById("muteBtn"),
+                    micIndicator: document.getElementById("micIndicator")
+                },
+
+                ptt: {
+                    micCard: document.getElementById("micCard"),
+                    transmitModeSelect: document.getElementById("transmitModeSelect"),
+
+                    pttCard: document.getElementById("pttCard"),
+                    pttBindingControls: document.getElementById("pttBindingControls"),
+
+                    bindPttBtn: document.getElementById("bindPttBtn"),
+                    clearPttBtn: document.getElementById("clearPttBtn"),
+
+                    pttBindingLabel: document.getElementById("control-label"),
+
+                    pttControls: document.getElementById("pttControls"),
+
+                    pushToTalkBtn: document.getElementById("pushToTalkBtn"),
+                    fullscreenPttBtn: document.getElementById("fullscreenPttBtn"),
+
+                    pttFullscreenOverlay: document.getElementById("pttFullscreenOverlay"),
+
+                    pushToTalkFullscreenBtn: document.getElementById("pushToTalkFullscreenBtn"),
+                    exitFullscreenPttBtn: document.getElementById("exitFullscreenPttBtn"),
+
+                    allowBackgroundPttCheckbox:
+                        document.getElementById("allowBackgroundPtt")
+                },
+
+                dev: {
+                    devToggle: document.getElementById("devToggle"),
+                    devContent: document.getElementById("devContent")
+                }
+            },
+            chat: {
+                logEl: document.getElementById("log"),
+                inputEl: document.getElementById("msgInput"),
+                sendBtn: document.getElementById("messageButton")
+            },
+        });
+
+        await client.start();
     </script>
 
 </body>
