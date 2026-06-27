@@ -35,6 +35,9 @@ public final class SvgConfig {
         defaults.put("server.security.auth-lock-duration", 8);
         defaults.put("server.audio.transport-mode", "auto");
         defaults.put("server.audio.allow-legacy-fallback", true);
+        defaults.put("proxy.enabled", false);
+        defaults.put("proxy.shared-secret", "simplevoice-geyser-proxy-secret");
+        defaults.put("proxy.token-ttl-seconds", 120);
         defaults.put("debug", false);
         defaults.put("updatechecker.enable", true);
         defaults.put("config-version", "0.1.1-dev-migration1");
@@ -104,6 +107,15 @@ public final class SvgConfig {
     public final ConfigKey<Boolean> AUDIO_ALLOW_LEGACY_FALLBACK =
             new ConfigKey <>(this, "server.audio.allow-legacy-fallback", true);
 
+    public final ConfigKey<Boolean> PROXY_ENABLED =
+            new ConfigKey <>(this, "proxy.enabled", false);
+
+    public final ConfigKey<String> PROXY_SHARED_SECRET =
+            new ConfigKey <>(this, "proxy.shared-secret", "simplevoice-geyser-proxy-secret");
+
+    public final ConfigKey<Integer> PROXY_TOKEN_TTL_SECONDS =
+            new ConfigKey <>(this, "proxy.token-ttl-seconds", 120);
+
     public final ConfigKey<Boolean> DEBUG =
             new ConfigKey <>(this, "debug", false);
 
@@ -130,6 +142,9 @@ public final class SvgConfig {
             MAX_AUTH_FAILURES,
             AUDIO_TRANSPORT_MODE,
             AUDIO_ALLOW_LEGACY_FALLBACK,
+            PROXY_ENABLED,
+            PROXY_SHARED_SECRET,
+            PROXY_TOKEN_TTL_SECONDS,
             DEBUG,
             UPDATE_CHECKER_ENABLED,
             CONFIG_VERSION
