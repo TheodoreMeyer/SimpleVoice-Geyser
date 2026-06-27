@@ -56,6 +56,22 @@ public final class ConnectionAuthenticator {
             String username,
             String password
     ) {
+        return authenticate(username, password, null);
+    }
+
+    /**
+     * Attempts to authenticate a websocket client.
+     *
+     * @param username username
+     * @param password password
+     * @param proxyToken optional proxy-auth token
+     * @return auth response
+     */
+    public AuthResponse authenticate(
+            String username,
+            String password,
+            String proxyToken
+    ) {
 
         try {
 
@@ -69,6 +85,15 @@ public final class ConnectionAuthenticator {
             }
 
             String authKey = username.toLowerCase(Locale.ROOT);
+
+            if (proxyToken != null && !proxyToken.isBlank()) {
+                AuthResponse proxyAuth = authenticateProxy(username, proxyToken);
+                if (!proxyAuth.success()) {
+                    return proxyAuth;
+                }
+                authRateLimiter.reset(authKey);
+                return proxyAuth;
+            }
 
             if (!authRateLimiter.allow(authKey)) {
 
@@ -143,6 +168,35 @@ public final class ConnectionAuthenticator {
                     "Internal server error."
             );
         }
+    }
+
+    private AuthResponse authenticateProxy(String username, String proxyToken) {
+        String secret = SvgCore.getConfig().PROXY_SHARED_SECRET.get();
+        ProxyAuthToken.Claims claims = ProxyAuthToken.validate(proxyToken, secret);
+        if (claims == null) {
+            return AuthResponse.failure("Proxy authentication failed.");
+        }
+
+        if (!claims.username().equalsIgnoreCase(username)) {
+            return AuthResponse.failure("Proxy authentication failed.");
+        }
+
+        SvgPlayer player = SvgCore.getPlayerManager().getPlayer(claims.uuid());
+        if (player == null) {
+            return AuthResponse.failure("Timeout: You didn’t join the server in time.");
+        }
+
+        AuthResponse permissionResult = validatePermissions(player);
+        if (!permissionResult.success()) {
+            return permissionResult;
+        }
+
+        AuthResponse voiceChatResult = validateVoiceChat(claims.uuid());
+        if (!voiceChatResult.success()) {
+            return voiceChatResult;
+        }
+
+        return AuthResponse.success(claims.uuid(), player);
     }
 
     /**

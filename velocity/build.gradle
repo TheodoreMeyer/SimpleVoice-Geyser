@@ -17,6 +17,11 @@ dependencies {
     implementation(project(":core"))
 
     implementation("org.json:json:20250107")
+    implementation("org.mindrot:jbcrypt:0.4")
+    implementation("org.eclipse.jetty:jetty-server:11.0.25")
+    implementation("org.eclipse.jetty:jetty-servlet:11.0.25")
+    implementation("org.eclipse.jetty.websocket:websocket-servlet:11.0.25")
+    implementation("org.eclipse.jetty.websocket:websocket-jetty-server:11.0.25")
 
     compileOnly("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
 }

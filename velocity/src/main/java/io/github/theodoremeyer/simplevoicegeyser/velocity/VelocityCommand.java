@@ -4,76 +4,73 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.api.proxy.Player;
-import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
-import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.Sender;
-import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
-import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
+import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.data.ProxyPasswordStore;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.sender.VelocityConsole;
+import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.sender.VelocityPlayer;
 import net.kyori.adventure.text.Component;
 
 import java.util.Collections;
 import java.util.List;
 
-public class VelocityCommand implements RawCommand {
+public final class VelocityCommand implements RawCommand {
+
+    private final ProxyPasswordStore passwordStore;
+
+    public VelocityCommand(ProxyPasswordStore passwordStore) {
+        this.passwordStore = passwordStore;
+    }
 
     @Override
     public void execute(Invocation invocation) {
         CommandSource source = invocation.source();
-        String[] args = invocation.arguments().split(" ", -1);
+        String[] args = invocation.arguments().isBlank() ? new String[0] : invocation.arguments().split(" ", -1);
 
-        Sender sender;
         if (source instanceof Player player) {
-            SvgPlayer svgPlayer = SvgCore.getPlayerManager().getPlayer(player.getUniqueId());
-            if (svgPlayer == null) {
-                source.sendMessage(Component.text("Unable to find your player instance."));
-                return;
-            }
-            sender = svgPlayer;
+            VelocityPlayer svgPlayer = new VelocityPlayer(player);
+            onCommand(svgPlayer, args);
         } else if (source instanceof ConsoleCommandSource console) {
-            sender = new VelocityConsole(console);
-        } else {
-            return;
+            onCommand(new VelocityConsole(console), args);
         }
-
-        executeCore(sender, args);
     }
 
     @Override
     public List<String> suggest(Invocation invocation) {
-        String[] args = invocation.arguments().split(" ", -1);
+        String[] args = invocation.arguments().isBlank() ? new String[0] : invocation.arguments().split(" ", -1);
         if (args.length <= 1) {
-            String input = args[0];
-            List<String> subs = List.of("help", "pswd", "jgroup", "lgroup", "cgroup");
-            if (input.isEmpty()) return subs;
-            return subs.stream()
-                    .filter(s -> s.startsWith(input.toLowerCase()))
+            String input = args.length == 0 ? "" : args[0].toLowerCase();
+            return List.of("help", "pswd").stream()
+                    .filter(s -> s.startsWith(input))
                     .toList();
         }
         return Collections.emptyList();
     }
 
-    private void executeCore(Sender sender, String[] args) {
-        if (args.length == 0 || args[0].isEmpty()) {
-            SvgCore.getCommand().formOrHelp(sender);
+    private void onCommand(VelocityPlayer player, String[] args) {
+        if (args.length == 0 || args[0].isBlank() || "help".equalsIgnoreCase(args[0])) {
+            player.sendMessage("/svg pswd <password>");
             return;
         }
 
-        String sub = args[0];
-        CommandArgs parsedArgs = new CommandArgs(sub, sender);
-
-        switch (sub) {
-            case "pswd" -> {
-                if (args.length >= 2) parsedArgs.put("password", args[1]);
-            }
-            case "jgroup" -> {
-                if (args.length >= 2) parsedArgs.put("name", args[1]);
-                if (args.length >= 3) parsedArgs.put("password", args[2]);
-            }
-            case "cgroup" -> {
-                if (args.length >= 2) parsedArgs.put("name", args[1]);
-            }
+        if (!"pswd".equalsIgnoreCase(args[0])) {
+            player.sendMessage("Unknown subcommand.");
+            return;
         }
 
-        SvgCore.getCommand().execute(parsedArgs);
+        if (args.length < 2 || args[1].isBlank()) {
+            player.sendMessage("Usage: /svg pswd <password>");
+            return;
+        }
+
+        passwordStore.setPassword(player.getUniqueId(), player.getName(), args[1]);
+        player.sendMessage("Password set successfully.");
+    }
+
+    private void onCommand(VelocityConsole console, String[] args) {
+        if (args.length == 0 || args[0].isBlank() || "help".equalsIgnoreCase(args[0])) {
+            console.sendMessage("Use /svg pswd <password> from a player account.");
+            return;
+        }
+
+        console.sendMessage("This command can only be used by players.");
     }
 }

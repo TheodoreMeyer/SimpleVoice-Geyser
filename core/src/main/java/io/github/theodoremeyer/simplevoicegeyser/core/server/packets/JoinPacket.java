@@ -67,9 +67,10 @@ public final class JoinPacket implements Packet {
 
         String username = json.optString("username", "").trim();
         String password = json.optString("password", "");
+        String proxyToken = json.optString("proxyToken", "");
 
         AuthResponse response =
-                JettyWebSocket.AUTHENTICATOR.authenticate(username, password);
+                JettyWebSocket.AUTHENTICATOR.authenticate(username, password, proxyToken);
 
         if (!response.success()) {
             socket.sendRaw(
