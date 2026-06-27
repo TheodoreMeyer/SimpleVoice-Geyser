@@ -14,4 +14,4 @@ pluginManagement {
 
 rootProject.name = "SimpleVoice-Geyser"
 
-include("core", "spigot", "fabric")
+include("core", "spigot", "fabric", "velocity")

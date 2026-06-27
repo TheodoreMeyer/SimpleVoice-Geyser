@@ -1,0 +1,8 @@
+{
+    "id": "simplevoice-geyser",
+    "name": "SimpleVoice-Geyser",
+    "version": "${plugin_version}",
+    "description": "Proxy frontend for Simple Voice Geyser.",
+    "authors": ["TheodoreMeyer"],
+    "main": "io.github.theodoremeyer.simplevoicegeyser.velocity.VelocityPlugin"
+}
