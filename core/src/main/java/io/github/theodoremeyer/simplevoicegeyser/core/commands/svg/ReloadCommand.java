@@ -51,5 +51,8 @@ public class ReloadCommand implements SubCommand {
         sender.sendMessage("The reload will not update all config values used, several (like server port) require" +
                 " the server to be restarted to take effect.");
 
+        //Apply debug
+        SvgCore.getLogger().setDebug(SvgCore.getConfig().DEBUG.get());
+
     }
 }

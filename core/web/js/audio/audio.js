@@ -1,358 +1,360 @@
-import {log} from "../utils/logger.js";
+import {Logger} from "../utils/logger.js";
 
-let audioContext;
-let audioWorkletNode;
+export class SvgAudio {
 
-let micHandler = null;
+    static MIC_HOLD_MS = 120;
+    static PACKET_SIZE = 960;
+    static BUFFER_SIZE = SvgAudio.PACKET_SIZE * 20;
 
-let microphoneStream = null;
-let micNode = null;
-let micSource = null;
+    audioContext;
 
-let muted = false;
-let micActiveUntil = 0;
-const MIC_HOLD_MS = 120;
+    audioWorkletNode;
 
-const PACKET_SIZE = 960;
-const BUFFER_SIZE = 960 * 20;
+    constructor() {
+        this.micHandler = null;
+        this.microphoneStream = null;
+        this.micNode = null;
+        this.micSource = null;
+        this.muted = false;
+        this.micActiveUntil = 0;
+        this.micBuffer = new Int16Array(SvgAudio.BUFFER_SIZE);
+        this.speechBuffer = new Uint8Array(SvgAudio.BUFFER_SIZE);
+        this.writeIndex = 0;
+        this.readIndex = 0;
+        this.available = 0;
+        this.micIndicator = null;
+        this.isPttActive = () => true;
+        this.getTransmitMode = () => "voice";
 
-let micBuffer = new Int16Array(BUFFER_SIZE);
-let speechBuffer = new Uint8Array(BUFFER_SIZE);
-let writeIndex = 0;
-let readIndex = 0;
-let available = 0;
-
-let micIndicator = null;
-let isPttActive = () => true;
-let getTransmitMode = () => "voice";
-
-const audioRuntime = {
-    audioContextSupported: false,
-    workletSupported: false,
-    mediaDevicesSupported: false,
-    canCaptureMic: false,
-    canSelectOutput: false,
-    degradedReason: ""
-};
-
-function getAudioContextCtor() {
-    return window.AudioContext || window.webkitAudioContext || null;
-}
-
-function resolveAudioModuleUrl(moduleName) {
-    return new URL(moduleName, import.meta.url).href;
-}
-
-export async function initAudio() {
-    const AudioContextCtor = getAudioContextCtor();
-    audioRuntime.audioContextSupported = !!AudioContextCtor;
-    audioRuntime.mediaDevicesSupported = !!(navigator.mediaDevices
-        && typeof navigator.mediaDevices.getUserMedia === "function"
-        && typeof navigator.mediaDevices.enumerateDevices === "function");
-
-    window.audioElement = document.createElement("audio");
-    audioRuntime.canSelectOutput = !!window.audioElement?.setSinkId;
-
-    if (!AudioContextCtor) {
-        audioRuntime.degradedReason = "AudioContext is unavailable in this browser.";
-        log(`[Audio] ${audioRuntime.degradedReason}`);
-        return { ...audioRuntime };
-    }
-
-    audioContext = new AudioContextCtor({ sampleRate: 48000 });
-
-    if (audioContext.sampleRate !== 48000) {
-        console.warn("WRONG SAMPLE RATE:", audioContext.sampleRate);
-    }
-
-    audioRuntime.workletSupported = !!(audioContext.audioWorklet && typeof AudioWorkletNode !== "undefined");
-    if (!audioRuntime.workletSupported) {
-        audioRuntime.degradedReason = "AudioWorklet is unavailable, receive/mic processing is limited.";
-        log(`[Audio] ${audioRuntime.degradedReason}`);
-        audioRuntime.canCaptureMic = false;
-        audioRuntime.canSelectOutput = audioRuntime.canSelectOutput || !!audioContext.setSinkId;
-        return { ...audioRuntime };
-    }
-
-    try {
-        await audioContext.audioWorklet.addModule(resolveAudioModuleUrl("speaker.js"));
-        await audioContext.audioWorklet.addModule(resolveAudioModuleUrl("microphone.js"));
-
-        audioWorkletNode = new AudioWorkletNode(audioContext, "pcm-player", {
-            numberOfInputs: 0,
-            numberOfOutputs: 1,
-            outputChannelCount: [2]
-        });
-        audioWorkletNode.connect(audioContext.destination);
-    } catch (error) {
-        audioRuntime.degradedReason = "Failed loading audio worklets.";
-        log(`[Audio] ${audioRuntime.degradedReason}`);
-        console.error(error);
-        audioWorkletNode = null;
-    }
-
-    audioRuntime.canCaptureMic = !!audioWorkletNode && audioRuntime.mediaDevicesSupported;
-    audioRuntime.canSelectOutput = audioRuntime.canSelectOutput || !!audioContext.setSinkId;
-
-    if (!audioRuntime.canCaptureMic && !audioRuntime.degradedReason) {
-        audioRuntime.degradedReason = "Microphone capture is unavailable in this browser/context.";
-    }
-
-    return { ...audioRuntime };
-}
-
-export function setMicIndicator(el) {
-    micIndicator = el;
-}
-
-export function onMicData(handler) {
-    micHandler = handler;
-}
-
-export function setTransmitModeProvider(fn) {
-    getTransmitMode = fn;
-}
-
-export function setPttActiveProvider(fn) {
-    isPttActive = fn;
-}
-
-export async function startMic(deviceId) {
-    if (!audioRuntime.canCaptureMic || !audioContext) {
-        throw new Error("Microphone capture is not supported in this browser/context.");
-    }
-
-    await audioContext.resume();
-
-    const audioConstraints = {
-        noiseSuppression: true,
-        echoCancellation: true,
-        autoGainControl: true,
-        channelCount: 1,
-        sampleRate: 48000
-    };
-    if (deviceId) {
-        audioConstraints.deviceId = { exact: deviceId };
-    }
-
-    microphoneStream = await navigator.mediaDevices.getUserMedia({
-        audio: audioConstraints
-    });
-
-    micSource = audioContext.createMediaStreamSource(microphoneStream);
-    micNode = new AudioWorkletNode(audioContext, "mic-capture");
-
-    micSource.connect(micNode);
-    micNode.port.onmessage = handleMicMessage;
-}
-
-function handleMicMessage(event) {
-    const { samples, speech } = event.data;
-    const now = performance.now();
-    const speechValue = speech ? 1 : 0;
-
-    const mode = getTransmitMode();
-    const pttActive = isPttActive();
-
-    for (let i = 0; i < samples.length; i++) {
-        const s = Math.max(-1, Math.min(1, samples[i]));
-        micBuffer[writeIndex] = s < 0 ? s * 0x8000 : s * 0x7fff;
-        speechBuffer[writeIndex] = speechValue;
-
-        writeIndex = (writeIndex + 1) % BUFFER_SIZE;
-
-        if (available < BUFFER_SIZE) {
-            available++;
-        } else {
-            readIndex = (readIndex + 1) % BUFFER_SIZE;
-        }
-    }
-
-    if (micIndicator) {
-        if (mode === "ptt") {
-            micIndicator.classList.toggle("active", !muted && pttActive);
-        } else {
-            if (speech && !muted) {
-                micActiveUntil = now + MIC_HOLD_MS;
-            }
-            micIndicator.classList.toggle("active", now < micActiveUntil);
-        }
-    }
-
-    while (available >= PACKET_SIZE) {
-        const packet = new Int16Array(PACKET_SIZE);
-        let packetHasSpeech = false;
-
-        for (let i = 0; i < PACKET_SIZE; i++) {
-            packet[i] = micBuffer[readIndex];
-            if (speechBuffer[readIndex] !== 0) {
-                packetHasSpeech = true;
-            }
-            readIndex = (readIndex + 1) % BUFFER_SIZE;
-        }
-
-        available -= PACKET_SIZE;
-
-        if (shouldSendPacket(mode, packetHasSpeech, pttActive)) {
-            micHandler?.(packet.slice().buffer);
-        }
-    }
-}
-
-function shouldSendPacket(mode, speech, pttActive) {
-    if (muted) return false;
-    if (mode === "voice") return speech;
-    if (mode === "ptt") return pttActive;
-    return false;
-}
-
-export function stopMic() {
-    if (micNode) {
-        micNode.port.onmessage = null;
-        micNode.disconnect();
-        micNode = null;
-    }
-
-    if (micSource) {
-        micSource.disconnect();
-        micSource = null;
-    }
-
-    if (microphoneStream) {
-        microphoneStream.getTracks().forEach(t => t.stop());
-        microphoneStream = null;
-    }
-
-    writeIndex = 0;
-    readIndex = 0;
-    available = 0;
-    speechBuffer.fill(0);
-
-    if (micIndicator) {
-        micIndicator.classList.remove("active");
-    }
-}
-
-export function toggleMute() {
-    muted = !muted;
-
-    if (muted && micIndicator) {
-        micIndicator.classList.remove("active");
-    }
-
-    return muted;
-}
-
-export function playAudio(buffer) {
-    if (!audioWorkletNode) {
-        return;
-    }
-
-    if (buffer instanceof Float32Array) {
-        audioWorkletNode.port.postMessage({ type: "pcm", buffer: { samples: buffer, channels: 1 } });
-        return;
-    }
-
-    const packet = normalizeAudioPacket(buffer);
-    if (!packet) {
-        return;
-    }
-    audioWorkletNode.port.postMessage({ type: "pcm", buffer: packet });
-}
-
-export function resetAudioState() {
-    audioWorkletNode?.port.postMessage({ type: "reset" });
-
-    writeIndex = 0;
-    readIndex = 0;
-    available = 0;
-    speechBuffer.fill(0);
-}
-
-function normalizeAudioPacket(input) {
-    if (!input || typeof input !== "object") {
-        return null;
-    }
-
-    const samples = input.samples instanceof Float32Array ? input.samples : null;
-    if (!samples) {
-        return null;
-    }
-
-    const channels = Number.isFinite(input.channels) ? input.channels : 1;
-    const safeChannels = channels === 2 ? 2 : 1;
-
-    return { samples, channels: safeChannels };
-}
-
-export async function getAudioDevices() {
-    if (!audioRuntime.mediaDevicesSupported) {
-        return {
-            microphones: [],
-            speakers: [],
-            available: false,
-            reason: "Media devices are unavailable in this browser/context."
+        this.audioRuntime = {
+            audioContextSupported: false,
+            workletSupported: false,
+            mediaDevicesSupported: false,
+            canCaptureMic: false,
+            canSelectOutput: false,
+            degradedReason: ""
         };
     }
 
-    let permissionStream = null;
+    getAudioContextCtor() {
+        return window.AudioContext || window.webkitAudioContext || null;
+    }
 
-    try {
-        permissionStream = await navigator.mediaDevices.getUserMedia({
-            audio: true
+    resolveAudioModuleUrl(moduleName) {
+        return new URL(moduleName, import.meta.url).href;
+    }
+
+    async initAudio() {
+        const AudioContextCtor = this.getAudioContextCtor();
+        this.audioRuntime.audioContextSupported = !!AudioContextCtor;
+        this.audioRuntime.mediaDevicesSupported = !!(navigator.mediaDevices
+            && typeof navigator.mediaDevices.getUserMedia === "function"
+            && typeof navigator.mediaDevices.enumerateDevices === "function");
+
+        window.audioElement = document.createElement("audio");
+        this.audioRuntime.canSelectOutput = !!window.audioElement?.setSinkId;
+
+        if (!AudioContextCtor) {
+            this.audioRuntime.degradedReason = "AudioContext is unavailable in this browser.";
+            Logger.log(`[Audio] ${this.audioRuntime.degradedReason}`);
+            return { ...this.audioRuntime };
+        }
+
+        this.audioContext = new AudioContextCtor({ sampleRate: 48000 });
+
+        if (this.audioContext.sampleRate !== 48000) {
+            console.warn("WRONG SAMPLE RATE:", this.audioContext.sampleRate);
+        }
+
+        this.audioRuntime.workletSupported = !!(this.audioContext.audioWorklet && typeof AudioWorkletNode !== "undefined");
+        if (!this.audioRuntime.workletSupported) {
+            this.audioRuntime.degradedReason = "AudioWorklet is unavailable, receive/mic processing is limited.";
+            Logger.log(`[Audio] ${this.audioRuntime.degradedReason}`);
+            this.audioRuntime.canCaptureMic = false;
+            this.audioRuntime.canSelectOutput = this.audioRuntime.canSelectOutput || !!this.audioContext.setSinkId;
+            return { ...this.audioRuntime };
+        }
+
+        try {
+            await this.audioContext.audioWorklet.addModule(this.resolveAudioModuleUrl("speaker.js"));
+            await this.audioContext.audioWorklet.addModule(this.resolveAudioModuleUrl("microphone.js"));
+
+            this.audioWorkletNode = new AudioWorkletNode(this.audioContext, "pcm-player", {
+                numberOfInputs: 0,
+                numberOfOutputs: 1,
+                outputChannelCount: [2]
+            });
+            this.audioWorkletNode.connect(this.audioContext.destination);
+        } catch (error) {
+            this.audioRuntime.degradedReason = "Failed loading audio worklets.";
+            Logger.log(`[Audio] ${this.audioRuntime.degradedReason}`);
+            console.error(error);
+            this.audioWorkletNode = null;
+        }
+
+        this.audioRuntime.canCaptureMic = !!this.audioWorkletNode && this.audioRuntime.mediaDevicesSupported;
+        this.audioRuntime.canSelectOutput = this.audioRuntime.canSelectOutput || !!this.audioContext.setSinkId;
+
+        if (!this.audioRuntime.canCaptureMic && !this.audioRuntime.degradedReason) {
+            this.audioRuntime.degradedReason = "Microphone capture is unavailable in this browser/context.";
+        }
+
+        return { ...this.audioRuntime };
+    }
+
+    setMicIndicator(el) {
+        this.micIndicator = el;
+    }
+
+    onMicData(handler) {
+        this.micHandler = handler;
+    }
+
+    setTransmitModeProvider(fn) {
+        this.getTransmitMode = fn;
+    }
+
+    setPttActiveProvider(fn) {
+        this.isPttActive = fn;
+    }
+
+    async startMic(deviceId) {
+        if (!this.audioRuntime.canCaptureMic || !this.audioContext) {
+            throw new Error("Microphone capture is not supported in this browser/context.");
+        }
+
+        await this.audioContext.resume();
+
+        const audioConstraints = {
+            noiseSuppression: true,
+            echoCancellation: true,
+            autoGainControl: true,
+            channelCount: 1,
+            sampleRate: 48000
+        };
+        if (deviceId) {
+            audioConstraints.deviceId = { exact: deviceId };
+        }
+
+        this.microphoneStream = await navigator.mediaDevices.getUserMedia({
+            audio: audioConstraints
         });
 
-        const devices = await navigator.mediaDevices.enumerateDevices();
+        this.micSource = this.audioContext.createMediaStreamSource(this.microphoneStream);
+        this.micNode = new AudioWorkletNode(this.audioContext, "mic-capture");
 
-        return {
-            microphones: devices.filter(device => device.kind === "audioinput"),
-            speakers: devices.filter(device => device.kind === "audiooutput"),
-            available: true,
-            reason: ""
-        };
-    } catch (error) {
-        console.warn("Microphone permission denied:", error);
-
-        return {
-            microphones: [],
-            speakers: [],
-            available: false,
-            reason: "Microphone permission denied or unavailable."
-        };
-    } finally {
-        permissionStream?.getTracks().forEach(track => track.stop());
+        this.micSource.connect(this.micNode);
+        this.micNode.port.onmessage = (event) => this.#handleMicMessage(event);
     }
-}
 
-export async function setOutputDevice(deviceId) {
-    if (audioContext?.setSinkId) {
-        try {
-            await audioContext.setSinkId(deviceId);
-            log(`AudioContext output set to device ${deviceId}`);
-            return true;
-        } catch {
-            log("Failed to set audio context sink ID, falling back to audio element");
+    #handleMicMessage(event) {
+        const { samples, speech } = event.data;
+        const now = performance.now();
+        const speechValue = speech ? 1 : 0;
+
+        const mode = this.getTransmitMode();
+        const pttActive = this.isPttActive();
+
+        for (let i = 0; i < samples.length; i++) {
+            const s = Math.max(-1, Math.min(1, samples[i]));
+            this.micBuffer[this.writeIndex] = s < 0 ? s * 0x8000 : s * 0x7fff;
+            this.speechBuffer[this.writeIndex] = speechValue;
+
+            this.writeIndex = (this.writeIndex + 1) % SvgAudio.BUFFER_SIZE;
+
+            if (this.available < SvgAudio.BUFFER_SIZE) {
+                this.available++;
+            } else {
+                this.readIndex = (this.readIndex + 1) % SvgAudio.BUFFER_SIZE;
+            }
         }
-    } else {
-        log("AudioContext does not support setSinkId, falling back to audio element");
-    }
 
-    if (window.audioElement?.setSinkId) {
-        try {
-            await window.audioElement.setSinkId(deviceId);
-            log(`AudioElement output set to device ${deviceId}`);
-            return true;
-        } catch {
-            log("Failed to set audio context sink ID");
+        if (this.micIndicator) {
+            if (mode === "ptt") {
+                this.micIndicator.classList.toggle("active", !this.muted && pttActive);
+            } else {
+                if (speech && !this.muted) {
+                    this.micActiveUntil = now + SvgAudio.MIC_HOLD_MS;
+                }
+                this.micIndicator.classList.toggle("active", now < this.micActiveUntil);
+            }
         }
-    } else {
-        log("Audio element does not support setSinkId, cannot set output device");
+
+        while (this.available >= SvgAudio.PACKET_SIZE) {
+            const packet = new Int16Array(SvgAudio.PACKET_SIZE);
+            let packetHasSpeech = false;
+
+            for (let i = 0; i < SvgAudio.PACKET_SIZE; i++) {
+                packet[i] = this.micBuffer[this.readIndex];
+                if (this.speechBuffer[this.readIndex] !== 0) {
+                    packetHasSpeech = true;
+                }
+                this.readIndex = (this.readIndex + 1) % SvgAudio.BUFFER_SIZE;
+            }
+
+            this.available -= SvgAudio.PACKET_SIZE;
+
+            if (this.shouldSendPacket(mode, packetHasSpeech, pttActive)) {
+                this.micHandler?.(packet.slice().buffer);
+            }
+        }
     }
-    log("No method available to set audio output device");
 
-    return false;
-}
+    shouldSendPacket(mode, speech, pttActive) {
+        if (this.muted) return false;
+        if (mode === "voice") return speech;
+        if (mode === "ptt") return pttActive;
+        return false;
+    }
 
-export function getAudioRuntime() {
-    return { ...audioRuntime };
+    stopMic() {
+        if (this.micNode) {
+            this.micNode.port.onmessage = null;
+            this.micNode.disconnect();
+            this.micNode = null;
+        }
+
+        if (this.micSource) {
+            this.micSource.disconnect();
+            this.micSource = null;
+        }
+
+        if (this.microphoneStream) {
+            this.microphoneStream.getTracks().forEach(t => t.stop());
+            this.microphoneStream = null;
+        }
+
+        this.writeIndex = 0;
+        this.readIndex = 0;
+        this.available = 0;
+        this.speechBuffer.fill(0);
+
+        if (this.micIndicator) {
+            this.micIndicator.classList.remove("active");
+        }
+    }
+
+    toggleMute() {
+        this.muted = !this.muted;
+
+        if (this.muted && this.micIndicator) {
+            this.micIndicator.classList.remove("active");
+        }
+
+        return this.muted;
+    }
+
+    playAudio(buffer) {
+        if (!this.audioWorkletNode) {
+            return;
+        }
+
+        if (buffer instanceof Float32Array) {
+            this.audioWorkletNode.port.postMessage({ type: "pcm", buffer: { samples: buffer, channels: 1 } });
+            return;
+        }
+
+        const packet = this.#normalizeAudioPacket(buffer);
+        if (!packet) {
+            return;
+        }
+        this.audioWorkletNode.port.postMessage({ type: "pcm", buffer: packet });
+    }
+
+    resetAudioState() {
+        this.audioWorkletNode?.port.postMessage({ type: "reset" });
+
+        this.writeIndex = 0;
+        this.readIndex = 0;
+        this.available = 0;
+        this.speechBuffer.fill(0);
+    }
+
+    #normalizeAudioPacket(input) {
+        if (!input || typeof input !== "object") {
+            return null;
+        }
+
+        const samples = input.samples instanceof Float32Array ? input.samples : null;
+        if (!samples) {
+            return null;
+        }
+
+        const channels = Number.isFinite(input.channels) ? input.channels : 1;
+        const safeChannels = channels === 2 ? 2 : 1;
+
+        return { samples, channels: safeChannels };
+    }
+
+    async getAudioDevices() {
+        if (!this.audioRuntime.mediaDevicesSupported) {
+            return {
+                microphones: [],
+                speakers: [],
+                available: false,
+                reason: "Media devices are unavailable in this browser/context."
+            };
+        }
+
+        let permissionStream = null;
+
+        try {
+            permissionStream = await navigator.mediaDevices.getUserMedia({
+                audio: true
+            });
+
+            const devices = await navigator.mediaDevices.enumerateDevices();
+
+            return {
+                microphones: devices.filter(device => device.kind === "audioinput"),
+                speakers: devices.filter(device => device.kind === "audiooutput"),
+                available: true,
+                reason: ""
+            };
+        } catch (error) {
+            console.warn("Microphone permission denied:", error);
+
+            return {
+                microphones: [],
+                speakers: [],
+                available: false,
+                reason: "Microphone permission denied or unavailable."
+            };
+        } finally {
+            permissionStream?.getTracks().forEach(track => track.stop());
+        }
+    }
+
+    async setOutputDevice(deviceId) {
+        if (this.audioContext?.setSinkId) {
+            try {
+                await this.audioContext.setSinkId(deviceId);
+                Logger.log(`AudioContext output set to device ${deviceId}`);
+                return true;
+            } catch {
+                Logger.log("Failed to set audio context sink ID, falling back to audio element");
+            }
+        } else {
+            Logger.log("AudioContext does not support setSinkId, falling back to audio element");
+        }
+
+        if (window.audioElement?.setSinkId) {
+            try {
+                await window.audioElement.setSinkId(deviceId);
+                Logger.log(`AudioElement output set to device ${deviceId}`);
+                return true;
+            } catch {
+                Logger.log("Failed to set audio context sink ID");
+            }
+        } else {
+            Logger.log("Audio element does not support setSinkId, cannot set output device");
+        }
+        Logger.log("No method available to set audio output device");
+
+        return false;
+    }
+
+    getAudioRuntime() {
+        return { ...this.audioRuntime };
+    }
 }
