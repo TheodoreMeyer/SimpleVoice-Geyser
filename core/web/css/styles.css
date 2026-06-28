@@ -140,12 +140,10 @@ Controls
 .controls-divider {
   width: 100%;
   height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    #666,
-    transparent
-  );
+  background: linear-gradient(to right,
+      transparent,
+      #666,
+      transparent);
   margin: 5px 0;
 }
 
@@ -233,6 +231,7 @@ Controls
     opacity: 0;
     transform: translateY(-5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -401,4 +400,43 @@ a:hover {
 
 .preset-btn:active {
   transform: translateY(0) scale(0.98);
+}
+
+.noscript-container {
+  background: red;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  font-weight: bolder;
+  z-index: 9999;
+  height: 100vh;
+  width: 100vw;
+  box-sizing: border-box;
+  margin: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+}
+
+.report-button {
+  font-weight: bold;
+  color: white;
+  border-radius: 100%;
+  padding: 10px;
+  z-index: 999;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  cursor: pointer;
+}
+
+.report-button:hover {
+  background-color: #00aacc;
+  transform: scale(1.15);
+}
+
+.report-button:active {
+  background-color: #008ca8;
+  transform: scale(1.1);
 }
