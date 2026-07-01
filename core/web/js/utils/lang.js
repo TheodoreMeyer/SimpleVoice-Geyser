@@ -100,6 +100,9 @@ const langData = {
 document.addEventListener("DOMContentLoaded", () => {
     let userLang = navigator.language || navigator.userLanguage || "en";
     userLang = userLang.slice(0, 2);
+    if(!(userLang in langData)){
+        userLang = "en";
+    }
     
     document.querySelectorAll(".lang").forEach(el => {
         if (langData[userLang] && langData[userLang][el.id]) {
