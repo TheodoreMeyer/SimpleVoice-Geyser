@@ -9,6 +9,7 @@ public enum AudioTransportMode {
      * Legacy transportation mode of pure audio, no special stuff
      * @deprecated Only used for clients that don't support the new protocol, and will be removed in a future release.
      */
+    @Deprecated()
     LEGACY,
 
     /**

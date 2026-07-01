@@ -11,12 +11,14 @@ public enum AudioTransportPreference {
      * Allows both types, but prefers v2.
      * @deprecated no longer needed when LEGACY is removed
      */
+    @Deprecated
     AUTO,
 
     /**
      * Represents the old pure audio transport system, with no support for opus, panning, gain, or any of the new features.
      * @deprecated Only used for clients that don't support the new protocol, and will be removed in a future release.
      */
+    @Deprecated
     LEGACY,
 
     /**
