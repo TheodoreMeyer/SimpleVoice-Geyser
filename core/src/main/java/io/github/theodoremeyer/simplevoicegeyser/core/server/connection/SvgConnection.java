@@ -7,6 +7,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiation;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioListener;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioSender;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.AuthException;
 import org.eclipse.jetty.websocket.api.Session;
 import org.json.JSONObject;
 
@@ -44,30 +45,30 @@ public final class SvgConnection {
 
     /**
      * Authenticate the player
-     * @throws IllegalStateException if something is wrong
+     * @throws AuthException if something is wrong
      */
-    public synchronized void authenticate() throws IllegalStateException {
+    public synchronized void authenticate() throws AuthException {
         if (authenticated) {
             return;
         }
 
         VoicechatServerApi api = SvgCore.getBridge().getVcServerApi();
         if (api == null) {
-            throw new IllegalStateException("VoicechatServerApi is null");
+            throw new AuthException("VoicechatServerApi is null");
         }
 
         VoicechatConnection connection = api.getConnectionOf(uuid);
         if (connection == null) {
-            throw new IllegalStateException("VoicechatConnection is null for: " + uuid);
+            throw new AuthException("VoicechatConnection is null for: " + uuid);
         }
 
         if (connection.isInstalled()) {
-            throw new IllegalStateException("Player has Simple Voice Chat mod installed");
+            throw new AuthException("Player has Simple Voice Chat mod installed");
         }
 
         audioListener = new SvgAudioListener(uuid, session, api, audioNegotiation);
         if (!audioListener.registerListener()) {
-            throw new IllegalStateException("Failed to register audio listener for: " + uuid);
+            throw new AuthException("Failed to register audio listener for: " + uuid);
         }
 
         audioSender = new SvgAudioSender(api, uuid);

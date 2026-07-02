@@ -1,46 +1,209 @@
-import { getConnectedGamepad, getGamepadButtonName } from "./gamepad.js";
+import {getConnectedGamepad, getGamepadButtonName} from "./gamepad.js";
+import {Logger} from "./utils/logger.js";
+
+/**
+ * @import {PttElements} from "./utils/types.js"
+ */
 
 const TRANSMIT_MODE_KEY = "svgTransmitMode";
 const PTT_BINDING_KEY = "svgPttBinding";
 const ALLOW_BACKGROUND_PTT_KEY = "svgAllowBackgroundPtt";
 
-export function createPttController({ elements, log }) {
-    const {
-        micCard,
-        transmitModeSelect,
-        pttCard,
-        pttBindingControls,
-        bindPttBtn,
-        clearPttBtn,
-        pttBindingLabel,
-        pttControls,
-        pushToTalkBtn,
-        fullscreenPttBtn,
-        pttFullscreenOverlay,
-        pushToTalkFullscreenBtn,
-        exitFullscreenPttBtn,
-        allowBackgroundPttCheckbox
-    } = elements;
+export class PttController {
 
-    const logFn = typeof log === "function" ? log : () => {};
+    /**
+     * @param {PttElements} elements
+     */
+    constructor(elements) {
+        this.elements = elements;
 
-    const pttSources = new Set();
+        this.pttSources = new Set();
 
-    let bindingCaptureActive = false;
-    let muted = false;
-    let pttBinding = loadPttBinding();
-    let allowBackgroundPtt = localStorage.getItem(ALLOW_BACKGROUND_PTT_KEY) === "true";
+        this.bindingCaptureActive = false;
+        this.muted = false;
 
-    if (allowBackgroundPttCheckbox) {
-        allowBackgroundPttCheckbox.checked = allowBackgroundPtt;
-        allowBackgroundPttCheckbox.addEventListener("change", () => {
-            allowBackgroundPtt = allowBackgroundPttCheckbox.checked;
-            localStorage.setItem(ALLOW_BACKGROUND_PTT_KEY, allowBackgroundPtt ? "true" : "false");
-            logFn(`Background PTT ${allowBackgroundPtt ? "enabled" : "disabled"}.`);
-        });
+        this.pttBinding = this.#loadPttBinding();
+        this.allowBackgroundPtt = localStorage.getItem(ALLOW_BACKGROUND_PTT_KEY) === "true";
     }
 
-    function loadPttBinding() {
+    // ==================================================
+    // Public API
+    // ==================================================
+
+    init() {
+        this.elements.transmitModeSelect.value = localStorage.getItem(TRANSMIT_MODE_KEY) || "voice";
+
+        this.elements.transmitModeSelect.addEventListener("change", () => {
+            localStorage.setItem(TRANSMIT_MODE_KEY, this.#getTransmitMode());
+            this.#updateTransmitModeUi();
+        });
+
+        if (this.elements.allowBackgroundPttCheckbox) {
+            this.elements.allowBackgroundPttCheckbox.checked = this.allowBackgroundPtt;
+
+            this.elements.allowBackgroundPttCheckbox.addEventListener("change", () => {
+                this.allowBackgroundPtt = this.elements.allowBackgroundPttCheckbox.checked;
+                localStorage.setItem(ALLOW_BACKGROUND_PTT_KEY, this.allowBackgroundPtt ? "true" : "false");
+                Logger.log(`Background PTT ${this.allowBackgroundPtt ? "enabled" : "disabled"}.`);
+            });
+        }
+
+        this.elements.bindPttBtn.addEventListener("click", () => {
+            this.#setBindingCaptureState(true);
+        });
+
+        this.elements.clearPttBtn.addEventListener("click", () => {
+            this.#savePttBinding(null);
+            Logger.log("Push-to-talk binding cleared.");
+        });
+
+        this.elements.fullscreenPttBtn.addEventListener("click", () => {
+            this.#requestFullscreenPtt();
+        });
+
+        this.elements.exitFullscreenPttBtn.addEventListener("click", () => {
+            this.#exitFullscreenPtt();
+        });
+
+        this.#registerHoldButton(this.elements.pushToTalkBtn, "button");
+        this.#registerHoldButton(this.elements.pushToTalkFullscreenBtn, "fullscreen");
+
+        window.addEventListener("keydown", (event) => {
+            if (this.bindingCaptureActive) {
+                event.preventDefault();
+
+                if (event.code === "Escape") {
+                    this.#setBindingCaptureState(false);
+                    return;
+                }
+
+                this.#capturePttBinding({ type: "keyboard", code: event.code });
+                return;
+            }
+
+            if (!this.isPttMode() || !this.#bindingMatchesKeyboard(event) || event.repeat) return;
+            if (this.#isEditableTarget(event.target)) return;
+
+            event.preventDefault();
+            this.#addPttSource(`keyboard:${this.pttBinding.code}`);
+        });
+
+        window.addEventListener("keyup", (event) => {
+            if (!this.isPttMode() || !this.#bindingMatchesKeyboard(event)) return;
+
+            event.preventDefault();
+            this.#removePttSource(`keyboard:${this.pttBinding.code}`);
+        });
+
+        window.addEventListener("mousedown", (event) => {
+            if (this.bindingCaptureActive) {
+                event.preventDefault();
+                this.#capturePttBinding({ type: "mouse", button: event.button });
+                return;
+            }
+
+            if (!this.isPttMode() || !this.#bindingMatchesMouse(event)) return;
+
+            event.preventDefault();
+            this.#addPttSource(`mouse:${this.pttBinding.button}`);
+        });
+
+        window.addEventListener("mouseup", (event) => {
+            if (!this.isPttMode() || !this.#bindingMatchesMouse(event)) return;
+
+            event.preventDefault();
+            this.#removePttSource(`mouse:${this.pttBinding.button}`);
+        });
+
+        window.addEventListener("auxclick", (event) => {
+            if ((this.bindingCaptureActive || (this.isPttMode() && this.#bindingMatchesMouse(event))) && event.cancelable) {
+                event.preventDefault();
+            }
+        });
+
+        window.addEventListener("contextmenu", (event) => {
+            if ((this.bindingCaptureActive || (this.isPttMode() && this.#bindingMatchesMouse(event))) && event.cancelable) {
+                event.preventDefault();
+            }
+        });
+
+        window.addEventListener("blur", () => {
+            if (this.allowBackgroundPtt) {
+                return;
+            }
+            this.#clearPttSources();
+        });
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                if (this.allowBackgroundPtt) {
+                    return;
+                }
+                this.#clearPttSources();
+                return;
+            }
+
+            if (this.allowBackgroundPtt) {
+                // Keyboard/mouse release events are not guaranteed while unfocused.
+                this.#clearKeyboardAndMouseSources();
+            }
+        });
+
+        window.addEventListener("focus", () => {
+            if (this.allowBackgroundPtt) {
+                // Clear stale keyboard/mouse holds once focus is regained.
+                this.#clearKeyboardAndMouseSources();
+            }
+        });
+
+        document.addEventListener("fullscreenchange", () => {
+            this.#setFullscreenPtt(document.fullscreenElement === this.elements.pttFullscreenOverlay);
+        });
+
+        window.addEventListener("gamepadconnected", (event) => {
+            Logger.log(`Controller connected: ${event.gamepad.id}`);
+            this.#updatePttBindingLabel();
+        });
+
+        window.addEventListener("gamepaddisconnected", (event) => {
+            Logger.log(`Controller disconnected: ${event.gamepad.id}`);
+            this.#updatePttBindingLabel();
+        });
+
+        this.#updatePttBindingLabel();
+        this.#updateTransmitModeUi();
+        this.#updatePttButtons();
+        window.requestAnimationFrame(() => this.#pollGamepads());
+    }
+
+    isPttMode() {
+        return this.#getTransmitMode() === "ptt";
+    }
+
+    isPttActive() {
+        return !this.muted && this.pttSources.size > 0;
+    }
+
+    setMuted(value) {
+        this.muted = value;
+
+        if (this.muted) {
+            this.#clearPttSources();
+        }
+
+        this.#updatePttButtons();
+    }
+
+    reset() {
+        this.#clearPttSources();
+        this.#exitFullscreenPtt();
+    }
+
+    // ==================================================
+    // Storage
+    // ==================================================
+
+    #loadPttBinding() {
         try {
             const raw = localStorage.getItem(PTT_BINDING_KEY);
             if (!raw) return null;
@@ -58,8 +221,8 @@ export function createPttController({ elements, log }) {
         return null;
     }
 
-    function savePttBinding(binding) {
-        pttBinding = binding;
+    #savePttBinding(binding) {
+        this.pttBinding = binding;
 
         if (binding) {
             localStorage.setItem(PTT_BINDING_KEY, JSON.stringify(binding));
@@ -67,74 +230,101 @@ export function createPttController({ elements, log }) {
             localStorage.removeItem(PTT_BINDING_KEY);
         }
 
-        updatePttBindingLabel();
+        this.#updatePttBindingLabel();
     }
 
-    function getTransmitMode() {
-        return transmitModeSelect.value === "ptt" ? "ptt" : "voice";
+    // ==================================================
+    // State
+    // ==================================================
+
+    #getTransmitMode() {
+        return this.elements.transmitModeSelect.value === "ptt" ? "ptt" : "voice";
     }
 
-    function isPttMode() {
-        return getTransmitMode() === "ptt";
+    #addPttSource(sourceId) {
+        this.pttSources.add(sourceId);
+        this.#updatePttButtons();
     }
 
-    function isPttActive() {
-        return !muted && pttSources.size > 0;
+    #removePttSource(sourceId) {
+        this.pttSources.delete(sourceId);
+        this.#updatePttButtons();
     }
 
-    function addPttSource(sourceId) {
-        pttSources.add(sourceId);
-        updatePttButtons();
+    #clearPttSources() {
+        this.pttSources.clear();
+        this.#updatePttButtons();
     }
 
-    function removePttSource(sourceId) {
-        pttSources.delete(sourceId);
-        updatePttButtons();
-    }
-
-    function clearPttSources() {
-        pttSources.clear();
-        updatePttButtons();
-    }
-
-    function clearKeyboardAndMouseSources() {
+    #clearKeyboardAndMouseSources() {
         const retained = [];
-        for (const sourceId of pttSources) {
+        for (const sourceId of this.pttSources) {
             if (sourceId.startsWith("gamepad:")) {
                 retained.push(sourceId);
             }
         }
 
-        pttSources.clear();
+        this.pttSources.clear();
         for (const sourceId of retained) {
-            pttSources.add(sourceId);
+            this.pttSources.add(sourceId);
         }
 
-        updatePttButtons();
+        this.#updatePttButtons();
     }
 
-    function updatePttButtons() {
-        const active = isPttActive();
-        pushToTalkBtn.classList.toggle("active", active);
-        pushToTalkFullscreenBtn.classList.toggle("active", active);
-        pushToTalkBtn.textContent = active ? "Talking..." : "Hold to Talk";
-        pushToTalkFullscreenBtn.textContent = active ? "Talking..." : "Hold to Talk";
+    // ==================================================
+    // UI
+    // ==================================================
+
+    #updatePttButtons() {
+        const active = this.isPttActive();
+        this.elements.pushToTalkBtn.classList.toggle("active", active);
+        this.elements.pushToTalkFullscreenBtn.classList.toggle("active", active);
+        this.elements.pushToTalkBtn.textContent = active ? "Talking..." : "Hold to Talk";
+        this.elements.pushToTalkFullscreenBtn.textContent = active ? "Talking..." : "Hold to Talk";
     }
 
-    function setBindingCaptureState(active) {
-        bindingCaptureActive = active;
-        bindPttBtn.textContent = active ? "Press a key, mouse button, or controller button..." : "Bind Push-to-Talk";
-        bindPttBtn.disabled = active;
-        clearPttBtn.disabled = active;
+    #updatePttBindingLabel() {
+        this.elements.pttBindingLabel.textContent = this.#formatPttBinding(this.pttBinding);
+    }
+
+    #updateTransmitModeUi() {
+        const pttMode = this.isPttMode();
+        if (this.elements.pttCard) {
+            this.elements.pttCard.classList.toggle("dev-hidden", !pttMode);
+        }
+        if (this.elements.micCard) {
+            this.elements.micCard.classList.toggle("dev-hidden", pttMode);
+        }
+
+        this.elements.pttBindingControls.classList.toggle("dev-hidden", !pttMode);
+        this.elements.pttControls.classList.toggle("dev-hidden", !pttMode);
+        this.elements.fullscreenPttBtn.hidden = !pttMode;
+
+        if (!pttMode) {
+            this.#clearPttSources();
+            this.#exitFullscreenPtt();
+        }
+    }
+
+    #setBindingCaptureState(active) {
+        this.bindingCaptureActive = active;
+        this.elements.bindPttBtn.textContent = active ? "Press a key, mouse button, or controller button..." : "Bind Push-to-Talk";
+        this.elements.bindPttBtn.disabled = active;
+        this.elements.clearPttBtn.disabled = active;
 
         if (active) {
-            pttBindingLabel.textContent = "Waiting for input... press Escape to cancel.";
+            this.elements.pttBindingLabel.textContent = "Waiting for input... press Escape to cancel.";
         } else {
-            updatePttBindingLabel();
+            this.#updatePttBindingLabel();
         }
     }
 
-    function formatMouseButton(button) {
+    // ==================================================
+    // Formatting
+    // ==================================================
+
+    #formatMouseButton(button) {
         if (button === 0) return "Mouse Left Button";
         if (button === 1) return "Mouse Middle Button";
         if (button === 2) return "Mouse Right Button";
@@ -143,7 +333,7 @@ export function createPttController({ elements, log }) {
         return `Mouse Button ${button}`;
     }
 
-    function formatKeyboardCode(code) {
+    #formatKeyboardCode(code) {
         const aliases = {
             Space: "Space",
             Escape: "Escape",
@@ -164,17 +354,17 @@ export function createPttController({ elements, log }) {
             .replace(/([a-z])([A-Z])/g, "$1 $2");
     }
 
-    function formatPttBinding(binding) {
+    #formatPttBinding(binding) {
         if (!binding) {
             return "No binding set. Use the hold button or add a binding.";
         }
 
         if (binding.type === "keyboard") {
-            return `Bound to ${formatKeyboardCode(binding.code)}`;
+            return `Bound to ${this.#formatKeyboardCode(binding.code)}`;
         }
 
         if (binding.type === "mouse") {
-            return `Bound to ${formatMouseButton(binding.button)}`;
+            return `Bound to ${this.#formatMouseButton(binding.button)}`;
         }
 
         if (binding.type === "gamepad") {
@@ -186,32 +376,32 @@ export function createPttController({ elements, log }) {
         return "No binding set. Use the hold button or add a binding.";
     }
 
-    function updatePttBindingLabel() {
-        pttBindingLabel.textContent = formatPttBinding(pttBinding);
-    }
+    // ==================================================
+    // Fullscreen
+    // ==================================================
 
-    function setFullscreenPtt(active) {
+    #setFullscreenPtt(active) {
         document.body.classList.toggle("fullscreen-ptt-active", active);
-        pttFullscreenOverlay.classList.toggle("visible", active);
-        pttFullscreenOverlay.setAttribute("aria-hidden", active ? "false" : "true");
+        this.elements.pttFullscreenOverlay.classList.toggle("visible", active);
+        this.elements.pttFullscreenOverlay.setAttribute("aria-hidden", active ? "false" : "true");
     }
 
-    async function requestFullscreenPtt() {
-        if (!isPttMode()) return;
+    async #requestFullscreenPtt() {
+        if (!this.isPttMode()) return;
 
-        setFullscreenPtt(true);
+        this.#setFullscreenPtt(true);
 
-        if (pttFullscreenOverlay.requestFullscreen && document.fullscreenElement !== pttFullscreenOverlay) {
+        if (this.elements.pttFullscreenOverlay.requestFullscreen && document.fullscreenElement !== this.elements.pttFullscreenOverlay) {
             try {
-                await pttFullscreenOverlay.requestFullscreen();
+                await this.elements.pttFullscreenOverlay.requestFullscreen();
             } catch (error) {
                 console.warn("Fullscreen request failed:", error);
             }
         }
     }
 
-    async function exitFullscreenPtt() {
-        if (document.fullscreenElement === pttFullscreenOverlay && document.exitFullscreen) {
+    async #exitFullscreenPtt() {
+        if (document.fullscreenElement === this.elements.pttFullscreenOverlay && document.exitFullscreen) {
             try {
                 await document.exitFullscreen();
             } catch (error) {
@@ -219,29 +409,32 @@ export function createPttController({ elements, log }) {
             }
         }
 
-        setFullscreenPtt(false);
+        this.#setFullscreenPtt(false);
     }
 
-    function updateTransmitModeUi() {
-        const pttMode = isPttMode();
-        if (pttCard) {
-            pttCard.classList.toggle("dev-hidden", !pttMode);
-        }
-        if (micCard) {
-            micCard.classList.toggle("dev-hidden", pttMode);
-        }
+    // ==================================================
+    // Binding
+    // ==================================================
 
-        pttBindingControls.classList.toggle("dev-hidden", !pttMode);
-        pttControls.classList.toggle("dev-hidden", !pttMode);
-        fullscreenPttBtn.hidden = !pttMode;
-
-        if (!pttMode) {
-            clearPttSources();
-            exitFullscreenPtt();
-        }
+    #capturePttBinding(binding) {
+        this.#savePttBinding(binding);
+        this.#setBindingCaptureState(false);
+        Logger.log(`Push-to-talk binding saved: ${this.#formatPttBinding(binding)}`);
     }
 
-    function isEditableTarget(target) {
+    #bindingMatchesKeyboard(event) {
+        return this.pttBinding && this.pttBinding.type === "keyboard" && event.code === this.pttBinding.code;
+    }
+
+    #bindingMatchesMouse(event) {
+        return this.pttBinding && this.pttBinding.type === "mouse" && event.button === this.pttBinding.button;
+    }
+
+    // ==================================================
+    // Input Helpers
+    // ==================================================
+
+    #isEditableTarget(target) {
         if (!(target instanceof HTMLElement)) return false;
         if (target.isContentEditable) return true;
 
@@ -249,27 +442,13 @@ export function createPttController({ elements, log }) {
         return tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT";
     }
 
-    function bindingMatchesKeyboard(event) {
-        return pttBinding && pttBinding.type === "keyboard" && event.code === pttBinding.code;
-    }
-
-    function bindingMatchesMouse(event) {
-        return pttBinding && pttBinding.type === "mouse" && event.button === pttBinding.button;
-    }
-
-    function capturePttBinding(binding) {
-        savePttBinding(binding);
-        setBindingCaptureState(false);
-        logFn(`Push-to-talk binding saved: ${formatPttBinding(binding)}`);
-    }
-
-    function registerHoldButton(button, sourcePrefix) {
+    #registerHoldButton(button, sourcePrefix) {
         button.addEventListener("pointerdown", (event) => {
-            if (!isPttMode()) return;
+            if (!this.isPttMode()) return;
 
             event.preventDefault();
             const sourceId = `${sourcePrefix}:${event.pointerId}`;
-            addPttSource(sourceId);
+            this.#addPttSource(sourceId);
 
             if (button.setPointerCapture) {
                 button.setPointerCapture(event.pointerId);
@@ -278,7 +457,7 @@ export function createPttController({ elements, log }) {
 
         const releasePointer = (event) => {
             const sourceId = `${sourcePrefix}:${event.pointerId}`;
-            removePttSource(sourceId);
+            this.#removePttSource(sourceId);
         };
 
         button.addEventListener("pointerup", releasePointer);
@@ -287,188 +466,35 @@ export function createPttController({ elements, log }) {
         button.addEventListener("contextmenu", (event) => event.preventDefault());
     }
 
-    function pollGamepads() {
+    #pollGamepads() {
         const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
 
-        if (bindingCaptureActive) {
+        if (this.bindingCaptureActive) {
             for (const gamepad of gamepads) {
                 if (!gamepad) continue;
 
                 const pressedIndex = gamepad.buttons.findIndex((button) => button.pressed || button.value > 0.5);
                 if (pressedIndex !== -1) {
-                    capturePttBinding({ type: "gamepad", buttonIndex: pressedIndex });
+                    this.#capturePttBinding({ type: "gamepad", buttonIndex: pressedIndex });
                     break;
                 }
             }
         }
 
-        if (isPttMode() && pttBinding && pttBinding.type === "gamepad") {
+        if (this.isPttMode() && this.pttBinding && this.pttBinding.type === "gamepad") {
             for (const gamepad of gamepads) {
                 if (!gamepad) continue;
 
-                const button = gamepad.buttons[pttBinding.buttonIndex];
-                const sourceId = `gamepad:${gamepad.index}:${pttBinding.buttonIndex}`;
+                const button = gamepad.buttons[this.pttBinding.buttonIndex];
+                const sourceId = `gamepad:${gamepad.index}:${this.pttBinding.buttonIndex}`;
                 if (button && (button.pressed || button.value > 0.5)) {
-                    addPttSource(sourceId);
+                    this.#addPttSource(sourceId);
                 } else {
-                    removePttSource(sourceId);
+                    this.#removePttSource(sourceId);
                 }
             }
         }
 
-        window.requestAnimationFrame(pollGamepads);
+        window.requestAnimationFrame(() => this.#pollGamepads());
     }
-
-    function init() {
-        transmitModeSelect.value = localStorage.getItem(TRANSMIT_MODE_KEY) || "voice";
-
-        transmitModeSelect.addEventListener("change", () => {
-            localStorage.setItem(TRANSMIT_MODE_KEY, getTransmitMode());
-            updateTransmitModeUi();
-        });
-
-        bindPttBtn.addEventListener("click", () => {
-            setBindingCaptureState(true);
-        });
-
-        clearPttBtn.addEventListener("click", () => {
-            savePttBinding(null);
-            logFn("Push-to-talk binding cleared.");
-        });
-
-        fullscreenPttBtn.addEventListener("click", () => {
-            requestFullscreenPtt();
-        });
-
-        exitFullscreenPttBtn.addEventListener("click", () => {
-            exitFullscreenPtt();
-        });
-
-        registerHoldButton(pushToTalkBtn, "button");
-        registerHoldButton(pushToTalkFullscreenBtn, "fullscreen");
-
-        window.addEventListener("keydown", (event) => {
-            if (bindingCaptureActive) {
-                event.preventDefault();
-
-                if (event.code === "Escape") {
-                    setBindingCaptureState(false);
-                    return;
-                }
-
-                capturePttBinding({ type: "keyboard", code: event.code });
-                return;
-            }
-
-            if (!isPttMode() || !bindingMatchesKeyboard(event) || event.repeat) return;
-            if (isEditableTarget(event.target)) return;
-
-            event.preventDefault();
-            addPttSource(`keyboard:${pttBinding.code}`);
-        });
-
-        window.addEventListener("keyup", (event) => {
-            if (!isPttMode() || !bindingMatchesKeyboard(event)) return;
-
-            event.preventDefault();
-            removePttSource(`keyboard:${pttBinding.code}`);
-        });
-
-        window.addEventListener("mousedown", (event) => {
-            if (bindingCaptureActive) {
-                event.preventDefault();
-                capturePttBinding({ type: "mouse", button: event.button });
-                return;
-            }
-
-            if (!isPttMode() || !bindingMatchesMouse(event)) return;
-
-            event.preventDefault();
-            addPttSource(`mouse:${pttBinding.button}`);
-        });
-
-        window.addEventListener("mouseup", (event) => {
-            if (!isPttMode() || !bindingMatchesMouse(event)) return;
-
-            event.preventDefault();
-            removePttSource(`mouse:${pttBinding.button}`);
-        });
-
-        window.addEventListener("auxclick", (event) => {
-            if ((bindingCaptureActive || (isPttMode() && bindingMatchesMouse(event))) && event.cancelable) {
-                event.preventDefault();
-            }
-        });
-
-        window.addEventListener("contextmenu", (event) => {
-            if ((bindingCaptureActive || (isPttMode() && bindingMatchesMouse(event))) && event.cancelable) {
-                event.preventDefault();
-            }
-        });
-
-        window.addEventListener("blur", () => {
-            if (allowBackgroundPtt) {
-                return;
-            }
-            clearPttSources();
-        });
-
-        document.addEventListener("visibilitychange", () => {
-            if (document.hidden) {
-                if (allowBackgroundPtt) {
-                    return;
-                }
-                clearPttSources();
-                return;
-            }
-
-            if (allowBackgroundPtt) {
-                // Keyboard/mouse release events are not guaranteed while unfocused.
-                clearKeyboardAndMouseSources();
-            }
-        });
-
-        window.addEventListener("focus", () => {
-            if (allowBackgroundPtt) {
-                // Clear stale keyboard/mouse holds once focus is regained.
-                clearKeyboardAndMouseSources();
-            }
-        });
-
-        document.addEventListener("fullscreenchange", () => {
-            setFullscreenPtt(document.fullscreenElement === pttFullscreenOverlay);
-        });
-
-        window.addEventListener("gamepadconnected", (event) => {
-            logFn(`Controller connected: ${event.gamepad.id}`);
-            updatePttBindingLabel();
-        });
-
-        window.addEventListener("gamepaddisconnected", (event) => {
-            logFn(`Controller disconnected: ${event.gamepad.id}`);
-            updatePttBindingLabel();
-        });
-
-        updatePttBindingLabel();
-        updateTransmitModeUi();
-        updatePttButtons();
-        window.requestAnimationFrame(pollGamepads);
-    }
-
-    return {
-        init,
-        isPttMode,
-        isPttActive,
-        setMuted(value) {
-            muted = value;
-            if (muted) {
-                clearPttSources();
-            }
-            updatePttButtons();
-        },
-        reset() {
-            clearPttSources();
-            exitFullscreenPtt();
-        }
-    };
 }

@@ -1,18 +1,14 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.server.servlets;
 
-import de.maxhenkel.voicechat.api.Group;
-import de.maxhenkel.voicechat.api.VoicechatConnection;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
-import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiation;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioTransportMode;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioTransportPreference;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.SvgConnection;
-import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.AuthResponse;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.ConnectionAuthenticator;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.packets.PacketHandler;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import org.eclipse.jetty.websocket.api.exceptions.WebSocketException;
@@ -36,10 +32,10 @@ public final class JettyWebSocket {
     public static final ConnectionAuthenticator AUTHENTICATOR =
             new ConnectionAuthenticator();
 
-    private static final int MAX_WEB_CHAT_LENGTH = 200;
-
     private final ConnectionManager connectionManager =
             SvgCore.getConnectionManager();
+
+    private static final PacketHandler packetHandler = new PacketHandler();
 
     private Session session;
     private SvgConnection connection;
@@ -97,23 +93,7 @@ public final class JettyWebSocket {
             String type = json.getString("type");
             SvgCore.getLogger().debug("WebSocket: Control message #" + controlMessageCount + " type=" + type);
 
-            switch (type) {
-                case "join" -> {
-                    joinAttemptCount++;
-                    SvgCore.getLogger().debug("WebSocket: Join attempt #" + joinAttemptCount + " from " + session.getRemoteAddress());
-                    join(json);
-                }
-                case "chat" -> chat(json);
-                case "capabilities" -> {
-                    capabilityMessageCount++;
-                    capabilities(json);
-                }
-                default -> sendRaw(
-                        ConnectionStates.MessageType.ERROR,
-                        "Unknown message type: " + type,
-                        false
-                );
-            }
+            packetHandler.handle(this, json);
 
         } catch (Exception e) {
             SvgCore.getLogger().severe("[VCBridge] Exception: " + e.getMessage());
@@ -357,7 +337,9 @@ public final class JettyWebSocket {
             SvgCore.getLogger().debug("WebSocket: Failed to send capabilities ack", e);
         }
 
-        SvgCore.getLogger().debug(
+        SvgCore.getLogger().import java.time.Duration;
+20
+debug(
                 "WebSocket: Capabilities #" + capabilityMessageCount
                         + " uuid=" + (connection == null ? "pending" : connection.getUuid())
                         + " legacy=" + supportsLegacy
@@ -368,51 +350,9 @@ public final class JettyWebSocket {
         );
     }
 
-    private void chat(JSONObject json) {
-        if (connection == null || !connection.isAuthenticated()) {
-            sendRaw(ConnectionStates.MessageType.ERROR,
-                    "Access Denied: Not authenticated.", false
-            );
-            return;
-        }
+    //Senders
 
-        SanitizedChat sanitized = sanitizeChatMessage(json.optString("message", ""));
-        SvgCore.getLogger().debug(
-                "WebChat: uuid=" + connection.getUuid()
-                        + " originalLen=" + sanitized.originalLength
-                        + " sanitizedLen=" + sanitized.sanitized.length()
-                        + " removed=" + sanitized.removedCount
-                        + " truncated=" + sanitized.truncated
-                        + " dropped=" + sanitized.sanitized.isEmpty()
-        );
-
-        if (sanitized.sanitized.isEmpty()) {
-            connection.sendError("Message contained unsupported characters and was not sent.", false);
-            return;
-        }
-
-        SvgPlayer player = connection.getPlayer();
-        String displayName = player != null ? player.getName() : connection.getUuid().toString();
-        String outbound = "[Web Chat] " + displayName + ": " + sanitized.sanitized;
-
-        try {
-            connection.sendChat("You: " + sanitized.sanitized);
-
-            if (player != null) {
-                player.chat(outbound);
-            } else {
-                connection.sendStatus("You are not in-game. Message was broadcast.");
-                for (SvgPlayer other : SvgCore.getPlayerManager().getAllPlayers()) {
-                    other.sendMessage(outbound);
-                }
-            }
-        } catch (Exception e) {
-            SvgCore.getLogger().debug("WebChat: Failed to forward chat for uuid=" + connection.getUuid(), e);
-            connection.sendError("Failed to send chat message safely.", false);
-        }
-    }
-
-    private void sendRaw(ConnectionStates.MessageType type, String message, boolean fatal) {
+    public void sendRaw(ConnectionStates.MessageType type, String message, boolean fatal) {
         if (session == null || !session.isOpen()) {
             return;
         }
@@ -429,66 +369,54 @@ public final class JettyWebSocket {
         }
     }
 
-    private SanitizedChat sanitizeChatMessage(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return new SanitizedChat("", 0, false, 0);
+    public boolean sendJson(JSONObject json) {
+        if (session == null || !session.isOpen()) {
+            return false;
         }
 
-        int originalLength = raw.length();
-        StringBuilder sanitized = new StringBuilder(Math.min(originalLength, MAX_WEB_CHAT_LENGTH));
-        int removedCount = 0;
-        boolean truncated = false;
-        boolean prevSpace = false;
-
-        for (int i = 0; i < raw.length(); i++) {
-            char ch = raw.charAt(i);
-
-            if (ch == '\r' || ch == '\n' || ch == '\t') {
-                ch = ' ';
-            }
-
-            if (ch == '\u00A7' || ch < 0x20 || ch == 0x7F) {
-                removedCount++;
-                continue;
-            }
-
-            if (ch > 0x7E) {
-                removedCount++;
-                continue;
-            }
-
-            if (ch == ' ') {
-                if (prevSpace) {
-                    continue;
-                }
-                prevSpace = true;
-            } else {
-                prevSpace = false;
-            }
-
-            if (sanitized.length() >= MAX_WEB_CHAT_LENGTH) {
-                truncated = true;
-                break;
-            }
-
-            sanitized.append(ch);
+        try {
+            session.getRemote().sendString(json.toString());
+            return true;
+        } catch (IOException e) {
+            SvgCore.getLogger().debug("WebSocket: Failed to send JSON packet", e);
+            return false;
         }
-
-        String result = sanitized.toString().trim();
-        return new SanitizedChat(result, originalLength, truncated, removedCount);
     }
 
-    private static final class SanitizedChat {
-        private final String sanitized;
-        private final int originalLength;
-        private final boolean truncated;
-        private final int removedCount;
+    //Getters. ONLY used in packet handlers, not for external use.
+    // These should not be exposed to any outside classes.
+    public SvgConnection getConnection() {
+        return connection;
+    }
 
-        private SanitizedChat(String sanitized, int originalLength, boolean truncated, int removedCount) {
-            this.sanitized = sanitized;
-            this.originalLength = originalLength;
-            this.truncated = truncated;
-            this.removedCount = removedCount;
-        }
+    public AudioSessionNegotiation getAudioNegotiation() {
+        return audioNegotiation;
+    }
+
+    public Session getSession() {
+        return session;
+    }
+
+    public ConnectionManager getConnectionManager() {
+        return connectionManager;
+    }
+
+    public void setConnection(SvgConnection connection) {
+        this.connection = connection;
+    }
+
+    public long addJoinAttempt() {
+        ++joinAttemptCount;
+        return joinAttemptCount;
+    }
+
+    public long addCapabilityMessage() {
+        ++capabilityMessageCount;
+        return capabilityMessageCount;
+    }
+
+
+    public void setAudioNegotiation(AudioSessionNegotiation audioNegotiation) {
+        this.audioNegotiation = audioNegotiation;
     }
 }
