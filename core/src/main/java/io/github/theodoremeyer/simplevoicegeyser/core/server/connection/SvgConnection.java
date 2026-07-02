@@ -9,6 +9,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioListener;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioSender;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.AuthException;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.compatibility.ClientIdentity;
+import de.maxhenkel.voicechat.api.packets.SoundPacket;
 import org.eclipse.jetty.websocket.api.Session;
 import org.json.JSONObject;
 
@@ -65,10 +66,6 @@ public final class SvgConnection {
         }
 
         audioListener = new SvgAudioListener(uuid, session, api, audioNegotiation);
-        if (!audioListener.registerListener()) {
-            throw new AuthException("Failed to register audio listener for: " + uuid);
-        }
-
         audioSender = new SvgAudioSender(api, uuid);
         authenticated = true;
 
@@ -165,8 +162,23 @@ public final class SvgConnection {
         return authenticated;
     }
 
+    public boolean isClosed() {
+        return closed;
+    }
+
     public SvgAudioSender getAudioSender() {
         return audioSender;
+    }
+
+    public SvgAudioListener getAudioListener() {
+        return audioListener;
+    }
+
+    public void receiveVoicePacket(SoundPacket packet) {
+        if (audioListener == null) {
+            return;
+        }
+        audioListener.onAudioReceived(packet);
     }
 
     public ClientIdentity getClientIdentity() {

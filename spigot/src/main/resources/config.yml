@@ -24,9 +24,12 @@ client:
     # When true, listed client types are blocked. When false, only listed client types are allowed.
     isBlackList: true
 
-    # default: []
-    # Client type names to use with the blacklist/whitelist mode above, for example Web or Svg-App.
-    list: []
+    # default: no client types listed
+    # Client type names to use with the blacklist/whitelist mode above.
+    # Uncomment one or both entries below when using blacklist/whitelist mode.
+    list:
+      # - Web
+      # - Svg-App
 
 server:
 
