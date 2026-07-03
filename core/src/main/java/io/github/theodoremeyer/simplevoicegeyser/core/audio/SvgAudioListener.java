@@ -4,6 +4,7 @@ import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.Position;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
+import de.maxhenkel.voicechat.api.audiolistener.PlayerAudioListener;
 import de.maxhenkel.voicechat.api.opus.OpusDecoder;
 import de.maxhenkel.voicechat.api.packets.EntitySoundPacket;
 import de.maxhenkel.voicechat.api.packets.LocationalSoundPacket;
@@ -51,6 +52,7 @@ public final class SvgAudioListener {
     private final Session session;
     private final AudioSessionNegotiation negotiation;
     private final AudioByteCompiler audioByteCompiler;
+    private PlayerAudioListener registeredListener;
 
     /**
      * Create a listener
@@ -548,6 +550,22 @@ public final class SvgAudioListener {
         }
     }
 
+    public boolean registerListener() {
+        PlayerAudioListener listener = serverApi.playerAudioListenerBuilder()
+                .setPlayer(listenerId)
+                .setPacketListener(this::onAudioReceived)
+                .build();
+
+        if (serverApi.registerAudioListener(listener)) {
+            registeredListener = listener;
+            SvgCore.getLogger().info("[VCBridge] Registered audio listener for: " + listenerId);
+            return true;
+        }
+
+        SvgCore.getLogger().warning("[VCBridge] Failed to register audio listener for: " + listenerId);
+        return false;
+    }
+
     /**
      * Unregister the Listener from SVC
      */
@@ -560,6 +578,10 @@ public final class SvgAudioListener {
             synchronized (decoderLock) {
                 decoder.resetState();
                 decoder.close();
+            }
+            if (registeredListener != null) {
+                serverApi.unregisterAudioListener(registeredListener);
+                registeredListener = null;
             }
         } catch (Exception e) {
             SvgCore.getLogger().debug("AudioListener: Failed closing decoder for " + listenerId, e);

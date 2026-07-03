@@ -26,7 +26,7 @@ dependencies {
 
     testImplementation(platform("org.junit:junit-bom:5.12.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
+    testImplementation("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

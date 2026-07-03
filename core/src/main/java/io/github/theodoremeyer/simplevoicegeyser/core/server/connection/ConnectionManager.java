@@ -4,11 +4,8 @@ import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiation;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.compatibility.ClientIdentity;
-import de.maxhenkel.voicechat.api.packets.SoundPacket;
 import org.eclipse.jetty.websocket.api.Session;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,14 +55,6 @@ public final class ConnectionManager {
         return connections.get(uuid);
     }
 
-    public VoicePacketForwarder.Result forwardVoicePacket(UUID senderUuid, SoundPacket packet) {
-        List<VoicePacketForwarder.Receiver<SoundPacket>> receivers = new ArrayList<>(connections.size());
-        for (SvgConnection connection : connections.values()) {
-            receivers.add(new SvgConnectionReceiver(connection));
-        }
-        return VoicePacketForwarder.forward(senderUuid, packet, receivers);
-    }
-
     public void disconnect(UUID uuid, int code, String reason) {
         SvgConnection connection = connections.remove(uuid);
 
@@ -99,32 +88,5 @@ public final class ConnectionManager {
 
         connections.clear();
         SvgCore.getLogger().info("[ConnectionManager] Disconnected all clients");
-    }
-
-    private record SvgConnectionReceiver(SvgConnection connection) implements VoicePacketForwarder.Receiver<SoundPacket> {
-        @Override
-        public UUID uuid() {
-            return connection.getUuid();
-        }
-
-        @Override
-        public boolean authenticated() {
-            return connection.isAuthenticated();
-        }
-
-        @Override
-        public boolean closed() {
-            return connection.isClosed();
-        }
-
-        @Override
-        public boolean canReceiveVoicePacket() {
-            return connection.getAudioListener() != null;
-        }
-
-        @Override
-        public void receive(SoundPacket packet) {
-            connection.receiveVoicePacket(packet);
-        }
     }
 }
