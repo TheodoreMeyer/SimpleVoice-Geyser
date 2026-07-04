@@ -135,6 +135,7 @@ public final class SvgAudioListener {
                     );
                     packetSentSvgV2Count++;
                 } else {
+                    // TODO 0.1.3: Remove this PCM websocket path with the legacy transport.
                     short[] pcm;
                     synchronized (decoderLock) {
                         if (closed.get() || closing.get()) {

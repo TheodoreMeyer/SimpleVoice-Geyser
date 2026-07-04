@@ -27,6 +27,7 @@ public final class ClientCompatibilityValidator {
             if (join.has("client")) {
                 return INVALID_CLIENT_INFO;
             }
+            // TODO 0.1.3: Remove this browser build fallback once Web always sends clientType.serverBuild.
             return validateBrowser(join, expectedServerVersion, expectedBrowserBuild, policy, null);
         }
 

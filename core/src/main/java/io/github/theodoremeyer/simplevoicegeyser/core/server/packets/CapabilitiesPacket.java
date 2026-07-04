@@ -35,6 +35,7 @@ public final class CapabilitiesPacket implements Packet {
 
         JSONArray protocols = audio.optJSONArray("protocols");
 
+        // TODO 0.1.3: Remove legacy fallback when svg-v2 is required for supported clients.
         boolean supportsLegacy = true;
         boolean supportsSvgV2 = false;
 
