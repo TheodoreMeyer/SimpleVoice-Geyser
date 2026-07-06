@@ -109,11 +109,54 @@ server:
    # Address server binds to, use 127.0.0.1 to only connect from host device.
    # This is suggested to be changed only if you are running a proxy on the same network/device as the server to allow https/wss.
    bind-address: 0.0.0.0
+   
+   # default: /
+   # This is the context-path, or where the root of the server will be generated.
+   # Example: /svg will generate the server at https://yourdomain.com/svg/
+   context-path: /
+   
+   security:
+     
+     # default: 5
+     # This is the number of failed login attempts before the server will block the user for auth-lock-duration.
+     max-auth-failures: 5
+     
+     # default: 3
+     # How long each failure is saved for in minutes. 
+     # Example: if set to 3, and max-auth-failures is 5, auth can fail 4 times in 3 minutes before being locked out.
+     auth-fail-duration: 3
+
+     # default: 5
+     # This is the lockout in minutes when max-auth-failures has been reached.
+     auth-lock-duration: 5
+   
+   # See more at https://theodoremeyer.github.io/projects/simplevoicegeyser/0.1.2/audio-transport/
+   audio:
+     
+     # default: auto
+     # options: legacy, svg-v2, auto
+     # This is the audio transport mode, deciding how to send audio to client.
+     # legacy: uses the legacy audio transport mode, which is compatible with all clients.
+     # svg-v2: uses the new svg-v2 audio transport mode, which is only compatible with clients that support it.
+     # auto: automatically detects which audio transport mode to use based on the client capabilities.
+     # WARNING: This has been deprecated, and will be changed or removed in future releases.
+     transport-mode: auto
+     
+     # default: true
+     # Whether legacy mode is supported on your server.
+     # If transport-mode is set to svg-v2, can legacy still be used.
+     allow-legacy-fallback: true
+     
 
 # default: false
 # Debug logs
 # Do NOT use this in production. This will very quickly fill up your server logs.
 Debug: false
+
+# default: false
+# Version of server associated with config
+# DO NOT CHANGE, or config may be reset/messed up
+config-version: 0.1.2
 ```
 
 ### Important Notes
@@ -163,29 +206,17 @@ https://theodoremeyer.github.io/projects/simplevoicegeyser/upgrading/
 
 ---
 
-## Troubleshooting
-
-* Ensure all dependencies match supported versions
-* Check server logs for startup errors
-* Verify Geyser and Simple Voice Chat are functioning independently
-
-If issues persist, open an issue on the GitHub repository with:
-
-* server type (Paper / Fabric, etc.)
-* plugin versions
-* logs
-
----
-
 ## Notes
 
 * This plugin extends Simple Voice Chat; it does not replace it
 
 * It does not provide voice chat on its own
 
-* As of 0.0.2-DEV:
+* As of 0.1.2-DEV:
 
-   * Audio is not encoded
+   * Audio Security
+       * Client to server audio is not encoded
+       * Server to client audio is only encoded in Svg-v2 audio protocol
    * The server runs over HTTP by default
 
 This makes using HTTPS strongly recommended for real deployments.
