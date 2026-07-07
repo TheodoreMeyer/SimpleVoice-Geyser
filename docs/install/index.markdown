@@ -82,6 +82,10 @@ client:
    # WARNING: Make sure you have off-hand-emote turned off in geyser or there may
    #          be conflict
    useEmoteForSVG: true
+
+  # default: true
+  # Allows players using web-chat to chat in-game
+   web-chat-enabled: true
    
 updatechecker:
   enable: true
@@ -134,11 +138,10 @@ server:
    audio:
      
      # default: auto
-     # options: legacy, svg-v2, auto
+     # options: legacy, svg-v2
      # This is the audio transport mode, deciding how to send audio to client.
      # legacy: uses the legacy audio transport mode, which is compatible with all clients.
      # svg-v2: uses the new svg-v2 audio transport mode, which is only compatible with clients that support it.
-     # auto: automatically detects which audio transport mode to use based on the client capabilities.
      # WARNING: This has been deprecated, and will be changed or removed in future releases.
      transport-mode: auto
      

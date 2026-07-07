@@ -18,6 +18,15 @@ public class ChatPacket implements Packet {
     @Override
     public void handle(JettyWebSocket socket, JSONObject json) {
 
+        if (!SvgCore.getConfig().WEB_CHAT_ENABLED.get()) {
+            socket.sendRaw(
+                    ConnectionStates.MessageType.ERROR,
+                    "Web chat is disabled on this server.",
+                    false
+            );
+            return;
+        }
+
         if (socket.getConnection() == null || !socket.getConnection().isAuthenticated()) {
             socket.sendRaw(
                     ConnectionStates.MessageType.ERROR,

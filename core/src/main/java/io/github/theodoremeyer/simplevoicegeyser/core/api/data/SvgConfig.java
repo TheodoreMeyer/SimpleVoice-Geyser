@@ -71,6 +71,9 @@ public final class SvgConfig {
     public final ConfigKey<Boolean> USE_EMOTE =
             new ConfigKey <>(this, "client.useEmoteForSVG", true);
 
+    public final ConfigKey<Boolean> WEB_CHAT_ENABLED =
+            new ConfigKey<>(this, "client.web-chat-enabled", true);
+
     public final ConfigKey<Boolean> DEFAULT_GROUP_ENABLED =
             new ConfigKey <>(this, "server.group.default.enabled", true);
 

@@ -24,6 +24,7 @@ A Geyser Extension to allow Bedrock Clients to connect with Simple voice Chat.
 ## What can the Plugin/extension do?
 - Allow Bedrock Players to voice chat with Java Players through a web interface.
 - Configured to also allow Java Players without the SVC Mod to join the chat.
+- Configurable texting through a chatbox to allow the bedrock players to chat in-game.
 
 ## Using this Plugin
 - Set the '.jar' file into your server's plugin directory.
@@ -56,7 +57,7 @@ Reach out through issues!
 - [Geysermc.org](https://geysermc.org)
 - [Jetty.org](https://jetty.org)
 - SimpleVoiceChat: [ModRepo.de](https://modrepo.de/minecraft/voicechat/overview)
-- Bcrypt:          [Mindrot.org](https://www.mindrot.org/projects/jBCrypt/)
+- Bcrypt: [Mindrot.org](https://www.mindrot.org/projects/jBCrypt/)
 
 ## Important Notes
 - Simple Voice Chat 2.6.0 or compatible is required to work, It must run on the server.
