@@ -24,6 +24,7 @@ public final class SvgConfig {
         defaults.put("client.idletimeout", 2);
         defaults.put("client.requireBedrock", false);
         defaults.put("client.useEmoteForSVG", true);
+        defaults.put("client.web-chat-enabled", true);
         defaults.put("client.allowedTypes.isBlackList", true);
         defaults.put("client.allowedTypes.list", List.of());
         defaults.put("server.group.default.enabled", true);
@@ -79,6 +80,9 @@ public final class SvgConfig {
     public final ConfigKey<List<String>> CLIENT_ALLOWED_TYPES_LIST =
             new ConfigKey<>(this, "client.allowedTypes.list", List.of());
 
+    public final ConfigKey<Boolean> WEB_CHAT_ENABLED =
+            new ConfigKey<>(this, "client.web-chat-enabled", true);
+
     public final ConfigKey<Boolean> DEFAULT_GROUP_ENABLED =
             new ConfigKey <>(this, "server.group.default.enabled", true);
 
@@ -127,6 +131,7 @@ public final class SvgConfig {
             IDLE_TIMEOUT,
             REQUIRE_BEDROCK,
             USE_EMOTE,
+            WEB_CHAT_ENABLED,
             CLIENT_ALLOWED_TYPES_BLACKLIST,
             CLIENT_ALLOWED_TYPES_LIST,
             DEFAULT_GROUP_ENABLED,

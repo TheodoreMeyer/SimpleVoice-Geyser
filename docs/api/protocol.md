@@ -1,5 +1,5 @@
 ---
-title: Server Protocol Reference
+title: Websocket Protocol
 layout: projects
 project: simplevoicegeyser
 ---

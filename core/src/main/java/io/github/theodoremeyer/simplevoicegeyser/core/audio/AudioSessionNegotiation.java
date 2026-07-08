@@ -7,7 +7,7 @@ import java.util.Locale;
  */
 public final class AudioSessionNegotiation {
 
-    private final AudioTransportPreference serverPreference;
+    private final AudioTransportMode serverPreference;
     private final boolean allowLegacyFallback;
 
     private volatile boolean clientCapsReceived = false;
@@ -23,7 +23,7 @@ public final class AudioSessionNegotiation {
      * @param serverPreference the server preference of type
      * @param allowLegacyFallback whether to allow backwards compatibility.
      */
-    public AudioSessionNegotiation(AudioTransportPreference serverPreference, boolean allowLegacyFallback) {
+    public AudioSessionNegotiation(AudioTransportMode serverPreference, boolean allowLegacyFallback) {
         this.serverPreference = serverPreference;
         this.allowLegacyFallback = allowLegacyFallback;
         this.selectedMode = resolveMode();
@@ -96,25 +96,29 @@ public final class AudioSessionNegotiation {
     }
 
     private AudioTransportMode resolveMode() {
-        if (serverPreference == AudioTransportPreference.LEGACY) {
+        if (serverPreference == AudioTransportMode.LEGACY) {
             return AudioTransportMode.LEGACY;
         }
 
-        boolean v2Capable = clientCapsReceived
-                && clientSupportsSvgV2
-                && clientSupportsOpusDecoder;
+        // Server prefers SVG-V2.
 
-        if (serverPreference == AudioTransportPreference.SVG_V2) {
-            if (v2Capable) {
-                return AudioTransportMode.SVG_V2;
-            }
-            return allowLegacyFallback ? AudioTransportMode.LEGACY : AudioTransportMode.SVG_V2;
+        // Before receiving capabilities, assume legacy if fallback is allowed.
+        if (!clientCapsReceived) {
+            return allowLegacyFallback
+                    ? AudioTransportMode.LEGACY
+                    : AudioTransportMode.SVG_V2;
         }
 
-        // AUTO mode prefers v2 only when capability is explicitly known.
+        boolean v2Capable =
+                clientSupportsSvgV2 &&
+                        clientSupportsOpusDecoder;
+
         if (v2Capable) {
             return AudioTransportMode.SVG_V2;
         }
-        return AudioTransportMode.LEGACY;
+
+        return allowLegacyFallback
+                ? AudioTransportMode.LEGACY
+                : AudioTransportMode.SVG_V2;
     }
 }

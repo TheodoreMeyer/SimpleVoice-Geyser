@@ -1,19 +1,36 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.audio;
 
-/**
- * Runtime transport mode selected for one websocket audio session.
- */
+import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
+
+import java.util.Locale;
+
 public enum AudioTransportMode {
 
     /**
-     * Legacy transportation mode of pure audio, no special stuff
-     * @deprecated Only used for clients that don't support the new protocol, and will be removed in a future release.
+     * Legacy transport.
+     *
+     * @deprecated Only used for clients that don't support SVG-V2.
      */
-    @Deprecated()
+    @Deprecated
     LEGACY,
 
     /**
-     * Modern Audio system with support for opus, panning, gain, and more.
+     * Modern SVG-V2 transport.
      */
-    SVG_V2
+    SVG_V2;
+
+    public static AudioTransportMode fromConfig(SvgConfig config) {
+        String rawValue = config.AUDIO_TRANSPORT_MODE.get();
+        if (rawValue == null || rawValue.isBlank()) {
+            return SVG_V2;
+        }
+
+        String normalized = rawValue.trim().toLowerCase(Locale.ROOT);
+
+        return switch (normalized) {
+            case "legacy" -> LEGACY;
+            case "svg-v2", "svg_v2", "v2" -> SVG_V2;
+            default -> SVG_V2;
+        };
+    }
 }

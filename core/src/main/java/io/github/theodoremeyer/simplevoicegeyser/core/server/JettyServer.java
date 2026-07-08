@@ -62,7 +62,7 @@ public final class JettyServer {
      */
     public void start() throws Exception {
         ServletContextHandler context = new ServletContextHandler();
-        context.setContextPath("/");
+        context.setContextPath(SvgCore.getConfig().CONTEXT_PATH.get());
         server.setHandler(context);
 
         // Serve all static resources from /web
