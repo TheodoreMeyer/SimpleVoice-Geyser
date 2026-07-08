@@ -6,22 +6,121 @@ project: simplevoicegeyser
 
 # Android Awareness
 
-Simple Voice Geyser 0.1.3 adds client awareness for websocket connections so the built-in Web client and the native Svg-App can identify themselves before authentication.
+Simple Voice Geyser 0.1.3 can tell the difference between the built-in web client and the native Android app before a player logs in.
 
-This lets the server keep browser build protection, accept the Android app without requiring a browser build id, and optionally allow or block client families from config.
+For server admins, this means:
+
+- Web browser players keep using the normal built-in web UI.
+- Android app players can connect as `Svg-App` without needing the browser build id.
+- Server owners can allow or block `Web` and `Svg-App` clients from config.
+- The normal voice password, chat, and audio flow still works after the client is accepted.
+
+## App Server Address
+
+In the Android app, users should enter the same public address where the Simple Voice Geyser web UI is available.
+
+Use the host, port if one is needed, and the configured subpath if the web UI is not served from `/`.
+
+| Server setup | Web UI address | What to enter in the app |
+|--------------|----------------|--------------------------|
+| LAN or base IP | `http://192.168.1.50:8080/` | `192.168.1.50:8080` |
+| Subdomain | `https://voice.example.com/` | `voice.example.com` |
+| Subpath | `https://example.com/svg/` | `example.com/svg` |
+
+If the app asks for a full websocket URL instead of a server address, use:
+
+| Server setup | Websocket URL |
+|--------------|---------------|
+| LAN or base IP | `ws://192.168.1.50:8080/ws` |
+| Subdomain | `wss://voice.example.com/ws` |
+| Subpath | `wss://example.com/svg/ws` |
+
+For subpath deployments, the path is required. If the server is configured with `server.context-path: /svg`, entering only `example.com` makes the app connect to the wrong endpoint. Use `example.com/svg`.
 
 ## Client Types
 
-Supported client type names are:
+The plugin currently recognizes these client type names:
 
-| Client type | Purpose |
+| Client type | Meaning |
 |-------------|---------|
-| `Web` | Built-in browser client served by the plugin. |
-| `Svg-App` | Native Android app client. |
+| `Web` | The built-in browser client served by the plugin. |
+| `Svg-App` | The native Android app. |
 
-The client type is sent in the `join` packet as `clientType`.
+These names are also the values admins can use in `config.yml` when allowing or blocking client types.
 
-### Web
+## Config
+
+By default, both `Web` and `Svg-App` are allowed.
+
+```yaml
+client:
+  allowedTypes:
+    isBlackList: true
+    list:
+      # - Web
+      # - Svg-App
+```
+
+When `isBlackList` is `true`, the listed client types are blocked. With the default empty list, nothing is blocked.
+
+Examples:
+
+```yaml
+# Allow both Web and Svg-App
+client:
+  allowedTypes:
+    isBlackList: true
+    list:
+      # - Web
+      # - Svg-App
+```
+
+```yaml
+# Block the Android app, but keep the Web client allowed
+client:
+  allowedTypes:
+    isBlackList: true
+    list:
+      - Svg-App
+```
+
+```yaml
+# Only allow the Android app
+client:
+  allowedTypes:
+    isBlackList: false
+    list:
+      - Svg-App
+```
+
+Restart the server after changing this setting so the plugin reloads the config.
+
+## What Happens When A Player Connects
+
+Before checking the player's username and voice password, the plugin checks what kind of client is connecting.
+
+| Problem | Result |
+|---------|--------|
+| Client information is missing or malformed | `4005` / `invalid_client_info` |
+| Client type is unknown or blocked by config | `4005` / `unsupported_client_type` |
+| Web client is using stale browser files | `4008` / `update_required` |
+| Android app targets the wrong plugin version | `4008` / `app_protocol_unsupported` |
+
+If the client type is accepted, the connection continues to the normal username and password check.
+
+## Audio And Chat
+
+Admins do not need to change the audio config just to allow the Android app.
+
+The app still sends the normal capabilities packet after login. The server then chooses the available audio transport for that session. Legacy audio still works, and `svg-v2` remains the newer transport path for clients that support it.
+
+Voice routing is still handled by Simple Voice Chat's normal per-player listener path. This feature does not broadcast every voice packet to every app connection.
+
+Web/app chat still uses the same chat packet after login.
+
+## Developer Packet Details
+
+The built-in web client sends:
 
 ```json
 {
@@ -36,11 +135,11 @@ The client type is sent in the `join` packet as `clientType`.
 }
 ```
 
-`Web` must include `serverBuild`. The server validates it against `SvgCore.BUILD_ID` so stale browser assets are rejected.
+`Web` must include `serverBuild`. The server checks this against `SvgCore.BUILD_ID` so outdated browser assets can be rejected.
 
-For 0.1.x compatibility, old browser joins with top-level `build` are still accepted. This path is marked in code for removal when the next compatibility break removes the legacy browser join shape.
+For 0.1.x compatibility, old browser joins with top-level `build` are still accepted. This fallback is marked in code for removal on a later compatibility break.
 
-### Svg-App
+The Android app sends:
 
 ```json
 {
@@ -56,48 +155,14 @@ For 0.1.x compatibility, old browser joins with top-level `build` are still acce
 
 `Svg-App` does not send `build` or `serverBuild`. It targets the plugin project version through `serverVersion`.
 
-## Validation Order
-
-Client compatibility is checked before username/password authentication.
-
-| Case | Close result |
-|------|--------------|
-| Malformed `clientType` | `4005` / `invalid_client_info` |
-| Unknown or config-blocked client type | `4005` / `unsupported_client_type` |
-| Missing or stale Web build | `4008` / `update_required` |
-| Svg-App server version mismatch | `4008` / `app_protocol_unsupported` |
-
 Old Android metadata using `client.kind`, `client.version`, or `client.protocol` is not accepted by the 0.1.3 client awareness model.
-
-## Config
-
-Server owners can allow or block client families with:
-
-```yaml
-client:
-  allowedTypes:
-    isBlackList: true
-    list:
-      # - Web
-      # - Svg-App
-```
-
-When `isBlackList` is `true`, listed types are blocked. When it is `false`, only listed types are allowed. The default list is empty, so no client type is blocked by default.
-
-## Capabilities And Audio
-
-After join and authentication succeed, clients still send the normal `capabilities` packet. Client awareness does not replace audio capability negotiation.
-
-The Android app should keep advertising legacy audio support until its `svg-v2` receive/playback path is fully implemented and tested. The server can still negotiate `legacy` or `svg-v2` per session.
-
-Voice routing remains managed by Simple Voice Chat through the per-player audio listener path. The Android-awareness PR does not use a global microphone-packet fan-out.
 
 ## Testing Checklist
 
-- Web client joins with matching `clientType.serverBuild`.
-- Legacy Web join with top-level `build` still works during 0.1.x.
-- Svg-App joins with `clientType.type = "Svg-App"` and matching `serverVersion`.
-- Wrong password still fails after compatibility validation.
-- Blacklist/whitelist config accepts or rejects `Web` and `Svg-App` as expected.
-- Chat still works after authentication.
+- Web client joins normally.
+- Svg-App joins with the correct server address.
+- Subpath servers require the subpath in the app address.
+- Wrong password still fails normally.
+- Blacklist and whitelist config accepts or rejects `Web` and `Svg-App` as expected.
+- Chat works after login.
 - Bedrock/App to Java voice and Java to Bedrock/App voice both work.
