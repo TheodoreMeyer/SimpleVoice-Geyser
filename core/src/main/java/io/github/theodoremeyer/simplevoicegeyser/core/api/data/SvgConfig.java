@@ -24,6 +24,7 @@ public final class SvgConfig {
         defaults.put("client.idletimeout", 2);
         defaults.put("client.requireBedrock", false);
         defaults.put("client.useEmoteForSVG", true);
+        defaults.put("client.web-chat-enabled", true);
         defaults.put("server.group.default.enabled", true);
         defaults.put("server.group.default.password", "1a2b");
         defaults.put("server.group.default.force-on-web-join", false);
@@ -122,6 +123,7 @@ public final class SvgConfig {
             IDLE_TIMEOUT,
             REQUIRE_BEDROCK,
             USE_EMOTE,
+            WEB_CHAT_ENABLED,
             DEFAULT_GROUP_ENABLED,
             DEFAULT_GROUP_PASSWORD,
             DEFAULT_GROUP_FORCE_ON_WEB_JOIN,
