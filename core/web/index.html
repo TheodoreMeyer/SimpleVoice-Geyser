@@ -14,26 +14,26 @@
 </head>
 
 <body>
-    <h1><span class="lang" id="joinLabel"></span></h1>
+    <h1><span svg-lang="joinLabel"></span></h1>
     <div id="form-container">
-        <form id="joinForm">
-            <label for="username"><span class="lang" id="usernameInput"></span>:</label>
-            <input type="text" id="username" name="username" required autocomplete="username">
+        <form id="joinForm" data-svg="form">
+            <label for="username" svg-lang="usernameInput"></label>
+            <input data-svg="form.username" type="text" id="username" name="username" required autocomplete="username">
 
-            <label for="password"><span class="lang" id="passwordInput"></span>:</label>
-            <input type="password" id="password" name="password" required autocomplete="svg-password">
+            <label for="password" svg-lang="passwordInput"></label>
+            <input data-svg="form.password" type="password" id="password" name="password" required autocomplete="svg-password">
 
-            <label for="mic"><span class="lang" id="micSelect"></span>:</label>
-            <select id="mic" name="mic">
-                <option disabled selected><span class="lang" id="micLoad"></span></option>
+            <label for="mic" svg-lang="micSelect"></label>
+            <select id="mic" name="mic" data-svg="audio.mic">
+                <option disabled selected svg-lang="micLoad"></option>
             </select>
 
-            <label for="speaker"><span class="lang" id="speakSelect"></span>:</label>
-            <select id="speaker" name="speaker">
-                <option disabled selected><span class="lang" id="speakLoad"></span></option>
+            <label for="speaker" svg-lang="speakSelect"></label>
+            <select id="speaker" name="speaker" data-svg="audio.speaker">
+                <option disabled selected svg-lang="speakLoad"></option>
             </select>
 
-            <button type="submit" id="joinbtn"><span class="lang" id="joinBtnText"></span></button>
+            <button type="submit" id="joinbtn" data-svg="form.join" svg-lang="joinBtnText"></button>
         </form>
     </div>
     <!-- Added translated spanish to noscript text and moved its css into styles.css-->
@@ -47,59 +47,57 @@
     </noscript>
     <div id="main-vc-container">
         <br>
-        <div id="status"><span class="lang" id="joinWait"></span></div>
-        <div id="log"></div>
+        <div id="status" data-svg="form.status" svg-lang="joinWait"></div>
+        <div id="log" data-svg="chat.log"></div>
         <br>
         <div id="inputArea">
-            <label for="msgInput"><span class="lang" id="msgText"></span></label>
-            <input type="text" id="msgInput" placeholder="Type a message..." />
-            <button id="messageButton"><span class="lang" id="sendBtnText"></span></button>
+            <label for="msgInput" svg-lang="msgText"></label>
+            <input data-svg="chat.input" type="text" id="msgInput" placeholder="Type a message..." />
+            <button id="messageButton" data-svg="chat.send" svg-lang="sendBtnText"></button>
         </div>
     </div>
     <br>
     <div id="controls">
         <div id="controls-main">
-            <div class="controls-card" id="micCard">
+            <div class="controls-card" id="micCard" data-svg="ptt.mic-card">
                 <div class="control-group">
-                    <span class="control-label"><span class="lang" id="micSLabel"></span></span>
+                    <span class="control-label" svg-lang="micSLabel"></span>
                     <div id="micControls">
-                        <button id="muteBtn" class="unmuted"><span class="lang" id="muteBtnText"></span></button>
-                        <span id="micIndicator" title="Mic activity"></span>
+                        <button id="muteBtn" class="unmuted" data-svg="audio.mute" svg-lang="muteBtnText"></button>
+                        <span id="micIndicator" title="Mic activity" data-svg="audio.indicator"></span>
                     </div>
                 </div>
             </div>
 
             <div class="controls-card">
                 <div class="control-group">
-                    <span class="control-label"><span class="lang" id="transmitModeLabel"></span></span>
-                    <select id="transmitModeSelect" aria-label="Transmit mode">
-                        <option value="voice"><span class="lang" id="voiceActivityText"></span></option>
-                        <option value="ptt"><span class="lang" id="pushToTalkText"></span></option>
+                    <span class="control-label" svg-lang="transmitModeLabel"></span>
+                    <select id="transmitModeSelect" aria-label="Transmit mode" data-svg="ptt.mode">
+                        <option value="voice" svg-lang="voiceActivityText"></option>
+                        <option value="ptt" svg-lang="pushToTalkText"></option>
                     </select>
                 </div>
             </div>
 
-            <div class="controls-card controls-card-ptt dev-hidden" id="pttCard">
-                <div class="control-group" id="pttBindingControls">
-                    <span class="control-label"><span class="lang" id="pttBindingLabel"></span></span>
+            <div class="controls-card controls-card-ptt dev-hidden" id="pttCard" data-svg="ptt.card">
+                <div class="control-group" id="pttBindingControls" data-svg="ptt.binding-controls">
+                    <span class="control-label" data-svg="ptt.binding-label" svg-lang="pttBindingLabel"></span>
                     <div class="ptt-action-row">
-                        <button id="bindPttBtn" type="button"><span class="lang" id="bindPttBtnText"></span></button>
-                        <button id="clearPttBtn" type="button"><span class="lang" id="clearPttBtnText"></span></button>
+                        <button id="bindPttBtn" type="button" data-svg="ptt.bind" svg-lang="bindPttBtnText"></button>
+                        <button id="clearPttBtn" type="button" data-svg="ptt.clear" svg-lang="clearPttBtnText"></button>
                     </div>
-                    <small id="control-label"><span class="lang" id="pttBindingDescription"></span></small>
+                    <small id="control-label" svg-lang="pttBindingDescription"></small>
                     <label class="ptt-background-toggle">
-                        <input type="checkbox" id="allowBackgroundPtt">
-                        <span><span class="lang" id="allowBackgroundPttText"></span></span>
+                        <input type="checkbox" id="allowBackgroundPtt" data-svg="ptt.allow-background"/>
+                        <span svg-lang="allowBackgroundPttText"></span>
                     </label>
                 </div>
 
-                <div class="control-group" id="pttControls">
-                    <span class="control-label"><span class="lang" id="pttLabel"></span></span>
+                <div class="control-group" id="pttControls" data-svg="ptt.controls">
+                    <span class="control-label" svg-lang="pttLabel"></span>
                     <div>
-                        <button id="pushToTalkBtn" class="pttButton" type="button"><span class="lang"
-                                id="pushToTalkBtnText"></span></button>
-                        <button id="fullscreenPttBtn" type="button"><span class="lang"
-                                id="fullscreenPttBtnText"></span></button>
+                        <button id="pushToTalkBtn" class="pttButton" type="button" data-svg="ptt.button" svg-lang="pushToTalkBtnText"></button>
+                        <button id="fullscreenPttBtn" type="button" data-svg="ptt.fullscreen" svg-lang="fullscreenPttBtnText"></button>
                     </div>
                 </div>
             </div>
@@ -107,19 +105,17 @@
         </div>
         <div class="controls-divider"></div>
         <div id="controls-dev">
-            <button id="devToggle" class="dev-toggle">
-                <span class="lang" id="devToolsLabel"></span> ▼
-            </button>
-            <div id="devContent">
+            <button id="devToggle" class="dev-toggle" data-svg="dev.toggle" svg-lang="devToolsLabel"></button>
+            <div id="devContent" data-svg="dev.content">
                 <div class="control-group">
-                    <span class="control-label"><span class="lang" id="debugAudioLabel"></span></span>
-                    <button id="testSound" type="button"><span class="lang" id="testSoundBtnText"></span></button>
+                    <span class="control-label" svg-lang="debugAudioLabel"></span>
+                    <button id="testSound" type="button" svg-lang="testSoundBtnText"></button>
                 </div>
             </div>
         </div>
     </div>
     <div id="color-editor">
-        <h2><span class="lang" id="colorEditorLabel"></span></h2>
+        <h2 svg-lang="colorEditorLabel"></h2>
         <div id="preset-field"></div>
     </div>
     <!--Added more links and tweaked github image-->
@@ -171,12 +167,10 @@
         </svg>
     </button>
     <!--fixed when hovering over hold to talk button covering up exit full screen button-->
-    <div id="pttFullscreenOverlay" aria-hidden="true">
-        <button id="pushToTalkFullscreenBtn" class="pttButton" type="button"><span class="lang"
-                id="pushToTalkFullscreenBtnText"></span></button>
+    <div id="pttFullscreenOverlay" aria-hidden="true" data-svg="ptt.overlay">
+        <button id="pushToTalkFullscreenBtn" class="pttButton" type="button" data-svg="ptt.overlay-button" svg-lang="pushToTalkFullscreenBtnText"></button>
         <br>
-        <button id="exitFullscreenPttBtn" type="button"><span class="lang"
-                id="exitFullscreenPttBtnText"></span></button>
+        <button id="exitFullscreenPttBtn" type="button" data-svg="ptt.overlay-exit" svg-lang="exitFullscreenPttBtnText"></button>
     </div>
     <script>
         const availablePresets = ['default', 'dark', 'light', 'green', 'blue', 'purple', 'red', 'yellow', 'cyan', 'monochrome', 'monokai', 'orange', 'mint', 'rose'];
@@ -205,61 +199,9 @@
         window.BUILD_ID = "@@GIT_COMMIT@@";
 
         /** @import {SvgClientOptions} from './js/types.js' */
-        import { SvgClient } from './js/client.js';
+        import { SvgBuilder } from './js/utils/builder.js';
 
-        const client = new SvgClient(/** @type {SvgClientOptions} */{
-            ui: {
-                form: {
-                    formEl: document.getElementById("joinForm"),
-                    joinButton: document.getElementById("joinbtn"),
-                    statusEl: document.getElementById("status"),
-                    usernameInput: document.getElementById("username"),
-                    passwordInput: document.getElementById("password")
-                },
-                audio: {
-                    speakerSelect: document.getElementById("speaker"),
-                    micSelect: document.getElementById("mic"),
-                    muteBtn: document.getElementById("muteBtn"),
-                    micIndicator: document.getElementById("micIndicator")
-                },
-
-                ptt: {
-                    micCard: document.getElementById("micCard"),
-                    transmitModeSelect: document.getElementById("transmitModeSelect"),
-
-                    pttCard: document.getElementById("pttCard"),
-                    pttBindingControls: document.getElementById("pttBindingControls"),
-
-                    bindPttBtn: document.getElementById("bindPttBtn"),
-                    clearPttBtn: document.getElementById("clearPttBtn"),
-
-                    pttBindingLabel: document.getElementById("control-label"),
-
-                    pttControls: document.getElementById("pttControls"),
-
-                    pushToTalkBtn: document.getElementById("pushToTalkBtn"),
-                    fullscreenPttBtn: document.getElementById("fullscreenPttBtn"),
-
-                    pttFullscreenOverlay: document.getElementById("pttFullscreenOverlay"),
-
-                    pushToTalkFullscreenBtn: document.getElementById("pushToTalkFullscreenBtn"),
-                    exitFullscreenPttBtn: document.getElementById("exitFullscreenPttBtn"),
-
-                    allowBackgroundPttCheckbox:
-                        document.getElementById("allowBackgroundPtt")
-                },
-
-                dev: {
-                    devToggle: document.getElementById("devToggle"),
-                    devContent: document.getElementById("devContent")
-                }
-            },
-            chat: {
-                logEl: document.getElementById("log"),
-                inputEl: document.getElementById("msgInput"),
-                sendBtn: document.getElementById("messageButton")
-            },
-        });
+        const client = SvgBuilder.fromDocument().build();
 
         await client.start();
     </script>
