@@ -1,4 +1,4 @@
-import {SvgClient} from "./client.js";
+import {SvgClient} from "../client.js";
 
 /**
  * Maps SvgClientOptions to HTML data-svg attributes.
@@ -70,10 +70,31 @@ export class SvgBuilder {
     }
 
     /**
+     * Directly creates the client from the options given
+     * @param {SvgClientOptions} options
+     * @returns {SvgClient}
+     */
+    static fromElements(options) {
+        return new SvgClient(options);
+    }
+
+    /**
      * @param {ParentNode} root
      */
     constructor(root) {
         this.root = root;
+
+        this.elements = {};
+
+        root.querySelectorAll("[data-svg]").forEach(element => {
+            const id = element.dataset.svg;
+
+            if (this.elements[id]) {
+                throw new Error(`Duplicate data-svg="${id}"`);
+            }
+
+            this.elements[id] = element;
+        });
     }
 
     /**
@@ -115,7 +136,7 @@ export class SvgBuilder {
      * @returns {HTMLElement}
      */
     #require(id) {
-        const element = this.root.querySelector(`[data-svg="${id}"]`);
+        const element = this.elements[id];
 
         if (!element) {
             throw new Error(

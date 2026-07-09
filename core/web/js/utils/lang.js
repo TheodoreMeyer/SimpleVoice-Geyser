@@ -100,13 +100,18 @@ const langData = {
 document.addEventListener("DOMContentLoaded", () => {
     let userLang = navigator.language || navigator.userLanguage || "en";
     userLang = userLang.slice(0, 2);
-    if(!(userLang in langData)){
+
+    if (!(userLang in langData)) {
         userLang = "en";
     }
-    
-    document.querySelectorAll(".lang").forEach(el => {
-        if (langData[userLang] && langData[userLang][el.id]) {
-            el.innerText = langData[userLang][el.id];
+
+    const language = langData[userLang];
+
+    document.querySelectorAll("[svg-lang]").forEach(element => {
+        const key = element.getAttribute("svg-lang");
+
+        if (key in language) {
+            element.textContent = language[key];
         }
     });
 });

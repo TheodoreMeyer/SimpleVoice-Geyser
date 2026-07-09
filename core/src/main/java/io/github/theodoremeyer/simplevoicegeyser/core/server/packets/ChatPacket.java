@@ -56,11 +56,8 @@ public class ChatPacket implements Packet {
         }
 
         SvgPlayer player = socket.getConnection().getPlayer();
-        String displayName = player != null
-                ? player.getName()
-                : socket.getConnection().getUuid().toString();
 
-        String outbound = "[Web Chat] " + displayName + ": " + sanitized.sanitized;
+        String outbound = "[Web Chat]: " + sanitized.sanitized;
 
         try {
             socket.getConnection().sendChat("You: " + sanitized.sanitized);
