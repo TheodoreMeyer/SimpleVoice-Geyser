@@ -198,8 +198,7 @@ Use a reverse proxy (e.g., Nginx, Caddy) to provide:
 
 Some versions may introduce breaking changes.
 
-See:
-https://theodoremeyer.github.io/projects/simplevoicegeyser/upgrading/
+See: [Upgrading]({% project_link upgrading %})
 
 ---
 

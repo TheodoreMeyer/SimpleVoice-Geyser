@@ -26,7 +26,9 @@ This is because modern browsers block microphone access on insecure origins.
 
    http:// ip: port
 
+```text
    Example: http://192.168.1.10:8080
+```
 
 
 ---
