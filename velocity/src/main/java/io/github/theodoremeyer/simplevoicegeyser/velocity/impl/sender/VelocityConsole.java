@@ -1,10 +1,9 @@
 package io.github.theodoremeyer.simplevoicegeyser.velocity.impl.sender;
 
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
-import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgConsole;
 import net.kyori.adventure.text.Component;
 
-public class VelocityConsole extends SvgConsole {
+public class VelocityConsole {
 
     private final ConsoleCommandSource source;
 
@@ -12,7 +11,10 @@ public class VelocityConsole extends SvgConsole {
         this.source = source;
     }
 
-    @Override
+    public String getName() {
+        return "Console";
+    }
+
     public void sendMessage(String message) {
         source.sendMessage(Component.text(message));
     }

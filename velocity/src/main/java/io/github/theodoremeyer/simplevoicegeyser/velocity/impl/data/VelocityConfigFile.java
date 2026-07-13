@@ -1,7 +1,5 @@
 package io.github.theodoremeyer.simplevoicegeyser.velocity.impl.data;
 
-import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
-import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -10,9 +8,11 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
-public class VelocityConfigFile extends SvgFile {
+public class VelocityConfigFile {
 
     private static final DateTimeFormatter BACKUP_TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private final File configFile;
@@ -35,47 +35,38 @@ public class VelocityConfigFile extends SvgFile {
         }
     }
 
-    @Override
     public Set<String> getKeys() {
         return config.keySet();
     }
 
-    @Override
     public boolean has(String key) {
         return config.has(key);
     }
 
-    @Override
     public void set(String path, Object value) {
         config.put(path, value);
     }
 
-    @Override
     public String getString(String path) {
         return config.optString(path, null);
     }
 
-    @Override
     public String getString(String path, String def) {
         return config.optString(path, def);
     }
 
-    @Override
     public boolean getBoolean(String path, boolean def) {
         return config.optBoolean(path, def);
     }
 
-    @Override
     public int getInt(String path, int def) {
         return config.optInt(path, def);
     }
 
-    @Override
     public double getDouble(String path, double def) {
         return config.optDouble(path, def);
     }
 
-    @Override
     public void save() {
         try {
             Files.writeString(configFile.toPath(), config.toString(2));
@@ -84,17 +75,14 @@ public class VelocityConfigFile extends SvgFile {
         }
     }
 
-    @Override
     public void reload() {
         this.config = load();
     }
 
-    @Override
     public File getFile() {
         return configFile;
     }
 
-    @Override
     public MigrationReport migrateFromBundledDefaults(String trigger) {
         JSONObject defaults = loadBundledDefaults();
         if (defaults.isEmpty()) {
@@ -120,7 +108,7 @@ public class VelocityConfigFile extends SvgFile {
 
     private JSONObject loadBundledDefaults() {
         JSONObject defaults = new JSONObject();
-        SvgConfig.codeDefaults().forEach(defaults::put);
+        codeDefaults().forEach(defaults::put);
         return defaults;
     }
 
@@ -137,4 +125,35 @@ public class VelocityConfigFile extends SvgFile {
             throw new RuntimeException("Failed backing up config.json", e);
         }
     }
+
+    private static Map<String, Object> codeDefaults() {
+        Map<String, Object> defaults = new LinkedHashMap<>();
+        defaults.put("config-info", "This file is used to configure Simple Voice Geyser. "
+                + "For more information, see the wiki: https://theodoremeyer.github.io/projects/simplevoicegeyser/");
+        defaults.put("client.vctimeout", 30);
+        defaults.put("client.idletimeout", 2);
+        defaults.put("client.requireBedrock", false);
+        defaults.put("client.useEmoteForSVG", true);
+        defaults.put("client.web-chat-enabled", true);
+        defaults.put("server.group.default.enabled", true);
+        defaults.put("server.group.default.password", "1a2b");
+        defaults.put("server.group.default.force-on-web-join", false);
+        defaults.put("server.port", 8080);
+        defaults.put("server.bind-address", "0.0.0.0");
+        defaults.put("server.context-path", "/");
+        defaults.put("server.security.max-auth-failures", 5);
+        defaults.put("server.security.auth-fail-duration", 3);
+        defaults.put("server.security.auth-lock-duration", 8);
+        defaults.put("server.audio.transport-mode", "auto");
+        defaults.put("server.audio.allow-legacy-fallback", true);
+        defaults.put("proxy.enabled", false);
+        defaults.put("proxy.shared-secret", "simplevoice-geyser-proxy-secret");
+        defaults.put("proxy.token-ttl-seconds", 120);
+        defaults.put("debug", false);
+        defaults.put("updatechecker.enable", true);
+        defaults.put("config-version", "0.1.1-dev-migration1");
+        return defaults;
+    }
+
+    public record MigrationReport(String mode, String backupPath, int addedKeys, boolean migrated) {}
 }
