@@ -1,6 +1,5 @@
 package io.github.theodoremeyer.simplevoicegeyser.velocity.proxy;
 
-import io.github.theodoremeyer.simplevoicegeyser.core.server.servlets.ResourceServlet;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.VelocityPlugin;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;

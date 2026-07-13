@@ -1,8 +1,7 @@
 package io.github.theodoremeyer.simplevoicegeyser.velocity.proxy;
 
 import com.velocitypowered.api.proxy.Player;
-import io.github.theodoremeyer.simplevoicegeyser.core.BuildInfo;
-import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
+import io.github.theodoremeyer.simplevoicegeyser.velocity.BuildInfo;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.VelocityPlugin;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.jetty.websocket.api.Session;
@@ -29,6 +28,7 @@ public final class ProxyWebSocket {
     private UUID playerUuid;
     private String playerName;
     private JSONObject lastJoinRequest;
+    private JSONObject lastCapabilitiesRequest;
     private String currentBackendUrl;
 
     public ProxyWebSocket(VelocityPlugin plugin) {
@@ -49,6 +49,17 @@ public final class ProxyWebSocket {
         }
 
         if (relay != null) {
+            message = message.trim();
+            if (message.startsWith("{")) {
+                try {
+                    JSONObject json = new JSONObject(message);
+                    if ("capabilities".equals(json.optString("type", ""))) {
+                        this.lastCapabilitiesRequest = new JSONObject(json.toString());
+                        relay.updateCapabilitiesPayload(json.toString());
+                    }
+                } catch (Exception ignored) {
+                }
+            }
             relay.forwardText(message);
             return;
         }
@@ -95,6 +106,7 @@ public final class ProxyWebSocket {
         }
         currentBackendUrl = null;
         lastJoinRequest = null;
+        lastCapabilitiesRequest = null;
         playerUuid = null;
         playerName = null;
     }
@@ -111,6 +123,7 @@ public final class ProxyWebSocket {
         }
         currentBackendUrl = null;
         lastJoinRequest = null;
+        lastCapabilitiesRequest = null;
     }
 
     public synchronized void reconnectBackend(String backendUrl) {
@@ -124,6 +137,9 @@ public final class ProxyWebSocket {
 
         JSONObject join = buildBackendJoinPayload();
         relay.updateJoinPayload(join.toString());
+        if (lastCapabilitiesRequest != null) {
+            relay.updateCapabilitiesPayload(lastCapabilitiesRequest.toString());
+        }
         relay.reconnect(backendUrl);
         currentBackendUrl = backendUrl;
     }

@@ -20,6 +20,7 @@ public final class BackendRelay {
     private volatile WebSocket backendSocket;
     private volatile String backendUrl;
     private volatile String joinPayload;
+    private volatile String capabilitiesPayload;
     private volatile boolean suppressClientClose;
 
     public BackendRelay(Session clientSession, Logger logger) {
@@ -37,6 +38,9 @@ public final class BackendRelay {
                     .join();
             if (joinPayload != null && !joinPayload.isBlank()) {
                 backendSocket.sendText(joinPayload, true);
+            }
+            if (capabilitiesPayload != null && !capabilitiesPayload.isBlank()) {
+                backendSocket.sendText(capabilitiesPayload, true);
             }
         } catch (Exception e) {
             logger.error("Failed to connect backend relay to {}", backendUrl, e);
@@ -72,6 +76,10 @@ public final class BackendRelay {
 
     public void updateJoinPayload(String joinPayload) {
         this.joinPayload = joinPayload;
+    }
+
+    public void updateCapabilitiesPayload(String capabilitiesPayload) {
+        this.capabilitiesPayload = capabilitiesPayload;
     }
 
     private void closeBackend(int code, String reason) {

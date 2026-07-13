@@ -10,7 +10,7 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.ProxyAuthToken;
+import io.github.theodoremeyer.simplevoicegeyser.velocity.proxy.ProxyAuthToken;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.data.ProxyPasswordStore;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.data.VelocityConfigFile;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.proxy.ProxyJettyServer;
