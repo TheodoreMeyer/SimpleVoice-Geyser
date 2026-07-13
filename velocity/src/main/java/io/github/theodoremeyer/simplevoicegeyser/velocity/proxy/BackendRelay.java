@@ -10,14 +10,17 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class BackendRelay {
 
     private final Session clientSession;
     private final Logger logger;
     private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final AtomicLong connectionIdCounter = new AtomicLong();
 
     private volatile WebSocket backendSocket;
+    private volatile long currentConnectionId;
     private volatile String backendUrl;
     private volatile String joinPayload;
     private volatile String capabilitiesPayload;
@@ -31,10 +34,12 @@ public final class BackendRelay {
     public synchronized void connect(String backendUrl, String joinPayload) {
         this.backendUrl = backendUrl;
         this.joinPayload = joinPayload;
+        long id = connectionIdCounter.incrementAndGet();
+        this.currentConnectionId = id;
 
         try {
             this.backendSocket = httpClient.newWebSocketBuilder()
-                    .buildAsync(URI.create(backendUrl), new Listener())
+                    .buildAsync(URI.create(backendUrl), new Listener(id))
                     .join();
             if (joinPayload != null && !joinPayload.isBlank()) {
                 backendSocket.sendText(joinPayload, true);
@@ -43,16 +48,18 @@ public final class BackendRelay {
                 backendSocket.sendText(capabilitiesPayload, true);
             }
         } catch (Exception e) {
-            logger.error("Failed to connect backend relay to {}", backendUrl, e);
-            closeClient(1011, "backend_connect_failed");
+            if (currentConnectionId == id) {
+                logger.error("Failed to connect backend relay to {}", backendUrl, e);
+                closeClient(1011, "backend_connect_failed");
+            }
         }
     }
 
     public synchronized void reconnect(String newBackendUrl) {
         suppressClientClose = true;
         closeBackend(1000, "backend_switch");
-        connect(newBackendUrl, joinPayload);
         suppressClientClose = false;
+        connect(newBackendUrl, joinPayload);
     }
 
     public void forwardText(String text) {
@@ -110,6 +117,11 @@ public final class BackendRelay {
     private final class Listener implements WebSocket.Listener {
 
         private final StringBuilder textBuffer = new StringBuilder();
+        private final long connectionId;
+
+        Listener(long connectionId) {
+            this.connectionId = connectionId;
+        }
 
         @Override
         public void onOpen(WebSocket webSocket) {
@@ -122,6 +134,9 @@ public final class BackendRelay {
             if (last) {
                 String text = textBuffer.toString();
                 textBuffer.setLength(0);
+                if (connectionId != currentConnectionId) {
+                    return CompletableFuture.completedFuture(null);
+                }
                 try {
                     clientSession.getRemote().sendString(text);
                 } catch (Exception e) {
@@ -134,6 +149,10 @@ public final class BackendRelay {
 
         @Override
         public CompletionStage<?> onBinary(WebSocket webSocket, ByteBuffer data, boolean last) {
+            if (connectionId != currentConnectionId) {
+                webSocket.request(1);
+                return CompletableFuture.completedFuture(null);
+            }
             byte[] bytes = new byte[data.remaining()];
             data.get(bytes);
             try {
@@ -147,12 +166,18 @@ public final class BackendRelay {
 
         @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
+            if (connectionId != currentConnectionId) {
+                return CompletableFuture.completedFuture(null);
+            }
             closeClient(statusCode, reason == null ? "backend_closed" : reason);
             return CompletableFuture.completedFuture(null);
         }
 
         @Override
         public void onError(WebSocket webSocket, Throwable error) {
+            if (connectionId != currentConnectionId) {
+                return;
+            }
             logger.debug("Backend websocket error", error);
             closeClient(1011, "backend_error");
         }

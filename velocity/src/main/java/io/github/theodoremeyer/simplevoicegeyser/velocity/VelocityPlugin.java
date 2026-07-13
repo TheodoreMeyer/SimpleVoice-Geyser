@@ -19,7 +19,9 @@ import org.slf4j.Logger;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -167,7 +169,12 @@ public final class VelocityPlugin {
     }
 
     public String createProxyToken(UUID uuid, String username) {
-        String secret = configFile.getString("proxy.shared-secret", "simplevoice-geyser-proxy-secret");
+        String secret = configFile.getString("proxy.shared-secret", "");
+        if (secret == null || secret.isBlank()) {
+            secret = generateFallbackSecret();
+            configFile.set("proxy.shared-secret", secret);
+            configFile.save();
+        }
         int ttlSeconds = configFile.getInt("proxy.token-ttl-seconds", 120);
         return ProxyAuthToken.create(uuid, username, secret, Duration.ofSeconds(ttlSeconds));
     }
@@ -180,7 +187,9 @@ public final class VelocityPlugin {
         ensureDefault("proxy.web.port", 8081);
         ensureDefault("proxy.web.bind-address", "0.0.0.0");
         ensureDefault("proxy.web.idle-timeout-minutes", 2);
-        ensureDefault("proxy.shared-secret", "simplevoice-geyser-proxy-secret");
+        if (!configFile.has("proxy.shared-secret")) {
+            configFile.set("proxy.shared-secret", generateFallbackSecret());
+        }
         ensureDefault("proxy.token-ttl-seconds", 120);
         ensureDefault("proxy.backend.url", "ws://127.0.0.1:8080/ws");
         ensureDefault("proxy.routes.default.url", "ws://127.0.0.1:8080/ws");
@@ -191,5 +200,11 @@ public final class VelocityPlugin {
         if (!configFile.has(key)) {
             configFile.set(key, value);
         }
+    }
+
+    private static String generateFallbackSecret() {
+        byte[] bytes = new byte[32];
+        new SecureRandom().nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }

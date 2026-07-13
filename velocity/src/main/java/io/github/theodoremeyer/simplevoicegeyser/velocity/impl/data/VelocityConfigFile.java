@@ -6,17 +6,23 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class VelocityConfigFile {
 
     private static final DateTimeFormatter BACKUP_TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
+    private static final SecureRandom RANDOM = new SecureRandom();
+    private static final Logger LOGGER = Logger.getLogger(VelocityConfigFile.class.getName());
     private final File configFile;
-    private JSONObject config;
+    private volatile JSONObject config;
 
     public VelocityConfigFile(File configFile) {
         this.configFile = configFile;
@@ -31,6 +37,7 @@ public class VelocityConfigFile {
             String content = Files.readString(configFile.toPath());
             return new JSONObject(content);
         } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Failed to load config.json, using defaults", e);
             return new JSONObject();
         }
     }
@@ -43,7 +50,7 @@ public class VelocityConfigFile {
         return config.has(key);
     }
 
-    public void set(String path, Object value) {
+    public synchronized void set(String path, Object value) {
         config.put(path, value);
     }
 
@@ -67,7 +74,7 @@ public class VelocityConfigFile {
         return config.optDouble(path, def);
     }
 
-    public void save() {
+    public synchronized void save() {
         try {
             Files.writeString(configFile.toPath(), config.toString(2));
         } catch (IOException e) {
@@ -75,7 +82,7 @@ public class VelocityConfigFile {
         }
     }
 
-    public void reload() {
+    public synchronized void reload() {
         this.config = load();
     }
 
@@ -147,7 +154,7 @@ public class VelocityConfigFile {
         defaults.put("server.audio.transport-mode", "auto");
         defaults.put("server.audio.allow-legacy-fallback", true);
         defaults.put("proxy.enabled", false);
-        defaults.put("proxy.shared-secret", "simplevoice-geyser-proxy-secret");
+        defaults.put("proxy.shared-secret", generateRandomSecret());
         defaults.put("proxy.token-ttl-seconds", 120);
         defaults.put("debug", false);
         defaults.put("updatechecker.enable", true);
@@ -156,4 +163,10 @@ public class VelocityConfigFile {
     }
 
     public record MigrationReport(String mode, String backupPath, int addedKeys, boolean migrated) {}
+
+    private static String generateRandomSecret() {
+        byte[] bytes = new byte[32];
+        RANDOM.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
 }
