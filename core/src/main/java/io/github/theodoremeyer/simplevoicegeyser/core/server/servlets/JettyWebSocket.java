@@ -3,7 +3,6 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.servlets;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiation;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioTransportMode;
-import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioTransportPreference;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.SvgConnection;
@@ -12,13 +11,11 @@ import io.github.theodoremeyer.simplevoicegeyser.core.server.packets.PacketHandl
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
 import org.eclipse.jetty.websocket.api.exceptions.WebSocketException;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Locale;
 
 /**
  * Wrapper for handling the session with player
@@ -59,10 +56,9 @@ public final class JettyWebSocket {
     public void onConnect(Session session) {
         this.session = session;
         session.setIdleTimeout(Duration.ofMinutes(SvgCore.getConfig().IDLE_TIMEOUT.get()));
-        AudioTransportPreference preference = AudioTransportPreference.fromConfig(
-                SvgCore.getConfig().AUDIO_TRANSPORT_MODE.get()
-        );
+        AudioTransportMode preference = AudioTransportMode.fromConfig(SvgCore.getConfig());
         boolean allowLegacyFallback = Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_ALLOW_LEGACY_FALLBACK.get());
+
         this.audioNegotiation = new AudioSessionNegotiation(preference, allowLegacyFallback);
         SvgCore.getLogger().info("[Websocket] WebSocket connected: " + session.getRemoteAddress());
         SvgCore.getLogger().debug("WebSocket: Session opened remote=" + session.getRemoteAddress());

@@ -52,13 +52,13 @@ Optional:
    /svg pswd <password>
    ```
 
-   See more at [Commands](https://theodoremeyer.github.io/projects/simplevoicegeyser/commands/).
+   See more at [Commands]({% project_link commands %}).
 
 2. Open the provided web link from your server operator.
 
 3. Connect and start talking.
 
-See more at [Joining](https://theodoremeyer.github.io/projects/simplevoicegeyser/join_svg/).
+See more at [Joining]({% project_link joining %}).
 
 ## Status
 
@@ -68,9 +68,9 @@ Feedback, issues, and contributions are welcome.
 ## Download
 
 * [Releases](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/releases)
-  → See [Installation](installation/index.markdown) for setup instructions.
+  → See [Installation]({% project_link installation %}) for setup instructions.
 
-* Note- latest documentation changes can be found at [0.1.2 release docs](https://theodoremeyer.github.io/projects/simplevoicegeyser/0.1.2/) for now, until the public website is fully updated.
+* Note- latest documentation changes can be found at [0.1.2 release docs]({% project_link releases/0.1.2 %}) for now, until the public website is fully updated.
 
 ## Repository
 

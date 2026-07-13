@@ -7,3 +7,4 @@ gradlew.bat
 run/
 .DS_Store
 bin/
+.fake

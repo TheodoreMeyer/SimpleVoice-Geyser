@@ -15,6 +15,9 @@ This is due to the fact I built this as a websocket-based plugin, where anyone w
 
 ## Websocket
 - In Progress...
+### Protocol
+- Svg follows a protocol for server ↔ client communication.
+- This can be found at [Protocol]({% project_link api/protocol %}).
 
 ### To Be added
 - Connection types, so server admins can limit how you can connect.

@@ -3,7 +3,6 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.packets;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiation;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioTransportMode;
-import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioTransportPreference;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.servlets.JettyWebSocket;
 import org.json.JSONArray;
@@ -71,9 +70,7 @@ public final class CapabilitiesPacket implements Packet {
 
         if (negotiation == null) {
             negotiation = new AudioSessionNegotiation(
-                    AudioTransportPreference.fromConfig(
-                            SvgCore.getConfig().AUDIO_TRANSPORT_MODE.get()
-                    ),
+                    AudioTransportMode.fromConfig(SvgCore.getConfig()),
                     Boolean.TRUE.equals(
                             SvgCore.getConfig().AUDIO_ALLOW_LEGACY_FALLBACK.get()
                     )

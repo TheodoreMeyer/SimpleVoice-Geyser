@@ -1,5 +1,7 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.api.data;
 
+import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,7 @@ public final class SvgConfig {
         defaults.put("client.idletimeout", 2);
         defaults.put("client.requireBedrock", false);
         defaults.put("client.useEmoteForSVG", true);
+        defaults.put("client.web-chat-enabled", true);
         defaults.put("server.group.default.enabled", true);
         defaults.put("server.group.default.password", "1a2b");
         defaults.put("server.group.default.force-on-web-join", false);
@@ -74,6 +77,9 @@ public final class SvgConfig {
     public final ConfigKey<Boolean> USE_EMOTE =
             new ConfigKey <>(this, "client.useEmoteForSVG", true);
 
+    public final ConfigKey<Boolean> WEB_CHAT_ENABLED =
+            new ConfigKey<>(this, "client.web-chat-enabled", true);
+
     public final ConfigKey<Boolean> DEFAULT_GROUP_ENABLED =
             new ConfigKey <>(this, "server.group.default.enabled", true);
 
@@ -122,8 +128,8 @@ public final class SvgConfig {
     public final ConfigKey<Boolean> UPDATE_CHECKER_ENABLED =
             new ConfigKey <>(this, "updatechecker.enable", true);
 
-    private final ConfigKey<String> CONFIG_VERSION =
-            new ConfigKey <>(this, "config-version", "0.1.1-dev-migration1");
+    public final ConfigKey<String> CONFIG_VERSION =
+            new ConfigKey <>(this, "config-version", SvgCore.VERSION);
 
     private final List<ConfigKey<?>> ALL_KEYS = List.of(
             CONFIG_INFO,
@@ -131,6 +137,7 @@ public final class SvgConfig {
             IDLE_TIMEOUT,
             REQUIRE_BEDROCK,
             USE_EMOTE,
+            WEB_CHAT_ENABLED,
             DEFAULT_GROUP_ENABLED,
             DEFAULT_GROUP_PASSWORD,
             DEFAULT_GROUP_FORCE_ON_WEB_JOIN,
