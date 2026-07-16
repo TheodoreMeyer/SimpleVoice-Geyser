@@ -203,10 +203,6 @@ export class SvgUI {
             Logger.log("Failed to load audio devices.");
         }
 
-        Logger.log(
-            "Audio devices loaded successfully."
-        );
-
         if (navigator.mediaDevices &&
             typeof navigator.mediaDevices.addEventListener === "function"
         ) {
