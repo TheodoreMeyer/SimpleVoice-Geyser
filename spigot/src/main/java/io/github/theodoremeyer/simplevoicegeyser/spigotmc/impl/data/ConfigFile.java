@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Set;
 
 public class ConfigFile extends SvgFile {
@@ -88,6 +89,11 @@ public class ConfigFile extends SvgFile {
     @Override
     public double getDouble(String path, double def) {
         return config.getDouble(path, def);
+    }
+
+    @Override
+    public List<String> getStringList(String path, List<String> def) {
+        return config.contains(path) ? config.getStringList(path) : def;
     }
 
     @Override

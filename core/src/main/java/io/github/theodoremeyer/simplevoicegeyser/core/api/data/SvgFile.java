@@ -1,6 +1,7 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.api.data;
 
 import java.io.File;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -97,6 +98,8 @@ public abstract class SvgFile {
      * @return the value
      */
     public abstract double getDouble(String path, double def);
+
+    public abstract List<String> getStringList(String path, List<String> def);
 
     /**
      * Regenerates defaults from bundled resources and merges user values.

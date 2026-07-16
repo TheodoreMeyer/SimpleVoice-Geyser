@@ -22,6 +22,19 @@ client:
   # Allows players using web-chat to chat in-game
   web-chat-enabled: true
 
+  allowedTypes:
+
+    # default: true
+    # When true, listed client types are blocked. When false, only listed client types are allowed.
+    isBlackList: true
+
+    # default: no client types listed
+    # Client type names to use with the blacklist/whitelist mode above.
+    # Uncomment one or both entries below when using blacklist/whitelist mode.
+    list:
+      # - Web
+      # - Svg-App
+
 server:
 
   group:

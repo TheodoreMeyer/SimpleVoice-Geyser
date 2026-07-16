@@ -84,7 +84,11 @@ export class SvgWebSocket {
             this.ws.send(JSON.stringify({
                 type: "join",
                 ...this.lastCredentials,
-                build: window.BUILD_ID || "unknown"
+                clientType: {
+                    type: "Web",
+                    serverVersion: window.PROJECT_VERSION || "unknown",
+                    serverBuild: window.BUILD_ID || "unknown"
+                }
             }));
             Logger.log("Connected.");
             this.reconnectAttempts = 0;
