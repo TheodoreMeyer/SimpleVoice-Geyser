@@ -137,8 +137,8 @@ server:
    # See more at https://theodoremeyer.github.io/projects/simplevoicegeyser/install/audio-transport/
    audio:
      
-     # default: auto
-     # options: auto, legacy, svg-v2
+     # default: svg-v2
+     # options: legacy, svg-v2
      # This is the audio transport mode, deciding how to send audio to client.
      # legacy: uses the legacy audio transport mode, which is compatible with all clients.
      # svg-v2: uses the new svg-v2 audio transport mode, which is only compatible with clients that support it.

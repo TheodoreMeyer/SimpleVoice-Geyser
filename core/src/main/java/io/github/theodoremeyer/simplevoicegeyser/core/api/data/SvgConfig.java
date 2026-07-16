@@ -38,7 +38,7 @@ public final class SvgConfig {
         defaults.put("server.security.max-auth-failures", 5);
         defaults.put("server.security.auth-fail-duration", 3);
         defaults.put("server.security.auth-lock-duration", 8);
-        defaults.put("server.audio.transport-mode", "auto");
+        defaults.put("server.audio.transport-mode", "svg-v2");
         defaults.put("server.audio.allow-legacy-fallback", true);
         defaults.put("debug", false);
         defaults.put("updatechecker.enable", true);
@@ -113,7 +113,7 @@ public final class SvgConfig {
             new ConfigKey <>(this, "server.security.auth-lock-duration", 8);
 
     public final ConfigKey<String> AUDIO_TRANSPORT_MODE =
-            new ConfigKey <>(this, "server.audio.transport-mode", "auto");
+            new ConfigKey <>(this, "server.audio.transport-mode", "svg-v2");
 
     public final ConfigKey<Boolean> AUDIO_ALLOW_LEGACY_FALLBACK =
             new ConfigKey <>(this, "server.audio.allow-legacy-fallback", true);
