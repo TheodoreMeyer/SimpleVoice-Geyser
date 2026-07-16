@@ -6,7 +6,7 @@ project: simplevoicegeyser
 ## This page shows the best way, and main steps to join the voice chat using Simple Voice Chat Geyser.
 
 ### Other Guides
-- Flags: [Chrome Flags](/projects/simplevoicegeyser/join/chrome-flags/)
+- Flags: [Chrome Flags]({% project_link joining/chrome-flags %})
 
 ## ALL
 - When you join via the website, you auto join a group named Svg with a password of 1a2b.

@@ -56,7 +56,7 @@ Set up a reverse proxy (e.g. Nginx, Caddy):
 
 ### Use Strong Passwords
 
-- Minimum 8+ characters
+- Minimum 8-32 characters
 - Avoid defaults
 - Rotate periodically if exposed publicly
 

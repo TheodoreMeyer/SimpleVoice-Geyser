@@ -17,7 +17,7 @@ This is due to the fact I built this as a websocket-based plugin, where anyone w
 - In Progress...
 ### Protocol
 - Svg follows a protocol for server ↔ client communication.
-- This can be found at [Protocol](https://theodoremeyer.github.io/projects/simplevoicegeyser/api/protocol/).
+- This can be found at [Protocol]({% project_link api/protocol %}).
 - Android/Svg-App client awareness is documented at [Android Awareness](https://theodoremeyer.github.io/projects/simplevoicegeyser/0.1.3/android-awareness/).
 
 ### To Be added

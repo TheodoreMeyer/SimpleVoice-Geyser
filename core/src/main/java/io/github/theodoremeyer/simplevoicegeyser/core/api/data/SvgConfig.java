@@ -1,5 +1,7 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.api.data;
 
+import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,8 +124,8 @@ public final class SvgConfig {
     public final ConfigKey<Boolean> UPDATE_CHECKER_ENABLED =
             new ConfigKey <>(this, "updatechecker.enable", true);
 
-    private final ConfigKey<String> CONFIG_VERSION =
-            new ConfigKey <>(this, "config-version", "0.1.1-dev-migration1");
+    public final ConfigKey<String> CONFIG_VERSION =
+            new ConfigKey <>(this, "config-version", SvgCore.VERSION);
 
     private final List<ConfigKey<?>> ALL_KEYS = List.of(
             CONFIG_INFO,

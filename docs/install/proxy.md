@@ -78,6 +78,7 @@ SSL Certificates
 - Works with Nginx, Caddy, etc.
 
 ## Alternative: Caddy (Simpler)
+
 yourdomain.com {
     reverse_proxy localhost:8080
 }
@@ -88,7 +89,9 @@ Result
 
 Users connect via:
 
+```text
 https://yourdomain.com
+```
 
 Instead of:
 
