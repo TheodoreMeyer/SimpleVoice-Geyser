@@ -29,7 +29,7 @@ public enum AudioTransportMode {
 
         return switch (normalized) {
             case "legacy" -> LEGACY;
-            case "svg-v2", "svg_v2", "v2" -> SVG_V2;
+            case "svg-v2", "svg_v2", "v2", "auto" -> SVG_V2;
             default -> SVG_V2;
         };
     }
