@@ -134,7 +134,7 @@ server:
      # This is the lockout in minutes when max-auth-failures has been reached.
      auth-lock-duration: 5
    
-   # See more at https://theodoremeyer.github.io/projects/simplevoicegeyser/0.1.2/audio-transport/
+   # See more at https://theodoremeyer.github.io/projects/simplevoicegeyser/install/audio-transport/
    audio:
      
      # default: auto
@@ -159,7 +159,7 @@ Debug: false
 # default: false
 # Version of server associated with config
 # DO NOT CHANGE, or config may be reset/messed up
-config-version: 0.1.2
+config-version: 0.1.3
 ```
 
 ### Important Notes

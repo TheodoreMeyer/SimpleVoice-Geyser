@@ -41,7 +41,7 @@ A Geyser Extension to allow Bedrock Clients to connect with Simple voice Chat.
 - old wiki: [wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki).
 
 ## Coming Soon
-- Dev Release (v 0.1.2-Dev)
+- Dev Release (v 0.1.4-Dev)
 - Initial Release (v 1.0.0)
 
 ## Features to be worked on
@@ -65,13 +65,6 @@ Reach out through issues!
 - Java 25 or newer is required to build this project from source.
 
 - Microphone/Speaker options may or may not work, depending on your browser, as this was built for Google Chrome.
-
-## Audio Transport Migration (PR #45)
-- `server.audio.transport-mode`: `auto` (default), `legacy`, `svg-v2`
-- `server.audio.allow-legacy-fallback`: `true` (default during migration)
-
-`auto` keeps compatibility by defaulting to legacy PCM transport when client capabilities are missing or unsupported, and uses `svg-v2` only when the client reports compatible decoder support.
-See [Audio Transport](docs/install/audio-transport.md) for current transport and fallback behavior.
 
 ## Developer Notes
 - Please see the contributing.md before contributing to this project.

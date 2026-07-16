@@ -1,5 +1,6 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.server.connection.compatibility;
 
+import io.github.theodoremeyer.simplevoicegeyser.core.BuildInfo;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -10,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ClientCompatibilityValidatorTest {
 
-    private static final String SERVER_VERSION = "0.1.2";
-    private static final String BUILD_ID = "server-build";
+    private static final String SERVER_VERSION = BuildInfo.PROJECT_VERSION;//"0.1.3";
+    private static final String BUILD_ID = BuildInfo.BUILD_ID;//"server-build";
     private static final ClientTypePolicy ALLOW_ALL =
             new ClientTypePolicy(true, List.of());
 

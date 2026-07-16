@@ -15,7 +15,7 @@ with:
 ```json
 "clientType": {
   "type": "Svg-App",
-  "serverVersion": "0.1.2"
+  "serverVersion": "0.1.3"
 }
 ```
 

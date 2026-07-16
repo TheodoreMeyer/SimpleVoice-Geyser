@@ -6,7 +6,7 @@ project: simplevoicegeyser
 
 # Protocol Reference
 
-This page documents the 0.1.2 websocket client/server packet flow. It covers the browser web UI and native Android app protocol used by Simple Voice Geyser, not the internal Simple Voice Chat protocol.
+This page documents the 0.1.2-3 websocket client/server packet flow. It covers the browser web UI and native Android app protocol used by Simple Voice Geyser, not the internal Simple Voice Chat protocol.
 
 ## Connection
 
@@ -274,7 +274,7 @@ Known close reasons used by compatibility validation:
 
 ## Client To Server Audio
 
-The 0.1.2 web client sends microphone audio as binary websocket frames after authentication.
+The 0.1.2-3 web client sends microphone audio as binary websocket frames after authentication.
 
 Current packet shape:
 
