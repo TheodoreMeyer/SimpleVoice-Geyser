@@ -93,7 +93,7 @@ public class ConfigFile extends SvgFile {
 
     @Override
     public List<String> getStringList(String path, List<String> def) {
-        return config.contains(path) ? config.getStringList(path) : def;
+        return config.isList(path) ? config.getStringList(path) : def;
     }
 
     @Override

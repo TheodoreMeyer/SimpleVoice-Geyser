@@ -8,15 +8,15 @@ import {PttController} from "./ptt.js";
 
 export class SvgUI {
 
-    /** @type {import("./types.js").FormElements} */
+    /** @type {import("./utils/types.js").FormElements} */
     form;
-    /** @type {import("./types.js").AudioElements} */
+    /** @type {import("./utils/types.js").AudioElements} */
     audio;
 
-    /** @type {import("./types.js").PttElements} */
+    /** @type {import("./utils/types.js").PttElements} */
     ptt;
 
-    /** @type {import("./types.js").DevElements} */
+    /** @type {import("./utils/types.js").DevElements} */
     dev;
 
 

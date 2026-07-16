@@ -4,8 +4,8 @@ import {SvgAudio} from "./audio/audio.js";
 import {ChatLogger} from "./utils/logger.js";
 
 /**
- * @import {SvgClientOptions} from "./types.js"
- * @import {SvgUIOptions} from "./util/internal-types.js"
+ * @import {SvgClientOptions} from "./utils/types.js"
+ * @import {SvgUIOptions} from "./utils/internal-types.js"
  */
 
 /**
