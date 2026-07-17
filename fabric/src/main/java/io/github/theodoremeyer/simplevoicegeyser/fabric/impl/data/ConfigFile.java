@@ -1,11 +1,13 @@
 package io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data;
 
 import com.google.gson.*;
-import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricLogger;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
@@ -13,7 +15,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class ConfigFile extends SvgFile {
@@ -142,27 +143,6 @@ public class ConfigFile extends SvgFile {
     }
 
     @Override
-    public MigrationReport migrateFromBundledDefaults(String trigger) {
-        JsonObject defaults = loadBundledDefaults();
-        if (defaults == null) {
-            return new MigrationReport("json", "", 0, false);
-        }
-
-        JsonObject existing = data != null ? data : new JsonObject();
-        AddedCounter counter = new AddedCounter();
-        JsonObject merged = mergeObject(defaults, existing, counter);
-
-        if (counter.count == 0) {
-            return new MigrationReport("json", "", 0, false);
-        }
-
-        String backupPath = backupCurrentConfig();
-        this.data = merged;
-        save();
-        return new MigrationReport("json", backupPath, counter.count, true);
-    }
-
-    @Override
     public void save() {
         try (FileWriter writer = new FileWriter(file)) {
             GSON.toJson(data, writer);
@@ -239,54 +219,8 @@ public class ConfigFile extends SvgFile {
         save();
     }
 
-    private JsonObject loadBundledDefaults() {
-        return buildCodeDefaults();
-    }
-
-    private JsonObject buildCodeDefaults() {
-        JsonObject root = new JsonObject();
-        for (Map.Entry<String, Object> entry : SvgConfig.codeDefaults().entrySet()) {
-            setJsonPath(root, entry.getKey(), entry.getValue());
-        }
-        return root;
-    }
-
-    private void setJsonPath(JsonObject root, String path, Object value) {
-        String[] parts = path.split("\\.");
-        JsonObject current = root;
-        for (int i = 0; i < parts.length - 1; i++) {
-            String key = parts[i];
-            JsonElement existing = current.get(key);
-            if (!(existing instanceof JsonObject)) {
-                JsonObject next = new JsonObject();
-                current.add(key, next);
-                current = next;
-            } else {
-                current = existing.getAsJsonObject();
-            }
-        }
-
-        JsonElement element;
-        if (value == null) {
-            element = JsonNull.INSTANCE;
-        } else if (value instanceof Number number) {
-            element = new JsonPrimitive(number);
-        } else if (value instanceof Boolean bool) {
-            element = new JsonPrimitive(bool);
-        } else if (value instanceof Character ch) {
-            element = new JsonPrimitive(ch);
-        } else if (value instanceof Iterable<?> iterable) {
-            JsonArray array = new JsonArray();
-            iterable.forEach(item -> array.add(String.valueOf(item)));
-            element = array;
-        } else {
-            element = new JsonPrimitive(String.valueOf(value));
-        }
-
-        current.add(parts[parts.length - 1], element);
-    }
-
-    private String backupCurrentConfig() {
+    @Override
+    public String backup() {
         if (!file.exists()) {
             return "";
         }
@@ -299,54 +233,5 @@ public class ConfigFile extends SvgFile {
             logger.error("[Config] Failed backing up config.json", e);
             return "";
         }
-    }
-
-    private JsonObject mergeObject(JsonObject defaults, JsonObject existing, AddedCounter counter) {
-        JsonObject merged = new JsonObject();
-
-        for (String key : defaults.keySet()) {
-            JsonElement defaultValue = defaults.get(key);
-            if (existing.has(key)) {
-                JsonElement existingValue = existing.get(key);
-                if (defaultValue != null && defaultValue.isJsonObject()
-                        && existingValue != null && existingValue.isJsonObject()) {
-                    merged.add(key, mergeObject(defaultValue.getAsJsonObject(), existingValue.getAsJsonObject(), counter));
-                } else {
-                    merged.add(key, existingValue.deepCopy());
-                }
-            } else {
-                merged.add(key, defaultValue.deepCopy());
-                counter.count += countLeafNodes(defaultValue);
-            }
-        }
-
-        for (String key : existing.keySet()) {
-            if (!merged.has(key)) {
-                merged.add(key, existing.get(key).deepCopy());
-            }
-        }
-        return merged;
-    }
-
-    private int countLeafNodes(JsonElement element) {
-        if (element == null || element.isJsonNull()) {
-            return 1;
-        }
-        if (element.isJsonPrimitive() || element.isJsonArray()) {
-            return 1;
-        }
-        if (!element.isJsonObject()) {
-            return 1;
-        }
-        int total = 0;
-        JsonObject obj = element.getAsJsonObject();
-        for (String key : obj.keySet()) {
-            total += countLeafNodes(obj.get(key));
-        }
-        return total;
-    }
-
-    private static final class AddedCounter {
-        private int count = 0;
     }
 }

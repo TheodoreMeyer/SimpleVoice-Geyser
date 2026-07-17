@@ -15,15 +15,9 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.lang.reflect.Proxy;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SvgAudioListenerTest {
 
@@ -241,6 +235,11 @@ class SvgAudioListenerTest {
         @Override
         public File getFile() {
             return new File("test-config.yml");
+        }
+
+        @Override
+        public String backup() {
+            return "";
         }
 
         @Override

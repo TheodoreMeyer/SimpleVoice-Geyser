@@ -2,49 +2,12 @@ package io.github.theodoremeyer.simplevoicegeyser.core.api.data;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Represents the configuration for Simple Voice Geyser. This class is responsible for loading and saving the configuration file, as well as providing access to the configuration values.
  */
 public final class SvgConfig {
-
-    /**
-     * Canonical config defaults used by all platforms.
-     * @return map of dotted config paths to default values
-     * <p>
-     * May be removed
-     */
-    public static Map<String, Object> codeDefaults() {
-
-        Map<String, Object> defaults = new LinkedHashMap<>();
-        defaults.put("config-info", "This file is used to configure Simple Voice Geyser. "
-                + "For more information, see the wiki: https://theodoremeyer.github.io/projects/simplevoicegeyser/");
-        defaults.put("client.vctimeout", 30);
-        defaults.put("client.idletimeout", 2);
-        defaults.put("client.requireBedrock", false);
-        defaults.put("client.useEmoteForSVG", true);
-        defaults.put("client.web-chat-enabled", true);
-        defaults.put("client.allowedTypes.isBlackList", true);
-        defaults.put("client.allowedTypes.list", List.of());
-        defaults.put("server.group.default.enabled", true);
-        defaults.put("server.group.default.password", "1a2b");
-        defaults.put("server.group.default.force-on-web-join", false);
-        defaults.put("server.port", 8080);
-        defaults.put("server.bind-address", "0.0.0.0");
-        defaults.put("server.context-path", "/");
-        defaults.put("server.security.max-auth-failures", 5);
-        defaults.put("server.security.auth-fail-duration", 3);
-        defaults.put("server.security.auth-lock-duration", 8);
-        defaults.put("server.audio.transport-mode", "svg-v2");
-        defaults.put("server.audio.allow-legacy-fallback", true);
-        defaults.put("debug", false);
-        defaults.put("updatechecker.enable", true);
-        defaults.put("config-version", "0.1.1-dev-migration1");
-        return defaults;
-    }
 
     private final SvgFile file;
 
@@ -53,7 +16,7 @@ public final class SvgConfig {
         applyDefaults();
     }
 
-    SvgFile getFile() {
+    public SvgFile getFile() {
         if (file == null) {
             throw new IllegalStateException("SvgConfig not initialized");
         }
@@ -155,15 +118,59 @@ public final class SvgConfig {
     public void applyDefaults() {
         SvgFile file = getFile();
 
+        String backupPath = null;
+        int addedKeys = 0;
+        boolean modified = false;
+
+        // Add any missing config keys
         for (ConfigKey<?> key : ALL_KEYS) {
-            if (!file.has(key.path())) {
+            if (key.exists()) {
+
+                if (!modified) {
+                    backupPath = file.backup();
+                    modified = true;
+                }
+
                 file.set(key.path(), key.def());
+                addedKeys++;
             }
         }
 
-        file.set(CONTEXT_PATH.path(), normalizeContextPath(CONTEXT_PATH.get()));
-        file.set(CONFIG_VERSION.path(), CONFIG_VERSION.get());
-        file.save();
+        // Normalize context path if needed
+        String currentContext = CONTEXT_PATH.get();
+        String normalizedContext = normalizeContextPath(currentContext);
+        if (!normalizedContext.equals(currentContext)) {
+
+            if (!modified) {
+                backupPath = file.backup();
+                modified = true;
+            }
+
+            file.set(CONTEXT_PATH.path(), normalizedContext);
+        }
+
+        // Update config version if needed
+        if (!SvgCore.VERSION.equals(CONFIG_VERSION.get())) {
+
+            if (!modified) {
+                backupPath = file.backup();
+                modified = true;
+            }
+
+            file.set(CONFIG_VERSION.path(), SvgCore.VERSION);
+        }
+
+        if (modified) {
+            file.save();
+
+            SvgCore.getLogger().info(
+                    "[Config] Configuration updated."
+                            + (addedKeys > 0 ? " Added " + addedKeys + " missing key(s)." : "")
+                            + (backupPath == null || backupPath.isBlank()
+                            ? ""
+                            : " Backup: " + backupPath)
+            );
+        }
     }
 
     public static String normalizeContextPath(String contextPath) {

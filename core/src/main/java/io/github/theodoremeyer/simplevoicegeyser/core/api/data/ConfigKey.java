@@ -43,4 +43,12 @@ public record ConfigKey<T>(SvgConfig config, String path, T def) {
         file.set(path, value);
         file.save();
     }
+
+    /**
+     * Checks whether the key exists in the config file
+     * @return true if the key exists, false otherwise
+     */
+    public boolean exists() {
+        return config.getFile().has(path);
+    }
 }
