@@ -10,7 +10,15 @@ import org.json.JSONObject;
 
 import java.util.Locale;
 
+/**
+ * Handles incoming Capabilities packet from client
+ */
 public final class CapabilitiesPacket implements Packet {
+
+    /**
+     * No args required
+     */
+    public CapabilitiesPacket() {}
 
     @Override
     public String getType() {

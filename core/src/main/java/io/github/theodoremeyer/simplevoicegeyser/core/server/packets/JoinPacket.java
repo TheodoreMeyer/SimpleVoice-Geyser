@@ -15,7 +15,15 @@ import io.github.theodoremeyer.simplevoicegeyser.core.server.servlets.JettyWebSo
 import org.eclipse.jetty.websocket.api.Session;
 import org.json.JSONObject;
 
+/**
+ * Handles the Join Packet from the Client
+ */
 public final class JoinPacket implements Packet {
+
+    /**
+     * No Arg Constructor
+     */
+    public JoinPacket() {}
 
     @Override
     public String getType() {
@@ -72,7 +80,7 @@ public final class JoinPacket implements Packet {
             return;
         }
 
-        SvgConnection connection = socket.getConnectionManager().connect(
+        SvgConnection connection = SvgCore.getConnectionManager().connect(
                 socket.getSession(),
                 response.player(),
                 socket.getAudioNegotiation(),

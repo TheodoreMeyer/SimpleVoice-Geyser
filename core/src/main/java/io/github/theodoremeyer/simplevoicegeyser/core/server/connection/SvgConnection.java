@@ -32,6 +32,13 @@ public final class SvgConnection {
     private volatile boolean authenticated;
     private volatile boolean closed;
 
+    /**
+     * Create a Connection
+     * @param session associated Session
+     * @param player associated player
+     * @param audioNegotiation negotiation for audio
+     * @param clientIdentity the Client's Identity
+     */
     SvgConnection(
             Session session,
             SvgPlayer player,
@@ -45,6 +52,10 @@ public final class SvgConnection {
         this.clientIdentity = clientIdentity;
     }
 
+    /**
+     * Authenticate the session for the player
+     * @throws AuthException exception if authentication fails
+     */
     public synchronized void authenticate() throws AuthException {
         if (authenticated) {
             return;
@@ -81,6 +92,11 @@ public final class SvgConnection {
         );
     }
 
+    /**
+     * Disconnect the SvgConnection from SVC and the session
+     * @param code close code
+     * @param reason close reason
+     */
     public synchronized void disconnect(int code, String reason) {
         if (closed) {
             return;
@@ -120,6 +136,10 @@ public final class SvgConnection {
         }
     }
 
+    /**
+     * Send JSON data to the client
+     * @param json JSON packet
+     */
     public void sendJson(JSONObject json) {
         if (closed || !session.isOpen()) {
             return;
@@ -133,6 +153,12 @@ public final class SvgConnection {
         }
     }
 
+    /**
+     * Send a message to the client
+     * @param type message type
+     * @param message message content
+     * @param fatal whether the message is fatal
+     */
     public void sendMessage(ConnectionStates.MessageType type, String message, boolean fatal) {
         JSONObject json = new JSONObject();
         json.put("type", type);
@@ -141,43 +167,88 @@ public final class SvgConnection {
         sendJson(json);
     }
 
+    /**
+     * Send an error to the client
+     * @param message error message
+     * @param fatal whether the error is fatal
+     */
     public void sendError(String message, boolean fatal) {
         sendMessage(ConnectionStates.MessageType.ERROR, message, fatal);
     }
 
+    /**
+     * Send a status message
+     * @param message message to send
+     */
     public void sendStatus(String message) {
         sendMessage(ConnectionStates.MessageType.STATUS, message, false);
     }
 
+    /**
+     * Send a Chat Message to the client
+     * @param message chat message
+     */
     public void sendChat(String message) {
         sendMessage(ConnectionStates.MessageType.CHAT, message, false);
     }
 
+    /**
+     * Send a fatal message to the client
+     * @param message fatal message
+     * @param closeCode close code
+     * @param closeReason close reason
+     */
     public void sendFatal(String message, int closeCode, String closeReason) {
         sendError(message, true);
         disconnect(closeCode, closeReason);
     }
 
+    /**
+     * Get the Associated player's UUID
+     * @return Uuid
+     */
     public UUID getUuid() {
         return uuid;
     }
 
+    /**
+     * Get the associated player
+     * @return SvgPlayer
+     */
     public SvgPlayer getPlayer() {
         return player;
     }
 
+    /**
+     * Check if the Connection has authenticated yet
+     * @return if it has authenticated
+     */
     public boolean isAuthenticated() {
         return authenticated;
     }
 
+    /**
+     * Check to see if the connection has closed
+     * @return is closed
+     */
     public boolean isClosed() {
         return closed;
     }
 
+    /**
+     * Get the AudioSender that this Connection handles
+     * @return AudioSender
+     */
     public SvgAudioSender getAudioSender() {
         return audioSender;
     }
 
+    /**
+     * Get the Client's Identity
+     * <p>
+     * May be removed, and is unused
+     * @return ClientIdentity
+     */
     public ClientIdentity getClientIdentity() {
         return clientIdentity;
     }

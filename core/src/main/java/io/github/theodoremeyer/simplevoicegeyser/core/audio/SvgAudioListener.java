@@ -551,6 +551,10 @@ public final class SvgAudioListener {
         }
     }
 
+    /**
+     * Register the Listener with the SVC server API
+     * @return success
+     */
     public boolean registerListener() {
         PlayerAudioListener listener = serverApi.playerAudioListenerBuilder()
                 .setPlayer(listenerId)

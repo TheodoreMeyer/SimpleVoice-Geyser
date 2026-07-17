@@ -6,9 +6,17 @@ import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.Connecti
 import io.github.theodoremeyer.simplevoicegeyser.core.server.servlets.JettyWebSocket;
 import org.json.JSONObject;
 
+/**
+ * The Class handling the ChatPackets
+ */
 public class ChatPacket implements Packet {
 
     private static final int MAX_WEB_CHAT_LENGTH = 200;
+
+    /**
+     * A no arg Constructor
+     */
+    public ChatPacket() {}
 
     @Override
     public String getType() {

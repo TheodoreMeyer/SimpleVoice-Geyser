@@ -11,11 +11,19 @@ public final class SvgConfig {
 
     private final SvgFile file;
 
+    /**
+     * Create the Config with an associated config file
+     * @param file file
+     */
     public SvgConfig(SvgFile file) {
         this.file = file;
         applyDefaults();
     }
 
+    /**
+     * Get the underlying file
+     * @return SvgFile
+     */
     public SvgFile getFile() {
         if (file == null) {
             throw new IllegalStateException("SvgConfig not initialized");
@@ -115,6 +123,9 @@ public final class SvgConfig {
             CONFIG_VERSION
     );
 
+    /**
+     * Apply Defaults to the file if any are missing
+     */
     public void applyDefaults() {
         SvgFile file = getFile();
 
@@ -173,6 +184,11 @@ public final class SvgConfig {
         }
     }
 
+    /**
+     * Take the ContextPath and try to normalize it
+     * @param contextPath path to normalize
+     * @return the normalized version
+     */
     public static String normalizeContextPath(String contextPath) {
         if (contextPath == null) {
             return "/";

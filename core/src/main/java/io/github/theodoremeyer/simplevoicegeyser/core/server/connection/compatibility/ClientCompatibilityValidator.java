@@ -3,6 +3,12 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.connection.compati
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
 import org.json.JSONObject;
 
+/**
+ * Class in charge of validating the compatibility of a client based on its join packet and expected server version/build.
+ * It checks for the presence and validity of clientType, type, serverVersion, and build fields, and ensures that the client is compatible with the server's expected version and build.
+ * It also checks against a provided ClientTypePolicy to determine if the client type is allowed.
+ * The class provides methods to validate both web clients and SVG app clients, returning a ClientCompatibilityResult indicating whether the client is accepted or rejected, along with relevant messages and codes.
+ */
 public final class ClientCompatibilityValidator {
 
     private static final String WEB_TYPE = "Web";
@@ -15,8 +21,19 @@ public final class ClientCompatibilityValidator {
                     "invalid_client_info"
             );
 
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
     private ClientCompatibilityValidator() {}
 
+    /**
+     * Validate the Compatibility of a client based on its join packet and expected server version/build.
+     * @param join join packet
+     * @param expectedServerVersion expected version
+     * @param expectedBrowserBuild expected build
+     * @param policy type policy
+     * @return Result
+     */
     public static ClientCompatibilityResult validate(
             JSONObject join,
             String expectedServerVersion,

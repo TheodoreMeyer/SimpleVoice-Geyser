@@ -4,6 +4,9 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
 
 import java.util.Locale;
 
+/**
+ * Represents the Mode of the AudioProtocol
+ */
 public enum AudioTransportMode {
 
     /**
@@ -19,6 +22,11 @@ public enum AudioTransportMode {
      */
     SVG_V2;
 
+    /**
+     * Get the Mode from the Config
+     * @param config the Config to fetch from
+     * @return AudioTransportMode
+     */
     public static AudioTransportMode fromConfig(SvgConfig config) {
         String rawValue = config.AUDIO_TRANSPORT_MODE.get();
         if (rawValue == null || rawValue.isBlank()) {

@@ -19,8 +19,19 @@ public final class ConnectionManager {
     private final Map<UUID, SvgConnection> connections =
             new ConcurrentHashMap<>();
 
+    /**
+     * No arg Constructor
+     */
     public ConnectionManager() {}
 
+    /**
+     * Connect a Session, and hold Identity and AudioSessionNegotiation for the player.
+     * @param session Session to connect
+     * @param player player Session represents
+     * @param audioNegotiation the negotiation session
+     * @param clientIdentity Client's Identity
+     * @return the SvgConnection
+     */
     public SvgConnection connect(
             Session session,
             SvgPlayer player,
@@ -51,10 +62,21 @@ public final class ConnectionManager {
         return connection;
     }
 
+    /**
+     * Get the Connection by Uuid
+     * @param uuid player's uuid
+     * @return the Connection if found
+     */
     public SvgConnection get(UUID uuid) {
         return connections.get(uuid);
     }
 
+    /**
+     * Disconnnect a Client Connection
+     * @param uuid player's Uuid
+     * @param code Code
+     * @param reason Reason
+     */
     public void disconnect(UUID uuid, int code, String reason) {
         SvgConnection connection = connections.remove(uuid);
 
@@ -71,6 +93,7 @@ public final class ConnectionManager {
 
     /**
      * Remove a connection after the websocket close has already been sent.
+     * @param connection the connection to remove
      */
     public void remove(SvgConnection connection) {
         if (connection == null) {
@@ -81,6 +104,9 @@ public final class ConnectionManager {
         connections.computeIfPresent(uuid, (ignored, current) -> current != connection ? current : null);
     }
 
+    /**
+     * Disconnect all Connections
+     */
     public void disconnectAll() {
         for (SvgConnection connection : connections.values()) {
             connection.disconnect(1001, "Server shutting down");
