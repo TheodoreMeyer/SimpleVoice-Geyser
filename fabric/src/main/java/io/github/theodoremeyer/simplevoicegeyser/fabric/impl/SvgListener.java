@@ -1,7 +1,6 @@
 package io.github.theodoremeyer.simplevoicegeyser.fabric.impl;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
-import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.sender.FabricPlayer;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.network.chat.Component;
@@ -44,9 +43,10 @@ public class SvgListener {
 
             UUID uuid = handler.player.getUUID();
 
-            SvgPlayer player = SvgCore.getPlayerManager().getPlayer(uuid);
+            FabricPlayer player = (FabricPlayer) SvgCore.getPlayerManager().getPlayer(uuid);
 
             if (player != null) {
+                player.isOnline = false;
                 SvgCore.getPlayerManager().removePlayer(player);
             }
         });

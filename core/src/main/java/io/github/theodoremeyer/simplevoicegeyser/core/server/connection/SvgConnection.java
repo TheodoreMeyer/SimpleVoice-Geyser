@@ -114,6 +114,10 @@ public final class SvgConnection {
         }
 
         SvgCore.getLogger().debug("SvgConnection: Disconnected connection: " + uuid + " (" + reason + ")");
+
+        if (player.isOnline()) {
+            player.sendMessage(SvgCore.getPrefix() + "Audio Disconnected");
+        }
     }
 
     public void sendJson(JSONObject json) {

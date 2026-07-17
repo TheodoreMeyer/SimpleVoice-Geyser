@@ -44,6 +44,11 @@ public class BukkitPlayer extends SvgPlayer {
     }
 
     @Override
+    public boolean isOnline() {
+        return player.isOnline();
+    }
+
+    @Override
     public Object getPlayer() {
         return player;
     }

@@ -145,8 +145,6 @@ public final class JettyWebSocket {
         SvgCore.getLogger().info("Error: " + error.getMessage());
     }
 
-    //Senders
-
     public void sendRaw(ConnectionStates.MessageType type, String message, boolean fatal) {
         if (session == null || !session.isOpen()) {
             return;

@@ -126,6 +126,8 @@ public final class JoinPacket implements Packet {
             }
         }
 
+        response.player().sendMessage(SvgCore.getPrefix() + "Connected!");
+
         connection.sendMessage(
                 ConnectionStates.MessageType.STATUS,
                 "Connected as " + connection.getPlayer().getName() + ".",
