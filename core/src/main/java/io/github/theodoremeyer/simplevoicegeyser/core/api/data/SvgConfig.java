@@ -124,7 +124,7 @@ public final class SvgConfig {
 
         // Add any missing config keys
         for (ConfigKey<?> key : ALL_KEYS) {
-            if (key.exists()) {
+            if (!key.exists()) {
 
                 if (!modified) {
                     backupPath = file.backup();
