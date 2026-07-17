@@ -17,7 +17,6 @@ public class BukkitPlayer extends SvgPlayer {
         this.player = player;
     }
 
-    //Svg Player Impl
     @Override
     public UUID getUniqueId() {
         return player.getUniqueId();
@@ -45,12 +44,33 @@ public class BukkitPlayer extends SvgPlayer {
     }
 
     @Override
+    public boolean isOnline() {
+        return player.isOnline();
+    }
+
+    @Override
     public Object getPlayer() {
         return player;
     }
 
     @Override
     public void sendMessage(String message) {
-        player.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
+        runOnMainThread(() -> player.sendMessage(translate(message)));
+    }
+
+    private void runOnMainThread(Runnable task) {
+        if (Bukkit.isPrimaryThread()) {
+            task.run();
+            return;
+        }
+
+        Bukkit.getScheduler().runTask(
+                SvgPlugin.getPlugin(SvgPlugin.class),
+                task
+        );
+    }
+
+    private String translate(String message) {
+        return ChatColor.translateAlternateColorCodes('&', message);
     }
 }

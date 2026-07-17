@@ -130,14 +130,14 @@ server:
      # Example: if set to 3, and max-auth-failures is 5, auth can fail 4 times in 3 minutes before being locked out.
      auth-fail-duration: 3
 
-     # default: 5
+     # default: 8
      # This is the lockout in minutes when max-auth-failures has been reached.
-     auth-lock-duration: 5
+     auth-lock-duration: 8
    
-   # See more at https://theodoremeyer.github.io/projects/simplevoicegeyser/0.1.2/audio-transport/
+   # See more at https://theodoremeyer.github.io/projects/simplevoicegeyser/install/audio-transport/
    audio:
      
-     # default: auto
+     # default: svg-v2
      # options: legacy, svg-v2
      # This is the audio transport mode, deciding how to send audio to client.
      # legacy: uses the legacy audio transport mode, which is compatible with all clients.
@@ -154,12 +154,11 @@ server:
 # default: false
 # Debug logs
 # Do NOT use this in production. This will very quickly fill up your server logs.
-Debug: false
-
-# default: false
+debug: false
+# default: 0.1.3
 # Version of server associated with config
 # DO NOT CHANGE, or config may be reset/messed up
-config-version: 0.1.2
+config-version: 0.1.3
 ```
 
 ### Important Notes

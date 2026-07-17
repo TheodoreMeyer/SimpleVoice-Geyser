@@ -34,6 +34,12 @@ public abstract class SvgPlayer extends Sender {
     public abstract void chat(String message);
 
     /**
+     * Is the player online
+     * @return whether they are online
+     */
+    public abstract boolean isOnline();
+
+    /**
      * Allows to get the Platform's player instance if needed
      * @return the Player
      */

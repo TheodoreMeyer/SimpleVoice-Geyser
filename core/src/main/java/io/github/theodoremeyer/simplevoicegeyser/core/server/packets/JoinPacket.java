@@ -7,11 +7,23 @@ import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.Connecti
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.SvgConnection;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.AuthException;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.AuthResponse;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.compatibility.ClientCompatibilityResult;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.compatibility.ClientCompatibilityValidator;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.compatibility.ClientIdentity;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.compatibility.ClientTypePolicy;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.servlets.JettyWebSocket;
 import org.eclipse.jetty.websocket.api.Session;
 import org.json.JSONObject;
 
+/**
+ * Handles the Join Packet from the Client
+ */
 public final class JoinPacket implements Packet {
+
+    /**
+     * No Arg Constructor
+     */
+    public JoinPacket() {}
 
     @Override
     public String getType() {
@@ -25,9 +37,28 @@ public final class JoinPacket implements Packet {
                 + socket.addJoinAttempt() + " from "
                 + socket.getSession().getRemoteAddress());
 
-        if (!checkClientBuild(socket, json)) {
+        ClientCompatibilityResult compatibility = ClientCompatibilityValidator.validate(
+                json,
+                SvgCore.VERSION,
+                SvgCore.BUILD_ID,
+                ClientTypePolicy.fromConfig(SvgCore.getConfig())
+        );
+
+        if (!compatibility.accepted()) {
+            SvgCore.getLogger().debug(
+                    "WebSocket: Join rejected by compatibility gate reason="
+                            + compatibility.closeReason()
+            );
+            socket.sendRaw(ConnectionStates.MessageType.ERROR, compatibility.message(), false);
+            closeCompatibilityFailure(socket, compatibility);
             return;
         }
+
+        ClientIdentity clientIdentity = compatibility.identity();
+        SvgCore.getLogger().debug(
+                "WebSocket: Join compatibility accepted client="
+                        + clientIdentity.toLogString()
+        );
 
         if (socket.getConnection() != null) {
             socket.getConnection().sendError("Already authenticated.", false);
@@ -49,10 +80,11 @@ public final class JoinPacket implements Packet {
             return;
         }
 
-        SvgConnection connection = socket.getConnectionManager().connect(
+        SvgConnection connection = SvgCore.getConnectionManager().connect(
                 socket.getSession(),
                 response.player(),
-                socket.getAudioNegotiation()
+                socket.getAudioNegotiation(),
+                clientIdentity
         );
 
         socket.setConnection(connection);
@@ -102,6 +134,8 @@ public final class JoinPacket implements Packet {
             }
         }
 
+        response.player().sendMessage(SvgCore.getPrefix() + "Connected!");
+
         connection.sendMessage(
                 ConnectionStates.MessageType.STATUS,
                 "Connected as " + connection.getPlayer().getName() + ".",
@@ -115,36 +149,7 @@ public final class JoinPacket implements Packet {
         );
     }
 
-    private boolean checkClientBuild(JettyWebSocket socket, JSONObject json) {
-
-        String clientBuild = json.optString("build", "");
-
-        if (clientBuild.isEmpty()) {
-            socket.sendRaw(
-                    ConnectionStates.MessageType.ERROR,
-                    "Client missing build id. Update required.",
-                    false
-            );
-
-            closeUpdateRequired(socket);
-            return false;
-        }
-
-        if (!SvgCore.BUILD_ID.equals(clientBuild)) {
-            socket.sendRaw(
-                    ConnectionStates.MessageType.ERROR,
-                    "Outdated client. Please refresh.",
-                    false
-            );
-
-            closeUpdateRequired(socket);
-            return false;
-        }
-
-        return true;
-    }
-
-    private void closeUpdateRequired(JettyWebSocket socket) {
+    private void closeCompatibilityFailure(JettyWebSocket socket, ClientCompatibilityResult compatibility) {
 
         Session session = socket.getSession();
 
@@ -153,10 +158,7 @@ public final class JoinPacket implements Packet {
         }
 
         try {
-            session.close(
-                    ConnectionStates.DisconnectCodes.OUTDATED_CLIENT.getCode(),
-                    "update_required"
-            );
+            session.close(compatibility.closeCode(), compatibility.closeReason());
         } catch (Exception ignored) {
         }
     }

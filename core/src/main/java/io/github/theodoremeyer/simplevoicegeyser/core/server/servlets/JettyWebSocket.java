@@ -3,7 +3,6 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.servlets;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiation;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioTransportMode;
-import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.SvgConnection;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.ConnectionAuthenticator;
@@ -18,7 +17,7 @@ import java.time.Duration;
 import java.util.Arrays;
 
 /**
- * Wrapper for handling the session with player
+ * Class that handles talking to the Client
  */
 @WebSocket
 public final class JettyWebSocket {
@@ -28,9 +27,6 @@ public final class JettyWebSocket {
      */
     public static final ConnectionAuthenticator AUTHENTICATOR =
             new ConnectionAuthenticator();
-
-    private final ConnectionManager connectionManager =
-            SvgCore.getConnectionManager();
 
     private static final PacketHandler packetHandler = new PacketHandler();
 
@@ -44,13 +40,13 @@ public final class JettyWebSocket {
     private AudioSessionNegotiation audioNegotiation;
 
     /**
-     * Create an instance of the class
+     * No arg Constructor
      */
     public JettyWebSocket() {}
 
     /**
-     * What to do when a player connects
-     * @param session the connected session
+     * Code that runs on the Connect
+     * @param session connected Session
      */
     @OnWebSocketConnect
     public void onConnect(Session session) {
@@ -65,8 +61,8 @@ public final class JettyWebSocket {
     }
 
     /**
-     * Handles string messages from client
-     * @param message message from client
+     * Code triggered on a received message from the Session
+     * @param message message received
      */
     @OnWebSocketMessage
     public void onMessage(String message) {
@@ -98,10 +94,10 @@ public final class JettyWebSocket {
     }
 
     /**
-     * Handles byte messages from client
-     * @param buffer byte buffer
-     * @param offset offset
-     * @param length length
+     * Code that runs on a byte message from session
+     * @param buffer bytebuffer
+     * @param offset byte offset
+     * @param length byte length
      */
     @OnWebSocketMessage
     public void onMessage(byte[] buffer, int offset, int length) {
@@ -128,9 +124,9 @@ public final class JettyWebSocket {
     }
 
     /**
-     * Runs to close everything when websocket closes
+     * Code that runs when client closes the session
      * @param statusCode code
-     * @param reason why it closed
+     * @param reason close reason
      */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
@@ -154,15 +150,15 @@ public final class JettyWebSocket {
             );
 
             connection.disconnect(statusCode, reason);
-            connectionManager.remove(connection);
+            SvgCore.getConnectionManager().remove(connection);
         } else {
             SvgCore.getLogger().info("[WebSocket] Closed unknown session: " + reason);
         }
     }
 
     /**
-     * What to do on an error
-     * @param error error thrown
+     * Code that runs when an error is received from the client
+     * @param error error received
      */
     @OnWebSocketError
     public void onError(Throwable error) {
@@ -348,6 +344,12 @@ debug(
 
     //Senders
 
+    /**
+     * Send a Raw message to client
+     * @param type message type
+     * @param message message content
+     * @param fatal whether the message is fatal
+     */
     public void sendRaw(ConnectionStates.MessageType type, String message, boolean fatal) {
         if (session == null || !session.isOpen()) {
             return;
@@ -365,6 +367,11 @@ debug(
         }
     }
 
+    /**
+     * Send a JSON message to the client
+     * @param json message
+     * @return success
+     */
     public boolean sendJson(JSONObject json) {
         if (session == null || !session.isOpen()) {
             return false;
@@ -381,37 +388,61 @@ debug(
 
     //Getters. ONLY used in packet handlers, not for external use.
     // These should not be exposed to any outside classes.
+
+    /**
+     * Get the associated SvgConnection for this WebSocket
+     * @return SvgConnection
+     */
     public SvgConnection getConnection() {
         return connection;
     }
 
+    /**
+     * Get the Negotiation Session for audio type
+     * @return audio negotiation
+     */
     public AudioSessionNegotiation getAudioNegotiation() {
         return audioNegotiation;
     }
 
+    /**
+     * Get the underlying Session
+     * @return Session
+     */
     public Session getSession() {
         return session;
     }
 
-    public ConnectionManager getConnectionManager() {
-        return connectionManager;
-    }
-
+    /**
+     * Set the Connection associated with the session
+     * @param connection connection
+     */
     public void setConnection(SvgConnection connection) {
         this.connection = connection;
     }
 
+    /**
+     * Add a JoinAttempt
+     * @return the join attempts
+     */
     public long addJoinAttempt() {
         ++joinAttemptCount;
         return joinAttemptCount;
     }
 
+    /**
+     * Add the amount of Capability messages received from the client
+     * @return the count
+     */
     public long addCapabilityMessage() {
         ++capabilityMessageCount;
         return capabilityMessageCount;
     }
 
-
+    /**
+     * Set the AudioNegotiation as received from the Client
+     * @param audioNegotiation the audio Negotiation
+     */
     public void setAudioNegotiation(AudioSessionNegotiation audioNegotiation) {
         this.audioNegotiation = audioNegotiation;
     }

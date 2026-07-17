@@ -70,7 +70,7 @@ Feedback, issues, and contributions are welcome.
 * [Releases](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/releases)
   → See [Installation]({% project_link installation %}) for setup instructions.
 
-* Note- latest documentation changes can be found at [0.1.2 release docs]({% project_link releases/0.1.2 %}) for now, until the public website is fully updated.
+* Note-latest documentation changes can be found at [0.1.3 release docs]({% project_link releases/0.1.3 %}) for now, until the public website is fully updated.
 
 ## Repository
 

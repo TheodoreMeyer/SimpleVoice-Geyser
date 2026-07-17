@@ -2,9 +2,7 @@ package io.github.theodoremeyer.simplevoicegeyser.core.api.data;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Represents the configuration for Simple Voice Geyser. This class is responsible for loading and saving the configuration file, as well as providing access to the configuration values.
@@ -49,12 +47,20 @@ public final class SvgConfig {
 
     private final SvgFile file;
 
+    /**
+     * Create the Config with an associated config file
+     * @param file file
+     */
     public SvgConfig(SvgFile file) {
         this.file = file;
         applyDefaults();
     }
 
-    SvgFile getFile() {
+    /**
+     * Get the underlying file
+     * @return SvgFile
+     */
+    public SvgFile getFile() {
         if (file == null) {
             throw new IllegalStateException("SvgConfig not initialized");
         }
@@ -76,6 +82,12 @@ public final class SvgConfig {
 
     public final ConfigKey<Boolean> USE_EMOTE =
             new ConfigKey <>(this, "client.useEmoteForSVG", true);
+
+    public final ConfigKey<Boolean> CLIENT_ALLOWED_TYPES_BLACKLIST =
+            new ConfigKey<>(this, "client.allowedTypes.isBlackList", true);
+
+    public final ConfigKey<List<String>> CLIENT_ALLOWED_TYPES_LIST =
+            new ConfigKey<>(this, "client.allowedTypes.list", List.of());
 
     public final ConfigKey<Boolean> WEB_CHAT_ENABLED =
             new ConfigKey<>(this, "client.web-chat-enabled", true);
@@ -108,7 +120,7 @@ public final class SvgConfig {
             new ConfigKey <>(this, "server.security.auth-lock-duration", 8);
 
     public final ConfigKey<String> AUDIO_TRANSPORT_MODE =
-            new ConfigKey <>(this, "server.audio.transport-mode", "auto");
+            new ConfigKey <>(this, "server.audio.transport-mode", "svg-v2");
 
     public final ConfigKey<Boolean> AUDIO_ALLOW_LEGACY_FALLBACK =
             new ConfigKey <>(this, "server.audio.allow-legacy-fallback", true);
@@ -138,6 +150,8 @@ public final class SvgConfig {
             REQUIRE_BEDROCK,
             USE_EMOTE,
             WEB_CHAT_ENABLED,
+            CLIENT_ALLOWED_TYPES_BLACKLIST,
+            CLIENT_ALLOWED_TYPES_LIST,
             DEFAULT_GROUP_ENABLED,
             DEFAULT_GROUP_PASSWORD,
             DEFAULT_GROUP_FORCE_ON_WEB_JOIN,
@@ -157,20 +171,72 @@ public final class SvgConfig {
             CONFIG_VERSION
     );
 
+    /**
+     * Apply Defaults to the file if any are missing
+     */
     public void applyDefaults() {
         SvgFile file = getFile();
 
+        String backupPath = null;
+        int addedKeys = 0;
+        boolean modified = false;
+
+        // Add any missing config keys
         for (ConfigKey<?> key : ALL_KEYS) {
-            if (!file.has(key.path())) {
+            if (!key.exists()) {
+
+                if (!modified) {
+                    backupPath = file.backup();
+                    modified = true;
+                }
+
                 file.set(key.path(), key.def());
+                addedKeys++;
             }
         }
 
-        file.set(CONTEXT_PATH.path(), normalizeContextPath(CONTEXT_PATH.get()));
-        file.set(CONFIG_VERSION.path(), CONFIG_VERSION.get());
-        file.save();
+        // Normalize context path if needed
+        String currentContext = CONTEXT_PATH.get();
+        String normalizedContext = normalizeContextPath(currentContext);
+        if (!normalizedContext.equals(currentContext)) {
+
+            if (!modified) {
+                backupPath = file.backup();
+                modified = true;
+            }
+
+            file.set(CONTEXT_PATH.path(), normalizedContext);
+        }
+
+        // Update config version if needed
+        if (!SvgCore.VERSION.equals(CONFIG_VERSION.get())) {
+
+            if (!modified) {
+                backupPath = file.backup();
+                modified = true;
+            }
+
+            file.set(CONFIG_VERSION.path(), SvgCore.VERSION);
+        }
+
+        if (modified) {
+            file.save();
+
+            SvgCore.getLogger().info(
+                    "[Config] Configuration updated."
+                            + (addedKeys > 0 ? " Added " + addedKeys + " missing key(s)." : "")
+                            + (backupPath == null || backupPath.isBlank()
+                            ? ""
+                            : " Backup: " + backupPath)
+            );
+        }
     }
 
+    /**
+     * Take the ContextPath and try to normalize it
+     * @param contextPath path to normalize
+     * @return the normalized version
+     */
     public static String normalizeContextPath(String contextPath) {
         if (contextPath == null) {
             return "/";

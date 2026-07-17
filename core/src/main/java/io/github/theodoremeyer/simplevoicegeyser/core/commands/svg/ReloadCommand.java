@@ -2,6 +2,7 @@ package io.github.theodoremeyer.simplevoicegeyser.core.commands.svg;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.Sender;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgConsole;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
@@ -39,20 +40,15 @@ public class ReloadCommand implements SubCommand {
     }
 
     private void reload(Sender sender) {
-        var configFile = SvgCore.getPlatform().getFile(DataType.CONFIG);
+        SvgFile configFile = SvgCore.getPlatform().getFile(DataType.CONFIG);
+
         configFile.reload();
-        var migration = configFile.migrateFromBundledDefaults("reload");
         SvgCore.getConfig().applyDefaults();
 
         sender.sendMessage(SvgCore.getPrefix() + "Reloaded SimpleVoiceGeyser Config");
-        sender.sendMessage("Config migration: mode=" + migration.mode()
-                + ", addedKeys=" + migration.addedKeys()
-                + ", backup=" + (migration.backupPath().isBlank() ? "none" : migration.backupPath()));
-        sender.sendMessage("The reload will not update all config values used, several (like server port) require" +
-                " the server to be restarted to take effect.");
+        sender.sendMessage("The reload will not update all config values used. Several settings (such as the server port) require the server to be restarted to take effect.");
 
-        //Apply debug
+        // Apply debug
         SvgCore.getLogger().setDebug(SvgCore.getConfig().DEBUG.get());
-
     }
 }

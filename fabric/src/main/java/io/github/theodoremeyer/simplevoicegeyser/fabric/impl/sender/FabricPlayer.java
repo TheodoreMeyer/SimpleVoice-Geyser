@@ -12,6 +12,8 @@ public class FabricPlayer extends SvgPlayer {
 
     private final ServerPlayer player;
 
+    public boolean isOnline = true;
+
     public FabricPlayer(ServerPlayer player) {
         this.player = player;
     }
@@ -40,6 +42,13 @@ public class FabricPlayer extends SvgPlayer {
                 false
         );
     }
+
+    @Override
+    public boolean isOnline() {
+        return isOnline;
+    }
+
+
 
     @Override
     public Object getPlayer() {
