@@ -137,9 +137,10 @@ export class SvgWebSocket {
                         this.stopReconnection();
                     }
 
-                    Logger.log((packetType || "info") + ": " + (data.message || JSON.stringify(data)));
+                    Logger.debug((packetType || "info") + ": " + (data.message || JSON.stringify(data)));
                 } catch {
-                    Logger.log("Server: " + event.data);
+                    Logger.log("Received non-JSON message: " + event.type);
+                    Logger.debug("Server: " + event.data);
                 }
             } else {
                 await this.#handleIncomingBinaryFrame(event.data);
