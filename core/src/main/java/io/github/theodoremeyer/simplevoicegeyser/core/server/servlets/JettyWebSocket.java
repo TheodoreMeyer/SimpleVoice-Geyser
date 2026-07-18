@@ -182,7 +182,7 @@ public final class JettyWebSocket {
         }
 
         JSONObject json = new JSONObject();
-        json.put("type", type);
+        json.put("type", type.getJsonString());
         json.put("message", message);
         json.put("fatal", fatal);
 

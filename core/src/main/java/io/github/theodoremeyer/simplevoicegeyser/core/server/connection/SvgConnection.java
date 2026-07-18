@@ -161,7 +161,7 @@ public final class SvgConnection {
      */
     public void sendMessage(ConnectionStates.MessageType type, String message, boolean fatal) {
         JSONObject json = new JSONObject();
-        json.put("type", type);
+        json.put("type", type.getJsonString());
         json.put("message", message);
         json.put("fatal", fatal);
         sendJson(json);

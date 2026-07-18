@@ -99,6 +99,7 @@ export class SvgWebSocket {
             if (typeof event.data === "string") {
                 try {
                     const data = JSON.parse(event.data);
+                    const packetType = String(data.type || "").toLowerCase();
                     const msg = String(data.message || "").toLowerCase();
 
                     if (data?.fatal === true) {
@@ -106,16 +107,16 @@ export class SvgWebSocket {
                         this.stopReconnection();
                     }
 
-                    if (data.type === "status" && msg.includes("connected as")) {
+                    if (packetType === "status" && msg.includes("connected as")) {
                         this.hasJoined = true;
                         await this.#sendCapabilitiesOnce();
                     }
 
-                    if (data.type === "capabilities_ack") {
+                    if (packetType === "capabilities_ack") {
                         Logger.log(`[AudioRX] Server selected transport mode: ${data.selectedMode || "legacy"}`);
                     }
 
-                    if (data.type === "error") {
+                    if (packetType === "error") {
                         const isFatalError = msg.includes("bedrock player to join") ||
                             msg.includes("use /svg pswd") ||
                             msg.includes("access denied:") ||
@@ -136,7 +137,7 @@ export class SvgWebSocket {
                         this.stopReconnection();
                     }
 
-                    Logger.log((data.type || "info") + ": " + (data.message || JSON.stringify(data)));
+                    Logger.log((packetType || "info") + ": " + (data.message || JSON.stringify(data)));
                 } catch {
                     Logger.log("Server: " + event.data);
                 }
