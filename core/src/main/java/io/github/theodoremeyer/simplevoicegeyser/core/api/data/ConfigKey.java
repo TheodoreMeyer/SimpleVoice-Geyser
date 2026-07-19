@@ -1,5 +1,7 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.api.data;
 
+import java.util.List;
+
 /**
  * Represents a config key with a path and default value
  * @param config the config this key belongs to
@@ -22,6 +24,7 @@ public record ConfigKey<T>(SvgConfig config, String path, T def) {
             case Integer i -> file.getInt(path, i);
             case Boolean b -> file.getBoolean(path, b);
             case Double d -> file.getDouble(path, d);
+            case List<?> list -> file.getStringList(path, list.stream().map(String::valueOf).toList());
             default -> throw new IllegalStateException("Unsupported type: " + def.getClass());
         };
 
@@ -39,5 +42,13 @@ public record ConfigKey<T>(SvgConfig config, String path, T def) {
         SvgFile file = config.getFile();
         file.set(path, value);
         file.save();
+    }
+
+    /**
+     * Checks whether the key exists in the config file
+     * @return true if the key exists, false otherwise
+     */
+    public boolean exists() {
+        return config.getFile().has(path);
     }
 }

@@ -1,4 +1,4 @@
-import {log} from "../utils/logger.js";
+import {Logger} from "../utils/logger.js";
 
 const MAGIC_0 = 0x53; // 'S'
 const MAGIC_1 = 0x56; // 'V'
@@ -35,10 +35,10 @@ async function initWasmDecoder() {
         });
         await wasmDecoder.ready;
         wasmReady = true;
-        log("[AudioRX] Opus WASM decoder ready.");
+        Logger.log("[AudioRX] Opus WASM decoder ready.");
     } catch (err) {
         wasmInitError = err?.message || String(err);
-        log(`[AudioRX] Opus WASM decoder unavailable: ${wasmInitError}`);
+        Logger.log(`[AudioRX] Opus WASM decoder unavailable: ${wasmInitError}`);
     }
 }
 

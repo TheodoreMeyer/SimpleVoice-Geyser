@@ -1,6 +1,7 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.api.data;
 
 import java.io.File;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -8,15 +9,6 @@ import java.util.Set;
  * Can be JSON, yml, sqlite, etc
  */
 public abstract class SvgFile {
-
-    /**
-     * Result object for config migration routines.
-     * @param mode the migration mode used (e.g. "backup_and_replace", "merge", "none")
-     * @param backupPath if applicable, the path to the backup file created during migration
-     * @param addedKeys the number of keys added to the config as a result of migration
-     * @param migrated whether any migration actually occurred
-     */
-    public record MigrationReport(String mode, String backupPath, int addedKeys, boolean migrated) {}
 
     /**
      * Create something that represents a file
@@ -91,6 +83,12 @@ public abstract class SvgFile {
     public abstract File getFile();
 
     /**
+     * Backup Config File
+     * @return the path to the backup file
+     */
+    public abstract String backup();
+
+    /**
      * Get a double
      * @param path the path
      * @param def the default
@@ -99,13 +97,11 @@ public abstract class SvgFile {
     public abstract double getDouble(String path, double def);
 
     /**
-     * Regenerates defaults from bundled resources and merges user values.
-     * Implementations may return a no-op report when migration is unsupported.
-     *
-     * @param trigger why the migration ran (for logging context)
-     * @return migration report
+     * Get a List of Strings
+     * @param path the path
+     * @param def the default
+     * @return the value
      */
-    public MigrationReport migrateFromBundledDefaults(String trigger) {
-        return new MigrationReport("none", "", 0, false);
-    }
+    public abstract List<String> getStringList(String path, List<String> def);
+
 }

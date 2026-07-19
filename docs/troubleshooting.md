@@ -15,3 +15,21 @@ project: simplevoicegeyser
 
 ## Audio Sounds buggy
 - Make sure you have a good internet access.
+
+
+## Opening an issue:
+
+* Ensure all dependencies match supported versions
+* Check server logs for startup errors
+* Verify Geyser and Simple Voice Chat are functioning independently
+
+If issues persist, open an issue on the GitHub repository with:
+
+* server type (Paper / Fabric, etc.)
+* plugin versions
+* logs 
+    * client console
+    * Server logs
+    * client chatbox
+    * Optional: debug logs on server
+    * PLEASE NOTE: DO NOT share private information like usernames, passwords, and others in logs.

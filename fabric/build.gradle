@@ -31,7 +31,7 @@ dependencies {
     // =========================
     compileOnly "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
 
-    compileOnly 'net.luckperms:api:5.4'
+    compileOnly 'net.luckperms:api:5.5'
 }
 
 base {

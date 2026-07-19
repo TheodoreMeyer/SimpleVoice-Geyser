@@ -1,34 +1,95 @@
-let handler = console.log;
+/**
+ * @import {ChatElements} from "./types.js"
+ */
 
-// Initialize debug flag from localStorage
-window.debug = localStorage.getItem("debug") === "true";
+export class Logger {
 
-// Keep localStorage synced whenever debug changes
-Object.defineProperty(window, "debug", {
-    get() {
-        return this._debug ?? false;
-    },
-    set(value) {
-        this._debug = Boolean(value);
-        localStorage.setItem("debug", this._debug);
+    static handler = console.log;
+
+    /**
+     * @param {(msg: string) => void} handler
+     */
+    static setHandler(handler) {
+        Logger.handler = handler;
     }
-});
 
-// Trigger setter once with stored value
-window.debug = localStorage.getItem("debug") === "true";
+    /**
+     * @param {string} msg
+     */
+    static log(msg) {
+        Logger.handler(msg);
+    }
 
-export function setLogger(fn) {
-    handler = fn;
+    /**
+     * @param {string} msg
+     */
+    static debug(msg) {
+        console.log(`[DEBUG]: ` + msg);
+    }
 }
 
-export function log(msg) {
-    handler(msg);
-}
+export class ChatLogger {
 
-export function debug(msg) {
-    if (window.debug) {
-        log(msg);
-    } else {
-        console.debug(msg);
+    /** @type {ChatElements} */
+    options;
+
+    /**
+     * @param {ChatElements} options
+     * @param {*} webSocketController
+     */
+    constructor(
+        options,
+        webSocketController
+    ) {
+
+        this.options = options;
+        this.webSocketController =
+            webSocketController;
+    }
+
+    init() {
+
+        Logger.setHandler(
+            this.handleMessage.bind(this)
+        );
+
+        this.options.sendBtn.addEventListener(
+            "click",
+            () => {
+
+                const msg =
+                    this.options.inputEl.value.trim();
+
+                if (!msg) {
+                    return;
+                }
+
+                this.webSocketController.sendChat(
+                    msg
+                );
+
+                Logger.log(
+                    "[You] " + msg
+                );
+
+                this.options.inputEl.value = "";
+            }
+        );
+    }
+
+    /**
+     * @param {string} msg
+     */
+    handleMessage(msg) {
+
+        const time =
+            new Date()
+                .toLocaleTimeString();
+
+        this.options.logEl.textContent +=
+            `\n[${time}] ${msg}`;
+
+        this.options.logEl.scrollTop =
+            this.options.logEl.scrollHeight;
     }
 }
