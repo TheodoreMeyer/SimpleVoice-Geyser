@@ -3,7 +3,6 @@ package io.github.theodoremeyer.simplevoicegeyser.fabric.impl;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.sender.FabricPlayer;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.UUID;
@@ -21,21 +20,10 @@ public class SvgListener {
 
             ServerPlayer player = handler.player;
 
-            player.sendSystemMessage(
-                    Component.literal("This Server Uses SimpleVoice-Geyser")
-            );
+            FabricPlayer fabricPlayer = new FabricPlayer(player);
+            SvgCore.getJoinMessageHandler().sendJoinMessage(fabricPlayer);
 
-            player.sendSystemMessage(
-                    Component.literal("To set it up, run /svg pswd [password]")
-            );
-
-            player.sendSystemMessage(
-                    Component.literal("Then join via the server SVG website")
-            );
-
-            SvgCore.getPlayerManager().addPlayer(
-                    new FabricPlayer(player)
-            );
+            SvgCore.getPlayerManager().addPlayer(fabricPlayer);
         });
 
         // LEAVE
