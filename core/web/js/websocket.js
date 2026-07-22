@@ -16,6 +16,7 @@ export class SvgWebSocket {
         SERVER_SHUTDOWN: 4006,
         OUTDATED: 4008
     };
+    #statusChangeListeners = [];
 
     /**
      *
@@ -42,7 +43,15 @@ export class SvgWebSocket {
     connect(username, password, onStatusChange) {
         this.lastCredentials = { username, password };
         this.#resetState();
-        this.#createSocket(onStatusChange);
+        this.#createSocket();
+        this.addStatusChangeListener(onStatusChange);
+    }
+
+    addStatusChangeListener(onStatusChange) {
+        this.#statusChangeListeners.push(onStatusChange);
+    }
+    #runStatusChangeListeners(connected, username) {
+        this.#statusChangeListeners.forEach(listener => listener(connected, username));
     }
 
     #resetState() {
@@ -62,7 +71,7 @@ export class SvgWebSocket {
         this.reOpen = true;
     }
 
-    #createSocket(onStatusChange) {
+    #createSocket() {
         const protocol = location.protocol === "https:" ? "wss:" : "ws:";
         const pageUrl = new URL(window.location.href);
         if (!pageUrl.pathname.endsWith("/")) {
@@ -92,7 +101,7 @@ export class SvgWebSocket {
             }));
             Logger.log("Connected.");
             this.reconnectAttempts = 0;
-            onStatusChange(true, this.lastCredentials.username);
+            this.#runStatusChangeListeners(true, this.lastCredentials.username);
         };
 
         this.ws.onmessage = async (event) => {
@@ -155,7 +164,7 @@ export class SvgWebSocket {
             console.log("WebSocket closed:", code, reason);
 
             this.audioController.resetAudioState();
-            onStatusChange(false);
+            this.#runStatusChangeListeners(false, null);
 
             if (code === SvgWebSocket.DisconnectPolicy.OUTDATED || reason === "update_required") {
                 this.stopReconnection();
@@ -198,7 +207,7 @@ export class SvgWebSocket {
                 this.reconnectAttempts++;
                 this.reconnectTimeout = setTimeout(() => {
                     Logger.log(`Reconnecting... (${this.reconnectAttempts}/${SvgWebSocket.MAX_RECONNECT_ATTEMPTS})`);
-                    this.#createSocket(onStatusChange);
+                    this.#createSocket();
                 }, 3000);
             } else if (!this.manualClose && !this.hasJoined) {
                 Logger.log("Stopped reconnecting after repeated pre-join failures.");
