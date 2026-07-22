@@ -118,8 +118,11 @@ public final class SvgCore {
             this.vcBridge = platform.registerVcBridge();
             if (this.vcBridge == null) {
                 getLogger().severe("Failed to register VoiceChatBridge.");
-                shutdown();
+
                 state = State.FAILED;
+                shutdown();
+                platform.platformDisable();
+
                 return false;
             }
 
@@ -136,8 +139,11 @@ public final class SvgCore {
             return true;
         } catch (Exception e) {
             getLogger().severe("Init failed: " + e.getMessage());
-            shutdown();
+
             state = State.FAILED;
+            shutdown();
+            platform.platformDisable();
+
             return false;
         }
     }
