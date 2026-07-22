@@ -44,14 +44,17 @@ export class SvgWebSocket {
         this.lastCredentials = { username, password };
         this.#resetState();
         this.#createSocket();
-        this.addStatusChangeListener(onStatusChange);
+        this.addStatusChangeListener(onStatusChange, true);
     }
 
-    addStatusChangeListener(onStatusChange) {
-        this.#statusChangeListeners.push(onStatusChange);
+    addStatusChangeListener(onStatusChange, isTemporary = false) {
+        this.#statusChangeListeners.push({
+            func: onStatusChange,
+            isTemp: isTemporary
+        });
     }
     #runStatusChangeListeners(connected, username) {
-        this.#statusChangeListeners.forEach(listener => listener(connected, username));
+        this.#statusChangeListeners.forEach(listener => listener.func(connected, username));
     }
 
     #resetState() {
@@ -69,6 +72,7 @@ export class SvgWebSocket {
         this.rxLegacyFrames = 0;
         this.rxDecoderFallbacks = 0;
         this.reOpen = true;
+        this.#statusChangeListeners = this.#statusChangeListeners.filter(listener => !listener.isTemp)
     }
 
     #createSocket() {
