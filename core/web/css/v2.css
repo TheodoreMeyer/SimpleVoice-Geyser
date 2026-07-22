@@ -65,27 +65,24 @@
     border: 2px solid var(--color1);
 
     min-width: max-content;
+}
+.mcButtonStyle:hover .mcButtonStyleInner {
+    background-color: var(--select-color1);
+    text-shadow: 2px 2px var(--color2);
+    color: var(--select-color2);
+}
+.mcButtonStyle:active .mcButtonStyleInner {
+    box-shadow: inset -2px -4px var(--color3), inset 2px 2px var(--color4);
+}
+.mcButtonStyle .mcButtonStyleInner {
+    cursor: pointer;
 
-    /* Mouse over */
-    &:hover .mcButtonStyleInner {
-        background-color: var(--select-color1);
-        text-shadow: 2px 2px var(--color2);
-        color: var(--select-color2);
-    }
-    &:active .mcButtonStyleInner {
-        box-shadow: inset -2px -4px var(--color3), inset 2px 2px var(--color4);
-    }
-    /* Button title */
-    & .mcButtonStyleInner {
-        cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%; height: 100%;
+    padding: 0 10px 5px 10px;
 
-        border: none;
-        background: none;
-        width: 100%; height: 100%;
-        padding: 0 10px 5px 10px;
-
-        box-shadow: inset -2px -4px var(--color3), inset 2px 2px var(--color4);
-    }
+    box-shadow: inset -2px -4px var(--color3), inset 2px 2px var(--color4);
 }
 .mcTextboxStyle {
     /*https://codepen.io/ByTymeq/pen/vEBWExw*/
@@ -101,18 +98,16 @@
     border: 2px solid var(--color6);
     padding: 0 10px 0 10px;
     box-shadow: inset -2px -4px var(--color3), inset 2px 2px var(--color4);
-
-    /* Mouse over */
-    &:hover {
-        background-color: var(--select-color1);
-        color: var(--select-color2);
-    }
-    &:focus {
-        outline: none;
-        background: var(--color3);
-        color: var(--select-color2);
-        box-shadow: inset -2px -4px var(--color4), inset 2px 2px var(--color5);
-    }
+}
+.mcTextboxStyle:hover {
+    background-color: var(--select-color1);
+    color: var(--select-color2);
+}
+.mcTextboxStyle:focus {
+    outline: none;
+    background: var(--color3);
+    color: var(--select-color2);
+    box-shadow: inset -2px -4px var(--color4), inset 2px 2px var(--color5);
 }
 .mcTextviewStyle {
     cursor: text;
@@ -143,23 +138,22 @@
     border: 2px solid var(--color1);
 
     min-width: max-content;
-
-    & input:checked + .mcCheckboxStyleInner {
-        background-color: var(--color5);
-    }
-    &:hover .mcCheckboxStyleInner {
-        background-color: var(--select-color1);
-    }
-    & .mcCheckboxStyleInner {
-        height: 40px;
-        width: 40px;
-        box-shadow: inset -2px -4px var(--color3), inset 2px 2px var(--color4);
-    }
-    & input {
-        appearance: none;
-        -webkit-appearance: none;
-        position: absolute;
-    }
+}
+.mcCheckboxStyle input:checked + .mcCheckboxStyleInner {
+    background-color: var(--color5);
+}
+.mcCheckboxStyle:hover .mcCheckboxStyleInner {
+    background-color: var(--select-color1);
+}
+.mcCheckboxStyle .mcCheckboxStyleInner {
+    height: 40px;
+    width: 40px;
+    box-shadow: inset -2px -4px var(--color3), inset 2px 2px var(--color4);
+}
+.mcCheckboxStyle input {
+    appearance: none;
+    -webkit-appearance: none;
+    position: absolute;
 }
 .mcContainerStyle {
     /*https://codepen.io/Stampf/pen/LYKzrKm*/
