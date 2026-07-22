@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="build-id" content="@@GIT_COMMIT@@">
+    <title>Simple Voice Chat Web</title>
+
+    <link rel="stylesheet" href="css/v2.css">
+
+    <script src="js/utils/lang.js"></script>
+</head>
+<body class="mcDirtBackground flexContainer connected">
+    <main class="flexContainer">
+        <div class="mainContainer mcContainerStyle">
+            <section class="joinSec flexContainer">
+                <h2 class="joinLabel hiddenWhenConnected"><span svg-lang="joinLabel"></span></h2>
+                <div class="flexSpacer hiddenWhenConnected"></div>
+                <form class="joinForm flexContainer" data-svg="form">
+                    <div class="usernameContainer flexRowContainer fullWidth flexColumnWhenMobile hiddenWhenConnected">
+                        <label class="joinFormLabel usernameLabel mcTextStyle1" for="username" svg-lang="usernameInput"></label>
+                        <div class="flexSpacer"></div>
+                        <input class="usernameInput mcTextboxStyle" data-svg="form.username" type="text" id="username" name="username" required autocomplete="username">
+                    </div>
+
+                    <div class="passwordContainer flexRowContainer fullWidth flexColumnWhenMobile hiddenWhenConnected">
+                        <label class="joinFormLabel passwordLabel mcTextStyle1" for="password" svg-lang="passwordInput"></label>
+                        <div class="flexSpacer"></div>
+                        <input class="passwordInput mcTextboxStyle" data-svg="form.password" type="password" id="password" name="password" required autocomplete="svg-password">
+                    </div>
+
+                    <div class="micContainer flexRowContainer fullWidth flexColumnWhenMobile hiddenWhenConnected">
+                        <label class="joinFormLabel micLabel mcTextStyle1" for="mic" svg-lang="micSelect"></label>
+                        <div class="flexSpacer"></div>
+                        <div class="micSelect mcButtonStyle">
+                            <select class="mcButtonStyleInner mcTextStyle2" id="mic" name="mic" data-svg="audio.mic">
+                                <option disabled selected svg-lang="micLoad"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="speakerContainer flexRowContainer fullWidth flexColumnWhenMobile hiddenWhenConnected">
+                        <label class="joinFormLabel speakerLabel mcTextStyle1" for="speaker" svg-lang="speakSelect"></label>
+                        <div class="flexSpacer"></div>
+                        <div class="speakerSelect mcButtonStyle">
+                            <select class="mcButtonStyleInner mcTextStyle2" id="speaker" name="speaker" data-svg="audio.speaker">
+                                <option disabled selected svg-lang="speakLoad"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="joinContainer flexRowContainer fullWidth">
+                        <div class="joinBtnContainer mcButtonStyle flexRowContainer fullWidth">
+                            <button class="mcButtonStyleInner mcTextStyle2" type="submit" data-svg="form.join" svg-lang="joinBtnText"></button>
+                        </div>
+                        <div class="flexSpacer"></div>
+                        <div class="statusLabel" data-svg="form.status" svg-lang="joinWait"></div>
+                    </div>
+                </form>
+            </section>
+            <section class="connectedSec flexContainer">
+                <div class="flexDivider"></div>
+                <div class="fullWidth">
+                    <div class="flexRowContainer">
+                        <span class="mcTextStyle1" svg-lang="transmitModeLabel"></span>
+                        <div class="flexDivider"></div>
+                        <div class="flexSpacer"></div>
+                        <div class="mcButtonStyle">
+                            <select class="mcButtonStyleInner mcTextStyle2" aria-label="Transmit mode" data-svg="ptt.mode">
+                                <option value="voice" svg-lang="voiceActivityText"></option>
+                                <option value="ptt" svg-lang="pushToTalkText"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flexDivider"></div>
+
+                    <div class="dev-hidden" data-svg="ptt.card">
+                        <div class="flexContainer fullWidth" data-svg="ptt.binding-controls">
+                            <div class="pttBindBtnContainer mcButtonStyle">
+                                <button class="mcButtonStyleInner mcTextStyle2" type="button" data-svg="ptt.bind" svg-lang="bindPttBtnText"></button>
+                            </div>
+                            <div class="flexDivider"></div>
+                            <div class="flexRowContainer fullWidth flexColumnWhenMobile">
+                                <div class="pttClearBtnContainer mcButtonStyle">
+                                    <button class="mcButtonStyleInner mcTextStyle2" type="button" data-svg="ptt.clear" svg-lang="clearPttBtnText"></button>
+                                </div>
+                                <div class="flexDivider"></div>
+                                <div class="flexSpacer"></div>
+                                <label class="pttBackgroundToggleContainer flexRowContainer fullWidthWhenMobile">
+                                    <span svg-lang="allowBackgroundPttText"></span>
+                                    <div class="flexSpacerWhenMobile"></div>
+                                    <div class="flexDivider"></div>
+                                    <div class="mcCheckboxStyle">
+                                        <input type="checkbox" data-svg="ptt.allow-background"/>
+                                        <div class="mcCheckboxStyleInner"></div>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="flexDivider"></div>
+                            <span class="textAlignLeft fullWidth" data-svg="ptt.binding-label" svg-lang="pttBindingLabel"></span>
+<!--                            Superseded by pttBindingLabel?-->
+<!--                            <p id="control-label" svg-lang="pttBindingDescription"></p>-->
+                        </div>
+                    </div>
+                </div>
+                <div class="flexDivider"></div>
+                <div class="flexRowContainer fullWidth flexColumnWhenMobile">
+<!--                    Until there is more than one dev option the dev toggle button will be hidden-->
+                    <div class="mcButtonStyle dev-hidden">
+                        <button class="mcButtonStyleInner mcTextStyle2" data-svg="dev.toggle" svg-lang="devToolsLabel"></button>
+                    </div>
+<!--                    Ghost div to shut up errors-->
+                    <div class="flexRowContainer" data-svg="dev.content">
+<!--                        <span class="control-label" svg-lang="debugAudioLabel"></span>-->
+                    </div>
+                    <div class="mcButtonStyle fullWidthWhenMobile">
+                        <button class="mcButtonStyleInner mcTextStyle2" id="testSound" type="button" svg-lang="testSoundBtnText"></button>
+                    </div>
+                    <div class="flexDivider"></div>
+                    <div class="flexSpacer"></div>
+
+                    <div class="flexRowContainer" data-svg="ptt.mic-card">
+<!--                        <span class="mcTextStyle1" svg-lang="micSLabel"></span>-->
+<!--                        <div class="flexSpacer"></div>-->
+                        <div class="mcButtonStyle">
+                            <button class="unmuted mcButtonStyleInner mcTextStyle2" data-svg="audio.mute" svg-lang="muteBtnText"></button>
+                            <span title="Mic activity" data-svg="audio.indicator"></span>
+                        </div>
+                    </div>
+
+                    <div class="flexRowContainer flexColumnWhenMobile fullWidthWhenMobile" data-svg="ptt.controls">
+<!--                        <span class="control-label" svg-lang="pttLabel"></span>-->
+                        <div class="mcButtonStyle fullWidthWhenMobile">
+                            <button class="mcButtonStyleInner mcTextStyle2" type="button" data-svg="ptt.button" svg-lang="pushToTalkBtnText"></button>
+                        </div>
+                        <div class="flexDivider"></div>
+                        <div class="mcButtonStyle fullWidthWhenMobile">
+                            <button class="mcButtonStyleInner mcTextStyle2" type="button" data-svg="ptt.fullscreen" svg-lang="fullscreenPttBtnText"></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="flexDivider"></div>
+                <div class="mcTextviewStyle mcTextStyle1" data-svg="chat.log"></div>
+                <div class="fullWidth flexRowContainer">
+<!--                    Redundant text-->
+<!--                    <label class="mcTextStyle1" for="msgInput" svg-lang="msgText"></label>-->
+                    <input class="mcTextboxStyle fullWidth" id="chatInput" data-svg="chat.input" type="text" placeholder="Type a message..." />
+                    <div class="messageBtnContainer mcButtonStyle">
+                        <button class="mcButtonStyleInner mcTextStyle2" id="chatBtn" data-svg="chat.send" svg-lang="sendBtnText" type="submit"></button>
+                    </div>
+                </div>
+            </section>
+            <section class="pttFullscreenSec mcDirtBackground" aria-hidden="true" data-svg="ptt.overlay">
+                <div class="pttFullscreenBtn mcButtonStyle">
+                    <button class="mcButtonStyleInner mcTextStyle2" type="button" data-svg="ptt.overlay-button" svg-lang="pushToTalkFullscreenBtnText"></button>
+                </div>
+                <br>
+                <div class="mcButtonStyle">
+                    <button class="mcButtonStyleInner mcTextStyle2" type="button" data-svg="ptt.overlay-exit" svg-lang="exitFullscreenPttBtnText"></button>
+                </div>
+            </section>
+        </div>
+    </main>
+    <footer class="flexRowContainer">
+            <a class="footerLink flexRowContainer" href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank">
+                <span><img class="footerLinkImg" src="images/github.png" alt="GitHub Icon"></span>
+                <span class="footerLinkText">Theodore Meyer</span>
+            </a>
+            <a class="footerLink flexRowContainer" href="https://modrinth.com/plugin/simplevoice-geyser" target="_blank">
+                <span><img class="footerLinkImg" src="images/modrinth.png" alt="Modrinth Logo"></span>
+                <span class="footerLinkText">SimpleVoice-Geyser</span>
+            </a>
+            <a class="footerLink flexRowContainer" href="https://theodoremeyer.github.io/projects/simplevoicegeyser/" target="_blank">
+                    <span><img class="footerLinkImg" src="images/docs.png" alt="Docs Icon"></span>
+                <span class="footerLinkText">Docs</span>
+            </a>
+            <a class="footerLink flexRowContainer" href="index.html" target="_blank">
+                <span><img class="footerLinkImg" src="images/link.png" alt="Link Icon"></span>
+                <span class="footerLinkText">Old UI</span>
+            </a>
+    </footer>
+    <script type="module">
+        window.PROJECT_VERSION = "@@PROJECT_VERSION@@";
+        window.BUILD_ID = "@@GIT_COMMIT@@";
+
+        /** @import {SvgClientOptions} from '../js/types.js' */
+        import { SvgBuilder } from './js/utils/builder.js';
+
+        const client = SvgBuilder.fromDocument().build();
+
+        await client.start();
+
+        function UIv2Patch() {
+            // Auto send when enter is pressed
+            const chatBtn = document.querySelector("#chatBtn")
+            document.querySelector("#chatInput").addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    chatBtn.click();
+                }
+            });
+            // Detect connection state to show appropriate section
+            client.webSocketController.addStatusChangeListener((connected, _) => {
+                if (connected) {
+                    document.body.classList.add('connected');
+                } else {
+                    document.body.classList.remove('connected');
+                }
+            })
+        }
+        UIv2Patch();
+    </script>
+</body>
+</html>
