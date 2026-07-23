@@ -12,15 +12,15 @@ import java.io.InputStream;
  */
 public final class ResourceServlet extends HttpServlet {
 
+    private final FileManager fileManager;
+
     /**
      * Create the servlet
      */
-    public ResourceServlet() {}
-
-    /**
-     * Root directory inside the JAR where static files are stored.
-     */
-    private static final String RESOURCE_ROOT = "/web";
+    public ResourceServlet() {
+        this.fileManager = new FileManager();
+        fileManager.extractAssets();
+    }
 
     /**
      * Handles HTTP GET requests and serves the requested static resource.
@@ -44,17 +44,13 @@ public final class ResourceServlet extends HttpServlet {
             return;
         }
 
-        String resourcePath = RESOURCE_ROOT + path;
+        try (InputStream in = fileManager.getResourceStream(path)) {
 
-        try (InputStream in = getClass().getResourceAsStream(resourcePath)) {
-
-            // Resource not found
             if (in == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
 
-            // Determine MIME type
             String mime = getServletContext().getMimeType(path);
 
             if (mime == null) {
@@ -62,11 +58,8 @@ public final class ResourceServlet extends HttpServlet {
             }
 
             resp.setContentType(mime);
-
-            // Optional caching header
             resp.setHeader("Cache-Control", "public, max-age=3600");
 
-            // Stream file to client
             in.transferTo(resp.getOutputStream());
         }
     }
