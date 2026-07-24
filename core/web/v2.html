@@ -193,21 +193,21 @@
 
         function UIv2Patch() {
             // Auto send when enter is pressed
-            const chatBtn = document.querySelector("#chatBtn")
-            document.querySelector("#chatInput").addEventListener('keydown', (event) => {
-                if (event.key === 'Enter') {
+            const chatBtn = document.getElementById("chatBtn")
+            document.getElementById("chatInput").addEventListener("keydown", (event) => {
+                if (event.key === "Enter") {
                     event.preventDefault();
                     chatBtn.click();
                 }
             });
             // Detect connection state to show appropriate section
-            client.webSocketController.addStatusChangeListener((connected, _) => {
-                if (connected) {
-                    document.body.classList.add('connected');
+            client.webSocketController.addEventListener("statusChange", (status) => {
+                if (status.connected) {
+                    document.body.classList.add("connected");
                 } else {
-                    document.body.classList.remove('connected');
+                    document.body.classList.remove("connected");
                 }
-            })
+            }, true)
         }
         UIv2Patch();
     </script>

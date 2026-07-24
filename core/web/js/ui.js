@@ -274,10 +274,10 @@ export class SvgUI {
                 this.webSocketController.connect(usernameInput.value,
                     passwordInput.value,
 
-                    async (connected, username) => {
-                        if (connected) {
+                    async (status) => {
+                        if (status.connected) {
 
-                            statusEl.textContent = "Connected as " + username;
+                            statusEl.textContent = "Connected as " + status.username;
                             statusEl.style.backgroundColor = "#005f00";
                             joinButton.textContent = "Leave";
                             micSelect.disabled = true;

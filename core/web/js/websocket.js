@@ -16,7 +16,10 @@ export class SvgWebSocket {
         SERVER_SHUTDOWN: 4006,
         OUTDATED: 4008
     };
-    #statusChangeListeners = [];
+    #eventListeners = {
+        statusChange: [],
+        message: []
+    };
 
     /**
      *
@@ -43,18 +46,27 @@ export class SvgWebSocket {
     connect(username, password, onStatusChange) {
         this.lastCredentials = { username, password };
         this.#resetState();
-        this.addStatusChangeListener(onStatusChange, true);
+        this.addEventListener("statusChange", onStatusChange);
         this.#createSocket();
     }
 
-    addStatusChangeListener(onStatusChange, isTemporary = false) {
-        this.#statusChangeListeners.push({
-            func: onStatusChange,
-            isTemp: isTemporary
+    addEventListener(type, listener, persistsAfterConnection = false) {
+        if (!Object.hasOwn(this.#eventListeners, type)) {
+            Logger.log(`Cannot add event listener for event "${type}" because it does not exist.`)
+            return;
+        }
+        this.#eventListeners[type].push({
+            func: listener,
+            isPersistent: persistsAfterConnection
         });
     }
-    #runStatusChangeListeners(connected, username) {
-        this.#statusChangeListeners.forEach(listener => listener.func(connected, username));
+    #runEventListeners(type, ...args) {
+        this.#eventListeners[type].forEach(listener => listener.func(...args));
+    }
+    #removeTemporaryEventListeners() {
+        for (const type in this.#eventListeners) {
+            this.#eventListeners[type] = this.#eventListeners[type].filter(listener => listener.isPersistent);
+        }
     }
 
     #resetState() {
@@ -72,7 +84,8 @@ export class SvgWebSocket {
         this.rxLegacyFrames = 0;
         this.rxDecoderFallbacks = 0;
         this.reOpen = true;
-        this.#statusChangeListeners = this.#statusChangeListeners.filter(listener => !listener.isTemp)
+
+        this.#removeTemporaryEventListeners();
     }
 
     #createSocket() {
@@ -105,7 +118,11 @@ export class SvgWebSocket {
             }));
             Logger.log("Connected.");
             this.reconnectAttempts = 0;
-            this.#runStatusChangeListeners(true, this.lastCredentials.username);
+
+            this.#runEventListeners("statusChange", {
+                connected: false,
+                username: this.lastCredentials.username
+            });
         };
 
         this.ws.onmessage = async (event) => {
@@ -151,9 +168,22 @@ export class SvgWebSocket {
                     }
 
                     Logger.debug((packetType || "info") + ": " + (data.message || JSON.stringify(data)));
+
+                    this.#runEventListeners("message", {
+                        type: "json",
+                        fatalAuthError: this.fatalAuthError,
+                        packetType: packetType,
+                        msg: msg
+                    })
                 } catch {
                     Logger.log("Received non-JSON message: " + event.type);
                     Logger.debug("Server: " + event.data);
+
+                    this.#runEventListeners("message", {
+                        type: "text",
+                        eventType: event.type,
+                        eventData: event.data
+                    })
                 }
             } else {
                 await this.#handleIncomingBinaryFrame(event.data);
@@ -168,7 +198,11 @@ export class SvgWebSocket {
             console.log("WebSocket closed:", code, reason);
 
             this.audioController.resetAudioState();
-            this.#runStatusChangeListeners(false, null);
+            this.#runEventListeners("statusChange", {
+                connected: false,
+                code: code,
+                reason: reason
+            });
 
             if (code === SvgWebSocket.DisconnectPolicy.OUTDATED || reason === "update_required") {
                 this.stopReconnection();
