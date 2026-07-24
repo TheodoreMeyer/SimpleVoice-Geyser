@@ -10,7 +10,6 @@
     <link rel="icon" href="images/svg-temp.png" type="image/x-icon">
     <link rel="stylesheet" href="css/presets.css">
     <!--<link rel="manifest" href="/manifest.json">-->
-    <script src="js/utils/lang.js"></script>
 </head>
 
 <body>
@@ -201,6 +200,11 @@
 
         /** @import {SvgClientOptions} from './js/types.js' */
         import { SvgBuilder } from './js/utils/builder.js';
+        import { SvgLang } from "./js/utils/lang.js";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            SvgLang.detectLanguage();
+        });
 
         const client = SvgBuilder.fromDocument().build();
 

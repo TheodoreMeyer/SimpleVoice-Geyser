@@ -261,6 +261,20 @@ body.connected .joinSec {
     padding: 10px 10px 0 10px;
 }
 
+.floatingWidgetsOverlay {
+    position: fixed;
+    bottom: 50px;
+    width: calc(100% - 20px);
+}
+
+.langBtn {
+    padding: 5px !important;
+}
+.langBtn img {
+    width: 28px;
+    height: 28px;
+}
+
 @media (max-width: 600px) {
     body {
         display: block;
@@ -288,6 +302,11 @@ body.connected .joinSec {
 
     .footerLinkText {
         display: none;
+    }
+
+    .floatingWidgetsOverlay {
+        position: initial;
+        bottom: auto;
     }
 }
 

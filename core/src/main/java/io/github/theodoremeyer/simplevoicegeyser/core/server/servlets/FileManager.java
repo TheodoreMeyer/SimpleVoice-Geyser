@@ -94,25 +94,34 @@ class FileManager {
                 "/web/images/v2-background.png",
                 "images/v2-background.png"
         );
-
         extractResource(
                 "/web/images/docs.png",
                 "images/docs.png"
         );
-
         extractResource(
                 "/web/images/github.png",
                 "images/github.png"
         );
-
         extractResource(
                 "/web/images/modrinth.png",
                 "images/modrinth.png"
         );
-
         extractResource(
                 "/web/images/link.png",
                 "images/link.png"
+        );
+
+        extractResource(
+                "/web/images/flags-1x1/en.svg",
+                "images/flags-1x1/en.svg"
+        );
+        extractResource(
+                "/web/images/flags-1x1/pl.svg",
+                "images/flags-1x1/pl.svg"
+        );
+        extractResource(
+                "/web/images/flags-1x1/it.svg",
+                "images/flags-1x1/it.svg"
         );
 
         versioning.save();

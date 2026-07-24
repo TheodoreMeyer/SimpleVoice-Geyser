@@ -7,8 +7,6 @@
     <title>Simple Voice Chat Web</title>
 
     <link rel="stylesheet" href="css/v2.css">
-
-    <script src="js/utils/lang.js"></script>
 </head>
 <body class="mcDirtBackground flexContainer">
     <main class="flexContainer">
@@ -180,12 +178,29 @@
                 <span class="footerLinkText">Old UI</span>
             </a>
     </footer>
+    <div class="flexSpacer"></div>
+    <div class="floatingWidgetsOverlay flexRowContainer">
+        <div class="flexSpacer"></div>
+        <div class="languageSelectorContainer flexRowContainer">
+            <div class="flexRowContainer" id="langOptionsContainer"></div>
+            <div class="mcButtonStyle">
+                <button class="langBtn mcButtonStyleInner mcTextStyle2" id="langBtn">
+                    <img src="images/flags-1x1/en.svg" id="langBtnImg" alt="Language Changer">
+                </button>
+            </div>
+        </div>
+    </div>
     <script type="module">
         window.PROJECT_VERSION = "@@PROJECT_VERSION@@";
         window.BUILD_ID = "@@GIT_COMMIT@@";
 
         /** @import {SvgClientOptions} from '../js/types.js' */
         import { SvgBuilder } from './js/utils/builder.js';
+        import { SvgLang } from "./js/utils/lang.js";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            SvgLang.detectLanguage();
+        });
 
         const client = SvgBuilder.fromDocument().build();
 
@@ -207,7 +222,47 @@
                 } else {
                     document.body.classList.remove("connected");
                 }
-            }, true)
+            }, true);
+            // Language Changer
+            const langBtn = document.getElementById("langBtn");
+            const langBtnImg = document.getElementById("langBtnImg");
+            const langOptionsContainer = document.getElementById("langOptionsContainer");
+
+            langBtn.addEventListener("click", (_) => {
+                if (langOptionsContainer.childElementCount === 0) {
+                    // Populate #langOptionsContainer with available languages
+                    for (const lang of SvgLang.availableLanguages) {
+                        if (lang === SvgLang.currentLanguage) {
+                            continue;
+                        }
+
+                        const html =
+                                `<div class="mcButtonStyle">
+                            <button class="langBtn mcButtonStyleInner mcTextStyle2" id="langBtn">
+                                <img src="images/flags-1x1/${lang}.svg" id="${lang}LangBtn" alt="Change to ${lang}">
+                            </button>
+                        </div>`;
+                        langOptionsContainer.insertAdjacentHTML("beforeend", html);
+
+                        document.getElementById(`${lang}LangBtn`).addEventListener("click", (_) => {
+                            SvgLang.changeLanguage(lang);
+
+                            langBtnImg.src = `images/flags-1x1/${lang}.svg`;
+                            langOptionsContainer.innerHTML = "";
+                            langBtn.style.backgroundColor = "var(--color4)";
+                            langBtnImg.style.filter = "brightness(1.0)";
+                        });
+                    }
+
+                    langBtn.style.backgroundColor = "var(--color3)";
+                    langBtnImg.style.filter = "brightness(0.2)";
+                } else {
+                    // Hide available languages
+                    langOptionsContainer.innerHTML = "";
+                    langBtn.style.backgroundColor = "var(--color4)";
+                    langBtnImg.style.filter = "brightness(1.0)";
+                }
+            });
         }
         UIv2Patch();
     </script>
