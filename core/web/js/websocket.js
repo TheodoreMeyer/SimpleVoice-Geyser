@@ -120,7 +120,7 @@ export class SvgWebSocket {
             this.reconnectAttempts = 0;
 
             this.#runEventListeners("statusChange", {
-                connected: false,
+                connected: true,
                 username: this.lastCredentials.username
             });
         };
