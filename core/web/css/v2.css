@@ -79,10 +79,48 @@
 
     border: none;
     background: none;
-    width: 100%; height: 100%;
+    width: 100%;
+    height: 100%;
     padding: 0 10px 5px 10px;
 
     box-shadow: inset -2px -4px var(--color3), inset 2px 2px var(--color4);
+}
+.mcIconButtonStyle {
+    /*https://codepen.io/ByTymeq/pen/vEBWExw*/
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+    user-select: none;
+    height: fit-content;
+
+    background: var(--color4) url("data:image/png;base64,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") center / cover;
+    image-rendering: pixelated;
+    border: 2px solid var(--color1);
+
+    min-width: max-content;
+}
+.mcIconButtonStyle:hover .mcIconButtonStyleInner {
+    background-color: var(--select-color1);
+    text-shadow: 2px 2px var(--color2);
+    color: var(--select-color2);
+}
+.mcIconButtonStyle:active .mcIconButtonStyleInner {
+    box-shadow: inset -2px -4px var(--color3), inset 2px 2px var(--color4);
+}
+.mcIconButtonStyle .mcIconButtonStyleInner {
+    cursor: pointer;
+
+    border: none;
+    background: none;
+    width: fit-content;
+    height: 100%;
+    padding: 5px;
+
+    box-shadow: inset -2px -4px var(--color3), inset 2px 2px var(--color4);
+}
+.mcIconButtonStyle .mcIconButtonStyleInner img {
+    width: 28px;
+    height: 28px;
 }
 .mcTextboxStyle {
     /*https://codepen.io/ByTymeq/pen/vEBWExw*/
@@ -211,6 +249,21 @@ main {
     width: min(700px, calc(95vw - 10px));
 }
 
+.micActivityIndicator.active {
+    filter: brightness(1);
+}
+.micActivityIndicator {
+    width: 24px;
+    height: 24px;
+    padding: 8px;
+    box-shadow: inset -2px -4px var(--color3), inset 2px 2px var(--color4);
+    cursor: default;
+
+    filter: brightness(0.7);
+}
+
+/*TODO CSS Below this point that isn't generic (e.g. .pttBindBtnContainer) are hotfixes for visual glitches; there probably is a way to not need these CSS. */
+
 .joinSec {
     text-align: center;
     padding: 10px;
@@ -266,16 +319,21 @@ body.connected .joinSec {
     bottom: 50px;
     width: calc(100% - 20px);
 }
-.floatingWidgetsOverlay .mcButtonStyle {
-    height: fit-content;
+
+.alertOverlay {
+    position: fixed;
+    top: 0;
+    z-index: 67;
+
+    background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('../images/v2-alert-background.png') !important; /* Replace with your dirt image path */
+    background-repeat: repeat !important;
+    background-size: 64px 64px !important;
+    image-rendering: crisp-edges !important;
+
+    border-bottom: 2px solid var(--color4);
 }
-.floatingWidgetsOverlay .mcButtonStyleInner {
-    padding: 5px !important;
-    width: fit-content;
-}
-.floatingWidgetsOverlay .mcButtonStyleInner img {
-    width: 28px;
-    height: 28px;
+.alertOverlayInner {
+    margin: 0 20px 0 20px;
 }
 
 @media (max-width: 600px) {
@@ -301,6 +359,10 @@ body.connected .joinSec {
     }
     .micSelect, .speakerSelect, .pttClearBtnContainer {
         width: calc(100% - 4px);
+    }
+
+    .micContainer {
+        width: calc(100% + 4px);
     }
 
     .footerLinkText {

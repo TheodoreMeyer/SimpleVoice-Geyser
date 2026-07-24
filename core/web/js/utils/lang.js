@@ -3,7 +3,7 @@
 // then copy the <xx>.svg country flag representing the language
 // of the translation to core/src/web/css/images/flags-1x1
 // and rename the file to <language code>.svg instead of <country code>.svg
-// E.g. en.svg -> en.svg
+// E.g. gb.svg -> en.svg
 //
 // Also edit core/src/main/.../server/servlets/FileManager.java
 //

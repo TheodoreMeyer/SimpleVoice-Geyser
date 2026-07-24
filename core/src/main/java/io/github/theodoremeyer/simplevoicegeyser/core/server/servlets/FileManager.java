@@ -95,6 +95,18 @@ class FileManager {
                 "images/v2-background.png"
         );
         extractResource(
+                "/web/images/v2-alert-background.png",
+                "images/v2-alert-background.png"
+        );
+        extractResource(
+                "/web/images/close.png",
+                "images/close.png"
+        );
+        extractResource(
+                "/web/images/mic.png",
+                "images/mic.png"
+        );
+        extractResource(
                 "/web/images/docs.png",
                 "images/docs.png"
         );
