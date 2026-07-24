@@ -266,11 +266,14 @@ body.connected .joinSec {
     bottom: 50px;
     width: calc(100% - 20px);
 }
-
-.langBtn {
-    padding: 5px !important;
+.floatingWidgetsOverlay .mcButtonStyle {
+    height: fit-content;
 }
-.langBtn img {
+.floatingWidgetsOverlay .mcButtonStyleInner {
+    padding: 5px !important;
+    width: fit-content;
+}
+.floatingWidgetsOverlay .mcButtonStyleInner img {
     width: 28px;
     height: 28px;
 }

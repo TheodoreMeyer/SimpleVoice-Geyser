@@ -180,6 +180,11 @@
     </footer>
     <div class="flexSpacer"></div>
     <div class="floatingWidgetsOverlay flexRowContainer">
+        <div class="mcButtonStyle">
+            <a class="mcButtonStyleInner mcTextStyle2 flexContainer" href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser/issues" target="_blank" rel="noopener noreferrer">
+                <img src="images/bug-report.png" alt="Report an Issue">
+            </a>
+        </div>
         <div class="flexSpacer"></div>
         <div class="languageSelectorContainer flexRowContainer">
             <div class="flexRowContainer" id="langOptionsContainer"></div>
@@ -215,6 +220,7 @@
                     chatBtn.click();
                 }
             });
+
             // Detect connection state to show appropriate section
             client.webSocketController.addEventListener("statusChange", (status) => {
                 if (status.connected) {
@@ -223,11 +229,11 @@
                     document.body.classList.remove("connected");
                 }
             }, true);
+
             // Language Changer
             const langBtn = document.getElementById("langBtn");
             const langBtnImg = document.getElementById("langBtnImg");
             const langOptionsContainer = document.getElementById("langOptionsContainer");
-
             langBtn.addEventListener("click", (_) => {
                 if (langOptionsContainer.childElementCount === 0) {
                     // Populate #langOptionsContainer with available languages

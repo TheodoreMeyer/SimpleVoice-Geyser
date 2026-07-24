@@ -110,6 +110,10 @@ class FileManager {
                 "/web/images/link.png",
                 "images/link.png"
         );
+        extractResource(
+                "/web/images/bug-report.png",
+                "images/bug-report.png"
+        );
 
         extractResource(
                 "/web/images/flags-1x1/en.svg",
