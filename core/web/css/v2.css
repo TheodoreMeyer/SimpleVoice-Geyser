@@ -84,6 +84,9 @@
     padding: 0 10px 5px 10px;
 
     box-shadow: inset -2px -4px var(--color3), inset 2px 2px var(--color4);
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0;
 }
 .mcIconButtonStyle {
     /*https://codepen.io/ByTymeq/pen/vEBWExw*/
@@ -117,9 +120,6 @@
     padding: 5px;
 
     box-shadow: inset -2px -4px var(--color3), inset 2px 2px var(--color4);
-    -webkit-appearance: none;
-    appearance: none;
-    border-radius: 0;
 }
 .mcIconButtonStyle .mcIconButtonStyleInner img {
     width: 28px;
