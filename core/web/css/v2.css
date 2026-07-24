@@ -182,7 +182,7 @@
     );
 }
 .mcDirtBackground {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../images/dirt.png') !important; /* Replace with your dirt image path */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../images/v2-background.png') !important; /* Replace with your dirt image path */
     background-repeat: repeat !important;
     background-size: 64px 64px !important;
     image-rendering: crisp-edges !important;
