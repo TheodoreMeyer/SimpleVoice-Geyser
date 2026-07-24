@@ -202,9 +202,7 @@
         import { SvgBuilder } from './js/utils/builder.js';
         import { SvgLang } from "./js/utils/lang.js";
 
-        document.addEventListener("DOMContentLoaded", () => {
-            SvgLang.detectLanguage();
-        });
+        SvgLang.detectLanguage();
 
         const client = SvgBuilder.fromDocument().build();
 

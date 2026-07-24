@@ -260,9 +260,7 @@
         import { SvgLang } from "./js/utils/lang.js";
         import { SvgWebSocket } from "./js/websocket.js";
 
-        document.addEventListener("DOMContentLoaded", () => {
-            SvgLang.detectLanguage();
-        });
+        SvgLang.detectLanguage();
 
         const client = SvgBuilder.fromDocument().build();
 
