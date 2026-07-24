@@ -52,6 +52,17 @@ tasks.processResources {
                 )
             }
         }
+        filesMatching("v2.html") {
+            filter { line ->
+                line.replace(
+                        "@@GIT_COMMIT@@",
+                        currentGitCommit()
+                ).replace(
+                        "@@PROJECT_VERSION@@",
+                        project.version.toString()
+                )
+            }
+        }
     }
 }
 
