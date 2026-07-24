@@ -80,6 +80,41 @@ class FileManager {
                 "css/styles.css"
         );
 
+        extractResource(
+                "/web/v2.html",
+                "v2.html"
+        );
+
+        extractResource(
+                "/web/css/v2.css",
+                "css/v2.css"
+        );
+
+        extractResource(
+                "/web/images/v2-background.png",
+                "images/v2-background.png"
+        );
+
+        extractResource(
+                "/web/images/docs.png",
+                "images/docs.png"
+        );
+
+        extractResource(
+                "/web/images/github.png",
+                "images/github.png"
+        );
+
+        extractResource(
+                "/web/images/modrinth.png",
+                "images/modrinth.png"
+        );
+
+        extractResource(
+                "/web/images/link.png",
+                "images/link.png"
+        );
+
         versioning.save();
 
         logModifiedFiles();
