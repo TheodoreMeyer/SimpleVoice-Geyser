@@ -14,6 +14,7 @@ import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricVcBridge;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.SvgListener;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data.ConfigFile;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.File;
@@ -51,6 +52,11 @@ public class SvgMod implements ModInitializer, Platform {
             createFiles();
 
             core = new SvgCore(this);
+
+            ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+                logger.info(getPrefix() + "Closing Jetty Server and stopping.");
+                SvgCore.disable();
+            });
 
             luckPermsHook = new LuckPermsHook();
 
@@ -123,9 +129,14 @@ public class SvgMod implements ModInitializer, Platform {
         this.configFile = new ConfigFile(dir, logger);
     }
 
-    @Override
     public void disable() {
         logger.severe(getPrefix() + "Disabling SimpleVoiceGeyser (Fabric) due to fatal error.");
+        SvgCore.disable();
+    }
+
+    @Override
+    public void platformDisable() {
+        // No platform-specific disable logic needed for Fabric;
     }
 
     @Override

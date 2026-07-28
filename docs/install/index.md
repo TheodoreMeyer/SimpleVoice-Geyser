@@ -77,6 +77,19 @@ client:
    # Only allow bedrock players to join the chat
    requireBedrock: false
 
+   join-message:
+
+     #default: true
+     # Enables join messages for web clients.
+     enabled: true
+
+     # Default: provided below
+     # The text svg sends when a player joins
+     text:
+       - "This Server Uses SimpleVoice-Geyser."
+       - "To set it up, run /svg pswd [password],"
+       - "Then join Via the server's SVG website."
+
    # default: true
    # Allows for the bedrock client to open a menu just by opening the emotes menu
    # WARNING: Make sure you have off-hand-emote turned off in geyser or there may

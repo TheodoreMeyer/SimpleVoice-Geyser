@@ -14,6 +14,7 @@ import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.ConfigFile;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -82,12 +83,18 @@ public class SvgPlugin extends JavaPlugin implements Platform {
 
     @Override
     public void onDisable() {
+        HandlerList.unregisterAll(this);
         SvgCore.disable();
     }
 
+    //--------------
+    // Platform Impl
+    //--------------
+
     @Override
-    public void disable() {
+    public void platformDisable() {
         Bukkit.getPluginManager().disablePlugin(this);
+
     }
 
     @Override

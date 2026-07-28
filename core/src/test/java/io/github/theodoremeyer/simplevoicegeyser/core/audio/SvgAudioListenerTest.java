@@ -139,7 +139,7 @@ class SvgAudioListenerTest {
         private final SvgLogger logger = new NoopLogger();
 
         @Override
-        public void disable() {
+        public void platformDisable() {
         }
 
         @Override
