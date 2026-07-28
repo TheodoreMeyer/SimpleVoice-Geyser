@@ -71,60 +71,54 @@ class FileManager {
         outdatedFiles.clear();
 
         extractResource(
-                "/web/index.html",
-                "index.html"
+                "/web/legacy.html",
+                "legacy.html"
         );
-
         extractResource(
                 "/web/css/styles.css",
                 "css/styles.css"
         );
 
         extractResource(
-                "/web/v2.html",
-                "v2.html"
+                "/web/index.html",
+                "index.html"
         );
-
         extractResource(
                 "/web/css/v2.css",
                 "css/v2.css"
         );
+        extractResource(
+                "/web/js/v2.js",
+                "js/v2.js"
+        );
 
         extractResource(
-                "/web/images/v2-background.png",
-                "images/v2-background.png"
+                "/web/images/v2/background.png",
+                "images/v2/background.png"
         );
         extractResource(
-                "/web/images/v2-alert-background.png",
-                "images/v2-alert-background.png"
+                "/web/images/v2/alert-background.png",
+                "images/v2/alert-background.png"
         );
         extractResource(
-                "/web/images/close.png",
-                "images/close.png"
+                "/web/images/v2/close.png",
+                "images/v2/close.png"
         );
         extractResource(
-                "/web/images/mic.png",
-                "images/mic.png"
+                "/web/images/v2/mic.png",
+                "images/v2/mic.png"
         );
         extractResource(
-                "/web/images/docs.png",
-                "images/docs.png"
+                "/web/images/v2/docs.png",
+                "images/v2/docs.png"
         );
         extractResource(
-                "/web/images/github.png",
-                "images/github.png"
+                "/web/images/v2/link.png",
+                "images/v2/link.png"
         );
         extractResource(
-                "/web/images/modrinth.png",
-                "images/modrinth.png"
-        );
-        extractResource(
-                "/web/images/link.png",
-                "images/link.png"
-        );
-        extractResource(
-                "/web/images/bug-report.png",
-                "images/bug-report.png"
+                "/web/images/v2/bug-report.png",
+                "images/v2/bug-report.png"
         );
 
         extractResource(

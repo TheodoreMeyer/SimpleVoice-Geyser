@@ -223,7 +223,7 @@
     );
 }
 .mcDirtBackground {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../images/v2-background.png') !important; /* Replace with your dirt image path */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../images/v2/background.png') !important; /* Replace with your dirt image path */
     background-repeat: repeat !important;
     background-size: 64px 64px !important;
     image-rendering: crisp-edges !important;
@@ -263,6 +263,10 @@ main {
     cursor: default;
 
     filter: brightness(0.7);
+}
+
+.whiteFilter {
+    filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(4950%) hue-rotate(125deg) brightness(100%) contrast(110%);
 }
 
 /*TODO CSS Below this point that isn't generic (e.g. .pttBindBtnContainer) are hotfixes for visual glitches; there probably is a way to not need these CSS. */
@@ -328,7 +332,7 @@ body.connected .joinSec {
     top: 0;
     z-index: 67;
 
-    background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('../images/v2-alert-background.png') !important; /* Replace with your dirt image path */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('../images/v2/alert-background.png') !important; /* Replace with your dirt image path */
     background-repeat: repeat !important;
     background-size: 64px 64px !important;
     image-rendering: crisp-edges !important;
