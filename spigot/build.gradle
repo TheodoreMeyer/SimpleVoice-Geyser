@@ -63,5 +63,8 @@ tasks.runServer { // https://github.com/jpenilla/run-task/wiki
         url("https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot")
         // Floodgate //
         url("https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot")
+        // Via Version //
+        // Allows bedrock client to join on a later version - e.g bedrock 26.2 -> java 1.21.11
+        url("https://cdn.modrinth.com/data/P1OZGk5p/versions/ZhlgRvXY/ViaVersion-5.11.1-SNAPSHOT.jar?mr_download_reason=standalone&mr_game_version=1.21.11&mr_loader=paper")
     }
 }
