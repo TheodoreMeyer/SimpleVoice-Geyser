@@ -16,9 +16,6 @@ export class SvgUI {
     /** @type {import("./utils/types.js").PttElements} */
     ptt;
 
-    /** @type {import("./utils/types.js").DevElements} */
-    dev;
-
 
     /**
      * @param {SvgUIOptions} options
@@ -31,7 +28,6 @@ export class SvgUI {
         this.form = options.form;
         this.audio = options.audio;
         this.ptt = options.ptt;
-        this.dev = options.dev;
 
         this.pttController = null;
     }
@@ -170,28 +166,6 @@ export class SvgUI {
             exitFullscreenPttBtn,
             allowBackgroundPttCheckbox
         } = this.ptt;
-
-        const {
-            devToggle,
-            devContent
-        } = this.dev;
-
-        devContent.classList.add("dev-hidden");
-
-        devToggle.addEventListener("click",
-            () => {
-
-                const isHidden =
-                    devContent.classList.toggle(
-                        "dev-hidden"
-                    );
-
-                devToggle.textContent =
-                    !isHidden
-                        ? "Developer Tools ▲"
-                        : "Developer Tools ▼";
-            }
-        );
 
         this.audioController.setMicIndicator(micIndicator);
 

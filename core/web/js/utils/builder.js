@@ -44,11 +44,6 @@ const ELEMENTS = {
 
             allowBackgroundPttCheckbox: "ptt.allow-background"
         },
-
-        dev: {
-            devToggle: "dev.toggle",
-            devContent: "dev.content"
-        }
     },
 
     chat: {
