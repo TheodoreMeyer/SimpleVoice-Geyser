@@ -71,6 +71,9 @@ client.webSocketController.addEventListener("message", (data) => {
 const langBtn = document.getElementById("langBtn");
 const langBtnImg = document.getElementById("langBtnImg");
 const langOptionsContainer = document.getElementById("langOptionsContainer");
+
+langBtnImg.src = `images/flags-1x1/${SvgLang.currentLanguage}.svg`;
+
 langBtn.addEventListener("click", (_) => {
     if (langOptionsContainer.childElementCount === 0) {
         // Populate #langOptionsContainer with available languages

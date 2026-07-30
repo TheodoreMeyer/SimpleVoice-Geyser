@@ -20,7 +20,7 @@
 import {Logger} from "./logger.js";
 
 export class SvgLang {
-    static #translationData = {
+    static #htmlTranslation = {
         "en": {
             "joinLabel": "Join Simple Voice Chat",
             "usernameInput": "Username",
@@ -118,7 +118,24 @@ export class SvgLang {
             "devToolsLabel": "Strumenti per sviluppatori"
         }
     };
-    static availableLanguages = Object.keys(SvgLang.#translationData);
+    static #jsTranslation = {
+        "en": {
+            "audioFallbackDefaultReason": "Audio device APIs are unavailable.",
+            "microphoneUnavailableLabel": "Microphone unavailable",
+            "speakerUnavailableLabel": "Speaker unavailable",
+            "microphoneIndexPrefix": "Microphone",
+            "speakerIndexPrefix": "Speaker",
+            "noMicrophoneDetectedLabel": "No microphones detected",
+            "noSpeakerDetectedLabel": "No speakers detected",
+            "joinBtnUnconnectedLabel": "Join",
+            "joinBtnConnectedLabel": "Leave",
+            "statusConnectedAsPrefix": "Connected as",
+            "statusDisconnectedLabel": "Disconnected",
+            "muteBtnUnmuteLabel": "Unmute",
+            "muteBtnMuteLabel": "Mute"
+        }
+    };
+    static availableLanguages = Object.keys(SvgLang.#htmlTranslation);
 
     static #currentLanguage;
     static get currentLanguage() {
@@ -126,20 +143,37 @@ export class SvgLang {
     }
 
     static detectLanguage() {
-        let langCode = navigator.language || navigator.userLanguage || "en";
-        langCode = langCode.slice(0, 2);
+        let langCode = localStorage.getItem("preferredLanguage");
+        if (langCode === null) {
+            langCode = navigator.language || navigator.userLanguage || "en";
+            langCode = langCode.slice(0, 2);
+        }
 
         SvgLang.changeLanguage(langCode);
     }
 
+    static string(key) {
+        let text;
+        try {
+            text = SvgLang.#jsTranslation[SvgLang.#currentLanguage][key];
+            if (typeof text === "undefined") {
+                throw new Error(`Cannot find js translation for key: ${key}`);
+            }
+        } catch {
+            text = SvgLang.#jsTranslation["en"][key] || null;
+        }
+        return text;
+    }
+
     static changeLanguage(langCode) {
-        if (!(langCode in SvgLang.#translationData)) {
+        if (!SvgLang.availableLanguages.includes(langCode)) {
             Logger.log(`Translation for country code ${langCode} unavailable... defaulting to English.`)
             langCode = "en";
         }
         SvgLang.#currentLanguage = langCode;
+        localStorage.setItem("preferredLanguage", langCode);
 
-        const translation = SvgLang.#translationData[langCode];
+        const translation = SvgLang.#htmlTranslation[langCode];
 
         document.querySelectorAll("[svg-lang]").forEach(element => {
             const key = element.getAttribute("svg-lang");

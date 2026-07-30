@@ -1,4 +1,5 @@
 import {Logger} from "./utils/logger.js";
+import {SvgLang} from "./utils/lang.js";
 import {PttController} from "./ptt.js";
 
 /**
@@ -59,16 +60,16 @@ export class SvgUI {
 
         if (!available) {
             const fallbackReason =
-                reason || "Audio device APIs are unavailable.";
+                reason || SvgLang.string("audioFallbackDefaultReason");
 
             this.setSelectUnavailable(
                 micSelect,
-                "Microphone unavailable"
+                SvgLang.string("microphoneUnavailableLabel")
             );
 
             this.setSelectUnavailable(
                 speakerSelect,
-                "Speaker unavailable"
+                SvgLang.string("speakerUnavailableLabel")
             );
 
             Logger.log(`[Audio] ${fallbackReason}`);
@@ -81,7 +82,7 @@ export class SvgUI {
             option.value = mic.deviceId;
             option.textContent =
                 mic.label ||
-                `Microphone ${micSelect.options.length + 1}`;
+                `${SvgLang.string("microphoneIndexPrefix")} ${micSelect.options.length + 1}`;
 
             micSelect.appendChild(option);
         }
@@ -92,7 +93,7 @@ export class SvgUI {
             option.value = speaker.deviceId;
             option.textContent =
                 speaker.label ||
-                `Speaker ${speakerSelect.options.length + 1}`;
+                `${SvgLang.string("speakerIndexPrefix")} ${speakerSelect.options.length + 1}`;
 
             speakerSelect.appendChild(option);
         }
@@ -100,7 +101,7 @@ export class SvgUI {
         if (microphones.length === 0) {
             this.setSelectUnavailable(
                 micSelect,
-                "No microphones detected"
+                SvgLang.string("noMicrophoneDetectedLabel")
             );
         } else {
             micSelect.disabled = false;
@@ -109,7 +110,7 @@ export class SvgUI {
         if (speakers.length === 0) {
             this.setSelectUnavailable(
                 speakerSelect,
-                "No speakers detected"
+                SvgLang.string("noSpeakerDetectedLabel")
             );
         } else {
             speakerSelect.disabled = false;
@@ -241,7 +242,7 @@ export class SvgUI {
                     this.webSocketController.disconnect();
                     this.audioController.stopMic();
                     this.pttController.reset();
-                    joinButton.textContent = "Join";
+                    joinButton.textContent = SvgLang.string("joinBtnUnconnectedLabel");
                     return;
                 }
 
@@ -251,9 +252,9 @@ export class SvgUI {
                     async (status) => {
                         if (status.connected) {
 
-                            statusEl.textContent = "Connected as " + status.username;
+                            statusEl.textContent = `${SvgLang.string("statusConnectedAsPrefix")} ${status.username}`;
                             statusEl.style.backgroundColor = "#005f00";
-                            joinButton.textContent = "Leave";
+                            joinButton.textContent = SvgLang.string("joinBtnConnectedLabel");
                             micSelect.disabled = true;
                             speakerSelect.disabled = true;
                             const runtime = this.audioController.getAudioRuntime();
@@ -276,12 +277,12 @@ export class SvgUI {
                                 );
                             }
                         } else {
-                            statusEl.textContent = "Disconnected";
+                            statusEl.textContent = SvgLang.string("statusDisconnectedLabel");
                             statusEl.style.backgroundColor = "#5f0000";
                             micSelect.disabled = false;
                             speakerSelect.disabled = false;
                             this.pttController.reset();
-                            joinButton.textContent = "Join";
+                            joinButton.textContent = SvgLang.string("joinBtnUnconnectedLabel");
                         }
                     }
                 );
@@ -296,8 +297,8 @@ export class SvgUI {
                 this.pttController.setMuted(muted);
 
                 muteBtn.textContent = muted
-                        ? "Unmute"
-                        : "Mute";
+                        ? SvgLang.string("muteBtnUnmuteLabel")
+                        : SvgLang.string("muteBtnMuteLabel");
 
                 muteBtn.classList.toggle("muted", muted);
 
