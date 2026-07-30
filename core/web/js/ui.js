@@ -253,7 +253,8 @@ export class SvgUI {
                         if (status.connected) {
 
                             statusEl.textContent = `${SvgLang.string("statusConnectedAsPrefix")} ${status.username}`;
-                            statusEl.style.backgroundColor = "#005f00";
+                            statusEl.classList.remove("disconnected");
+                            statusEl.classList.add("connected");
                             joinButton.textContent = SvgLang.string("joinBtnConnectedLabel");
                             micSelect.disabled = true;
                             speakerSelect.disabled = true;
@@ -278,7 +279,8 @@ export class SvgUI {
                             }
                         } else {
                             statusEl.textContent = SvgLang.string("statusDisconnectedLabel");
-                            statusEl.style.backgroundColor = "#5f0000";
+                            statusEl.classList.remove("connected");
+                            statusEl.classList.add("disconnected");
                             micSelect.disabled = false;
                             speakerSelect.disabled = false;
                             this.pttController.reset();

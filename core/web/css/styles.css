@@ -107,6 +107,13 @@ MAIN VC
   justify-content: center;
 }
 
+#status.disconnected {
+  background-color: #5f0000 !important;
+}
+#status.connected {
+  background-color: #005f00 !important;
+}
+
 #log {
   height: 350px;
   width: 95%;

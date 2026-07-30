@@ -269,6 +269,13 @@ main {
     filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(4950%) hue-rotate(125deg) brightness(100%) contrast(110%);
 }
 
+.statusLabel.disconnected {
+    color: #a63131;
+}
+.statusLabel.connected {
+    color: #2f791a;
+}
+
 /*TODO CSS Below this point that isn't generic (e.g. .pttBindBtnContainer) are hotfixes for visual glitches; there probably is a way to not need these CSS. */
 
 .joinSec {
