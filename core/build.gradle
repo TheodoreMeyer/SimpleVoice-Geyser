@@ -41,18 +41,7 @@ tasks.processResources {
     from("web") {
         into("web")
 
-        filesMatching("index.html") {
-            filter { line ->
-                line.replace(
-                        "@@GIT_COMMIT@@",
-                        currentGitCommit()
-                ).replace(
-                        "@@PROJECT_VERSION@@",
-                        project.version.toString()
-                )
-            }
-        }
-        filesMatching("v2.html") {
+        filesMatching("*.html") {
             filter { line ->
                 line.replace(
                         "@@GIT_COMMIT@@",
