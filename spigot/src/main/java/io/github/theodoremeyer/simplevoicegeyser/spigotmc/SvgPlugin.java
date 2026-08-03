@@ -94,7 +94,6 @@ public class SvgPlugin extends JavaPlugin implements Platform {
     @Override
     public void platformDisable() {
         Bukkit.getPluginManager().disablePlugin(this);
-
     }
 
     @Override

@@ -9,7 +9,6 @@ import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.Con
 import io.github.theodoremeyer.simplevoicegeyser.core.server.packets.PacketHandler;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
-import org.eclipse.jetty.websocket.api.exceptions.WebSocketException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -162,12 +161,23 @@ public final class JettyWebSocket {
      */
     @OnWebSocketError
     public void onError(Throwable error) {
-        if (error instanceof WebSocketException) {
-            SvgCore.getLogger().debug("Websocket Timeout: " + error.getMessage());
+        if (error instanceof org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException
+                || error instanceof org.eclipse.jetty.websocket.core.exception.WebSocketTimeoutException) {
+
+            String sessionName = connection != null ? connection.getPlayer().getName() : "unknown session";
+            SvgCore.getLogger().info("[WebSocket] Session timed out for " + sessionName);
         }
 
+        String type = error == null
+                ? "Unknown"
+                : error.getClass().getSimpleName();
+
+        String message = error == null || error.getMessage() == null
+                ? "<no message>"
+                : error.getMessage();
+
         SvgCore.getLogger().debug("WebSocket: websocket error", error);
-        SvgCore.getLogger().info("Error: " + error.getMessage());
+        SvgCore.getLogger().info("[WebSocket] Error: " + type + ": " + message);
     }
 
     /**
