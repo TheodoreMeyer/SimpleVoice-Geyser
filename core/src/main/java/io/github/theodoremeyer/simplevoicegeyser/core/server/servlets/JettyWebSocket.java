@@ -170,73 +170,6 @@ public final class JettyWebSocket {
         SvgCore.getLogger().info("Error: " + error.getMessage());
     }
 
-    private void join(@NonNull JSONObject json) {
-        if (!checkClientBuild(json)) {
-            return;
-        }
-
-        if (connection != null) {
-            connection.sendError("Already authenticated.", false);
-            return;
-        }
-
-        String username = json.optString("username", "").trim();
-        String password = json.optString("password", "");
-        String proxyToken = json.optString("proxyToken", "");
-
-        AuthResponse response = AUTHENTICATOR.authenticate(username, password, proxyToken);
-
-        if (!response.success()) {
-            sendRaw(
-                    ConnectionStates.MessageType.ERROR,
-                    "Authentication failed: " + response.message(),
-                    false
-            );
-            return;
-        }
-
-        this.connection = connectionManager.connect(session, response.player(), audioNegotiation);
-
-        try {
-            connection.authenticate();
-        } catch (Exception e) {
-            SvgCore.getLogger().debug("WebSocket: Failed to authenticate voice connection", e);
-
-            connection.sendFatal(
-                    "Failed to initialize voice chat.",
-                    ConnectionStates.DisconnectCodes.FATAL_ERROR.getCode(),
-                    "voice_init_failure"
-            );
-            return;
-        }
-
-        VoicechatConnection vcConnection = SvgCore.getBridge().getVcServerApi().getConnectionOf(response.uuid());
-        if (SvgCore.getConfig().DEFAULT_GROUP_ENABLED.get() && vcConnection != null) {
-            boolean forceDefaultGroup = SvgCore.getConfig().DEFAULT_GROUP_FORCE_ON_WEB_JOIN.get();
-            boolean alreadyInGroup = vcConnection.isInGroup() && vcConnection.getGroup() != null;
-
-            if (!alreadyInGroup || forceDefaultGroup) {
-                SvgCore.getGroupManager().createGroup(
-                        response.player(),
-                        "Svg",
-                        SvgCore.getConfig().DEFAULT_GROUP_PASSWORD.get(),
-                        Group.Type.OPEN,
-                        false,
-                        true
-                );
-            } else {
-                SvgCore.getLogger().debug("WebSocket: Preserving existing group for " + response.uuid() + " on web join");
-            }
-        }
-
-        connection.sendMessage(
-                ConnectionStates.MessageType.STATUS,
-                "Connected as " + connection.getPlayer().getName() + ".",
-                false
-        );
-
-        SvgCore.getLogger().info("[WebSocket] " + connection.getPlayer().getName() + " authenticated.");
-    }
 
     private boolean checkClientBuild(JSONObject json) {
 
@@ -329,9 +262,7 @@ public final class JettyWebSocket {
             SvgCore.getLogger().debug("WebSocket: Failed to send capabilities ack", e);
         }
 
-        SvgCore.getLogger().import java.time.Duration;
-20
-debug(
+        SvgCore.getLogger().debug(
                 "WebSocket: Capabilities #" + capabilityMessageCount
                         + " uuid=" + (connection == null ? "pending" : connection.getUuid())
                         + " legacy=" + supportsLegacy
@@ -339,8 +270,7 @@ debug(
                         + " opusDecoder=" + supportsOpusDecoder
                         + " secure=" + secureContext
                         + " selected=" + selected.name().toLowerCase(Locale.ROOT)
-        );
-    }
+        );    }
 
     //Senders
 
@@ -398,7 +328,7 @@ debug(
     }
 
     /**
-     * Get the Negotiation Session for audio type
+     * Get the audio negotiation state.
      * @return audio negotiation
      */
     public AudioSessionNegotiation getAudioNegotiation() {
@@ -406,19 +336,16 @@ debug(
     }
 
     /**
-     * Get the underlying Session
+     * Get the underlying Session.
      * @return Session
      */
     public Session getSession() {
         return session;
     }
 
-    /**
-     * Set the Connection associated with the session
      * @param connection connection
      */
-    public void setConnection(SvgConnection connection) {
-        this.connection = connection;
+    public void setConnection(SvgConnection connection) {        this.connection = connection;
     }
 
     /**
