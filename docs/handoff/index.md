@@ -1,3 +1,9 @@
+---
+title: Flutter Android App Handoff
+layout: projects
+project: simplevoicegeyser
+---
+
 # Flutter Android App Handoff: `clientType` Join Update
 
 Update the app websocket join packet to match the plugin's generic client awareness model. Replace the old Android-specific metadata:
