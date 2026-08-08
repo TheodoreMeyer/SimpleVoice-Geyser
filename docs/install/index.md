@@ -8,6 +8,8 @@ project: simplevoicegeyser
 
 This guide covers installing and configuring Simple Voice Geyser.
 
+For Host-Specific setup, see [Hosting Guides]({% project_link guides %}).
+
 ---
 
 ## Requirements
