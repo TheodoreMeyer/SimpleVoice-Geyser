@@ -369,19 +369,29 @@ class FileManager {
      * @return resource stream, or null if not found
      */
     InputStream getResourceStream(String path) {
+        // 1. Normalize the base directory to an absolute path
+        java.nio.file.Path base = webDirectory.toPath().toAbsolutePath().normalize();
 
-        String localPath = path.startsWith("/") ? path.substring(1) : path;
+        // 2. Strip leading slash to prevent path resolution from discarding the base directory
+        String cleanedPath = path.startsWith("/") ? path.substring(1) : path;
 
-        File localFile = new File(webDirectory, localPath);
+        // 3. Resolve and normalize the requested file path
+        java.nio.file.Path resolved = base.resolve(cleanedPath).toAbsolutePath().normalize();
+
+        // 4. Defense-in-depth: Ensure the resolved path remains inside the base directory
+        if (!resolved.startsWith(base)) {
+            return null;
+        }
+
+        // 5. Convert back to a File object
+        File localFile = resolved.toFile();
 
         /*
          * Local override takes priority.
          */
         if (localFile.exists() && localFile.isFile()) {
-
             try {
                 return new FileInputStream(localFile);
-
             } catch (FileNotFoundException e) {
                 // File may have disappeared between exists() and opening it.
             }
@@ -389,8 +399,10 @@ class FileManager {
 
         /*
          * Fall back to the resource bundled inside the JAR.
+         * We reconstruct a clean, normalized relative path for the JAR resource.
          */
-        String jarResourcePath = RESOURCE_ROOT + "/" + localPath;
+        String cleanRelativePath = base.relativize(resolved).toString().replace(File.separatorChar, '/');
+        String jarResourcePath = RESOURCE_ROOT + "/" + cleanRelativePath;
 
         return FileManager.class.getResourceAsStream(jarResourcePath);
     }
