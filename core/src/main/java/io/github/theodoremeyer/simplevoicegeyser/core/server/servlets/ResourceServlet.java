@@ -12,6 +12,9 @@ import java.io.InputStream;
  */
 public final class ResourceServlet extends HttpServlet {
 
+    /**
+     * Holds an instance of {@link FileManager} to manage resource extraction and access.
+     */
     private final FileManager fileManager;
 
     /**
