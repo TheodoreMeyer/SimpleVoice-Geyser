@@ -466,6 +466,17 @@ public final class SvgAudioListener {
     }
 
     private Double resolveReceiverYaw(VoicechatConnection receiverConnection) {
+        // Prefer the platform player's thread-safe yaw snapshot. Reading Bukkit
+        // Player#getLocation from the SVG-Audio thread is unsafe on Folia/Canvas.
+        io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer svgPlayer =
+                SvgCore.getPlayerManager().getPlayer(listenerId);
+        if (svgPlayer != null) {
+            Double cachedYaw = svgPlayer.getLookYawDegrees();
+            if (cachedYaw != null) {
+                return cachedYaw;
+            }
+        }
+
         if (receiverConnection == null || receiverConnection.getPlayer() == null) {
             return null;
         }
@@ -474,18 +485,7 @@ public final class SvgAudioListener {
             return null;
         }
 
-        try {
-            Method getLocation = platformPlayer.getClass().getMethod("getLocation");
-            Object location = getLocation.invoke(platformPlayer);
-            if (location != null) {
-                Double yaw = invokeNumericNoArgs(location, "getYaw");
-                if (yaw != null) {
-                    return yaw;
-                }
-            }
-        } catch (Exception ignored) {
-        }
-
+        // Fabric (and other non-Bukkit) platforms expose yaw without a Bukkit location.
         Double yaw = invokeNumericNoArgs(platformPlayer, "getYRot");
         if (yaw != null) {
             return yaw;

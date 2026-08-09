@@ -65,5 +65,9 @@ public class FabricPlayer extends SvgPlayer {
         return player.getName().getString();
     }
 
+    @Override
+    public Double getLookYawDegrees() {
+        return (double) player.getYRot();
+    }
 
 }

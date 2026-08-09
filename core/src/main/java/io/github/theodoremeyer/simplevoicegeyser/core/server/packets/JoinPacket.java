@@ -3,6 +3,7 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.packets;
 import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.SvgConnection;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.AuthException;
@@ -65,6 +66,15 @@ public final class JoinPacket implements Packet {
             return;
         }
 
+        if (!SvgCore.isRunning() || !SvgCore.getConnectionManager().isAcceptingConnections()) {
+            socket.sendRaw(
+                    ConnectionStates.MessageType.ERROR,
+                    "Server is shutting down.",
+                    false
+            );
+            return;
+        }
+
         String username = json.optString("username", "").trim();
         String password = json.optString("password", "");
 
@@ -80,9 +90,30 @@ public final class JoinPacket implements Packet {
             return;
         }
 
+        // Re-validate the in-game session after auth; browser/Jetty threads must not
+        // assume the SvgPlayer snapshot is still the online session.
+        SvgPlayer onlinePlayer = SvgCore.getPlayerManager().getPlayer(response.uuid());
+        if (onlinePlayer == null || !onlinePlayer.isOnline()) {
+            socket.sendRaw(
+                    ConnectionStates.MessageType.ERROR,
+                    "Authentication failed: Timeout: You didn’t join the server in time.",
+                    false
+            );
+            return;
+        }
+
+        if (!SvgCore.isRunning() || !SvgCore.getConnectionManager().isAcceptingConnections()) {
+            socket.sendRaw(
+                    ConnectionStates.MessageType.ERROR,
+                    "Server is shutting down.",
+                    false
+            );
+            return;
+        }
+
         SvgConnection connection = SvgCore.getConnectionManager().connect(
                 socket.getSession(),
-                response.player(),
+                onlinePlayer,
                 socket.getAudioNegotiation(),
                 clientIdentity
         );
@@ -118,7 +149,7 @@ public final class JoinPacket implements Packet {
 
             if (!alreadyInGroup || forceDefaultGroup) {
                 SvgCore.getGroupManager().createGroup(
-                        response.player(),
+                        onlinePlayer,
                         "Svg",
                         SvgCore.getConfig().DEFAULT_GROUP_PASSWORD.get(),
                         Group.Type.OPEN,
@@ -134,7 +165,7 @@ public final class JoinPacket implements Packet {
             }
         }
 
-        response.player().sendMessage(SvgCore.getPrefix() + "Connected!");
+        onlinePlayer.sendMessage(SvgCore.getPrefix() + "Connected!");
 
         connection.sendMessage(
                 ConnectionStates.MessageType.STATUS,

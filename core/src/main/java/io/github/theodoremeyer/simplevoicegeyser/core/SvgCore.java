@@ -12,6 +12,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserEventHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.PlayerManager;
+import io.github.theodoremeyer.simplevoicegeyser.core.schedule.TaskScheduler;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.JettyServer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
@@ -157,6 +158,7 @@ public final class SvgCore {
         }
 
         state = State.SHUTDOWN;
+        connectionManager.rejectNewConnections();
         connectionManager.disconnectAll();
 
         try {
@@ -171,6 +173,13 @@ public final class SvgCore {
 
         AudioThread.shutdown();
 
+        try {
+            platform.getTaskScheduler().shutdown();
+        } catch (Exception e) {
+            getLogger().severe("Failed to shut down task scheduler: " + e.getMessage());
+            getLogger().debug("Task scheduler shutdown failed", e);
+        }
+
         if (playerVcPswd != null) {
             playerVcPswd.shutdown();
         }
@@ -179,6 +188,21 @@ public final class SvgCore {
         jettyServer = null;
         groupManager = null;
         command = null;
+    }
+
+    /**
+     * @return whether the core is fully running and accepting work
+     */
+    public static boolean isRunning() {
+        SvgCore core = getInstance();
+        return core != null && core.state == State.RUNNING;
+    }
+
+    /**
+     * @return platform task scheduler
+     */
+    public static TaskScheduler getTaskScheduler() {
+        return getInstance().platform.getTaskScheduler();
     }
 
     /**

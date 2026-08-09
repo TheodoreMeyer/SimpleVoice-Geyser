@@ -67,8 +67,19 @@ public final class PlayerManager {
      * @param player the player to add
      */
     public void addPlayer(SvgPlayer player) {
-        players.put(player.getUniqueId(), player);
-        playersByName.put(player.getName(), player);
+        UUID uuid = player.getUniqueId();
+        String name = player.getName();
+
+        // Replace any stale mapping for this UUID/name as one compound transition.
+        SvgPlayer previousById = players.put(uuid, player);
+        if (previousById != null && !previousById.getName().equals(name)) {
+            playersByName.remove(previousById.getName(), previousById);
+        }
+
+        SvgPlayer previousByName = playersByName.put(name, player);
+        if (previousByName != null && !previousByName.getUniqueId().equals(uuid)) {
+            players.remove(previousByName.getUniqueId(), previousByName);
+        }
     }
 
     /**
@@ -77,15 +88,18 @@ public final class PlayerManager {
      * @param player the player to remove
      */
     public void removePlayer(SvgPlayer player) {
+        UUID uuid = player.getUniqueId();
+        String name = player.getName();
+
+        // Only remove if this exact instance is still mapped (session replacement safe).
+        players.remove(uuid, player);
+        playersByName.remove(name, player);
+
         SvgCore.getConnectionManager().disconnect(
-                player.getUniqueId(),
+                uuid,
                 ConnectionStates.DisconnectCodes.PLAYER_LEAVE.getCode(),
                 "Player left the game."
         );
-        //SvgCore.getWsManager().playerLeave(player);
-
-        players.remove(player.getUniqueId());
-        playersByName.remove(player.getName());
     }
 
     // Is Player Online
