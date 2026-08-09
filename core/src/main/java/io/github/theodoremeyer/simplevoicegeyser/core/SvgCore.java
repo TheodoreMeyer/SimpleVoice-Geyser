@@ -127,6 +127,7 @@ public final class SvgCore {
             }
 
             this.groupManager = new GroupManager(vcBridge);
+            GeyserHook.createFormHandler();
             this.command = new Command(groupManager, this);
 
             if (GeyserHook.isGeyser()) {

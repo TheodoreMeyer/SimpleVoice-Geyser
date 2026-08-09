@@ -24,7 +24,7 @@ public final class PswdCommand implements SubCommand {
      * Create the default password command
      */
     public PswdCommand() {
-        this.formHandler = new FormHandler(SvgCore.getGroupManager());
+        this.formHandler = GeyserHook.getFormHandler();
     }
 
     /**
