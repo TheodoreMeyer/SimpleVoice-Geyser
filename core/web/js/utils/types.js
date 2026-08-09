@@ -41,19 +41,12 @@
  */
 
 /**
- * @typedef {Object} DevElements
- * @property {HTMLElement} devToggle
- * @property {HTMLElement} devContent
- */
-
-/**
  * UI elements used by SvgClient.
  *
  * @typedef {Object} SvgUIElements
  * @property {FormElements} form
  * @property {AudioElements} audio
  * @property {PttElements} ptt
- * @property {DevElements} dev
  */
 
 /**

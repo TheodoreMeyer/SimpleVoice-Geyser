@@ -71,13 +71,67 @@ class FileManager {
         outdatedFiles.clear();
 
         extractResource(
-                "/web/index.html",
-                "index.html"
+                "/web/legacy.html",
+                "legacy.html"
         );
-
         extractResource(
                 "/web/css/styles.css",
                 "css/styles.css"
+        );
+
+        extractResource(
+                "/web/index.html",
+                "index.html"
+        );
+        extractResource(
+                "/web/css/v2.css",
+                "css/v2.css"
+        );
+        extractResource(
+                "/web/js/v2.js",
+                "js/v2.js"
+        );
+
+        extractResource(
+                "/web/images/v2/background.png",
+                "images/v2/background.png"
+        );
+        extractResource(
+                "/web/images/v2/alert-background.png",
+                "images/v2/alert-background.png"
+        );
+        extractResource(
+                "/web/images/v2/close.png",
+                "images/v2/close.png"
+        );
+        extractResource(
+                "/web/images/v2/mic.png",
+                "images/v2/mic.png"
+        );
+        extractResource(
+                "/web/images/v2/docs.png",
+                "images/v2/docs.png"
+        );
+        extractResource(
+                "/web/images/v2/link.png",
+                "images/v2/link.png"
+        );
+        extractResource(
+                "/web/images/v2/bug-report.png",
+                "images/v2/bug-report.png"
+        );
+
+        extractResource(
+                "/web/images/flags-1x1/en.svg",
+                "images/flags-1x1/en.svg"
+        );
+        extractResource(
+                "/web/images/flags-1x1/pl.svg",
+                "images/flags-1x1/pl.svg"
+        );
+        extractResource(
+                "/web/images/flags-1x1/it.svg",
+                "images/flags-1x1/it.svg"
         );
 
         versioning.save();
