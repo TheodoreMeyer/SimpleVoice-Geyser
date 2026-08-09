@@ -82,11 +82,19 @@ public final class GeyserHook {
     }
 
     //FORMS
+
+    /**
+     * Get The FormHandler
+     * @return {@link FormHandler}
+     */
     @Nullable
     public static FormHandler getFormHandler() {
         return formHandler;
     }
 
+    /**
+     * Create the {@link FormHandler} if it does not exist
+     */
     public static void createFormHandler() {
         if (formHandler == null) {
             formHandler = new FormHandler(SvgCore.getGroupManager());

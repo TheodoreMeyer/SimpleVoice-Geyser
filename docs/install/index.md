@@ -18,7 +18,7 @@ For Host-Specific setup, see [Hosting Guides]({% project_link guides %}).
 
 * Minecraft 1.21.8+
 * Simple Voice Chat 2.6.x+
-* GeyserMC 2.9.0-SNAPSHOT+
+* GeyserMC 2.10.1-SNAPSHOT+
 * Floodgate (optional, but recommended)
 
 ### Fabric
@@ -26,7 +26,7 @@ For Host-Specific setup, see [Hosting Guides]({% project_link guides %}).
 * Fabric Loader (matching your Minecraft version)
 * Fabric API (required)
 * Simple Voice Chat 2.6.x+
-* GeyserMC 2.9.0-SNAPSHOT+
+* GeyserMC 2.10.1-SNAPSHOT+
 * LuckPerms (optional)
 * Floodgate (optional)
 
