@@ -65,9 +65,11 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
 
         switch (sub) {
             case "pswd" -> {
-                if (args.length >= 3) {
+                if (args.length >= 2) {
                     out.put("password", args[1]);
-                    out.put("confirm", args[2]);
+                    if (args.length >= 3) {
+                        out.put("confirm", args[2]);
+                    }
                 }
             }
 
@@ -109,7 +111,7 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
 
         sender.sendMessage(
                 SvgCore.getPrefix() +
-                "**WARNING:** Passwords entered through this command may appear in console/logs. For safer setup, " +
+                "WARNING: Passwords entered through this command may appear in console/logs. For safer setup, " +
                         "use /svg pswd without arguments if you are bedrock."
         );
 
