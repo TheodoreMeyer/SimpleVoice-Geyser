@@ -142,6 +142,8 @@ export class SvgLang {
         return SvgLang.#currentLanguage;
     }
 
+    static #jsElementMap = new Map();
+
     static detectLanguage() {
         let langCode = localStorage.getItem("preferredLanguage");
         if (langCode === null) {
@@ -165,6 +167,36 @@ export class SvgLang {
         return text;
     }
 
+    static #setElementText(element, content) {
+        if (typeof content === "string") {
+            element.textContent = SvgLang.string(content);
+        } else {
+            element.textContent = content();
+        }
+    }
+
+    /**
+     * Set an element with some textContent involving translations.
+     *
+     * It automatically recomputes the text when required.
+     *
+     * Use it as a replacement for `element.textContent = someText`.
+     *
+     * @param element HTMLElement
+     * @param content JS Translation Key or No-Param String-Returning Factory
+     *
+     * @example
+     * SvgLang.setElement(el, "jsTranslationLabel");
+     *
+     * SvgLang.setElement(el, () =>
+     *     `A factory that uses ${SvgLang.string("jsTranslationLabel")}, useful for computed strings`
+     * );
+     */
+    static setElement(element, content) {
+        SvgLang.#jsElementMap.set(element, content);
+        SvgLang.#setElementText(element, content);
+    }
+
     static changeLanguage(langCode) {
         if (!SvgLang.availableLanguages.includes(langCode)) {
             Logger.log(`Translation for country code ${langCode} unavailable... defaulting to English.`)
@@ -181,6 +213,10 @@ export class SvgLang {
             if (key in translation) {
                 element.textContent = translation[key];
             }
+        });
+
+        SvgLang.#jsElementMap.forEach((content, element, _) => {
+            SvgLang.#setElementText(element, content);
         });
     }
 }
