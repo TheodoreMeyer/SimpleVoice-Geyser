@@ -83,6 +83,7 @@ async function main() {
   fs.mkdirSync(outDir, { recursive: true });
   const buildInfo = JSON.parse(fs.readFileSync(path.join(webRoot, "build-info.json"), "utf8"));
   const { server, base } = await serve();
+  const evidence = { buildId: buildInfo.buildId, borders: {}, accents: {}, urls: [] };
   let browser;
   const launchErrors = [];
   for (const opts of [
@@ -101,7 +102,6 @@ async function main() {
   if (!browser) {
     throw new Error(`Unable to launch browser. Tried channels. ${launchErrors.join(" | ")}`);
   }
-  const evidence = { buildId: buildInfo.buildId, borders: {}, accents: {}, urls: [] };
 
   try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
