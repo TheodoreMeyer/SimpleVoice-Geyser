@@ -2,6 +2,7 @@ build/
 .idea/
 .vscode/
 .gradle/
+.tools/
 gradlew
 gradlew.bat
 run/

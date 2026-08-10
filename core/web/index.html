@@ -3,40 +3,453 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="build-id" content="@@GIT_COMMIT@@">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="build-id" content="@@BUILD_ID@@">
     <title>SimpleVoice-Geyser</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/ptt.css">
+    <link rel="stylesheet" href="css/styles.css?v=@@BUILD_ID@@">
+    <link rel="stylesheet" href="css/ptt.css?v=@@BUILD_ID@@">
     <link rel="icon" href="images/svg-temp.png" type="image/x-icon">
-    <link rel="stylesheet" href="css/presets.css">
-    <!--<link rel="manifest" href="/manifest.json">-->
-    <script src="js/utils/lang.js"></script>
+    <link rel="stylesheet" href="css/presets.css?v=@@BUILD_ID@@">
+    <script src="js/utils/lang.js?v=@@BUILD_ID@@"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "./js/utils/builder.js": "./js/utils/builder.js?v=@@BUILD_ID@@",
+        "./js/client.js": "./js/client.js?v=@@BUILD_ID@@",
+        "./js/ui.js": "./js/ui.js?v=@@BUILD_ID@@",
+        "./js/websocket.js": "./js/websocket.js?v=@@BUILD_ID@@",
+        "./js/groups.js": "./js/groups.js?v=@@BUILD_ID@@",
+        "./js/clipboard.js": "./js/clipboard.js?v=@@BUILD_ID@@",
+        "./js/ptt.js": "./js/ptt.js?v=@@BUILD_ID@@",
+        "./js/gamepad.js": "./js/gamepad.js?v=@@BUILD_ID@@",
+        "./js/app-state.js": "./js/app-state.js?v=@@BUILD_ID@@",
+        "./js/dashboard-layout.js": "./js/dashboard-layout.js?v=@@BUILD_ID@@",
+        "./js/appearance.js": "./js/appearance.js?v=@@BUILD_ID@@",
+        "./js/build-identity.js": "./js/build-identity.js?v=@@BUILD_ID@@",
+        "./js/utils/logger.js": "./js/utils/logger.js?v=@@BUILD_ID@@",
+        "./js/utils/types.js": "./js/utils/types.js?v=@@BUILD_ID@@",
+        "./js/utils/internal-types.js": "./js/utils/internal-types.js?v=@@BUILD_ID@@",
+        "./js/audio/audio.js": "./js/audio/audio.js?v=@@BUILD_ID@@",
+        "./js/audio/pcm.js": "./js/audio/pcm.js?v=@@BUILD_ID@@",
+        "./js/audio/resampler.js": "./js/audio/resampler.js?v=@@BUILD_ID@@",
+        "./js/audio/capture-metrics.js": "./js/audio/capture-metrics.js?v=@@BUILD_ID@@",
+        "./js/audio/AudioByteDecompiler.js": "./js/audio/AudioByteDecompiler.js?v=@@BUILD_ID@@",
+        "./js/audio/vendor/opus-decoder-loader.js": "./js/audio/vendor/opus-decoder-loader.js?v=@@BUILD_ID@@",
+        "./js/audio/microphone.js": "./js/audio/microphone.js?v=@@BUILD_ID@@",
+        "./js/audio/speaker.js": "./js/audio/speaker.js?v=@@BUILD_ID@@"
+      }
+    }
+    </script>
 </head>
 
 <body>
-    <h1><span svg-lang="joinLabel"></span></h1>
-    <div id="form-container">
-        <form id="joinForm" data-svg="form">
-            <label for="username" svg-lang="usernameInput"></label>
-            <input data-svg="form.username" type="text" id="username" name="username" required autocomplete="username">
+    <a class="skip-link" href="#app-main">Skip to content</a>
 
-            <label for="password" svg-lang="passwordInput"></label>
-            <input data-svg="form.password" type="password" id="password" name="password" required autocomplete="svg-password">
+    <div class="app-shell">
+        <main id="app-root">
+            <section id="login-view" class="view view-login" data-svg="view.login" aria-labelledby="login-title">
+                <div class="login-card">
+                    <header class="login-brand">
+                        <p class="brand-mark" svg-lang="brandName">SimpleVoice-Geyser</p>
+                        <h1 id="login-title" svg-lang="joinLabel">Join Simple Voice Chat</h1>
+                        <p class="login-sub" svg-lang="loginSubtitle">Sign in with your Minecraft username and SVG password.</p>
+                    </header>
 
-            <label for="mic" svg-lang="micSelect"></label>
-            <select id="mic" name="mic" data-svg="audio.mic">
-                <option disabled selected svg-lang="micLoad"></option>
-            </select>
+                    <form id="joinForm" class="login-form" data-svg="form" autocomplete="on">
+                        <div class="field-group">
+                            <label for="username" svg-lang="usernameInput">Minecraft username</label>
+                            <input data-svg="form.username" type="text" id="username" name="username" required
+                                autocomplete="username" spellcheck="false" enterkeyhint="next">
+                        </div>
 
-            <label for="speaker" svg-lang="speakSelect"></label>
-            <select id="speaker" name="speaker" data-svg="audio.speaker">
-                <option disabled selected svg-lang="speakLoad"></option>
-            </select>
+                        <div class="field-group">
+                            <label for="password" svg-lang="passwordInput">SVG password</label>
+                            <div class="password-control">
+                                <input data-svg="form.password" type="password" id="password" name="password" required
+                                    autocomplete="current-password" minlength="8" maxlength="32" enterkeyhint="go">
+                                <button type="button" class="btn btn-ghost password-toggle" data-svg="form.password-toggle"
+                                    aria-pressed="false" aria-label="Show password" svg-lang="showPassword">Show</button>
+                            </div>
+                        </div>
 
-            <button type="submit" id="joinbtn" data-svg="form.join" svg-lang="joinBtnText"></button>
-        </form>
+                        <aside class="setup-help" role="note">
+                            <p class="hint-title" svg-lang="firstTimeTitle">First time connecting?</p>
+                            <p svg-lang="pswdHelp">Join the Minecraft server and run:</p>
+                            <div class="command-copy-row">
+                                <code id="pswd-command">/svg pswd &lt;your password&gt;</code>
+                                <button
+                                    id="copy-svg-command"
+                                    type="button"
+                                    class="btn btn-ghost secondary-button"
+                                    data-svg="form.copy-pswd"
+                                    title="Copy /svg pswd (then type your password)">Copy command</button>
+                            </div>
+                            <p class="copy-hint">Copy inserts <code>/svg pswd </code> — type your desired password after the space.</p>
+                            <span id="copy-command-status" class="visually-hidden" data-svg="form.copy-status"
+                                aria-live="polite"></span>
+                            <p svg-lang="pswdHelpDetail">Your password must be 8–32 characters. Return here and sign in using your Minecraft username and the password you created.</p>
+                            <p svg-lang="msAccountWarn">Your SVG password is not your Microsoft, Mojang, or Minecraft account password. Never enter your Microsoft account password here.</p>
+                            <p svg-lang="bedrockHint">Bedrock players can sign in with their gamertag; SVG resolves the Floodgate prefix when the match is unique.</p>
+                        </aside>
+
+                        <p id="status" class="form-status" data-svg="form.status" data-state="idle" hidden
+                            role="status" aria-live="polite"></p>
+
+                        <button type="submit" id="joinbtn" class="btn btn-primary btn-block btn-join" data-svg="form.join"
+                            data-loading="false" svg-lang="joinBtnText">Log In</button>
+                    </form>
+                </div>
+            </section>
+
+            <section id="dashboard-view" class="view view-dashboard" data-svg="view.dashboard" hidden aria-hidden="true"
+                aria-labelledby="dash-title">
+                <div class="dashboard-shell">
+                    <header class="dash-header">
+                        <div class="dash-brand">
+                            <p class="brand-mark" svg-lang="brandName">SimpleVoice-Geyser</p>
+                            <h1 id="dash-title" class="dash-title" svg-lang="dashboardTitle">Voice Panel</h1>
+                        </div>
+                        <dl class="dash-meta">
+                            <div>
+                                <dt svg-lang="playerLabel">Player</dt>
+                                <dd data-svg="dash.player">—</dd>
+                            </div>
+                            <div>
+                                <dt svg-lang="wsStatusLabel">Connection</dt>
+                                <dd data-svg="dash.ws-status" data-state="idle">Signed out</dd>
+                            </div>
+                            <div>
+                                <dt svg-lang="audioModeLabel">Audio mode</dt>
+                                <dd data-svg="dash.audio-mode">—</dd>
+                            </div>
+                            <div>
+                                <dt svg-lang="currentGroupLabel">Current group</dt>
+                                <dd data-svg="groups.current">None</dd>
+                            </div>
+                        </dl>
+                        <div class="dash-header-actions">
+                            <button type="button" class="btn btn-ghost" data-svg="dash.reset-layout" title="Reset dashboard panel layout">Reset layout</button>
+                            <button type="button" class="btn btn-danger" data-svg="dash.logout" svg-lang="logoutBtn">Log Out</button>
+                        </div>
+                        <div class="visually-hidden" data-svg="dash.layout-live" aria-live="polite"></div>
+                    </header>
+
+                    <div class="reconnect-banner" data-svg="dash.reconnect-overlay" hidden role="status" aria-live="polite">
+                        Reconnecting to voice panel…
+                    </div>
+
+                    <div class="build-mismatch-banner" data-svg="dash.build-mismatch" hidden role="alert">
+                        <p>Client update required. Frontend and server builds do not match.</p>
+                        <button type="button" class="btn btn-primary" data-svg="dash.reload-client">Reload Updated Client</button>
+                    </div>
+
+                    <div class="native-notice panel" data-svg="dash.native-notice" hidden role="status">
+                        <p svg-lang="nativeVoiceNotice">Voice is currently handled by your in-game Simple Voice Chat client.</p>
+                    </div>
+
+                    <div id="app-main" class="dash-main" data-svg="dash.grid">
+                        <section class="dashboard-upper">
+                        <section class="dashboard-panel voice-controls-panel voice-controls panel dash-panel" data-panel="voice" data-svg="dash.voice-controls" aria-labelledby="voice-heading">
+                            <div class="panel-header panel-drag-header" data-panel-handle title="Drag to rearrange" aria-label="Drag to rearrange Voice Controls. Arrow keys also move.">
+                                <div class="panel-title-row">
+                                    <span class="drag-grip" aria-hidden="true"></span>
+                                    <h2 id="voice-heading" svg-lang="voiceControlsHeading">Voice Controls</h2>
+                                </div>
+                                <div class="visually-hidden panel-a11y-move" aria-label="Reorder voice panel">
+                                    <button type="button" data-panel-move="up">Move voice panel up</button>
+                                    <button type="button" data-panel-move="down">Move voice panel down</button>
+                                    <button type="button" data-panel-move="left">Move voice panel left</button>
+                                    <button type="button" data-panel-move="right">Move voice panel right</button>
+                                </div>
+                            </div>
+
+                            <div class="voice-status-row">
+                                <div class="voice-status-chip">
+                                    <span class="voice-status-label">Connection</span>
+                                    <strong data-svg="dash.voice-conn">Signed out</strong>
+                                </div>
+                                <div class="voice-status-chip">
+                                    <span class="voice-status-label">Group</span>
+                                    <strong data-svg="dash.voice-group">None</strong>
+                                </div>
+                            </div>
+
+                            <p class="voice-gate" data-svg="dash.voice-gate" role="status" aria-live="polite">
+                                Voice will not transmit until you join a voice group.
+                            </p>
+                            <p class="mic-error" data-svg="dash.mic-error" hidden role="status" aria-live="polite"></p>
+
+                            <div class="device-row">
+                                <div class="field-group">
+                                    <label for="mic" svg-lang="micSelect">Microphone</label>
+                                    <select id="mic" name="mic" data-svg="audio.mic">
+                                        <option disabled selected svg-lang="micLoad">Loading…</option>
+                                    </select>
+                                </div>
+                                <div class="field-group">
+                                    <label for="speaker" svg-lang="speakSelect">Speaker</label>
+                                    <select id="speaker" name="speaker" data-svg="audio.speaker">
+                                        <option disabled selected svg-lang="speakLoad">Loading…</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="level-meter-block">
+                                <span class="control-label">Input level</span>
+                                <div class="level-meter" data-svg="audio.level" role="meter" aria-label="Microphone input level"
+                                    aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                    <span class="level-meter-fill"></span>
+                                </div>
+                            </div>
+
+                            <div class="audio-settings" data-svg="audio.processing">
+                                <span class="control-label">Microphone processing</span>
+
+                                <div class="audio-settings__row">
+                                    <div class="audio-settings__text">
+                                        <span class="audio-settings__label">Echo cancellation</span>
+                                        <span class="audio-settings__desc">Reduces feedback and speaker echo picked up by your mic.</span>
+                                    </div>
+                                    <label class="svg-switch">
+                                        <input type="checkbox" data-svg="audio.echo" role="switch" checked />
+                                        <span class="svg-switch-track" aria-hidden="true"></span>
+                                        <span class="svg-switch-label visually-hidden">Echo cancellation</span>
+                                    </label>
+                                </div>
+
+                                <div class="audio-settings__row">
+                                    <div class="audio-settings__text">
+                                        <span class="audio-settings__label">Noise suppression</span>
+                                        <span class="audio-settings__desc">Filters out steady background noise while you talk.</span>
+                                    </div>
+                                    <label class="svg-switch">
+                                        <input type="checkbox" data-svg="audio.noise" role="switch" checked />
+                                        <span class="svg-switch-track" aria-hidden="true"></span>
+                                        <span class="svg-switch-label visually-hidden">Noise suppression</span>
+                                    </label>
+                                </div>
+
+                                <div class="audio-settings__row">
+                                    <div class="audio-settings__text">
+                                        <span class="audio-settings__label">Automatic gain control</span>
+                                        <span class="audio-settings__desc">Automatically balances mic volume so you stay audible.</span>
+                                    </div>
+                                    <label class="svg-switch">
+                                        <input type="checkbox" data-svg="audio.agc" role="switch" checked />
+                                        <span class="svg-switch-track" aria-hidden="true"></span>
+                                        <span class="svg-switch-label visually-hidden">Automatic gain control</span>
+                                    </label>
+                                </div>
+
+                                <p class="mic-applied-status" data-svg="audio.applied-status" role="status" aria-live="polite"></p>
+
+                                <div class="audio-settings__footer">
+                                    <button type="button" class="btn btn-secondary" data-svg="audio.reset-settings">Reset audio settings</button>
+                                </div>
+                            </div>
+
+                            <div id="controls">
+                                <div id="controls-main">
+                                    <div class="controls-card" id="micCard" data-svg="ptt.mic-card">
+                                        <div class="control-group">
+                                            <span class="control-label" svg-lang="micSLabel">Microphone</span>
+                                            <div id="micControls">
+                                                <button id="muteBtn" type="button" class="unmuted" data-svg="audio.mute" svg-lang="muteBtnText">Mute</button>
+                                                <span id="micIndicator" title="Mic activity" data-svg="audio.indicator" aria-hidden="true"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="controls-card">
+                                        <div class="control-group">
+                                            <span class="control-label" svg-lang="transmitModeLabel">Transmit Mode</span>
+                                            <select id="transmitModeSelect" aria-label="Transmit mode" data-svg="ptt.mode">
+                                                <option value="voice" svg-lang="voiceActivityText">Voice Activation</option>
+                                                <option value="ptt" svg-lang="pushToTalkText">Push-To-Talk</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="controls-card controls-card-ptt dev-hidden" id="pttCard" data-svg="ptt.card">
+                                        <div class="control-group" id="pttBindingControls" data-svg="ptt.binding-controls">
+                                            <span class="control-label" data-svg="ptt.binding-label" svg-lang="pttBindingLabel">PTT Binding</span>
+                                            <div class="ptt-action-row">
+                                                <button id="bindPttBtn" type="button" data-svg="ptt.bind" svg-lang="bindPttBtnText">Bind Push-to-Talk</button>
+                                                <button id="clearPttBtn" type="button" data-svg="ptt.clear" svg-lang="clearPttBtnText">Clear Binding</button>
+                                            </div>
+                                            <small id="control-label" svg-lang="pttBindingDescription">No binding set.</small>
+                                            <label class="svg-switch ptt-background-toggle">
+                                                <input type="checkbox" id="allowBackgroundPtt" data-svg="ptt.allow-background" role="switch"/>
+                                                <span class="svg-switch-track" aria-hidden="true"></span>
+                                                <span class="svg-switch-label" svg-lang="allowBackgroundPttText">Allow background controller PTT</span>
+                                            </label>
+                                        </div>
+
+                                        <div class="control-group" id="pttControls" data-svg="ptt.controls">
+                                            <span class="control-label" svg-lang="pttLabel">Push-to-Talk</span>
+                                            <div>
+                                                <button id="pushToTalkBtn" class="pttButton" type="button" data-svg="ptt.button" svg-lang="pushToTalkBtnText">Hold to Talk</button>
+                                                <button id="fullscreenPttBtn" type="button" data-svg="ptt.fullscreen" svg-lang="fullscreenPttBtnText">Fullscreen PTT</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="controls-divider"></div>
+                                <div id="controls-dev">
+                                    <button id="devToggle" type="button" class="dev-toggle" data-svg="dev.toggle" svg-lang="devToolsLabel">Developer Tools</button>
+                                    <div id="devContent" data-svg="dev.content">
+                                        <div class="control-group">
+                                            <span class="control-label" svg-lang="debugAudioLabel">Debug Audio</span>
+                                            <button id="testSound" type="button" svg-lang="testSoundBtnText">Test Sound</button>
+                                        </div>
+                                        <div class="build-diag" data-svg="dev.build-diag">
+                                            <p>Frontend build: <code data-svg="dev.frontend-build">—</code></p>
+                                            <p>Server build: <code data-svg="dev.server-build">—</code></p>
+                                            <p>Protocol: <code data-svg="dev.protocol">—</code></p>
+                                            <p>Assets: <code data-svg="dev.assets-build">—</code></p>
+                                            <p>Build match: <code data-svg="dev.build-match">—</code></p>
+                                            <p>Audio worklet build: <code data-svg="dev.worklet-build">—</code></p>
+                                            <p>Decoder build: <code data-svg="dev.decoder-build">—</code></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <div class="dashboard-right">
+                        <section class="dashboard-panel chat-panel panel dash-panel" data-panel="chat" aria-labelledby="chat-heading">
+                            <div class="panel-header panel-drag-header" data-panel-handle title="Drag to rearrange" aria-label="Drag to rearrange Chat. Arrow keys also move.">
+                                <div class="panel-title-row">
+                                    <span class="drag-grip" aria-hidden="true"></span>
+                                    <h2 id="chat-heading" svg-lang="chatHeading">Chat</h2>
+                                </div>
+                                <div class="visually-hidden panel-a11y-move" aria-label="Reorder chat panel">
+                                    <button type="button" data-panel-move="up">Move chat panel up</button>
+                                    <button type="button" data-panel-move="down">Move chat panel down</button>
+                                    <button type="button" data-panel-move="left">Move chat panel left</button>
+                                    <button type="button" data-panel-move="right">Move chat panel right</button>
+                                </div>
+                            </div>
+                            <div class="chat-panel-body">
+                                <div id="log" class="chat-log" data-svg="chat.log" role="log" aria-live="polite"></div>
+                                <div id="inputArea" class="chat-compose chat-input-row">
+                                    <label class="visually-hidden" for="msgInput" svg-lang="msgText">Message</label>
+                                    <input data-svg="chat.input" type="text" id="msgInput" autocomplete="off"
+                                        placeholder="Type a message…" disabled />
+                                    <button id="messageButton" type="button" class="btn btn-secondary" data-svg="chat.send"
+                                        svg-lang="sendBtnText" disabled>Send</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="dashboard-panel appearance-panel appearance-tile panel dash-panel" data-panel="appearance" data-svg="dash.appearance-section" aria-labelledby="appearance-heading">
+                            <div class="panel-header panel-drag-header" data-panel-handle title="Drag to rearrange" aria-label="Drag to rearrange Appearance. Arrow keys also move.">
+                                <div class="panel-title-row">
+                                    <span class="drag-grip" aria-hidden="true"></span>
+                                    <h2 id="appearance-heading">Appearance</h2>
+                                </div>
+                                <div class="visually-hidden panel-a11y-move" aria-label="Reorder appearance panel">
+                                    <button type="button" data-panel-move="up">Move appearance panel up</button>
+                                    <button type="button" data-panel-move="down">Move appearance panel down</button>
+                                    <button type="button" data-panel-move="left">Move appearance panel left</button>
+                                    <button type="button" data-panel-move="right">Move appearance panel right</button>
+                                </div>
+                            </div>
+                            <div class="appearance-body">
+                                <div class="appearance-group">
+                                    <label class="appearance-group__label" for="dash-appearance-accent">Theme Color</label>
+                                    <div class="appearance-control-row">
+                                        <select id="dash-appearance-accent" data-svg="dash.appearance-accent" aria-label="Theme color">
+                                            <option value="default">Default</option>
+                                            <option value="cyan">Cyan</option>
+                                            <option value="blue">Blue</option>
+                                            <option value="purple">Purple</option>
+                                            <option value="green">Green</option>
+                                            <option value="red">Red</option>
+                                            <option value="gold">Gold</option>
+                                        </select>
+                                        <div class="appearance-swatches" data-svg="dash.appearance-accent-swatches" role="group" aria-label="Theme color preview">
+                                            <button type="button" class="appearance-swatch" data-accent="default" aria-label="Default" title="Default"></button>
+                                            <button type="button" class="appearance-swatch" data-accent="cyan" aria-label="Cyan" title="Cyan"></button>
+                                            <button type="button" class="appearance-swatch" data-accent="blue" aria-label="Blue" title="Blue"></button>
+                                            <button type="button" class="appearance-swatch" data-accent="purple" aria-label="Purple" title="Purple"></button>
+                                            <button type="button" class="appearance-swatch" data-accent="green" aria-label="Green" title="Green"></button>
+                                            <button type="button" class="appearance-swatch" data-accent="red" aria-label="Red" title="Red"></button>
+                                            <button type="button" class="appearance-swatch" data-accent="gold" aria-label="Gold" title="Gold"></button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="appearance-group">
+                                    <label class="appearance-group__label" for="dash-appearance-border">Border Style</label>
+                                    <div class="appearance-control-row">
+                                        <select id="dash-appearance-border" data-svg="dash.appearance-border" aria-label="Border style">
+                                            <option value="default">Default</option>
+                                            <option value="glass">Glass</option>
+                                            <option value="subtle">Subtle</option>
+                                            <option value="glow">Glow</option>
+                                            <option value="high-contrast">High Contrast</option>
+                                        </select>
+                                        <div class="appearance-swatches" data-svg="dash.appearance-border-swatches" role="group" aria-label="Border style preview">
+                                            <button type="button" class="appearance-swatch appearance-swatch--border" data-border="default" aria-label="Default" title="Default"></button>
+                                            <button type="button" class="appearance-swatch appearance-swatch--border" data-border="glass" aria-label="Glass" title="Glass"></button>
+                                            <button type="button" class="appearance-swatch appearance-swatch--border" data-border="subtle" aria-label="Subtle" title="Subtle"></button>
+                                            <button type="button" class="appearance-swatch appearance-swatch--border" data-border="glow" aria-label="Glow" title="Glow"></button>
+                                            <button type="button" class="appearance-swatch appearance-swatch--border" data-border="high-contrast" aria-label="High contrast" title="High contrast"></button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="audio-settings__footer">
+                                    <button type="button" class="btn btn-secondary" data-svg="dash.reset-appearance">Reset Appearance</button>
+                                </div>
+                            </div>
+                        </section>
+                        </div>
+                        </section>
+
+                        <section class="dashboard-panel voice-groups-panel voice-groups panel dash-panel" data-panel="groups" aria-labelledby="groups-heading">
+                            <div class="panel-header panel-drag-header" data-panel-handle title="Drag to rearrange" aria-label="Drag to rearrange Voice Groups. Arrow keys also move.">
+                                <div class="panel-title-row">
+                                    <span class="drag-grip" aria-hidden="true"></span>
+                                    <h2 id="groups-heading" svg-lang="groupsHeading">Voice Groups</h2>
+                                </div>
+                                <div class="visually-hidden panel-a11y-move" aria-label="Reorder groups panel">
+                                    <button type="button" data-panel-move="up">Move groups panel up</button>
+                                    <button type="button" data-panel-move="down">Move groups panel down</button>
+                                    <button type="button" data-panel-move="left">Move groups panel left</button>
+                                    <button type="button" data-panel-move="right">Move groups panel right</button>
+                                </div>
+                            </div>
+                            <div class="panel-actions groups-actions">
+                                <button type="button" class="btn btn-secondary" data-svg="groups.create" svg-lang="createGroupBtn" disabled>Create Group</button>
+                                <button type="button" class="btn btn-ghost no-drag" data-svg="groups.refresh" aria-label="Refresh voice groups" disabled>Refresh</button>
+                                <button type="button" class="btn btn-ghost" data-svg="groups.leave" svg-lang="leaveGroupBtn" disabled>Leave Group</button>
+                            </div>
+                            <p class="groups-refresh-status" data-svg="groups.refresh-status" hidden role="status" aria-live="polite"></p>
+                            <p class="type-hint" data-svg="groups.type-hint" svg-lang="groupTypeHint">
+                                OPEN: hear nearby outsiders · NORMAL: proximity + group · ISOLATED: group only
+                            </p>
+                            <div class="groups-error" data-svg="groups.error" hidden role="alert"></div>
+                            <div class="group-list" data-svg="groups.list" role="list"></div>
+                        </section>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <nav class="footer-links" aria-label="Project links">
+                <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <a href="https://modrinth.com/plugin/simplevoice-geyser" target="_blank" rel="noopener noreferrer">Modrinth</a>
+                <a href="https://theodoremeyer.github.io/projects/simplevoicegeyser/" target="_blank" rel="noopener noreferrer">Docs</a>
+            </nav>
+            <div class="footer-credits">
+                <span>Created by TheodoreMeyer</span>
+                <span>Modernized by Kopeka</span>
+            </div>
+        </footer>
     </div>
-    <!-- Added translated spanish to noscript text and moved its css into styles.css-->
+
     <noscript>
         <div class="noscript-container">
             <h2>Error:</h2>
@@ -45,145 +458,149 @@
             <p>Se requiere JavaScript para utilizar esta aplicación.</p>
         </div>
     </noscript>
-    <div id="main-vc-container">
-        <br>
-        <div id="status" data-svg="form.status" svg-lang="joinWait"></div>
-        <div id="log" data-svg="chat.log"></div>
-        <br>
-        <div id="inputArea">
-            <label for="msgInput" svg-lang="msgText"></label>
-            <input data-svg="chat.input" type="text" id="msgInput" placeholder="Type a message..." />
-            <button id="messageButton" data-svg="chat.send" svg-lang="sendBtnText"></button>
-        </div>
-    </div>
-    <br>
-    <div id="controls">
-        <div id="controls-main">
-            <div class="controls-card" id="micCard" data-svg="ptt.mic-card">
-                <div class="control-group">
-                    <span class="control-label" svg-lang="micSLabel"></span>
-                    <div id="micControls">
-                        <button id="muteBtn" class="unmuted" data-svg="audio.mute" svg-lang="muteBtnText"></button>
-                        <span id="micIndicator" title="Mic activity" data-svg="audio.indicator"></span>
-                    </div>
-                </div>
-            </div>
 
-            <div class="controls-card">
-                <div class="control-group">
-                    <span class="control-label" svg-lang="transmitModeLabel"></span>
-                    <select id="transmitModeSelect" aria-label="Transmit mode" data-svg="ptt.mode">
-                        <option value="voice" svg-lang="voiceActivityText"></option>
-                        <option value="ptt" svg-lang="pushToTalkText"></option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="controls-card controls-card-ptt dev-hidden" id="pttCard" data-svg="ptt.card">
-                <div class="control-group" id="pttBindingControls" data-svg="ptt.binding-controls">
-                    <span class="control-label" data-svg="ptt.binding-label" svg-lang="pttBindingLabel"></span>
-                    <div class="ptt-action-row">
-                        <button id="bindPttBtn" type="button" data-svg="ptt.bind" svg-lang="bindPttBtnText"></button>
-                        <button id="clearPttBtn" type="button" data-svg="ptt.clear" svg-lang="clearPttBtnText"></button>
-                    </div>
-                    <small id="control-label" svg-lang="pttBindingDescription"></small>
-                    <label class="ptt-background-toggle">
-                        <input type="checkbox" id="allowBackgroundPtt" data-svg="ptt.allow-background"/>
-                        <span svg-lang="allowBackgroundPttText"></span>
-                    </label>
-                </div>
-
-                <div class="control-group" id="pttControls" data-svg="ptt.controls">
-                    <span class="control-label" svg-lang="pttLabel"></span>
-                    <div>
-                        <button id="pushToTalkBtn" class="pttButton" type="button" data-svg="ptt.button" svg-lang="pushToTalkBtnText"></button>
-                        <button id="fullscreenPttBtn" type="button" data-svg="ptt.fullscreen" svg-lang="fullscreenPttBtnText"></button>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-        <div class="controls-divider"></div>
-        <div id="controls-dev">
-            <button id="devToggle" class="dev-toggle" data-svg="dev.toggle" svg-lang="devToolsLabel"></button>
-            <div id="devContent" data-svg="dev.content">
-                <div class="control-group">
-                    <span class="control-label" svg-lang="debugAudioLabel"></span>
-                    <button id="testSound" type="button" svg-lang="testSoundBtnText"></button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="color-editor">
-        <h2 svg-lang="colorEditorLabel"></h2>
-        <div id="preset-field"></div>
-    </div>
-    <!--Added more links and tweaked github image-->
-    <div style="margin-left: auto; margin-right: auto;">
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-
-            <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank"
-                style="display: flex; align-items: center; gap: 10px; text-decoration: none; line-height: 1;">
-                <span
-                    style="width: 25px !important; height: 25px !important; max-width: 25px !important; min-width: 25px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                    <img src="https://github.com/favicon.ico" alt="github icon">
-                </span>
-                <span>Theodore Meyer</span>
-            </a>
-
-            <a href="https://modrinth.com/plugin/simplevoice-geyser" target="_blank"
-                style="display: flex; align-items: center; gap: 10px; text-decoration: none; line-height: 1;">
-                <span
-                    style="width: 25px !important; height: 25px !important; max-width: 25px !important; min-width: 25px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                    <img src="https://modrinth.com/favicon.ico" alt="modrinth logo"
-                        style="width: 100% !important; height: 100% !important; max-width: 100% !important; object-fit: contain; display: block;">
-                </span>
-                <span>SimpleVoice-Geyser</span>
-            </a>
-
-            <a href="https://theodoremeyer.github.io/projects/simplevoicegeyser/" target="_blank"
-                style="display: flex; align-items: center; gap: 10px; text-decoration: none; line-height: 1;">
-                <span
-                    style="width: 25px !important; height: 25px !important; max-width: 25px !important; min-width: 25px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-file-earmark-fill"
-                        viewBox="0 0 16 16"
-                        style="width: 100% !important; height: 100% !important; max-width: 100% !important; display: block;">
-                        <path
-                            d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2m5.5 1.5v2a1 1 0 0 0 1 1h2z" />
-                    </svg>
-                </span>
-                <span>Docs</span>
-            </a>
-
-        </div>
-    </div>
-    <!--bug report button-->
-    <button class="report-button" title="Click to report a bug"
-        onclick="window.open('https://github.com/TheodoreMeyer/SimpleVoice-Geyser/issues', '_blank');">
+    <button type="button" class="report-button" title="Report a bug" data-report-bug>
         <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-bug"
-            viewBox="0 0 16 16">
+            viewBox="0 0 16 16" aria-hidden="true">
             <path
                 d="M4.355.522a.5.5 0 0 1 .623.333l.291.956A5 5 0 0 1 8 1c1.007 0 1.946.298 2.731.811l.29-.956a.5.5 0 1 1 .957.29l-.41 1.352A5 5 0 0 1 13 6h.5a.5.5 0 0 0 .5-.5V5a.5.5 0 0 1 1 0v.5A1.5 1.5 0 0 1 13.5 7H13v1h1.5a.5.5 0 0 1 0 1H13v1h.5a1.5 1.5 0 0 1 1.5 1.5v.5a.5.5 0 1 1-1 0v-.5a.5.5 0 0 0-.5-.5H13a5 5 0 0 1-10 0h-.5a.5.5 0 0 0-.5.5v.5a.5.5 0 1 1-1 0v-.5A1.5 1.5 0 0 1 2.5 10H3V9H1.5a.5.5 0 0 1 0-1H3V7h-.5A1.5 1.5 0 0 1 1 5.5V5a.5.5 0 0 1 1 0v.5a.5.5 0 0 0 .5.5H3c0-1.364.547-2.601 1.432-3.503l-.41-1.352a.5.5 0 0 1 .333-.623M4 7v4a4 4 0 0 0 3.5 3.97V7zm4.5 0v7.97A4 4 0 0 0 12 11V7zM12 6a4 4 0 0 0-1.334-2.982A3.98 3.98 0 0 0 8 2a3.98 3.98 0 0 0-2.667 1.018A4 4 0 0 0 4 6z" />
         </svg>
+        <span class="visually-hidden">Report a bug</span>
     </button>
-    <!--fixed when hovering over hold to talk button covering up exit full screen button-->
-    <div id="pttFullscreenOverlay" aria-hidden="true" data-svg="ptt.overlay">
-        <button id="pushToTalkFullscreenBtn" class="pttButton" type="button" data-svg="ptt.overlay-button" svg-lang="pushToTalkFullscreenBtnText"></button>
+
+    <div id="pttFullscreenOverlay" hidden aria-hidden="true" data-svg="ptt.overlay">
+        <button id="pushToTalkFullscreenBtn" class="pttButton" type="button" data-svg="ptt.overlay-button"
+            svg-lang="pushToTalkFullscreenBtnText">Hold to Talk</button>
         <br>
-        <button id="exitFullscreenPttBtn" type="button" data-svg="ptt.overlay-exit" svg-lang="exitFullscreenPttBtnText"></button>
+        <button id="exitFullscreenPttBtn" type="button" data-svg="ptt.overlay-exit"
+            svg-lang="exitFullscreenPttBtnText">Exit Fullscreen</button>
     </div>
+
+    <dialog id="create-group-dialog" class="app-dialog" data-svg="groups.create-modal"
+        aria-labelledby="create-group-title">
+        <section class="dialog-surface" aria-labelledby="create-group-title">
+            <header class="dialog-header">
+                <h2 id="create-group-title" svg-lang="createGroupTitle">Create Group</h2>
+                <button
+                    id="close-create-group"
+                    type="button"
+                    class="btn btn-ghost icon-button"
+                    data-svg="groups.create-close"
+                    aria-label="Close">×</button>
+            </header>
+
+            <form id="create-group-form" class="dialog-form" data-svg="groups.create-form">
+                <div class="field-group">
+                    <label for="create-group-name" svg-lang="groupNameLabel">Group name</label>
+                    <input
+                        id="create-group-name"
+                        name="groupName"
+                        data-svg="groups.create-name"
+                        type="text"
+                        maxlength="32"
+                        required
+                        autocomplete="off">
+                </div>
+
+                <div class="field-group">
+                    <label for="create-group-password">
+                        Password <span class="optional">Optional</span>
+                    </label>
+                    <input
+                        id="create-group-password"
+                        name="groupPassword"
+                        data-svg="groups.create-password"
+                        type="password"
+                        autocomplete="new-password">
+                    <small class="field-help">Leave blank for no password.</small>
+                </div>
+
+                <div class="field-group">
+                    <label for="create-group-type" svg-lang="groupTypeLabel">Type</label>
+                    <select id="create-group-type" name="groupType" data-svg="groups.create-type">
+                        <option value="ISOLATED" selected>Isolated</option>
+                        <option value="NORMAL">Normal</option>
+                        <option value="OPEN">Open</option>
+                    </select>
+                </div>
+
+                <aside id="group-type-help" class="group-type-help" data-svg="groups.create-type-help"
+                    aria-live="polite">
+                    <strong>Isolated:</strong>
+                    Only members of the group can hear each other.
+                </aside>
+
+                <div id="create-group-error" class="form-message form-message-error"
+                    data-svg="groups.create-error" role="alert" hidden></div>
+
+                <footer class="dialog-actions">
+                    <button id="cancel-create-group" type="button" class="btn btn-ghost"
+                        data-svg="groups.create-cancel" svg-lang="cancelBtn">Cancel</button>
+                    <button id="submit-create-group" type="submit" class="btn btn-primary"
+                        data-svg="groups.create-submit">Create</button>
+                </footer>
+            </form>
+        </section>
+    </dialog>
+
+    <dialog id="protected-group-dialog" class="app-dialog" data-svg="groups.join-modal"
+        aria-labelledby="protected-group-title">
+        <section class="dialog-surface" aria-labelledby="protected-group-title">
+            <header class="dialog-header">
+                <h2 id="protected-group-title" svg-lang="joinGroupTitle">Join Protected Group</h2>
+                <button
+                    id="close-protected-group"
+                    type="button"
+                    class="btn btn-ghost icon-button"
+                    data-svg="groups.join-close"
+                    aria-label="Close">×</button>
+            </header>
+
+            <form id="protected-group-form" class="dialog-form" data-svg="groups.join-form">
+                <p id="protected-group-name" data-svg="groups.join-name"></p>
+
+                <div class="field-group">
+                    <label for="protected-group-password" svg-lang="groupPasswordLabel">Password</label>
+                    <input
+                        id="protected-group-password"
+                        name="groupPassword"
+                        data-svg="groups.join-password"
+                        type="password"
+                        required
+                        autocomplete="current-password">
+                </div>
+
+                <div id="protected-group-error" class="form-message form-message-error"
+                    data-svg="groups.join-error" role="alert" hidden></div>
+
+                <footer class="dialog-actions">
+                    <button id="cancel-protected-group" type="button" class="btn btn-ghost"
+                        data-svg="groups.join-cancel" svg-lang="cancelBtn">Cancel</button>
+                    <button id="submit-protected-group" type="submit" class="btn btn-primary"
+                        svg-lang="joinGroupConfirm">Join</button>
+                </footer>
+            </form>
+        </section>
+    </dialog>
+
     <script>
+        document.querySelector("[data-report-bug]")?.addEventListener("click", () => {
+            window.open("https://github.com/TheodoreMeyer/SimpleVoice-Geyser/issues", "_blank", "noopener,noreferrer");
+        });
+
         const availablePresets = ['default', 'dark', 'light', 'green', 'blue', 'purple', 'red', 'yellow', 'cyan', 'monochrome', 'monokai', 'orange', 'mint', 'rose'];
         const savedPreset = localStorage.getItem('preset');
-        availablePresets.forEach(preset => {
-            document.getElementById('preset-field').insertAdjacentHTML('beforeend', `<button class="preset-btn" data-preset="${preset}">${preset.charAt(0).toUpperCase() + preset.slice(1)}</button>`);
-        });
+        const presetField = document.getElementById('preset-field');
+        if (presetField) {
+            availablePresets.forEach(preset => {
+                presetField.insertAdjacentHTML('beforeend', `<button type="button" class="preset-btn" data-preset="${preset}">${preset.charAt(0).toUpperCase() + preset.slice(1)}</button>`);
+            });
+        }
         applyPreset(availablePresets.includes(savedPreset) ? savedPreset : 'default');
 
         document.querySelectorAll('#color-editor button[data-preset]').forEach(button => {
             button.addEventListener('click', () => {
-                const preset = button.getAttribute('data-preset');
-                applyPreset(preset);
+                applyPreset(button.getAttribute('data-preset'));
             });
         });
 
@@ -197,16 +614,30 @@
     </script>
     <script type="module">
         window.PROJECT_VERSION = "@@PROJECT_VERSION@@";
-        window.BUILD_ID = "@@GIT_COMMIT@@";
+        window.BUILD_ID = "@@BUILD_ID@@";
+        window.PROTOCOL_VERSION = Number("@@PROTOCOL_VERSION@@");
+        window.FRONTEND_SCHEMA = Number("@@FRONTEND_SCHEMA@@");
 
-        /** @import {SvgClientOptions} from './js/types.js' */
         import { SvgBuilder } from './js/utils/builder.js';
+        import { handleCopyCommand } from './js/clipboard.js';
+
+        for (const dialog of document.querySelectorAll('dialog[open]')) {
+            dialog.close();
+        }
+
+        document.addEventListener('click', async (event) => {
+            const button = event.target.closest('#copy-svg-command');
+            if (!button) {
+                return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            await handleCopyCommand(button);
+        });
 
         const client = SvgBuilder.fromDocument().build();
-
         await client.start();
     </script>
-
 </body>
 
 </html>

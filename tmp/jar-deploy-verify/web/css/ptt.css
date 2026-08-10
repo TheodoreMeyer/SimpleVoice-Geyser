@@ -1,0 +1,113 @@
+#pttBindingControls,
+#pttControls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  justify-content: center;
+  padding: 8px 4px;
+}
+
+#fullscreenPttBtn[hidden],
+#pttFullscreenOverlay[hidden] {
+  display: none !important;
+}
+
+#pttBindingControls small {
+  color: #b7c2c8;
+}
+
+.ptt-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ptt-background-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  margin: 0;
+}
+
+#pttBindingControls,
+#pttControls {
+  min-width: 250px;
+}
+
+#pttControls > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pttButton {
+  min-width: 190px;
+  font-weight: bold;
+  letter-spacing: 0.2px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  border: 1px solid #2a6f82;
+  background: linear-gradient(180deg, #4ad0ea 0%, #1ea2c6 100%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.pttButton.active {
+  background: linear-gradient(180deg, #4bde7d 0%, #2cb45f 100%);
+  border-color: #2f8f53;
+  color: #04130a;
+  box-shadow: 0 0 0 1px rgba(76, 223, 132, 0.32), 0 0 18px rgba(76, 223, 132, 0.34);
+}
+
+#fullscreenPttBtn {
+  background: linear-gradient(180deg, #ffd37e 0%, #f2b94b 100%);
+  border: 1px solid #bf8f35;
+  color: #2b1e05;
+}
+
+#fullscreenPttBtn:hover {
+  background: linear-gradient(180deg, #ffdca0 0%, #e0a73e 100%);
+}
+
+#pttFullscreenOverlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  background: radial-gradient(
+    circle at center,
+    rgba(0, 212, 255, 0.18),
+    rgba(0, 0, 0, 0.94)
+  );
+  z-index: 1000;
+}
+
+#pttFullscreenOverlay.visible {
+  display: flex;
+}
+
+#pushToTalkFullscreenBtn {
+  width: min(82vw, 540px);
+  height: min(58vh, 540px);
+  border-radius: 24px;
+  font-size: clamp(24px, 5vw, 42px);
+}
+
+#exitFullscreenPttBtn {
+  background-color: #444;
+  color: #fff;
+}
+
+body.fullscreen-ptt-active {
+  overflow: hidden;
+}

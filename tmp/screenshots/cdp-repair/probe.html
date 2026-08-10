@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html><head><meta charset='utf-8'><title>SVG Dashboard Visual Check</title>
+<link rel='stylesheet' href='file:///C:/Users/lowry/Coding/SimpleVoice-Geyser/core/web/css/presets.css'>
+<link rel='stylesheet' href='file:///C:/Users/lowry/Coding/SimpleVoice-Geyser/core/web/css/styles.css'>
+<style>
+  #login-view[hidden], #dashboard-view[hidden] { display: none !important; }
+  body { margin: 0; }
+</style>
+</head><body class='preset-default'>
+<section id='login-view' hidden></section>
+<section id='dashboard-view' data-border-theme='default'>
+  <div class='app-shell'>
+    <header class='dash-header'><div class='dash-brand'><p class='brand-mark'>SimpleVoice-Geyser</p><h1 class='dash-title'>Voice Panel</h1></div></header>
+    <div id='app-main' class='dash-main dashboard-grid is-desktop-grid'>
+      <section class='voice-controls panel dash-panel' data-panel='voice' style='grid-column:1/span 5;grid-row:1/span 8'>
+        <div class='panel-header panel-drag-header'><h2>Voice Controls</h2></div>
+        <p class='voice-gate'>Voice will not transmit until you join a voice group.</p>
+        <div class='mic-processing'>
+          <label class='svg-switch'><input type='checkbox' checked/><span class='svg-switch-track'></span><span class='svg-switch-label'>Echo cancellation</span></label>
+          <label class='svg-switch'><input type='checkbox' checked/><span class='svg-switch-track'></span><span class='svg-switch-label'>Noise suppression</span></label>
+          <label class='svg-switch'><input type='checkbox' checked/><span class='svg-switch-track'></span><span class='svg-switch-label'>Automatic gain control</span></label>
+          <p class='mic-applied-status'>Applied: echo on, noise on, AGC on · 48000 Hz · 1 ch</p>
+        </div>
+      </section>
+      <section class='chat-panel panel dash-panel' data-panel='chat' style='grid-column:6/span 7;grid-row:1/span 12'>
+        <div class='panel-header'><h2>Chat</h2></div>
+        <div class='chat-log'><div>Welcome</div></div>
+      </section>
+      <aside class='dash-sidebar panel dash-panel' data-panel='groups' style='grid-column:1/span 5;grid-row:9/span 4'>
+        <div class='panel-header'><h2>Voice Groups</h2></div>
+        <div class='group-list'><div class='group-row'><strong>Crew</strong> · You</div></div>
+      </aside>
+    </div>
+    <section class='appearance-section panel'>
+      <details open><summary>Appearance</summary>
+        <div class='appearance-body'><div class='appearance-row'>
+          <label class='appearance-field'><span>Panel border theme</span>
+            <select id='theme'><option>default</option><option>glass</option><option>cyan</option><option>blue</option><option>gold</option></select>
+          </label>
+          <div class='appearance-swatches'><span class='appearance-swatch' data-theme='glass'></span><span class='appearance-swatch' data-theme='cyan'></span><span class='appearance-swatch' data-theme='gold'></span></div>
+        </div></div>
+      </details>
+    </section>
+  </div>
+</section>
+<script>
+  const root = document.getElementById('dashboard-view');
+  const theme = new URLSearchParams(location.search).get('theme') || 'default';
+  root.dataset.borderTheme = theme;
+  if (new URLSearchParams(location.search).get('drag') === '1') {
+    const p = document.querySelector('[data-panel=voice]');
+    p.classList.add('is-dragging','is-drag-preview');
+    p.style.transform = 'translate3d(120px, 80px, 0)';
+  }
+  // Expose computed border for CDP
+  window.__border = getComputedStyle(document.querySelector('.dash-panel')).borderColor;
+  window.__shadow = getComputedStyle(document.querySelector('.dash-panel')).boxShadow;
+</script>
+</body></html>

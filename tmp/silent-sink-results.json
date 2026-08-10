@@ -1,0 +1,33 @@
+{
+  "trialA": {
+    "mode": "worklet-only",
+    "durationSec": 10,
+    "sampleRate": 48000,
+    "quantumSize": 128,
+    "sourceSamples": 480000,
+    "workletCalls": 3739,
+    "inputSamples": 478592,
+    "frames960": 498
+  },
+  "trialB": {
+    "mode": "silent-sink",
+    "durationSec": 10,
+    "sampleRate": 48000,
+    "quantumSize": 128,
+    "sourceSamples": 480000,
+    "workletCalls": 3747,
+    "inputSamples": 479616,
+    "frames960": 499
+  },
+  "ratio": 1.0021396095212625,
+  "doublingConfirmed": false,
+  "durationSec": 10,
+  "ranAt": "2026-08-10T08:03:23.175Z",
+  "pageErrors": [],
+  "expectedAt48kHz10s": {
+    "sourceSamples": 480000,
+    "workletCalls128": 3750
+  },
+  "keepAliveRestored": true,
+  "keepAliveNote": "Doubling rejected (B/A=1.002); restored micSilentGain→destination in core/web/js/audio/audio.js"
+}

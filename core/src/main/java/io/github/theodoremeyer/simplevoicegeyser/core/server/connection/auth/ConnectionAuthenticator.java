@@ -5,8 +5,8 @@ import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.data.PlayerVcPswd;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.ratelimit.RateLimitResult;
 
-import java.time.Duration;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -24,21 +24,13 @@ import java.util.UUID;
  */
 public final class ConnectionAuthenticator {
 
-    /**
-     * Authentication rate limiter.
-     */
-    private final AuthRateLimiter authRateLimiter;
+    private static final String GENERIC_INVALID =
+            "Access Denied: Invalid username or password.";
 
     /**
      * Creates the authenticator.
      */
-    public ConnectionAuthenticator() {
-        this.authRateLimiter = new AuthRateLimiter(
-                SvgCore.getConfig().MAX_AUTH_FAILURES.get(),
-                Duration.ofMinutes(SvgCore.getConfig().AUTH_FAILURE_DURATION.get()),
-                Duration.ofMinutes(SvgCore.getConfig().AUTH_LOCK_DURATION.get())
-        );
-    }
+    public ConnectionAuthenticator() {}
 
     /**
      * Attempts to authenticate a websocket client.
@@ -62,38 +54,34 @@ public final class ConnectionAuthenticator {
             username = normalizeUsername(username);
 
             if (username.isEmpty()) {
+                return AuthResponse.failure("Username required.");
+            }
 
-                return AuthResponse.failure(
-                        "Username required."
-                );
+            if (password == null || password.isBlank()) {
+                return AuthResponse.failure(GENERIC_INVALID);
             }
 
             String authKey = username.toLowerCase(Locale.ROOT);
 
-            if (!authRateLimiter.allow(authKey)) {
-
+            RateLimitResult authLimit = SvgCore.getRateLimitService().tryAuthentication(authKey);
+            if (!authLimit.allowed()) {
                 return AuthResponse.failure(
                         "Too many failed login attempts. " +
                                 "Reset your password in-game with /svg pswd [password]."
                 );
             }
 
+            UUID uuid = UsernameResolver.resolve(username);
             PlayerVcPswd passwordManager = SvgCore.getPasswordManager();
-            UUID uuid = passwordManager.getUUID(username);
 
-            // Generic auth failure response
-            if (uuid == null ||
-                    !passwordManager.isPasswordSet(username) ||
-                    !passwordManager.validatePassword(
-                            username,
-                            password
-                    )) {
+            // UUID-bound password check after username resolution (generic failure wording).
+            if (uuid == null
+                    || passwordManager == null
+                    || !passwordManager.isPasswordSet(uuid)
+                    || !passwordManager.validatePassword(uuid, password)) {
 
-                authRateLimiter.recordFailure(authKey);
-
-                return AuthResponse.failure(
-                        "Access Denied: Invalid username or password."
-                );
+                SvgCore.getRateLimitService().recordAuthenticationFailure(authKey);
+                return AuthResponse.failure(GENERIC_INVALID);
             }
 
             AuthResponse bedrockResult =
@@ -108,9 +96,8 @@ public final class ConnectionAuthenticator {
                             .getPlayer(uuid);
 
             if (player == null) {
-
                 return AuthResponse.failure(
-                        "Timeout: You didn’t join the server in time."
+                        "Timeout: You didn't join the server in time."
                 );
             }
 
@@ -128,7 +115,7 @@ public final class ConnectionAuthenticator {
                 return voiceChatResult;
             }
 
-            authRateLimiter.reset(authKey);
+            SvgCore.getRateLimitService().resetAuthentication(authKey);
 
             return AuthResponse.success(
                     uuid,
@@ -179,7 +166,7 @@ public final class ConnectionAuthenticator {
 
         if (!bedrock && requireBedrock) {
 
-            authRateLimiter.recordFailure(authKey);
+            SvgCore.getRateLimitService().recordAuthenticationFailure(authKey);
 
             return AuthResponse.failure(
                     "Access Denied: " + "You must be a Bedrock player to join!"
@@ -212,6 +199,8 @@ public final class ConnectionAuthenticator {
 
     /**
      * Validates Simple Voice Chat compatibility.
+     * <p>
+     * Native SVC installs are allowed (native voice controller session mode).
      *
      * @param uuid player uuid
      * @return auth response
@@ -239,12 +228,6 @@ public final class ConnectionAuthenticator {
             );
         }
 
-        if (connection.isInstalled()) {
-            return AuthResponse.failure(
-                    "Access Denied: " + "Please remove the Simple Voice Chat mod."
-            );
-        }
-
         return AuthResponse.ok();
     }
 
@@ -258,7 +241,7 @@ public final class ConnectionAuthenticator {
             return;
         }
 
-        authRateLimiter.reset(username.toLowerCase(Locale.ROOT));
+        SvgCore.getRateLimitService().resetAuthentication(username.toLowerCase(Locale.ROOT));
     }
 
     /**

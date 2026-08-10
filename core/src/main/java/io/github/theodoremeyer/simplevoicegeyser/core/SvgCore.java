@@ -5,6 +5,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgConfig;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioByteCompiler;
+import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioPipelineExecutor;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioThread;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.Command;
 import io.github.theodoremeyer.simplevoicegeyser.core.data.PlayerVcPswd;
@@ -12,9 +13,12 @@ import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserEventHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.PlayerManager;
+import io.github.theodoremeyer.simplevoicegeyser.core.managers.group.GroupSyncService;
+import io.github.theodoremeyer.simplevoicegeyser.core.schedule.TaskScheduler;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.JettyServer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.ratelimit.RateLimitService;
 import io.github.theodoremeyer.simplevoicegeyser.core.update.UpdateChecker;
 
 /**
@@ -34,12 +38,17 @@ public final class SvgCore {
     public static final String VERSION = BuildInfo.PROJECT_VERSION;
 
     /**
-     * Build Git Commit ID. Generated during Gradle Build. This is always the latest commit hash of the branch.
-     * <p>
-     * Please note that 'Gradle clean' may have to get run if caches don't fix themselves,
+     * Full cache-busting build identity (version-git[-dirty]-timestamp).
+     * Generated once per Gradle invocation — never a static short git hash alone.
      */
     @SuppressWarnings("ConstantConditions")
     public static final String BUILD_ID = BuildInfo.BUILD_ID;
+
+    /** WebSocket / client protocol version expected by this server build. */
+    public static final int PROTOCOL_VERSION = BuildInfo.PROTOCOL_VERSION;
+
+    /** Frontend schema revision expected by this server build. */
+    public static final int FRONTEND_SCHEMA = BuildInfo.FRONTEND_SCHEMA;
 
     /**
      * Config system
@@ -50,9 +59,11 @@ public final class SvgCore {
     private JettyServer jettyServer;
     private final PlayerManager playerManager;
     private GroupManager groupManager;
+    private GroupSyncService groupSyncService;
     private PlayerVcPswd playerVcPswd;
     private Command command;
     private final AudioByteCompiler audioByteCompiler;
+    private final RateLimitService rateLimitService;
     private State state = State.NEW;
 
     /**
@@ -70,9 +81,11 @@ public final class SvgCore {
         }
 
         new AudioThread();
+        new AudioPipelineExecutor();
         this.playerManager = new PlayerManager();
         this.connectionManager = new ConnectionManager();
         this.audioByteCompiler = new AudioByteCompiler();
+        this.rateLimitService = new RateLimitService();
     }
 
     private static SvgCore getInstance() {
@@ -97,6 +110,11 @@ public final class SvgCore {
                 getLogger().setDebug(true);
             }
 
+            getLogger().info("[SVG] Running build: " + BUILD_ID);
+            getLogger().info("[SVG] Frontend resources: " + BUILD_ID
+                    + " protocol=" + PROTOCOL_VERSION
+                    + " frontendSchema=" + FRONTEND_SCHEMA);
+
             getLogger().info("client.vctimeout is currently documented but inactive in this dev build.");
 
             this.playerVcPswd = new PlayerVcPswd(this);
@@ -108,10 +126,7 @@ public final class SvgCore {
                 getLogger().warning("Audio legacy fallback is enabled. This is recommended during svg-v2 transition only.");
             }
 
-            this.jettyServer = new JettyServer(host, port);
-            this.jettyServer.start();
-            getLogger().info("Jetty server started on port: " + port);
-
+            // Register voice-chat and command state before accepting websocket joins.
             this.vcBridge = platform.registerVcBridge();
             if (this.vcBridge == null) {
                 getLogger().severe("Failed to register VoiceChatBridge.");
@@ -121,6 +136,7 @@ public final class SvgCore {
             }
 
             this.groupManager = new GroupManager(vcBridge);
+            this.groupSyncService = new GroupSyncService(groupManager);
             this.command = new Command(groupManager, this);
 
             if (GeyserHook.isGeyser()) {
@@ -129,7 +145,14 @@ public final class SvgCore {
                 getLogger().warning("Geyser is not installed. Skipping Bedrock events.");
             }
 
+            // Mark running before Jetty bind so the first accepted join is not rejected
+            // by the isRunning() gate introduced for Folia lifecycle safety.
             state = State.RUNNING;
+
+            this.jettyServer = new JettyServer(host, port);
+            this.jettyServer.start();
+            getLogger().info("Jetty server started on port: " + port);
+
             return true;
         } catch (Exception e) {
             getLogger().severe("Init failed: " + e.getMessage());
@@ -157,6 +180,7 @@ public final class SvgCore {
         }
 
         state = State.SHUTDOWN;
+        connectionManager.rejectNewConnections();
         connectionManager.disconnectAll();
 
         try {
@@ -170,6 +194,14 @@ public final class SvgCore {
         }
 
         AudioThread.shutdown();
+        AudioPipelineExecutor.shutdown();
+
+        try {
+            platform.getTaskScheduler().shutdown();
+        } catch (Exception e) {
+            getLogger().severe("Failed to shut down task scheduler: " + e.getMessage());
+            getLogger().debug("Task scheduler shutdown failed", e);
+        }
 
         if (playerVcPswd != null) {
             playerVcPswd.shutdown();
@@ -178,7 +210,23 @@ public final class SvgCore {
         vcBridge = null;
         jettyServer = null;
         groupManager = null;
+        groupSyncService = null;
         command = null;
+    }
+
+    /**
+     * @return whether the core is fully running and accepting work
+     */
+    public static boolean isRunning() {
+        SvgCore core = getInstance();
+        return core != null && core.state == State.RUNNING;
+    }
+
+    /**
+     * @return platform task scheduler
+     */
+    public static TaskScheduler getTaskScheduler() {
+        return getInstance().platform.getTaskScheduler();
     }
 
     /**
@@ -246,6 +294,14 @@ public final class SvgCore {
     }
 
     /**
+     * Get websocket group sync broadcaster
+     * @return group sync service
+     */
+    public static GroupSyncService getGroupSyncService() {
+        return getInstance().groupSyncService;
+    }
+
+    /**
      * Get the interface to SVC
      * @return voice chat bridge
      */
@@ -259,6 +315,14 @@ public final class SvgCore {
      */
     public static Command getCommand() {
         return getInstance().command;
+    }
+
+    /**
+     * Get websocket / auth rate limiter
+     * @return rate limit service
+     */
+    public static RateLimitService getRateLimitService() {
+        return getInstance().rateLimitService;
     }
 
     /**

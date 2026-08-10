@@ -6,11 +6,13 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.Platform;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
+import io.github.theodoremeyer.simplevoicegeyser.core.schedule.TaskScheduler;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.BukkitLogger;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.SvgCommand;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.SvgListener;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.ConfigFile;
+import io.github.theodoremeyer.simplevoicegeyser.spigotmc.schedule.PlatformSchedulers;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
@@ -26,10 +28,13 @@ public class SvgPlugin extends JavaPlugin implements Platform {
 
     private BukkitLogger logger;
 
+    private TaskScheduler taskScheduler;
+
     //JAVA PLUGIN
     @Override
     public void onLoad() {
         logger = new BukkitLogger(getLogger());
+        this.taskScheduler = PlatformSchedulers.create(this);
 
         // Ensure plugin folder exists
         if (!getDataFolder().exists()) {
@@ -49,6 +54,14 @@ public class SvgPlugin extends JavaPlugin implements Platform {
 
         // Initialize ConfigFile wrapper
         this.configFile = new ConfigFile(file);
+
+        if (taskScheduler.isRegionThreaded()) {
+            logger.info("Detected regionized threading (Folia/Canvas). Using region/entity schedulers.");
+        } else if (PlatformSchedulers.hasRegionSchedulers(getServer())) {
+            logger.info("Using Paper region scheduler API (mapped to the server tick thread).");
+        } else {
+            logger.info("Using classic Bukkit scheduler.");
+        }
 
         this.core = new SvgCore(this);
     }
@@ -78,6 +91,35 @@ public class SvgPlugin extends JavaPlugin implements Platform {
         command.setExecutor(new SvgCommand());
 
         Bukkit.getPluginManager().registerEvents(new SvgListener(), this);
+        seedOnlinePlayers();
+    }
+
+    /**
+     * Players already online when the plugin enables never fire PlayerJoinEvent.
+     * Snapshot them on each player's entity scheduler so Folia ownership is respected.
+     */
+    private void seedOnlinePlayers() {
+        for (org.bukkit.entity.Player player : Bukkit.getOnlinePlayers()) {
+            java.util.UUID uuid = player.getUniqueId();
+            taskScheduler.executeForEntity(
+                    "svg/player/seed-online",
+                    uuid,
+                    () -> {
+                        org.bukkit.entity.Player live = Bukkit.getPlayer(uuid);
+                        if (live == null || !live.isOnline()) {
+                            return;
+                        }
+                        if (SvgCore.getPlayerManager().getPlayer(uuid) != null) {
+                            return;
+                        }
+                        SvgCore.getPlayerManager().addPlayer(
+                                new io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.sender.BukkitPlayer(live)
+                        );
+                        logger.debug("Seeded online player into PlayerManager: " + live.getName());
+                    },
+                    () -> logger.debug("Skipped seeding retired player " + uuid)
+            );
+        }
     }
 
     @Override
@@ -142,5 +184,10 @@ public class SvgPlugin extends JavaPlugin implements Platform {
     @Override
     public boolean isDependencyEnabled(String name) {
         return Bukkit.getPluginManager().isPluginEnabled(name);
+    }
+
+    @Override
+    public TaskScheduler getTaskScheduler() {
+        return taskScheduler;
     }
 }

@@ -1,10 +1,12 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.server.connection;
 
+import de.maxhenkel.voicechat.api.Group;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiation;
+import io.github.theodoremeyer.simplevoicegeyser.core.audio.SessionVoiceMembership;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioListener;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.SvgAudioSender;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.AuthException;
@@ -14,6 +16,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Represents a single active websocket + voice connection.
@@ -22,13 +26,19 @@ import java.util.UUID;
  */
 public final class SvgConnection {
 
+    private static final AtomicLong SESSION_GENERATION = new AtomicLong();
+
     private final UUID uuid;
     private final Session session;
     private final SvgPlayer player;
+    private final long sessionGeneration;
     private SvgAudioSender audioSender;
     private SvgAudioListener audioListener;
     private final AudioSessionNegotiation audioNegotiation;
     private final ClientIdentity clientIdentity;
+    private final AtomicReference<SessionVoiceMembership> membership =
+            new AtomicReference<>();
+    private volatile SessionMode sessionMode = SessionMode.WEB_VOICE;
     private volatile boolean authenticated;
     private volatile boolean closed;
 
@@ -50,6 +60,8 @@ public final class SvgConnection {
         this.session = session;
         this.audioNegotiation = audioNegotiation;
         this.clientIdentity = clientIdentity;
+        this.sessionGeneration = SESSION_GENERATION.incrementAndGet();
+        this.membership.set(SessionVoiceMembership.uncertain(uuid, sessionGeneration));
     }
 
     /**
@@ -66,14 +78,30 @@ public final class SvgConnection {
             throw new AuthException("VoicechatServerApi is null");
         }
 
+        // Re-fetch connection at auth time (player may have installed/uninstalled mid-handshake).
         VoicechatConnection connection = api.getConnectionOf(uuid);
         if (connection == null) {
             throw new AuthException("VoicechatConnection is null for: " + uuid);
         }
 
         if (connection.isInstalled()) {
-            throw new AuthException("Player has Simple Voice Chat mod installed");
+            sessionMode = SessionMode.NATIVE_VOICE_CONTROLLER;
+            audioListener = null;
+            audioSender = null;
+            authenticated = true;
+            // Native controllers do not transmit browser audio; keep gate closed.
+            applyMembership(SessionVoiceMembership.none(uuid, sessionGeneration, 0L));
+
+            SvgCore.getLogger().debug(
+                    "SvgConnection: Authenticated native voice controller: "
+                            + uuid
+                            + " client="
+                            + clientIdentity.toLogString()
+            );
+            return;
         }
+
+        sessionMode = SessionMode.WEB_VOICE;
 
         audioListener = new SvgAudioListener(uuid, session, api, audioNegotiation);
         if (!audioListener.registerListener()) {
@@ -81,15 +109,101 @@ public final class SvgConnection {
             throw new AuthException("Failed to register audio listener for: " + uuid);
         }
 
-        audioSender = new SvgAudioSender(api, uuid);
+        audioSender = new SvgAudioSender(api, uuid, sessionGeneration);
         authenticated = true;
+
+        // Re-fetch SVC connection for membership (do not trust a stale snapshot).
+        VoicechatConnection fresh = api.getConnectionOf(uuid);
+        UUID groupId = null;
+        if (fresh != null && fresh.isInGroup()) {
+            Group group = fresh.getGroup();
+            if (group != null) {
+                groupId = group.getId();
+            }
+        }
+        long revision = 0L;
+        try {
+            if (SvgCore.getGroupManager() != null) {
+                revision = SvgCore.getGroupManager().getRevision();
+            }
+        } catch (RuntimeException ignored) {
+        }
+        if (groupId != null) {
+            applyMembership(SessionVoiceMembership.joined(uuid, sessionGeneration, groupId, revision));
+        } else {
+            applyMembership(SessionVoiceMembership.none(uuid, sessionGeneration, revision));
+        }
 
         SvgCore.getLogger().debug(
                 "SvgConnection: Authenticated connection: "
                         + uuid
+                        + " mode="
+                        + sessionMode
+                        + " group="
+                        + (groupId == null ? "none" : groupId)
                         + " client="
                         + clientIdentity.toLogString()
         );
+    }
+
+    /**
+     * @return session generation for this websocket lifecycle
+     */
+    public long getSessionGeneration() {
+        return sessionGeneration;
+    }
+
+    /**
+     * @return current membership snapshot
+     */
+    public SessionVoiceMembership getVoiceMembership() {
+        return membership.get();
+    }
+
+    /**
+     * Apply authoritative membership to this session and its audio sender.
+     * Membership from another session generation is ignored (fail-closed).
+     *
+     * @param next membership
+     * @return true when applied
+     */
+    public boolean applyMembership(SessionVoiceMembership next) {
+        if (next == null) {
+            return false;
+        }
+        if (!uuid.equals(next.playerUuid()) || next.sessionGeneration() != sessionGeneration) {
+            return false;
+        }
+        membership.set(next);
+        if (audioSender != null) {
+            audioSender.applyMembership(next);
+        }
+        return true;
+    }
+
+    /**
+     * Close outbound voice immediately (leave / group removal). Clears queued frames first.
+     *
+     * @param membershipRevision revision
+     */
+    public void closeVoiceTransmit(long membershipRevision) {
+        SessionVoiceMembership closedMembership =
+                SessionVoiceMembership.none(uuid, sessionGeneration, membershipRevision);
+        membership.set(closedMembership);
+        if (audioSender != null) {
+            audioSender.closeTransmit(membershipRevision);
+        }
+    }
+
+    /**
+     * @return whether this session may transmit browser voice
+     */
+    public boolean allowsVoiceTransmit() {
+        if (sessionMode != SessionMode.WEB_VOICE || audioSender == null) {
+            return false;
+        }
+        SessionVoiceMembership current = membership.get();
+        return current != null && current.allowsTransmit();
     }
 
     /**
@@ -104,6 +218,7 @@ public final class SvgConnection {
 
         closed = true;
         authenticated = false;
+        closeVoiceTransmit(membership.get() == null ? 0L : membership.get().membershipRevision());
 
         if (audioSender != null) {
             try {
@@ -236,10 +351,28 @@ public final class SvgConnection {
     }
 
     /**
+     * Session participation mode after authentication.
+     * @return session mode
+     */
+    public SessionMode getSessionMode() {
+        return sessionMode;
+    }
+
+    /**
+     * @return true when this session owns web audio transport
+     */
+    public boolean isWebVoice() {
+        return sessionMode == SessionMode.WEB_VOICE;
+    }
+
+    /**
      * Get the AudioSender that this Connection handles
-     * @return AudioSender
+     * @return AudioSender, or null for native voice controllers
      */
     public SvgAudioSender getAudioSender() {
+        if (sessionMode == SessionMode.NATIVE_VOICE_CONTROLLER) {
+            return null;
+        }
         return audioSender;
     }
 

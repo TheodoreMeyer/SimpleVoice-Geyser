@@ -1,0 +1,243 @@
+client:
+
+  # default: 30
+  # Timeout in seconds
+  # WARNING: Developer has disabled timeout enforcement for current dev builds.
+  vctimeout: 30
+
+  # default: 2
+  # Idle websocket timeout in minutes
+  idletimeout: 2
+
+  # default: false
+  # Only allow bedrock players to join the chat
+  requireBedrock: false
+
+  # default: true
+  # Allows bedrock clients to open the SVG menu via emotes.
+  # WARNING: Make sure off-hand-emote is disabled in Geyser to avoid conflicts.
+  useEmoteForSVG: true
+
+  # default: true
+  # Allows players using web-chat to chat in-game
+  web-chat-enabled: true
+
+  allowedTypes:
+
+    # default: true
+    # When true, listed client types are blocked. When false, only listed client types are allowed.
+    isBlackList: true
+
+    # default: no client types listed
+    # Client type names to use with the blacklist/whitelist mode above.
+    # Uncomment one or both entries below when using blacklist/whitelist mode.
+    list:
+      # - Web
+      # - Svg-App
+
+server:
+
+  group:
+
+    # Settings for the default group for SVG web players.
+    default:
+
+      # default: true
+      # Decides whether the SVG group is created for players who use the website.
+      enabled: true
+
+      # default: 1a2b
+      # Controls the default group's password.
+      password: 1a2b
+
+      # default: false
+      # Force assigning the default SVG group even when a user already has a group.
+      force-on-web-join: false
+
+  # default: 8080
+  # Port server will run on.
+  port: 8080
+
+  # default: 0.0.0.0
+  # Address server binds to; use 127.0.0.1 to only allow host-local access.
+  bind-address: 0.0.0.0
+
+  # default: /
+  # Context path for hosting SVG web UI behind proxies/subpaths.
+  context-path: /
+
+  audio:
+
+    # default: auto
+    # Audio transport preference: auto | legacy | svg-v2
+    transport-mode: auto
+
+    # default: true
+    # During migration, fallback to legacy transport for incompatible clients.
+    allow-legacy-fallback: true
+
+    # default: 48000
+    # Diagnostic outbound sample rate. Non-48000 values are clamped back to 48000.
+    outbound-sample-rate: 48000
+
+    # default: 960
+    # Diagnostic outbound frame sample count.
+    outbound-frame-samples: 960
+
+    # default: 32
+    # Bounded per-session outbound encode/jitter queue. Values below 16 migrate to 32.
+    outbound-queue-capacity: 32
+
+# Websocket / auth rate limits (token bucket + sliding window).
+rate-limits:
+
+  # default: true
+  enabled: true
+
+  authentication:
+
+    # default: 5
+    attempts: 5
+
+    # default: 60
+    window-seconds: 60
+
+    # default: 30
+    lockout-seconds: 30
+
+  chat:
+
+    # default: 4
+    burst: 4
+
+    # default: 1
+    refill-per-second: 1
+
+    # default: 500
+    maximum-length: 500
+
+  groups-refresh:
+
+    # default: 3
+    cooldown-seconds: 3
+
+  group-create:
+
+    # default: 10
+    cooldown-seconds: 10
+
+    # default: 2
+    burst: 2
+
+    # default: 60
+    window-seconds: 60
+
+  group-join:
+
+    # default: 750
+    cooldown-milliseconds: 750
+
+  group-leave:
+
+    # default: 750
+    cooldown-milliseconds: 750
+
+  group-password:
+
+    # default: 5
+    attempts: 5
+
+    # default: 60
+    window-seconds: 60
+
+    # default: 30
+    lockout-seconds: 30
+
+  control-packets:
+
+    # default: 20
+    burst: 20
+
+    # default: 10
+    refill-per-second: 10
+
+    # default: 16384
+    maximum-bytes: 16384
+
+  audio:
+
+    # default: true
+    enabled: true
+
+    # default: 50
+    expected-frames-per-second: 50
+
+    # default: 50
+    # Soft burst allowance — normal browser wake-ups must not drop speech.
+    normal-burst-frames: 50
+
+    # legacy alias (migrated); prefer normal-burst-frames
+    burst-frames: 50
+
+    # default: 75
+    sustained-maximum-frames-per-second: 75
+
+    # default: 5
+    sustained-window-seconds: 5
+
+    # default: 3
+    disconnect-after-consecutive-abuse-windows: 3
+
+    # default: 1920
+    maximum-frame-bytes: 1920
+
+    # default: false
+    # DEBUG matrix only: skip sustained-abuse limiting (oversized frames still rejected).
+    bypass: false
+
+  # default: 120
+  duplicate-operation-retention-seconds: 120
+
+# Group directory / creation limits (web + commands).
+groups:
+
+  # default: true
+  # Allow authenticated web clients to create groups.
+  allow-web-creation: true
+
+  # default: 100
+  # Maximum number of tracked active groups.
+  max-active-groups: 100
+
+  # default: 3
+  # Maximum groups a single player may create via web.
+  max-created-per-player: 3
+
+  # default: 10
+  # Cooldown in seconds between web group creations per player.
+  creation-cooldown-seconds: 10
+
+  # default: 32
+  # Maximum group name length.
+  max-name-length: 32
+
+  # default: NORMAL, OPEN, ISOLATED
+  # Allowed group types for creation.
+  allowed-types:
+    - NORMAL
+    - OPEN
+    - ISOLATED
+
+# default: false
+# Debug logs
+# Do NOT use this in production. This will very quickly fill up your server logs.
+debug: false
+
+# default: true
+# Check for plugin updates on startup.
+updatechecker:
+  enable: true
+
+# default: 0.1.1-dev-migration1
+# Internal config schema marker used for migration tracking.
+config-version: 0.1.1-dev-migration1

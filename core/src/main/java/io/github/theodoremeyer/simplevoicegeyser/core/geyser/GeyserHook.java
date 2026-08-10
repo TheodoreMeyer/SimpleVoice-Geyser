@@ -5,6 +5,7 @@ import org.geysermc.cumulus.form.Form;
 import org.geysermc.floodgate.api.FloodgateApi;
 import org.geysermc.geyser.api.GeyserApi;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -58,6 +59,30 @@ public final class GeyserHook {
             return GeyserApi.api().isBedrockPlayer(uuid);
         } else {
             return null;
+        }
+    }
+
+    /**
+     * Floodgate username prefix when Floodgate is present.
+     * <p>
+     * Never hardcode {@code "."}; servers may configure a custom prefix.
+     *
+     * @return prefix, or empty when Floodgate is unavailable
+     */
+    public static Optional<String> getFloodgatePrefix() {
+        if (!isFloodgate()) {
+            return Optional.empty();
+        }
+
+        try {
+            String prefix = FloodgateApi.getInstance().getPlayerPrefix();
+            if (prefix == null || prefix.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(prefix);
+        } catch (Throwable t) {
+            SvgCore.getLogger().debug("GeyserHook: Failed to read Floodgate player prefix", t);
+            return Optional.empty();
         }
     }
 
