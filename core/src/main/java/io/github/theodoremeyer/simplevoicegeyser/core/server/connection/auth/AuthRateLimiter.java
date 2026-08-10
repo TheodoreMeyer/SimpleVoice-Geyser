@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Simple rolling auth limiter.
  */
-final class AuthRateLimiter {
+public final class AuthRateLimiter {
 
     /**
      * Maximum failures before lock.
@@ -38,7 +38,14 @@ final class AuthRateLimiter {
      * @param window window duration
      * @param lockDuration lock duration
      */
-    AuthRateLimiter(
+    /**
+     * Creates the limiter.
+     *
+     * @param maxFailures max failures
+     * @param window window duration
+     * @param lockDuration lock duration
+     */
+    public AuthRateLimiter(
             int maxFailures,
             Duration window,
             Duration lockDuration
@@ -55,7 +62,13 @@ final class AuthRateLimiter {
      * @param username username
      * @return true if allowed
      */
-    boolean allow(String username) {
+    /**
+     * Gets whether an attempt is allowed.
+     *
+     * @param username key
+     * @return true if allowed
+     */
+    public boolean allow(String username) {
 
         long now = System.currentTimeMillis();
 
@@ -94,7 +107,12 @@ final class AuthRateLimiter {
      *
      * @param username username
      */
-    void recordFailure(String username) {
+    /**
+     * Records a failed attempt.
+     *
+     * @param username key
+     */
+    public void recordFailure(String username) {
 
         long now = System.currentTimeMillis();
 
@@ -143,7 +161,12 @@ final class AuthRateLimiter {
      *
      * @param username username
      */
-    void reset(String username) {
+    /**
+     * Clears failures for a key.
+     *
+     * @param username key
+     */
+    public void reset(String username) {
         entries.remove(username);
     }
 

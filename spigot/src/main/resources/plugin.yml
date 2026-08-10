@@ -8,6 +8,7 @@ website: https://theodoremeyer.github.io
 depend: [voicechat]
 softdepend: [Geyser-Spigot, floodgate]
 prefix: SVG
+folia-supported: true
 
 commands:
   svg:

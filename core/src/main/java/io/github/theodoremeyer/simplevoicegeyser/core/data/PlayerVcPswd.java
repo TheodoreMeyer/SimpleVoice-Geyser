@@ -28,13 +28,22 @@ public final class PlayerVcPswd {
     // =========================
 
     /**
+     * Check if a password is set for a UUID
+     * @param uuid player uuid
+     * @return if password is set
+     */
+    public boolean isPasswordSet(UUID uuid) {
+        return uuid != null && store.exists(uuid);
+    }
+
+    /**
      * Check id a password is set
      * @param username username to check
      * @return if password is set
      */
     public boolean isPasswordSet(String username) {
         UUID uuid = getUUID(username);
-        return uuid != null && store.exists(uuid);
+        return isPasswordSet(uuid);
     }
 
     /**
@@ -84,6 +93,32 @@ public final class PlayerVcPswd {
     }
 
     /**
+     * Check if a password is correct for a resolved player UUID.
+     * @param uuid player uuid
+     * @param password password to check
+     * @return if it is correct
+     */
+    public boolean validatePassword(UUID uuid, String password) {
+        if (uuid == null || password == null) {
+            return false;
+        }
+
+        String stored = store.getPasswordHash(uuid);
+        if (stored == null) {
+            return false;
+        }
+
+        try {
+            return BCrypt.checkpw(password, stored);
+        } catch (IllegalArgumentException e) {
+            SvgCore.getLogger().warning(
+                    "[PlayerData] Invalid bcrypt hash for uuid " + uuid
+            );
+            return false;
+        }
+    }
+
+    /**
      * Check if a password is correct
      * @param username username to check
      * @param password password to check
@@ -91,19 +126,7 @@ public final class PlayerVcPswd {
      */
     public boolean validatePassword(String username, String password) {
         UUID uuid = getUUID(username);
-        if (uuid == null) return false;
-
-        String stored = store.getPasswordHash(uuid);
-        if (stored == null) return false;
-
-        try {
-            return BCrypt.checkpw(password, stored);
-        } catch (IllegalArgumentException e) {
-            SvgCore.getLogger().warning(
-                    "[PlayerData] Invalid bcrypt hash for user " + username
-            );
-            return false;
-        }
+        return validatePassword(uuid, password);
     }
 
     /**

@@ -3,6 +3,7 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.packets;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.ratelimit.RateLimitResult;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.servlets.JettyWebSocket;
 import org.json.JSONObject;
 
@@ -10,8 +11,6 @@ import org.json.JSONObject;
  * The Class handling the ChatPackets
  */
 public class ChatPacket implements Packet {
-
-    private static final int MAX_WEB_CHAT_LENGTH = 200;
 
     /**
      * A no arg Constructor
@@ -35,16 +34,28 @@ public class ChatPacket implements Packet {
             return;
         }
 
-        if (socket.getConnection() == null || !socket.getConnection().isAuthenticated()) {
+        if (socket.getConnection() == null || !socket.isReady()) {
             socket.sendRaw(
                     ConnectionStates.MessageType.ERROR,
-                    "Access Denied: Not authenticated.",
+                    "Voice chat is not ready yet. Wait until the server confirms the connection.",
                     false
             );
             return;
         }
 
         SanitizedChat sanitized = sanitizeChatMessage(json.optString("message", ""));
+
+        RateLimitResult chatLimit = SvgCore.getRateLimitService().tryChat(
+                socket.getConnection().getUuid().toString(),
+                sanitized.sanitized.length()
+        );
+        if (!chatLimit.allowed()) {
+            socket.getConnection().sendError(
+                    "Please wait before sending another message.",
+                    false
+            );
+            return;
+        }
 
         SvgCore.getLogger().debug(
                 "WebChat: uuid=" + socket.getConnection().getUuid()
@@ -95,12 +106,13 @@ public class ChatPacket implements Packet {
 
 
     private SanitizedChat sanitizeChatMessage(String raw) {
+        int maxLength = SvgCore.getConfig().RATE_LIMITS_CHAT_MAX_LENGTH.get();
         if (raw == null || raw.isBlank()) {
             return new SanitizedChat("", 0, false, 0);
         }
 
         int originalLength = raw.length();
-        StringBuilder sanitized = new StringBuilder(Math.min(originalLength, MAX_WEB_CHAT_LENGTH));
+        StringBuilder sanitized = new StringBuilder(Math.min(originalLength, maxLength));
         int removedCount = 0;
         boolean truncated = false;
         boolean prevSpace = false;
@@ -131,7 +143,7 @@ public class ChatPacket implements Packet {
                 prevSpace = false;
             }
 
-            if (sanitized.length() >= MAX_WEB_CHAT_LENGTH) {
+            if (sanitized.length() >= maxLength) {
                 truncated = true;
                 break;
             }

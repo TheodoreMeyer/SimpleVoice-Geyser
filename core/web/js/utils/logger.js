@@ -64,6 +64,12 @@ export class ChatLogger {
                     return;
                 }
 
+                if (!this.webSocketController.isReady
+                    || !this.webSocketController.isReady()) {
+                    Logger.log("Chat ignored: voice session is not ready yet.");
+                    return;
+                }
+
                 this.webSocketController.sendChat(
                     msg
                 );

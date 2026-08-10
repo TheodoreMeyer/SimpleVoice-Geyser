@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SVG UI Preview Harness (test-only)</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/ptt.css">
+    <link rel="stylesheet" href="/css/presets.css">
+    <style>
+      /* Harness chrome only — never shipped in the JAR */
+      .harness-banner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100000;
+        background: #7a1f1f;
+        color: #fff;
+        text-align: center;
+        font: 600 12px/1.4 sans-serif;
+        padding: 6px 10px;
+        pointer-events: none;
+      }
+      body.harness-ready .harness-banner { display: none; }
+    </style>
+</head>
+<body>
+    <div class="harness-banner">TEST-ONLY PREVIEW HARNESS — not packaged</div>
+    <div id="mount"></div>
+    <script type="module">
+      const params = new URLSearchParams(location.search);
+      const state = (params.get("state") || "login").toLowerCase();
+
+      const res = await fetch("/index.html");
+      const text = await res.text();
+      const doc = new DOMParser().parseFromString(text, "text/html");
+
+      // Transplant markup without production module startup.
+      document.body.className = "preset-default";
+      const mountKids = [];
+      for (const child of [...doc.body.children]) {
+        if (child.tagName === "SCRIPT") continue;
+        mountKids.push(document.importNode(child, true));
+      }
+      document.body.replaceChildren(
+        ...[...document.body.querySelectorAll(".harness-banner")],
+        ...mountKids
+      );
+
+      const login = document.getElementById("login-view");
+      const dashboard = document.getElementById("dashboard-view");
+      const createDlg = document.getElementById("create-group-dialog");
+      const protectedDlg = document.getElementById("protected-group-dialog");
+
+      for (const dialog of document.querySelectorAll("dialog[open]")) {
+        dialog.close();
+      }
+
+      function showLogin() {
+        login.hidden = false;
+        dashboard.hidden = true;
+      }
+      function showDashboard() {
+        login.hidden = true;
+        dashboard.hidden = false;
+        dashboard.setAttribute("aria-hidden", "false");
+
+        const list = document.querySelector('[data-svg="groups.list"]');
+        if (list && !list.children.length) {
+          list.innerHTML = `
+            <article class="group-card group-row is-joined" role="listitem">
+              <div class="group-row-main">
+                <h3 class="group-name">Builders</h3>
+                <p class="group-meta">ISOLATED · 2 members · <span class="group-joined-badge">Joined</span></p>
+              </div>
+              <div class="group-row-actions">
+                <button type="button" class="btn btn-secondary" disabled>Joined</button>
+              </div>
+            </article>
+            <article class="group-card group-row" role="listitem">
+              <div class="group-row-main">
+                <h3 class="group-name">Staff <span class="group-lock">· locked</span></h3>
+                <p class="group-meta">NORMAL · 1 member</p>
+              </div>
+              <div class="group-row-actions">
+                <button type="button" class="btn btn-secondary">Join</button>
+              </div>
+            </article>
+            <article class="group-card group-row" role="listitem">
+              <div class="group-row-main">
+                <h3 class="group-name">Town Square</h3>
+                <p class="group-meta">OPEN · 4 members</p>
+              </div>
+              <div class="group-row-actions">
+                <button type="button" class="btn btn-secondary">Join</button>
+              </div>
+            </article>`;
+        }
+        const createBtn = document.querySelector('[data-svg="groups.create"]');
+        const leaveBtn = document.querySelector('[data-svg="groups.leave"]');
+        if (createBtn) createBtn.disabled = false;
+        if (leaveBtn) leaveBtn.disabled = false;
+        const player = document.querySelector('[data-svg="dash.player"]');
+        const ws = document.querySelector('[data-svg="dash.ws-status"]');
+        const mode = document.querySelector('[data-svg="dash.audio-mode"]');
+        const current = document.querySelector('[data-svg="groups.current"]');
+        if (player) player.textContent = "Steve";
+        if (ws) { ws.textContent = "Connected"; ws.dataset.state = "connected"; }
+        if (mode) mode.textContent = "WEB_VOICE";
+        if (current) current.textContent = "Builders";
+        const voiceConn = document.querySelector('[data-svg="dash.voice-conn"]');
+        const voiceGroup = document.querySelector('[data-svg="dash.voice-group"]');
+        if (voiceConn) voiceConn.textContent = "Connected";
+        if (voiceGroup) voiceGroup.textContent = "Builders";
+        const gate = document.querySelector('[data-svg="dash.voice-gate"]');
+        if (gate) gate.hidden = true;
+        const mic = document.getElementById("mic");
+        const speaker = document.getElementById("speaker");
+        if (mic) {
+          mic.innerHTML = '<option selected>Default Microphone</option>';
+          mic.disabled = false;
+        }
+        if (speaker) {
+          speaker.innerHTML = '<option selected>Default Speaker</option>';
+          speaker.disabled = false;
+        }
+        const log = document.querySelector('[data-svg="chat.log"]');
+        if (log && !log.children.length) {
+          log.innerHTML = '<div class="chat-line"><strong>Steve</strong>: Hello group</div>';
+        }
+        const chatInput = document.querySelector('[data-svg="chat.input"]');
+        const chatSend = document.querySelector('[data-svg="chat.send"]');
+        if (chatInput) chatInput.disabled = false;
+        if (chatSend) chatSend.disabled = false;
+
+        // Apply default grid placement without booting the full client.
+        const grid = document.querySelector('[data-svg="dash.grid"]');
+        grid?.classList.add("is-desktop-grid");
+        grid?.classList.remove("is-mobile-stack");
+        if (window.matchMedia("(max-width: 900px)").matches) {
+          grid?.classList.add("is-mobile-stack");
+          grid?.classList.remove("is-desktop-grid");
+        }
+      }
+
+      if (state === "login") {
+        showLogin();
+      } else if (state === "dashboard") {
+        showDashboard();
+      } else if (state === "create") {
+        showDashboard();
+        protectedDlg?.close?.();
+        createDlg.showModal();
+      } else if (state === "protected") {
+        showDashboard();
+        createDlg?.close?.();
+        const nameEl = document.getElementById("protected-group-name");
+        if (nameEl) nameEl.textContent = "Staff";
+        protectedDlg.showModal();
+      } else {
+        showLogin();
+      }
+
+      document.body.classList.add("harness-ready");
+      document.title = `SVG preview: ${state}`;
+    </script>
+</body>
+</html>

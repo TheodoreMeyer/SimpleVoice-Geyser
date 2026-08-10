@@ -6,6 +6,8 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgColor;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
+import io.github.theodoremeyer.simplevoicegeyser.core.schedule.DirectTaskScheduler;
+import io.github.theodoremeyer.simplevoicegeyser.core.schedule.TaskScheduler;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.hooks.LuckPermsHook;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricCommand;
@@ -33,6 +35,8 @@ public class SvgMod implements ModInitializer, Platform {
     private ConfigFile configFile;
 
     private final FabricLogger logger = new FabricLogger();
+
+    private final TaskScheduler taskScheduler = new DirectTaskScheduler();
 
     private static boolean ready = false;
 
@@ -183,5 +187,10 @@ public class SvgMod implements ModInitializer, Platform {
         } catch (ClassNotFoundException e) {
             return false;
         }
+    }
+
+    @Override
+    public TaskScheduler getTaskScheduler() {
+        return taskScheduler;
     }
 }

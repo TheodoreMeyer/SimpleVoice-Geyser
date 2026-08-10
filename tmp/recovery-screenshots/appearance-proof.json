@@ -1,0 +1,87 @@
+{
+  "appearance": {
+    "styles": {
+      "default": {
+        "borderTopColor": "rgb(74, 74, 74)",
+        "borderTopWidth": "1px",
+        "boxShadow": "rgba(0, 0, 0, 0.22) 0px 10px 28px 0px",
+        "backgroundColor": "rgb(42, 42, 42)",
+        "backdropFilter": "none"
+      },
+      "glass": {
+        "borderTopColor": "rgba(255, 255, 255, 0.42)",
+        "borderTopWidth": "1px",
+        "boxShadow": "rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset, rgba(255, 255, 255, 0.08) 0px 0px 18px 0px, rgba(0, 0, 0, 0.28) 0px 10px 28px 0px",
+        "backgroundColor": "color(srgb 0.164706 0.164706 0.164706 / 0.68)",
+        "backdropFilter": "blur(12px)"
+      },
+      "subtle": {
+        "borderTopColor": "color(srgb 0.290196 0.290196 0.290196 / 0.35)",
+        "borderTopWidth": "1px",
+        "boxShadow": "rgba(0, 0, 0, 0.16) 0px 4px 14px 0px",
+        "backgroundColor": "color(srgb 0.164706 0.164706 0.164706 / 0.96)",
+        "backdropFilter": "none"
+      },
+      "glow": {
+        "borderTopColor": "color(srgb 0.25614 0.750877 0.677193 / 0.95)",
+        "borderTopWidth": "2px",
+        "boxShadow": "oklab(0 0 0 / 0.160784) 0px 4px 14px 0px, oklab(0 0 0 / 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "backgroundColor": "color(srgb 0.164941 0.198118 0.193176)",
+        "backdropFilter": "none"
+      },
+      "high-contrast": {
+        "borderTopColor": "rgb(255, 255, 255)",
+        "borderTopWidth": "3px",
+        "boxShadow": "oklab(0 0 0 / 0.160784) 0px 4px 14px 0px, oklab(0 0 0 / 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "backgroundColor": "color(srgb 0.144941 0.144941 0.144941)",
+        "backdropFilter": "none"
+      },
+      "accent:default": "#2bb8a3",
+      "accent:cyan": "#2ec4d6",
+      "accent:blue": "#3b82f6",
+      "accent:purple": "#8b5cf6",
+      "accent:green": "#34d399",
+      "accent:red": "#f87171",
+      "accent:gold": "#d4a017"
+    },
+    "layout": {
+      "voice": {
+        "x": 204,
+        "y": 310,
+        "w": 595,
+        "h": 403
+      },
+      "chat": {
+        "x": 815,
+        "y": 310,
+        "w": 421,
+        "h": 246
+      },
+      "appearance": {
+        "x": 815,
+        "y": 571,
+        "w": 421,
+        "h": 141
+      },
+      "groups": {
+        "x": 204,
+        "y": 728,
+        "w": 1032,
+        "h": 193
+      }
+    },
+    "accentsDistinct": true
+  },
+  "1440x900": {
+    "errors": []
+  },
+  "1280x720": {
+    "errors": []
+  },
+  "1024x768": {
+    "errors": []
+  },
+  "390x844": {
+    "errors": []
+  }
+}

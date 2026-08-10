@@ -1,4 +1,4 @@
-import {SvgClient} from "../client.js";
+import { SvgClient } from "../client.js";
 
 /**
  * Maps SvgClientOptions to HTML data-svg attributes.
@@ -10,14 +10,23 @@ const ELEMENTS = {
             joinButton: "form.join",
             statusEl: "form.status",
             usernameInput: "form.username",
-            passwordInput: "form.password"
+            passwordInput: "form.password",
+            passwordToggle: "form.password-toggle",
+            copyPswdBtn: "form.copy-pswd",
+            copyStatusEl: "form.copy-status"
         },
 
         audio: {
             speakerSelect: "audio.speaker",
             micSelect: "audio.mic",
             muteBtn: "audio.mute",
-            micIndicator: "audio.indicator"
+            micIndicator: "audio.indicator",
+            levelMeterEl: "audio.level",
+            echoCancelEl: "audio.echo",
+            noiseSuppressEl: "audio.noise",
+            agcEl: "audio.agc",
+            resetAudioSettingsBtn: "audio.reset-settings",
+            appliedStatusEl: "audio.applied-status"
         },
 
         ptt: {
@@ -48,6 +57,67 @@ const ELEMENTS = {
         dev: {
             devToggle: "dev.toggle",
             devContent: "dev.content"
+        },
+
+        views: {
+            loginView: "view.login",
+            dashboardView: "view.dashboard"
+        },
+
+        dashboard: {
+            playerNameEl: "dash.player",
+            wsStatusEl: "dash.ws-status",
+            audioModeEl: "dash.audio-mode",
+            nativeNoticeEl: "dash.native-notice",
+            voiceControlsEl: "dash.voice-controls",
+            logoutBtn: "dash.logout",
+            resetLayoutBtn: "dash.reset-layout",
+            resetAppearanceBtn: "dash.reset-appearance",
+            appearanceAccentGroup: "dash.appearance-accent",
+            appearanceBorderGroup: "dash.appearance-border",
+            appearanceAccentSwatches: "dash.appearance-accent-swatches",
+            appearanceBorderSwatches: "dash.appearance-border-swatches",
+            layoutLiveEl: "dash.layout-live",
+            micErrorEl: "dash.mic-error",
+            reconnectOverlay: "dash.reconnect-overlay",
+            gridEl: "dash.grid",
+            voiceConnEl: "dash.voice-conn",
+            voiceGroupEl: "dash.voice-group",
+            voiceGateEl: "dash.voice-gate"
+        },
+
+        groups: {
+            listEl: "groups.list",
+            currentGroupEl: "groups.current",
+            createBtn: "groups.create",
+            leaveBtn: "groups.leave",
+            refreshBtn: "groups.refresh",
+            refreshStatusEl: "groups.refresh-status",
+            createModal: "groups.create-modal",
+            createForm: "groups.create-form",
+            createNameInput: "groups.create-name",
+            createPasswordInput: "groups.create-password",
+            createTypeSelect: "groups.create-type",
+            createTypeHelp: "groups.create-type-help",
+            createErrorEl: "groups.create-error",
+            createCloseBtn: "groups.create-close",
+            createCancelBtn: "groups.create-cancel",
+            createSubmitBtn: "groups.create-submit",
+            joinModal: "groups.join-modal",
+            joinForm: "groups.join-form",
+            joinPasswordInput: "groups.join-password",
+            joinGroupNameEl: "groups.join-name",
+            joinErrorEl: "groups.join-error",
+            joinCloseBtn: "groups.join-close",
+            joinCancelBtn: "groups.join-cancel",
+            typeHintEl: "groups.type-hint",
+            errorEl: "groups.error"
+        },
+
+        chat: {
+            logEl: "chat.log",
+            inputEl: "chat.input",
+            sendBtn: "chat.send"
         }
     },
 
@@ -86,7 +156,7 @@ export class SvgBuilder {
 
         this.elements = {};
 
-        root.querySelectorAll("[data-svg]").forEach(element => {
+        root.querySelectorAll("[data-svg]").forEach((element) => {
             const id = element.dataset.svg;
 
             if (this.elements[id]) {
@@ -117,13 +187,11 @@ export class SvgBuilder {
         const result = {};
 
         for (const [key, value] of Object.entries(object)) {
-
             if (typeof value === "string") {
                 result[key] = this.#require(value);
             } else {
                 result[key] = this.#resolveObject(value);
             }
-
         }
 
         return result;

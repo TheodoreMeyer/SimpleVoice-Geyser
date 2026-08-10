@@ -383,6 +383,7 @@ export class PttController {
     #setFullscreenPtt(active) {
         document.body.classList.toggle("fullscreen-ptt-active", active);
         this.elements.pttFullscreenOverlay.classList.toggle("visible", active);
+        this.elements.pttFullscreenOverlay.hidden = !active;
         this.elements.pttFullscreenOverlay.setAttribute("aria-hidden", active ? "false" : "true");
     }
 

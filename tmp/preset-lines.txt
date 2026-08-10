@@ -1,0 +1,14 @@
+{"name":"default","bg":"#1e1e1e","color":"#f5f5f5","h1":"#00d4ff","btn":"#00d4ff","btnHover":"#00aacc","form":"#2a2a2a","inputBg":"#2a2a2a","inputBorder":"#4a4a4a","inputText":"#f5f5f5"}
+{"name":"dark","bg":"#0a0a0a","color":"#e0e0e0","h1":"#0099cc","btn":"#0099cc","btnHover":"#0077aa","form":"#1a1a1a","inputBg":"#1a1a1a","inputBorder":"#3a3a3a","inputText":"#e0e0e0"}
+{"name":"light","bg":"#f5f5f5","color":"#1a1a1a","h1":"#0088cc","btn":"#0088cc","btnHover":"#0066aa","form":"#e8e8e8","inputBg":"#e8e8e8","inputBorder":"#9a9a9a","inputText":"#1a1a1a"}
+{"name":"green","bg":"#0d1f0a","color":"#d4f5d4","h1":"#22ff44","btn":"#22ff44","btnHover":"#1acc33","form":"#1a3a14","inputBg":"#1a3a14","inputBorder":"#2f5a2a","inputText":"#d4f5d4"}
+{"name":"blue","bg":"#0a1226","color":"#d8e7ff","h1":"#4ea1ff","btn":"#4ea1ff","btnHover":"#2f86ea","form":"#152240","inputBg":"#152240","inputBorder":"#35598d","inputText":"#d8e7ff"}
+{"name":"purple","bg":"#1a1026","color":"#eadcff","h1":"#c67dff","btn":"#c67dff","btnHover":"#ad62ea","form":"#2a1b40","inputBg":"#2a1b40","inputBorder":"#5f3f85","inputText":"#eadcff"}
+{"name":"red","bg":"#2a0f12","color":"#ffe1e1","h1":"#ff5b6b","btn":"#ff5b6b","btnHover":"#ea4455","form":"#3d171d","inputBg":"#3d171d","inputBorder":"#7a343d","inputText":"#ffe1e1"}
+{"name":"yellow","bg":"#2b260c","color":"#fff6cf","h1":"#ffd84d","btn":"#ffd84d","btnHover":"#eac33b","form":"#3d3514","inputBg":"#3d3514","inputBorder":"#78682b","inputText":"#fff6cf"}
+{"name":"cyan","bg":"#0c2327","color":"#d6fbff","h1":"#39e7ff","btn":"#39e7ff","btnHover":"#22cade","form":"#124047","inputBg":"#124047","inputBorder":"#2a7d8a","inputText":"#d6fbff"}
+{"name":"monochrome","bg":"#101010","color":"#efefef","h1":"#d0d0d0","btn":"#cfcfcf","btnHover":"#b5b5b5","form":"#1d1d1d","inputBg":"#1d1d1d","inputBorder":"#515151","inputText":"#efefef"}
+{"name":"monokai","bg":"#272822","color":"#f8f8f2","h1":"#66d9ef","btn":"#a6e22e","btnHover":"#8dcf20","form":"#383830","inputBg":"#383830","inputBorder":"#6a6654","inputText":"#f8f8f2"}
+{"name":"orange","bg":"#24140c","color":"#ffe8d8","h1":"#ff9d4d","btn":"#ff9d4d","btnHover":"#e88735","form":"#351d12","inputBg":"#351d12","inputBorder":"#6d4529","inputText":"#ffe8d8"}
+{"name":"mint","bg":"#10241f","color":"#dbfff4","h1":"#4ee6b8","btn":"#4ee6b8","btnHover":"#35c99d","form":"#18352f","inputBg":"#18352f","inputBorder":"#3e6d63","inputText":"#dbfff4"}
+{"name":"rose","bg":"#26131a","color":"#ffe4ef","h1":"#ff6b9c","btn":"#ff6b9c","btnHover":"#e85386","form":"#3a1c29","inputBg":"#3a1c29","inputBorder":"#6a3e52","inputText":"#ffe4ef"}

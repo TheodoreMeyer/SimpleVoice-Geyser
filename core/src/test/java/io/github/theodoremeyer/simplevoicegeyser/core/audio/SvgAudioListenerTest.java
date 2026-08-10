@@ -9,6 +9,8 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.Platform;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
+import io.github.theodoremeyer.simplevoicegeyser.core.schedule.DirectTaskScheduler;
+import io.github.theodoremeyer.simplevoicegeyser.core.schedule.TaskScheduler;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
 import org.eclipse.jetty.websocket.api.Session;
 import org.junit.jupiter.api.Test;
@@ -137,6 +139,7 @@ class SvgAudioListenerTest {
     private static final class FakePlatform implements Platform {
         private final SvgFile config = new FakeSvgFile();
         private final SvgLogger logger = new NoopLogger();
+        private final TaskScheduler taskScheduler = new DirectTaskScheduler();
 
         @Override
         public void disable() {
@@ -180,6 +183,11 @@ class SvgAudioListenerTest {
         @Override
         public boolean isDependencyEnabled(String name) {
             return false;
+        }
+
+        @Override
+        public TaskScheduler getTaskScheduler() {
+            return taskScheduler;
         }
     }
 

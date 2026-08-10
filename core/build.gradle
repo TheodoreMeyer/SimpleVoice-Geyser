@@ -40,6 +40,7 @@ tasks.processResources {
 
     from("web") {
         into("web")
+        exclude("**/*.test.mjs")
 
         filesMatching("index.html") {
             filter { line ->

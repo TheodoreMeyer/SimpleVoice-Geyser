@@ -3,6 +3,7 @@ package io.github.theodoremeyer.simplevoicegeyser.core.api;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.chat.SvgLogger;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.DataType;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
+import io.github.theodoremeyer.simplevoicegeyser.core.schedule.TaskScheduler;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
 
 import java.io.File;
@@ -67,5 +68,11 @@ public interface Platform {
      */
     boolean isDependencyEnabled(String name);
 
+    /**
+     * Platform task scheduler used for global/region/entity/async work.
+     *
+     * @return task scheduler owned by this platform instance
+     */
+    TaskScheduler getTaskScheduler();
 
 }

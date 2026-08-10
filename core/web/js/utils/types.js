@@ -5,6 +5,9 @@
  * @property {HTMLElement} statusEl
  * @property {HTMLInputElement} usernameInput
  * @property {HTMLInputElement} passwordInput
+ * @property {HTMLButtonElement} [passwordToggle]
+ * @property {HTMLButtonElement} [copyPswdBtn]
+ * @property {HTMLElement} [copyStatusEl]
  */
 
 /**
@@ -42,8 +45,59 @@
 
 /**
  * @typedef {Object} DevElements
- * @property {HTMLElement} devToggle
- * @property {HTMLElement} devContent
+ * @property {HTMLElement} [devToggle]
+ * @property {HTMLElement} [devContent]
+ */
+
+/**
+ * @typedef {Object} ViewElements
+ * @property {HTMLElement} loginView
+ * @property {HTMLElement} dashboardView
+ */
+
+/**
+ * @typedef {Object} DashboardElements
+ * @property {HTMLElement} [playerNameEl]
+ * @property {HTMLElement} [wsStatusEl]
+ * @property {HTMLElement} [audioModeEl]
+ * @property {HTMLElement} [nativeNoticeEl]
+ * @property {HTMLElement} [voiceControlsEl]
+ * @property {HTMLButtonElement} [logoutBtn]
+ * @property {HTMLElement} [micErrorEl]
+ * @property {HTMLElement} [reconnectOverlay]
+ * @property {HTMLElement} [gridEl]
+ * @property {HTMLButtonElement} [resetLayoutBtn]
+ * @property {HTMLElement} [layoutLiveEl]
+ * @property {HTMLButtonElement} [resetAppearanceBtn]
+ * @property {HTMLElement} [appearanceAccentGroup]
+ * @property {HTMLElement} [appearanceBorderGroup]
+ */
+
+/**
+ * @typedef {Object} GroupElements
+ * @property {HTMLElement} listEl
+ * @property {HTMLElement} currentGroupEl
+ * @property {HTMLButtonElement} createBtn
+ * @property {HTMLButtonElement} leaveBtn
+ * @property {HTMLElement} createModal
+ * @property {HTMLFormElement} createForm
+ * @property {HTMLInputElement} createNameInput
+ * @property {HTMLInputElement} createPasswordInput
+ * @property {HTMLSelectElement} createTypeSelect
+ * @property {HTMLElement} [createTypeHelp]
+ * @property {HTMLElement} [createErrorEl]
+ * @property {HTMLButtonElement} [createCloseBtn]
+ * @property {HTMLButtonElement} createCancelBtn
+ * @property {HTMLButtonElement} [createSubmitBtn]
+ * @property {HTMLElement} joinModal
+ * @property {HTMLFormElement} joinForm
+ * @property {HTMLInputElement} joinPasswordInput
+ * @property {HTMLElement} joinGroupNameEl
+ * @property {HTMLElement} [joinErrorEl]
+ * @property {HTMLButtonElement} [joinCloseBtn]
+ * @property {HTMLButtonElement} joinCancelBtn
+ * @property {HTMLElement} [typeHintEl]
+ * @property {HTMLElement} [errorEl]
  */
 
 /**
@@ -53,7 +107,11 @@
  * @property {FormElements} form
  * @property {AudioElements} audio
  * @property {PttElements} ptt
- * @property {DevElements} dev
+ * @property {DevElements} [dev]
+ * @property {ViewElements} views
+ * @property {DashboardElements} dashboard
+ * @property {GroupElements} groups
+ * @property {ChatElements} [chat]
  */
 
 /**
@@ -73,6 +131,7 @@
  * @property {boolean} mediaDevicesSupported
  * @property {boolean} canCaptureMic
  * @property {boolean} canSelectOutput
+ * @property {number} [sampleRate]
  * @property {string} degradedReason
  */
 

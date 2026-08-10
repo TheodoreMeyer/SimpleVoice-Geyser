@@ -44,4 +44,15 @@ public abstract class SvgPlayer extends Sender {
      * @return the Player
      */
     public abstract Object getPlayer();
+
+    /**
+     * Cached look yaw in degrees for spatial audio and other off-thread readers.
+     * <p>
+     * Platforms that cannot expose a thread-safe yaw return {@code null}.
+     *
+     * @return yaw degrees, or {@code null} when unavailable
+     */
+    public Double getLookYawDegrees() {
+        return null;
+    }
 }
