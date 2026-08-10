@@ -11,6 +11,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.data.PlayerVcPswd;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserEventHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.GroupManager;
+import io.github.theodoremeyer.simplevoicegeyser.core.managers.JoinMessageHandler;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.PlayerManager;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.JettyServer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionManager;
@@ -51,6 +52,7 @@ public final class SvgCore {
     private final PlayerManager playerManager;
     private GroupManager groupManager;
     private PlayerVcPswd playerVcPswd;
+    private final JoinMessageHandler joinMessageHandler;
     private Command command;
     private final AudioByteCompiler audioByteCompiler;
     private State state = State.NEW;
@@ -71,6 +73,7 @@ public final class SvgCore {
 
         new AudioThread();
         this.playerManager = new PlayerManager();
+        this.joinMessageHandler = new JoinMessageHandler();
         this.connectionManager = new ConnectionManager();
         this.audioByteCompiler = new AudioByteCompiler();
     }
@@ -115,12 +118,16 @@ public final class SvgCore {
             this.vcBridge = platform.registerVcBridge();
             if (this.vcBridge == null) {
                 getLogger().severe("Failed to register VoiceChatBridge.");
-                shutdown();
+
                 state = State.FAILED;
+                shutdown();
+                platform.platformDisable();
+
                 return false;
             }
 
             this.groupManager = new GroupManager(vcBridge);
+            GeyserHook.createFormHandler();
             this.command = new Command(groupManager, this);
 
             if (GeyserHook.isGeyser()) {
@@ -133,8 +140,11 @@ public final class SvgCore {
             return true;
         } catch (Exception e) {
             getLogger().severe("Init failed: " + e.getMessage());
-            shutdown();
+
             state = State.FAILED;
+            shutdown();
+            platform.platformDisable();
+
             return false;
         }
     }
@@ -227,6 +237,14 @@ public final class SvgCore {
      */
     public static PlayerManager getPlayerManager() {
         return getInstance().playerManager;
+    }
+
+    /**
+     * Get the JoinMessage Handler
+     * @return join message handler
+     */
+    public static JoinMessageHandler getJoinMessageHandler() {
+        return getInstance().joinMessageHandler;
     }
 
     /**

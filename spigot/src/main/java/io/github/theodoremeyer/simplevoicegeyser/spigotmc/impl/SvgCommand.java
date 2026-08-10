@@ -5,6 +5,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.Sender;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandArgs;
 import io.github.theodoremeyer.simplevoicegeyser.core.commands.CommandFlagParser;
+import io.github.theodoremeyer.simplevoicegeyser.core.geyser.GeyserHook;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.sender.BukkitConsole;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
@@ -51,6 +52,9 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
         // Parse args into CommandArgs
         CommandArgs parsedArgs = parseArgs(new CommandArgs(sub, sender), sub, args);
 
+        //Do a notification for passwords
+        if (!sendPasswordSecurityWarning(parsedArgs)) return true;
+
         return SvgCore.getCommand().execute(parsedArgs);
     }
 
@@ -63,6 +67,9 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
             case "pswd" -> {
                 if (args.length >= 2) {
                     out.put("password", args[1]);
+                    if (args.length >= 3) {
+                        out.put("confirm", args[2]);
+                    }
                 }
             }
 
@@ -84,6 +91,37 @@ public class SvgCommand implements CommandExecutor, TabCompleter {
         }
 
         return out;
+    }
+
+    //Password Security
+    //TODO: Figure out how to hide the pswd command args from console.
+    public boolean sendPasswordSecurityWarning(CommandArgs args) {
+
+        if (!args.sub().equalsIgnoreCase("pswd") || !(args.getSender() instanceof SvgPlayer p)) return true;
+
+        if (args.get("password") == null) {
+            if (GeyserHook.isEnabled()) {
+                if (Boolean.TRUE.equals(GeyserHook.isBedrock(p.getUniqueId()))) {
+                    GeyserHook.getFormHandler().setPassword(p);
+                }
+            }
+        }
+
+        Sender sender = args.getSender();
+
+        sender.sendMessage(
+                SvgCore.getPrefix() +
+                "WARNING: Passwords entered through this command may appear in console/logs. For safer setup, " +
+                        "use /svg pswd without arguments if you are bedrock."
+        );
+
+        if (!args.has("confirm")) {
+            p.sendMessage("Please add 'confirm' to the end of the command to confirm this command execution.");
+            return false;
+        }
+
+        return true;
+
     }
 
     //---------------

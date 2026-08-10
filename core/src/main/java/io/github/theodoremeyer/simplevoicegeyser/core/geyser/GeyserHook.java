@@ -4,6 +4,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import org.geysermc.cumulus.form.Form;
 import org.geysermc.floodgate.api.FloodgateApi;
 import org.geysermc.geyser.api.GeyserApi;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -11,6 +12,8 @@ import java.util.UUID;
  * Hook with Geyser MC
  */
 public final class GeyserHook {
+
+    private static FormHandler formHandler = null;
 
     /**
      * Block class from being made, as it is static util
@@ -75,6 +78,26 @@ public final class GeyserHook {
             FloodgateApi.getInstance().sendForm(uuid, form);
         } else if (isGeyser()) {
             GeyserApi.api().sendForm(uuid, form);
+        }
+    }
+
+    //FORMS
+
+    /**
+     * Get The FormHandler
+     * @return {@link FormHandler}
+     */
+    @Nullable
+    public static FormHandler getFormHandler() {
+        return formHandler;
+    }
+
+    /**
+     * Create the {@link FormHandler} if it does not exist
+     */
+    public static void createFormHandler() {
+        if (formHandler == null) {
+            formHandler = new FormHandler(SvgCore.getGroupManager());
         }
     }
 }

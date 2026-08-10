@@ -14,14 +14,13 @@ This page outlines supported environments, tested versions, and known limitation
 
 Simple Voice Geyser uses a web-based client that relies on WebRTC. Browser support may vary depending on implementation differences.
 
-| Version   | Chrome | Firefox | Edge |
-|-----------|--------|---------|------|
-| 0.0.1-DEV | ✅      | ❌       | ❌    |
-| 0.0.2-DEV | ✅      | 🛠️     | ❌    |
-| 0.0.3-DEV | ✅      | 🚧      | ❌    |
-| 0.1.0-DEV | ✅      | ✅       | 🚧   |
-| 0.1.1     | ✅      | ✅       | 🚧   |
-| 0.1.2     | ✅      | ✅       | 🚧   |
+| Version     | Chrome | Firefox | Edge |
+|-------------|--------|---------|------|
+| 0.0.1-DEV   | ✅      | ❌       | ❌    |
+| 0.0.2-DEV   | ✅      | 🛠️     | ❌    |
+| 0.0.3-DEV   | ✅      | 🚧      | ❌    |
+| 0.1.0-DEV   | ✅      | ✅       | 🚧   |
+| 0.1.1-0.1.4 | ✅      | ✅       | 🚧   |
 
 ---
 
@@ -36,6 +35,7 @@ Simple Voice Geyser uses a web-based client that relies on WebRTC. Browser suppo
 | 0.1.1     | 1.20.1+    | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | ❌     |
 | 0.1.2     | 1.20.1+    | 2.6.x      | 2.10.0-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ⚠️      |
 | 0.1.3     | 1.20.1+    | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
+| 0.1.4     | 1.20.1+    | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
 
 ### Requirements
 
@@ -54,6 +54,7 @@ Simple Voice Geyser uses a web-based client that relies on WebRTC. Browser suppo
 | 0.1.1-DEV | 1.21.11+   | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | compatible w/ 5.4 api | ❌      |
 | 0.1.2-DEV | 26.1+      | 2.6.x      | 2.10.0-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.4 api | ⚠️      |
 | 0.1.3-DEV | 26.1+      | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.5 api | ✅      |
+| 0.1.4     | 26.1+      | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.5 api | ✅      |
 
 ### Requirements
 

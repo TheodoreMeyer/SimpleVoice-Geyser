@@ -9,7 +9,8 @@ dependencies {
     implementation("org.mindrot:jbcrypt:0.4")
 
     // Json
-    implementation("org.json:json:20250107")
+    // Source: https://mvnrepository.com/artifact/org.json/json
+    implementation("org.json:json:20260522")
 
     // GeyserMC API (provided by platform)
     compileOnly("org.geysermc.geyser:api:${geysermc_api_version}")
@@ -40,7 +41,7 @@ tasks.processResources {
     from("web") {
         into("web")
 
-        filesMatching("index.html") {
+        filesMatching("*.html") {
             filter { line ->
                 line.replace(
                         "@@GIT_COMMIT@@",

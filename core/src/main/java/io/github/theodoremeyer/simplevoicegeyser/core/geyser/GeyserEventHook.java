@@ -19,7 +19,7 @@ public final class GeyserEventHook implements EventRegistrar {
      * Start Event Listener
      */
     public GeyserEventHook() {
-        this.formHandler = new FormHandler(SvgCore.getGroupManager());
+        this.formHandler = GeyserHook.getFormHandler();
         if (SvgCore.getConfig().USE_EMOTE.get()) {
             SvgCore.getLogger().info("Using Emote for SVG");
         } else {

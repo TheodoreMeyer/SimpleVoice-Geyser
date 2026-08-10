@@ -33,7 +33,7 @@ public final class Command {
      * @param core core to pass to subcommands
      */
     public Command(GroupManager groupManager, SvgCore core) {
-        this.formHandler = new FormHandler(groupManager);
+        this.formHandler = GeyserHook.getFormHandler();
 
         register(new PswdCommand());
         register(new CreateGroupCommand(groupManager));

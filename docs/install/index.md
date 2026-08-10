@@ -8,6 +8,8 @@ project: simplevoicegeyser
 
 This guide covers installing and configuring Simple Voice Geyser.
 
+For Host-Specific setup, see [Hosting Guides]({% project_link guides %}).
+
 ---
 
 ## Requirements
@@ -16,7 +18,7 @@ This guide covers installing and configuring Simple Voice Geyser.
 
 * Minecraft 1.21.8+
 * Simple Voice Chat 2.6.x+
-* GeyserMC 2.9.0-SNAPSHOT+
+* GeyserMC 2.10.1-SNAPSHOT+
 * Floodgate (optional, but recommended)
 
 ### Fabric
@@ -24,7 +26,7 @@ This guide covers installing and configuring Simple Voice Geyser.
 * Fabric Loader (matching your Minecraft version)
 * Fabric API (required)
 * Simple Voice Chat 2.6.x+
-* GeyserMC 2.9.0-SNAPSHOT+
+* GeyserMC 2.10.1-SNAPSHOT+
 * LuckPerms (optional)
 * Floodgate (optional)
 
@@ -76,6 +78,19 @@ client:
    # default: false
    # Only allow bedrock players to join the chat
    requireBedrock: false
+
+   join-message:
+
+     #default: true
+     # Enables join messages for web clients.
+     enabled: true
+
+     # Default: provided below
+     # The text svg sends when a player joins
+     text:
+       - "This Server Uses SimpleVoice-Geyser."
+       - "To set it up, run /svg pswd [password],"
+       - "Then join Via the server's SVG website."
 
    # default: true
    # Allows for the bedrock client to open a menu just by opening the emotes menu

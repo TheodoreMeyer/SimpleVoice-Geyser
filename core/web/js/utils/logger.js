@@ -6,31 +6,6 @@ export class Logger {
 
     static handler = console.log;
 
-    static DEBUG =
-        localStorage.getItem("debug") === "true";
-
-    static {
-
-        Object.defineProperty(
-            window,
-            "debug",
-            {
-                get() {
-                    return Logger.DEBUG;
-                },
-
-                set(value) {
-                    Logger.DEBUG = Boolean(value);
-
-                    localStorage.setItem(
-                        "debug",
-                        Logger.DEBUG.toString()
-                    );
-                }
-            }
-        );
-    }
-
     /**
      * @param {(msg: string) => void} handler
      */
@@ -49,12 +24,7 @@ export class Logger {
      * @param {string} msg
      */
     static debug(msg) {
-
-        if (Logger.DEBUG) {
-            Logger.log(msg);
-        } else {
-            console.debug(msg);
-        }
+        console.log(`[DEBUG]: ` + msg);
     }
 }
 

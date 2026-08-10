@@ -16,6 +16,10 @@ export class SvgWebSocket {
         SERVER_SHUTDOWN: 4006,
         OUTDATED: 4008
     };
+    #eventListeners = {
+        statusChange: [],
+        message: []
+    };
 
     /**
      *
@@ -42,7 +46,27 @@ export class SvgWebSocket {
     connect(username, password, onStatusChange) {
         this.lastCredentials = { username, password };
         this.#resetState();
-        this.#createSocket(onStatusChange);
+        this.addEventListener("statusChange", onStatusChange);
+        this.#createSocket();
+    }
+
+    addEventListener(type, listener, persistsAfterConnection = false) {
+        if (!Object.hasOwn(this.#eventListeners, type)) {
+            Logger.log(`Cannot add event listener for event "${type}" because it does not exist.`)
+            return;
+        }
+        this.#eventListeners[type].push({
+            func: listener,
+            isPersistent: persistsAfterConnection
+        });
+    }
+    #runEventListeners(type, ...args) {
+        this.#eventListeners[type].forEach(listener => listener.func(...args));
+    }
+    #removeTemporaryEventListeners() {
+        for (const type in this.#eventListeners) {
+            this.#eventListeners[type] = this.#eventListeners[type].filter(listener => listener.isPersistent);
+        }
     }
 
     #resetState() {
@@ -60,9 +84,11 @@ export class SvgWebSocket {
         this.rxLegacyFrames = 0;
         this.rxDecoderFallbacks = 0;
         this.reOpen = true;
+
+        this.#removeTemporaryEventListeners();
     }
 
-    #createSocket(onStatusChange) {
+    #createSocket() {
         const protocol = location.protocol === "https:" ? "wss:" : "ws:";
         const pageUrl = new URL(window.location.href);
         if (!pageUrl.pathname.endsWith("/")) {
@@ -92,13 +118,18 @@ export class SvgWebSocket {
             }));
             Logger.log("Connected.");
             this.reconnectAttempts = 0;
-            onStatusChange(true, this.lastCredentials.username);
+
+            this.#runEventListeners("statusChange", {
+                connected: true,
+                username: this.lastCredentials.username
+            });
         };
 
         this.ws.onmessage = async (event) => {
             if (typeof event.data === "string") {
                 try {
                     const data = JSON.parse(event.data);
+                    const packetType = String(data.type || "").toLowerCase();
                     const msg = String(data.message || "").toLowerCase();
 
                     if (data?.fatal === true) {
@@ -106,16 +137,16 @@ export class SvgWebSocket {
                         this.stopReconnection();
                     }
 
-                    if (data.type === "status" && msg.includes("connected as")) {
+                    if (packetType === "status" && msg.includes("connected as")) {
                         this.hasJoined = true;
                         await this.#sendCapabilitiesOnce();
                     }
 
-                    if (data.type === "capabilities_ack") {
+                    if (packetType === "capabilities_ack") {
                         Logger.log(`[AudioRX] Server selected transport mode: ${data.selectedMode || "legacy"}`);
                     }
 
-                    if (data.type === "error") {
+                    if (packetType === "error") {
                         const isFatalError = msg.includes("bedrock player to join") ||
                             msg.includes("use /svg pswd") ||
                             msg.includes("access denied:") ||
@@ -136,9 +167,23 @@ export class SvgWebSocket {
                         this.stopReconnection();
                     }
 
-                    Logger.log((data.type || "info") + ": " + (data.message || JSON.stringify(data)));
+                    Logger.debug((packetType || "info") + ": " + (data.message || JSON.stringify(data)));
+
+                    this.#runEventListeners("message", {
+                        type: "json",
+                        fatalAuthError: this.fatalAuthError,
+                        packetType: packetType,
+                        msg: msg
+                    })
                 } catch {
-                    Logger.log("Server: " + event.data);
+                    Logger.log("Received non-JSON message: " + event.type);
+                    Logger.debug("Server: " + event.data);
+
+                    this.#runEventListeners("message", {
+                        type: "text",
+                        eventType: event.type,
+                        eventData: event.data
+                    })
                 }
             } else {
                 await this.#handleIncomingBinaryFrame(event.data);
@@ -153,7 +198,11 @@ export class SvgWebSocket {
             console.log("WebSocket closed:", code, reason);
 
             this.audioController.resetAudioState();
-            onStatusChange(false);
+            this.#runEventListeners("statusChange", {
+                connected: false,
+                code: code,
+                reason: reason
+            });
 
             if (code === SvgWebSocket.DisconnectPolicy.OUTDATED || reason === "update_required") {
                 this.stopReconnection();
@@ -196,7 +245,7 @@ export class SvgWebSocket {
                 this.reconnectAttempts++;
                 this.reconnectTimeout = setTimeout(() => {
                     Logger.log(`Reconnecting... (${this.reconnectAttempts}/${SvgWebSocket.MAX_RECONNECT_ATTEMPTS})`);
-                    this.#createSocket(onStatusChange);
+                    this.#createSocket();
                 }, 3000);
             } else if (!this.manualClose && !this.hasJoined) {
                 Logger.log("Stopped reconnecting after repeated pre-join failures.");

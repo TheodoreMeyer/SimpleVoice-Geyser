@@ -23,7 +23,6 @@ import {ChatLogger} from "./utils/logger.js";
  *         form: {...},
  *         audio: {...},
  *         ptt: {...},
- *         dev: {...}
  *     },
  *     chat: {...}
  * });
