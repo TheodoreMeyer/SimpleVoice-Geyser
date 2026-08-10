@@ -54,8 +54,6 @@ public final class VelocityPlugin {
 
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
-        server.getEventManager().register(this, this);
-
         File dataDir = dataDirectory.toFile();
         if (!dataDir.exists()) {
             dataDir.mkdirs();
@@ -134,7 +132,10 @@ public final class VelocityPlugin {
     }
 
     public void registerSession(UUID uuid, ProxyWebSocket socket) {
-        activeSessions.put(uuid, socket);
+        ProxyWebSocket replaced = activeSessions.put(uuid, socket);
+        if (replaced != null && replaced != socket) {
+            replaced.onProxyDisconnect();
+        }
     }
 
     public void unregisterSession(UUID uuid, ProxyWebSocket socket) {
@@ -168,7 +169,7 @@ public final class VelocityPlugin {
         return configFile.getString("proxy.backend.url", "");
     }
 
-    public String createProxyToken(UUID uuid, String username) {
+    public synchronized String createProxyToken(UUID uuid, String username) {
         String secret = configFile.getString("proxy.shared-secret", "");
         if (secret == null || secret.isBlank()) {
             secret = generateFallbackSecret();
@@ -187,7 +188,8 @@ public final class VelocityPlugin {
         ensureDefault("proxy.web.port", 8081);
         ensureDefault("proxy.web.bind-address", "0.0.0.0");
         ensureDefault("proxy.web.idle-timeout-minutes", 2);
-        if (!configFile.has("proxy.shared-secret")) {
+        String secret = configFile.getString("proxy.shared-secret", "");
+        if (secret == null || secret.isBlank()) {
             configFile.set("proxy.shared-secret", generateFallbackSecret());
         }
         ensureDefault("proxy.token-ttl-seconds", 120);
