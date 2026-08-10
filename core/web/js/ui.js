@@ -80,9 +80,10 @@ export class SvgUI {
             const option = document.createElement("option");
 
             option.value = mic.deviceId;
+            const micIndex = micSelect.options.length + 1;
             SvgLang.setElement(option,
                 () => mic.label ||
-                    `${SvgLang.string("microphoneIndexPrefix")} ${micSelect.options.length + 1}`
+                    `${SvgLang.string("microphoneIndexPrefix")} ${micIndex}`
             );
 
             micSelect.appendChild(option);

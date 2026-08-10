@@ -170,8 +170,10 @@ export class SvgLang {
     static #setElementText(element, content) {
         if (typeof content === "string") {
             element.textContent = SvgLang.string(content);
-        } else {
+        } else if (typeof content === "function") {
             element.textContent = content();
+        } else {
+            throw new TypeError("SvgLang.setElement content must be of type 'string | (() => string)'");
         }
     }
 
@@ -182,8 +184,8 @@ export class SvgLang {
      *
      * Use it as a replacement for `element.textContent = someText`.
      *
-     * @param element HTMLElement
-     * @param content JS Translation Key or No-Param String-Returning Factory
+     * @param {HTMLElement} element
+     * @param {string|(() => string)} content JS translation key or no-arg string factory JS Translation Key or No-Param String-Returning Factory
      *
      * @example
      * SvgLang.setElement(el, "jsTranslationLabel");
@@ -215,8 +217,12 @@ export class SvgLang {
             }
         });
 
-        SvgLang.#jsElementMap.forEach((content, element, _) => {
+        for (const [element, content] of SvgLang.#jsElementMap) {
+            if (!element.isConnected) {
+                SvgLang.#jsElementMap.delete(element);
+                continue;
+            }
             SvgLang.#setElementText(element, content);
-        });
+        }
     }
 }
