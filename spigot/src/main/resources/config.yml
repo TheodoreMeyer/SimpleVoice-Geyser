@@ -229,6 +229,11 @@ groups:
     - ISOLATED
 
 # default: false
+# When true, allow dragging/persisting custom dashboard panel placements.
+# Recovery default is false — use the canonical fixed layout for all users.
+dashboard.custom-layout-enabled: false
+
+# default: false
 # Debug logs
 # Do NOT use this in production. This will very quickly fill up your server logs.
 debug: false

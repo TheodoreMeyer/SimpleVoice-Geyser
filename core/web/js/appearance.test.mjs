@@ -1,5 +1,5 @@
 /**
- * Appearance v3 (accent + border) tests.
+ * Appearance v4 (accent + border) tests.
  * Run: node --test core/web/js/appearance.test.mjs
  */
 import test from "node:test";
@@ -11,6 +11,7 @@ import {
     APPEARANCE_STORAGE_KEY,
     APPEARANCE_STORAGE_KEY_V1,
     APPEARANCE_STORAGE_KEY_V2,
+    APPEARANCE_STORAGE_KEY_V3,
     APPEARANCE_VERSION,
     ACCENT_THEMES,
     BORDER_STYLES,
@@ -102,7 +103,7 @@ test("invalid accent/border rejected", () => {
     assert.equal(validateBorder(""), null);
 });
 
-test("appearance persists under versioned v3 key", () => {
+test("appearance persists under versioned v4 key", () => {
     const prev = globalThis.localStorage;
     globalThis.localStorage = new MemoryStorage();
     try {
@@ -111,8 +112,8 @@ test("appearance persists under versioned v3 key", () => {
         assert.equal(loaded.accent, "cyan");
         assert.equal(loaded.border, "glass");
         assert.ok(localStorage.getItem(APPEARANCE_STORAGE_KEY));
-        assert.equal(APPEARANCE_STORAGE_KEY, "svg.dashboard.appearance.v3");
-        assert.equal(APPEARANCE_VERSION, 3);
+        assert.equal(APPEARANCE_STORAGE_KEY, "svg.dashboard.appearance.v4");
+        assert.equal(APPEARANCE_VERSION, 4);
         clearAppearance();
         const cleared = loadAppearance();
         assert.equal(cleared.accent, "default");
@@ -122,7 +123,23 @@ test("appearance persists under versioned v3 key", () => {
     }
 });
 
-test("v2 {accent, border} migrates to v3 and removes obsolete keys", () => {
+test("v3 {accent, border} migrates to v4 and removes obsolete keys", () => {
+    const prev = globalThis.localStorage;
+    const store = new MemoryStorage();
+    globalThis.localStorage = store;
+    try {
+        store.setItem(APPEARANCE_STORAGE_KEY_V3, JSON.stringify({ version: 3, accent: "red", border: "subtle" }));
+        const loaded = loadAppearance();
+        assert.equal(loaded.accent, "red");
+        assert.equal(loaded.border, "subtle");
+        assert.ok(store.getItem(APPEARANCE_STORAGE_KEY));
+        assert.equal(store.getItem(APPEARANCE_STORAGE_KEY_V3), null);
+    } finally {
+        globalThis.localStorage = prev;
+    }
+});
+
+test("v2 {accent, border} migrates to v4 and removes obsolete keys", () => {
     const prev = globalThis.localStorage;
     const store = new MemoryStorage();
     globalThis.localStorage = store;
@@ -138,7 +155,7 @@ test("v2 {accent, border} migrates to v3 and removes obsolete keys", () => {
     }
 });
 
-test("v3 record without version field is accepted", () => {
+test("v4 record without version field is accepted", () => {
     const prev = globalThis.localStorage;
     const store = new MemoryStorage();
     globalThis.localStorage = store;
@@ -152,7 +169,7 @@ test("v3 record without version field is accepted", () => {
     }
 });
 
-test("v1 {version:1, theme} migrates to v3 {accent, border}", () => {
+test("v1 {version:1, theme} migrates to v4 {accent, border}", () => {
     const prev = globalThis.localStorage;
     const store = new MemoryStorage();
     globalThis.localStorage = store;
@@ -300,7 +317,7 @@ test("dashboard spacing tokens are defined and applied", () => {
     assert.match(css, /--dash-section-gap/);
     assert.match(css, /--dash-control-height/);
     assert.match(css, /\.panel\s*\{[\s\S]*?padding:\s*var\(--dash-panel-padding/);
-    assert.match(css, /\.dashboard-grid\s*\{[\s\S]*?gap:\s*var\(--dash-panel-gap/);
+    assert.match(css, /\.dash-main\s*,\s*\.dashboard-grid\s*\{[\s\S]*?gap:\s*var\(--dash-panel-gap/);
     assert.match(css, /\.control-group\s*\{[\s\S]*?gap:\s*var\(--dash-field-gap/);
     assert.match(css, /\.voice-status-row\s*\{[\s\S]*?gap:\s*var\(--dash-field-gap/);
     assert.match(css, /\.group-card,\s*\.group-row\s*\{[\s\S]*?padding:\s*var\(--dash-panel-padding/);
@@ -309,7 +326,7 @@ test("dashboard spacing tokens are defined and applied", () => {
 });
 
 test("appearance tile is a distinct dash-panel using shared spacing tokens", () => {
-    assert.match(html, /appearance-tile panel dash-panel/);
+    assert.match(html, /appearance-panel appearance-tile panel dash-panel|appearance-tile panel dash-panel/);
     assert.match(css, /\.appearance-tile\s*\{[^}]*padding:\s*var\(--dash-section-gap/);
 });
 

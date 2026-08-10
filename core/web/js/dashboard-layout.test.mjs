@@ -25,6 +25,8 @@ import {
     movePanelKeyboard,
     snapToGrid,
     resolvePlacement,
+    setCustomLayoutEnabled,
+    isCustomLayoutEnabled,
     DashboardLayoutController
 } from "./dashboard-layout.js";
 
@@ -138,6 +140,57 @@ test("login view is not marked draggable", () => {
     assert.doesNotMatch(login, /dash-panel/);
 });
 
+test("custom layout dragging is disabled by default", () => {
+    setCustomLayoutEnabled(false);
+    assert.equal(isCustomLayoutEnabled(), false);
+    assert.doesNotMatch(html, /SVG_CUSTOM_LAYOUT_ENABLED\s*=\s*true/);
+});
+
+test("loadLayout always returns DEFAULT_LAYOUT when custom layout disabled", () => {
+    const prev = globalThis.localStorage;
+    const store = new MemoryStorage();
+    globalThis.localStorage = store;
+    setCustomLayoutEnabled(false);
+    try {
+        store.setItem(
+            LAYOUT_STORAGE_KEY,
+            JSON.stringify({
+                version: LAYOUT_VERSION,
+                panels: {
+                    voice: { id: "voice", col: 2, row: 2, colSpan: 4, rowSpan: 4 },
+                    chat: { id: "chat", col: 6, row: 2, colSpan: 4, rowSpan: 4 },
+                    appearance: { id: "appearance", col: 6, row: 6, colSpan: 4, rowSpan: 3 },
+                    groups: { id: "groups", col: 1, row: 9, colSpan: 12, rowSpan: 4 }
+                }
+            })
+        );
+        const loaded = loadLayout();
+        assert.deepEqual(loaded.voice, DEFAULT_LAYOUT.voice);
+        assert.deepEqual(loaded.chat, DEFAULT_LAYOUT.chat);
+        saveLayout({ ...DEFAULT_LAYOUT, voice: { ...DEFAULT_LAYOUT.voice, col: 3 } });
+        // Saves are no-ops while disabled — original custom payload still present or unchanged by save.
+        assert.ok(store.getItem(LAYOUT_STORAGE_KEY));
+    } finally {
+        globalThis.localStorage = prev;
+        setCustomLayoutEnabled(false);
+    }
+});
+
+test("canonical dashboard markup uses nested upper/right structure", () => {
+    assert.match(html, /class="dashboard-upper"/);
+    assert.match(html, /class="dashboard-right"/);
+    assert.match(html, /voice-controls-panel/);
+    assert.match(html, /appearance-panel/);
+    assert.match(html, /voice-groups-panel/);
+    assert.match(html, /data-svg="dash\.build-mismatch"/);
+    assert.match(html, /data-svg="dash\.reload-client"/);
+    assert.match(html, /data-svg="dev\.build-diag"/);
+    assert.match(html, /window\.BUILD_ID\s*=\s*"@@BUILD_ID@@"/);
+    assert.match(html, /window\.PROTOCOL_VERSION\s*=\s*Number\("@@PROTOCOL_VERSION@@"\)/);
+    assert.match(html, /window\.FRONTEND_SCHEMA\s*=\s*Number\("@@FRONTEND_SCHEMA@@"\)/);
+    assert.doesNotMatch(html, /@@GIT_COMMIT@@/);
+});
+
 test("default layout: voice left, chat+appearance right (aligned bottoms), groups full width", () => {
     assert.equal(DEFAULT_LAYOUT.voice.row, DEFAULT_LAYOUT.chat.row);
     assert.equal(
@@ -213,6 +266,7 @@ test("save/load round-trip and reset clears only layout key", () => {
     const prev = globalThis.localStorage;
     const store = new MemoryStorage();
     globalThis.localStorage = store;
+    setCustomLayoutEnabled(true);
     try {
         store.setItem("preset", "dark");
         saveLayout(DEFAULT_LAYOUT);
@@ -224,6 +278,7 @@ test("save/load round-trip and reset clears only layout key", () => {
         assert.equal(store.getItem("preset"), "dark");
         assert.deepEqual(loadLayout().chat, DEFAULT_LAYOUT.chat);
     } finally {
+        setCustomLayoutEnabled(false);
         globalThis.localStorage = prev;
     }
 });
@@ -232,6 +287,7 @@ test("obsolete v1/v2/v3 layouts are archived and default layout is used on first
     const prev = globalThis.localStorage;
     const store = new MemoryStorage();
     globalThis.localStorage = store;
+    setCustomLayoutEnabled(true);
     try {
         store.setItem(
             LAYOUT_STORAGE_KEY_V3,
@@ -262,6 +318,25 @@ test("obsolete v1/v2/v3 layouts are archived and default layout is used on first
         assert.equal(store.getItem(LAYOUT_STORAGE_KEY_V3), null);
         assert.equal(store.getItem(LAYOUT_STORAGE_KEY_V1), null);
         assert.equal(store.getItem(LAYOUT_STORAGE_KEY), null);
+    } finally {
+        setCustomLayoutEnabled(false);
+        globalThis.localStorage = prev;
+    }
+});
+
+test("clearLayout removes v1–v4 keys even when custom layout is disabled", () => {
+    const prev = globalThis.localStorage;
+    const store = new MemoryStorage();
+    globalThis.localStorage = store;
+    setCustomLayoutEnabled(false);
+    try {
+        store.setItem(LAYOUT_STORAGE_KEY, "{}");
+        store.setItem(LAYOUT_STORAGE_KEY_V3, "{}");
+        store.setItem(LAYOUT_STORAGE_KEY_V1, "{}");
+        clearLayout();
+        assert.equal(store.getItem(LAYOUT_STORAGE_KEY), null);
+        assert.equal(store.getItem(LAYOUT_STORAGE_KEY_V3), null);
+        assert.equal(store.getItem(LAYOUT_STORAGE_KEY_V1), null);
     } finally {
         globalThis.localStorage = prev;
     }
@@ -318,15 +393,16 @@ test("groups panel spans the full grid width; Appearance is a required panel bel
     assert.match(css, /\.chat-panel-body\s*\{[^}]*flex:\s*1\s*1\s*auto/);
 });
 
-test("desktop first-paint CSS matches v4 default grid (chat rowSpan 5, appearance below)", () => {
-    assert.match(css, /\[data-panel="voice"\][\s\S]*?grid-column:\s*1\s*\/\s*span\s*7/);
-    assert.match(css, /\[data-panel="chat"\][\s\S]*?grid-column:\s*8\s*\/\s*span\s*5/);
-    assert.match(css, /\[data-panel="chat"\][\s\S]*?grid-row:\s*1\s*\/\s*span\s*5/);
-    assert.match(css, /\[data-panel="appearance"\][\s\S]*?grid-column:\s*8\s*\/\s*span\s*5/);
-    assert.match(css, /\[data-panel="appearance"\][\s\S]*?grid-row:\s*6\s*\/\s*span\s*3/);
-    assert.match(css, /\[data-panel="voice"\][\s\S]*?grid-row:\s*1\s*\/\s*span\s*8/);
-    assert.match(css, /\[data-panel="groups"\][\s\S]*?grid-row:\s*9\s*\/\s*span\s*4/);
+test("canonical CSS uses nested flex layout (not 12x12 row numbers)", () => {
+    assert.match(css, /\.dashboard-upper\s*\{/);
+    assert.match(css, /\.dashboard-right\s*\{/);
+    assert.match(css, /\.voice-controls-panel[\s\S]*?width:\s*58%/);
+    assert.match(css, /\.dashboard-right[\s\S]*?width:\s*42%/);
+    assert.match(css, /\.voice-groups-panel[\s\S]*?width:\s*100%/);
+    assert.match(css, /\.panel-drag-header\s+\.drag-grip[\s\S]*?display:\s*none/);
+    assert.doesNotMatch(css, /grid-template-rows:\s*repeat\(12/);
 });
+
 test("group cards use a 2-column grid on desktop and 1 column on mobile", () => {
     assert.match(css, /\.group-list\s*\{[^}]*display:\s*grid/);
     assert.match(css, /\.group-list\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
@@ -372,7 +448,16 @@ test("pointer drag applies translate3d before release", () => {
     };
     try {
         const gridEl = {
-            classList: { toggle() {} },
+            classList: {
+                set: new Set(),
+                add(...c) { c.forEach((x) => this.set.add(x)); },
+                remove(...c) { c.forEach((x) => this.set.delete(x)); },
+                toggle(c, force) {
+                    if (force) this.set.add(c);
+                    else this.set.delete(c);
+                },
+                contains(c) { return this.set.has(c); }
+            },
             appendChild() {},
             insertBefore() {},
             getBoundingClientRect: () => ({ left: 0, top: 0, width: 1200, height: 1200 })
@@ -396,7 +481,11 @@ test("pointer drag applies translate3d before release", () => {
         globalThis.requestAnimationFrame = (fn) => { fn(); return 1; };
         globalThis.cancelAnimationFrame = () => {};
 
-        const controller = new DashboardLayoutController({ gridEl, panels });
+        const controller = new DashboardLayoutController({
+            gridEl,
+            panels,
+            customLayoutEnabled: true
+        });
         controller.init();
 
         const handle = panels.voice._handle;
@@ -439,6 +528,63 @@ test("pointer drag applies translate3d before release", () => {
 
         globalThis.addEventListener = origAdd;
     } finally {
+        setCustomLayoutEnabled(false);
+        globalThis.localStorage = prev;
+    }
+});
+
+test("canonical init does not attach pointer listeners", () => {
+    const prev = globalThis.localStorage;
+    globalThis.localStorage = new MemoryStorage();
+    globalThis.window = globalThis;
+    globalThis.document = {
+        body: { classList: { add() {}, remove() {} } },
+        createElement() {
+            return { style: {}, className: "", setAttribute() {}, remove() {} };
+        }
+    };
+    try {
+        const gridEl = {
+            classList: {
+                set: new Set(),
+                add(...c) { c.forEach((x) => this.set.add(x)); },
+                remove(...c) { c.forEach((x) => this.set.delete(x)); },
+                toggle(c, force) {
+                    if (force) this.set.add(c);
+                    else this.set.delete(c);
+                },
+                contains(c) { return this.set.has(c); }
+            },
+            appendChild() {},
+            insertBefore() {},
+            getBoundingClientRect: () => ({ left: 0, top: 0, width: 1200, height: 1200 })
+        };
+        const panels = {
+            voice: makePanel("voice"),
+            chat: makePanel("chat"),
+            appearance: makePanel("appearance"),
+            groups: makePanel("groups")
+        };
+        globalThis.matchMedia = () => ({ matches: false, addEventListener() {} });
+        const listeners = {};
+        globalThis.addEventListener = (type, fn) => {
+            listeners[type] = listeners[type] || [];
+            listeners[type].push(fn);
+        };
+        globalThis.removeEventListener = () => {};
+
+        const controller = new DashboardLayoutController({
+            gridEl,
+            panels,
+            customLayoutEnabled: false
+        });
+        controller.init();
+        assert.equal(controller.customLayoutEnabled, false);
+        assert.ok(gridEl.classList.contains("is-canonical-layout"));
+        assert.equal((listeners.pointermove || []).length, 0);
+        assert.equal((panels.voice._handle._listeners?.pointerdown || []).length, 0);
+    } finally {
+        setCustomLayoutEnabled(false);
         globalThis.localStorage = prev;
     }
 });

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silent Sink AudioWorklet Experiment</title>
+</head>
+<body>
+    <h1>Silent Sink Experiment</h1>
+    <p>Compares <code>source → worklet</code> vs <code>source → worklet → Gain(0) → destination</code>.</p>
+    <pre id="out">Loading…</pre>
+    <script type="module">
+        import { runSilentSinkTrial } from "./silent-sink-experiment.js";
+
+        const out = document.getElementById("out");
+
+        window.runExperiment = async (durationSec = 10) => {
+            const trialA = await runSilentSinkTrial("worklet-only", durationSec);
+            const trialB = await runSilentSinkTrial("silent-sink", durationSec);
+            const ratio = trialB.workletCalls / Math.max(1, trialA.workletCalls);
+            const doublingConfirmed = ratio >= 1.85;
+            const result = { trialA, trialB, ratio, doublingConfirmed };
+            out.textContent = JSON.stringify(result, null, 2);
+            return result;
+        };
+
+        if (new URLSearchParams(location.search).get("auto") === "1") {
+            window.runExperiment(10).then((r) => {
+                window.__experimentResult = r;
+            }).catch((err) => {
+                window.__experimentError = String(err);
+            });
+        } else {
+            out.textContent = "Call window.runExperiment(10) from devtools or Playwright.";
+        }
+    </script>
+</body>
+</html>

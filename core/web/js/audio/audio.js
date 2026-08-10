@@ -35,6 +35,8 @@ export class SvgAudio {
         this.micNode = null;
         this.micSource = null;
         this.micSilentGain = null;
+        /** @type {string|null} */
+        this.workletBuildId = null;
         this.muted = false;
         this.micActiveUntil = 0;
         this.speechRing = new Uint8Array(FRAME_SAMPLES * 16);
@@ -110,7 +112,7 @@ export class SvgAudio {
         const url = new URL(moduleName, import.meta.url);
         // import.meta.url query is dropped by URL resolution — re-apply build cache bust.
         const buildId = (typeof window !== "undefined" && window.BUILD_ID) || url.searchParams.get("v");
-        if (buildId && buildId !== "@@GIT_COMMIT@@") {
+        if (buildId && buildId !== "@@BUILD_ID@@" && !String(buildId).includes("@@")) {
             url.searchParams.set("v", String(buildId));
         }
         return url.href;
@@ -361,8 +363,13 @@ export class SvgAudio {
             channelInterpretation: "speakers"
         });
 
-        this.micSilentGain = null;
+        // Silent destination keep-alive: tmp/silent-sink-results.json (2026-08-10) showed
+        // worklet→Gain(0)→destination did NOT double quantum rate (B/A ≈ 1.002 vs ~2× threshold).
+        this.micSilentGain = this.audioContext.createGain();
+        this.micSilentGain.gain.value = 0;
         this.micSource.connect(this.micNode);
+        this.micNode.connect(this.micSilentGain);
+        this.micSilentGain.connect(this.audioContext.destination);
 
         this.activeMicGeneration = generation;
         this.workletMessageHandlerCount = 1;
@@ -373,11 +380,37 @@ export class SvgAudio {
         this.workletFramesProduced = 0;
         // Assigning onmessage replaces any prior handler — never also addEventListener("message").
         this.micNode.port.onmessage = (event) => this.#handleMicMessage(event, generation);
+        try {
+            this.micNode.port.postMessage({ type: "pingBuild" });
+        } catch {
+            // ignore
+        }
         this.#registerLivePipeline();
         this.captureMetrics.reset(generation);
         this.effectiveInputRate = this.contextSampleRate;
         this.#syncRuntimeCounts();
         this.#syncVadBypassToWorklet();
+    }
+
+    /**
+     * Pipeline counters for deployment / duplication diagnosis (no wall-clock rate guessing).
+     * @returns {object}
+     */
+    getPipelineCounters() {
+        const snap = this.captureMetrics?.snapshot?.() || {};
+        return {
+            workletBuildId: this.workletBuildId,
+            workletInputSamples: this.workletSourceSamplesProcessed || 0,
+            workletMessages: snap.workletCallbacks || 0,
+            mainThreadMessagesReceived: snap.workletCallbacks || 0,
+            resamplerInputSamples: snap.sourceSamplesReceived || 0,
+            resamplerOutputSamples: snap.resampledSamplesProduced || 0,
+            accumulatorFrames: snap.pcmFramesProduced || 0,
+            wsSendCalls: snap.binaryFramesSent || this.outgoingFrames || 0,
+            contextSampleRate: this.contextSampleRate,
+            effectiveInputRate: this.effectiveInputRate,
+            duplicateQuantumDrops: this.duplicateQuantumDrops || 0
+        };
     }
 
     #registerLivePipeline() {
@@ -658,6 +691,14 @@ export class SvgAudio {
         }
 
         const data = event.data || {};
+        if (data.type === "workletBuild") {
+            this.workletBuildId = data.buildId != null ? String(data.buildId) : null;
+            if (typeof window !== "undefined") {
+                window.WORKLET_BUILD_ID = this.workletBuildId;
+            }
+            this.onWorkletBuild?.(this.workletBuildId);
+            return;
+        }
         const {
             samples,
             speech,

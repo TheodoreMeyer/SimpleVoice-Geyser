@@ -141,11 +141,16 @@ test("ownership model: app-dialog classes", () => {
     assert.match(html, /class="dialog-actions"/);
 });
 
-test("dashboard grid hosts voice/chat/groups panels", () => {
+test("dashboard hosts voice/chat/appearance/groups in canonical nested layout", () => {
     assert.match(html, /data-panel="voice"/);
     assert.match(html, /data-panel="chat"/);
+    assert.match(html, /data-panel="appearance"/);
     assert.match(html, /data-panel="groups"/);
-    assert.match(css, /grid-template-columns:\s*repeat\(12/);
+    assert.match(html, /class="dashboard-upper"/);
+    assert.match(html, /class="dashboard-right"/);
+    assert.match(css, /\.dashboard-upper\s*\{/);
+    assert.match(css, /\.dashboard-right\s*\{/);
+    assert.match(css, /\.group-list\s*\{[^}]*grid-template-columns:\s*repeat\(2/);
 });
 
 test("presets do not style generic form/input/button layout", () => {

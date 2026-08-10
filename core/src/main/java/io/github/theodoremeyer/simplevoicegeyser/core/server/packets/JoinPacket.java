@@ -334,6 +334,14 @@ public final class JoinPacket implements Packet {
                 "allowWebCreation",
                 Boolean.TRUE.equals(SvgCore.getConfig().GROUPS_ALLOW_WEB_CREATION.get())
         );
+        ready.put("serverBuildId", SvgCore.BUILD_ID);
+        ready.put("frontendBuildIdExpected", SvgCore.BUILD_ID);
+        ready.put("protocolVersion", SvgCore.PROTOCOL_VERSION);
+        ready.put("frontendSchema", SvgCore.FRONTEND_SCHEMA);
+        ready.put(
+                "customLayoutEnabled",
+                Boolean.TRUE.equals(SvgCore.getConfig().DASHBOARD_CUSTOM_LAYOUT_ENABLED.get())
+        );
         connection.sendJson(ready);
 
         if (handshake != null) {

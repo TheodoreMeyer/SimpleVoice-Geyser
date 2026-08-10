@@ -4,33 +4,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="build-id" content="@@GIT_COMMIT@@">
+    <meta name="build-id" content="@@BUILD_ID@@">
     <title>SimpleVoice-Geyser</title>
-    <link rel="stylesheet" href="css/styles.css?v=@@GIT_COMMIT@@">
-    <link rel="stylesheet" href="css/ptt.css?v=@@GIT_COMMIT@@">
+    <link rel="stylesheet" href="css/styles.css?v=@@BUILD_ID@@">
+    <link rel="stylesheet" href="css/ptt.css?v=@@BUILD_ID@@">
     <link rel="icon" href="images/svg-temp.png" type="image/x-icon">
-    <link rel="stylesheet" href="css/presets.css?v=@@GIT_COMMIT@@">
-    <script src="js/utils/lang.js?v=@@GIT_COMMIT@@"></script>
+    <link rel="stylesheet" href="css/presets.css?v=@@BUILD_ID@@">
+    <script src="js/utils/lang.js?v=@@BUILD_ID@@"></script>
     <script type="importmap">
     {
       "imports": {
-        "./js/utils/builder.js": "./js/utils/builder.js?v=@@GIT_COMMIT@@",
-        "./js/client.js": "./js/client.js?v=@@GIT_COMMIT@@",
-        "./js/ui.js": "./js/ui.js?v=@@GIT_COMMIT@@",
-        "./js/websocket.js": "./js/websocket.js?v=@@GIT_COMMIT@@",
-        "./js/groups.js": "./js/groups.js?v=@@GIT_COMMIT@@",
-        "./js/clipboard.js": "./js/clipboard.js?v=@@GIT_COMMIT@@",
-        "./js/ptt.js": "./js/ptt.js?v=@@GIT_COMMIT@@",
-        "./js/gamepad.js": "./js/gamepad.js?v=@@GIT_COMMIT@@",
-        "./js/app-state.js": "./js/app-state.js?v=@@GIT_COMMIT@@",
-        "./js/dashboard-layout.js": "./js/dashboard-layout.js?v=@@GIT_COMMIT@@",
-        "./js/appearance.js": "./js/appearance.js?v=@@GIT_COMMIT@@",
-        "./js/utils/logger.js": "./js/utils/logger.js?v=@@GIT_COMMIT@@",
-        "./js/audio/audio.js": "./js/audio/audio.js?v=@@GIT_COMMIT@@",
-        "./js/audio/pcm.js": "./js/audio/pcm.js?v=@@GIT_COMMIT@@",
-        "./js/audio/resampler.js": "./js/audio/resampler.js?v=@@GIT_COMMIT@@",
-        "./js/audio/AudioByteDecompiler.js": "./js/audio/AudioByteDecompiler.js?v=@@GIT_COMMIT@@",
-        "./js/audio/vendor/opus-decoder-loader.js": "./js/audio/vendor/opus-decoder-loader.js?v=@@GIT_COMMIT@@"
+        "./js/utils/builder.js": "./js/utils/builder.js?v=@@BUILD_ID@@",
+        "./js/client.js": "./js/client.js?v=@@BUILD_ID@@",
+        "./js/ui.js": "./js/ui.js?v=@@BUILD_ID@@",
+        "./js/websocket.js": "./js/websocket.js?v=@@BUILD_ID@@",
+        "./js/groups.js": "./js/groups.js?v=@@BUILD_ID@@",
+        "./js/clipboard.js": "./js/clipboard.js?v=@@BUILD_ID@@",
+        "./js/ptt.js": "./js/ptt.js?v=@@BUILD_ID@@",
+        "./js/gamepad.js": "./js/gamepad.js?v=@@BUILD_ID@@",
+        "./js/app-state.js": "./js/app-state.js?v=@@BUILD_ID@@",
+        "./js/dashboard-layout.js": "./js/dashboard-layout.js?v=@@BUILD_ID@@",
+        "./js/appearance.js": "./js/appearance.js?v=@@BUILD_ID@@",
+        "./js/build-identity.js": "./js/build-identity.js?v=@@BUILD_ID@@",
+        "./js/utils/logger.js": "./js/utils/logger.js?v=@@BUILD_ID@@",
+        "./js/utils/types.js": "./js/utils/types.js?v=@@BUILD_ID@@",
+        "./js/utils/internal-types.js": "./js/utils/internal-types.js?v=@@BUILD_ID@@",
+        "./js/audio/audio.js": "./js/audio/audio.js?v=@@BUILD_ID@@",
+        "./js/audio/pcm.js": "./js/audio/pcm.js?v=@@BUILD_ID@@",
+        "./js/audio/resampler.js": "./js/audio/resampler.js?v=@@BUILD_ID@@",
+        "./js/audio/capture-metrics.js": "./js/audio/capture-metrics.js?v=@@BUILD_ID@@",
+        "./js/audio/AudioByteDecompiler.js": "./js/audio/AudioByteDecompiler.js?v=@@BUILD_ID@@",
+        "./js/audio/vendor/opus-decoder-loader.js": "./js/audio/vendor/opus-decoder-loader.js?v=@@BUILD_ID@@",
+        "./js/audio/microphone.js": "./js/audio/microphone.js?v=@@BUILD_ID@@",
+        "./js/audio/speaker.js": "./js/audio/speaker.js?v=@@BUILD_ID@@"
       }
     }
     </script>
@@ -132,12 +138,18 @@
                         Reconnecting to voice panel…
                     </div>
 
+                    <div class="build-mismatch-banner" data-svg="dash.build-mismatch" hidden role="alert">
+                        <p>Client update required. Frontend and server builds do not match.</p>
+                        <button type="button" class="btn btn-primary" data-svg="dash.reload-client">Reload Updated Client</button>
+                    </div>
+
                     <div class="native-notice panel" data-svg="dash.native-notice" hidden role="status">
                         <p svg-lang="nativeVoiceNotice">Voice is currently handled by your in-game Simple Voice Chat client.</p>
                     </div>
 
-                    <div id="app-main" class="dash-main dashboard-grid is-desktop-grid" data-svg="dash.grid">
-                        <section class="voice-controls panel dash-panel" data-panel="voice" data-svg="dash.voice-controls" aria-labelledby="voice-heading">
+                    <div id="app-main" class="dash-main" data-svg="dash.grid">
+                        <section class="dashboard-upper">
+                        <section class="dashboard-panel voice-controls-panel voice-controls panel dash-panel" data-panel="voice" data-svg="dash.voice-controls" aria-labelledby="voice-heading">
                             <div class="panel-header panel-drag-header" data-panel-handle title="Drag to rearrange" aria-label="Drag to rearrange Voice Controls. Arrow keys also move.">
                                 <div class="panel-title-row">
                                     <span class="drag-grip" aria-hidden="true"></span>
@@ -291,12 +303,22 @@
                                             <span class="control-label" svg-lang="debugAudioLabel">Debug Audio</span>
                                             <button id="testSound" type="button" svg-lang="testSoundBtnText">Test Sound</button>
                                         </div>
+                                        <div class="build-diag" data-svg="dev.build-diag">
+                                            <p>Frontend build: <code data-svg="dev.frontend-build">—</code></p>
+                                            <p>Server build: <code data-svg="dev.server-build">—</code></p>
+                                            <p>Protocol: <code data-svg="dev.protocol">—</code></p>
+                                            <p>Assets: <code data-svg="dev.assets-build">—</code></p>
+                                            <p>Build match: <code data-svg="dev.build-match">—</code></p>
+                                            <p>Audio worklet build: <code data-svg="dev.worklet-build">—</code></p>
+                                            <p>Decoder build: <code data-svg="dev.decoder-build">—</code></p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </section>
 
-                        <section class="chat-panel panel dash-panel" data-panel="chat" aria-labelledby="chat-heading">
+                        <div class="dashboard-right">
+                        <section class="dashboard-panel chat-panel panel dash-panel" data-panel="chat" aria-labelledby="chat-heading">
                             <div class="panel-header panel-drag-header" data-panel-handle title="Drag to rearrange" aria-label="Drag to rearrange Chat. Arrow keys also move.">
                                 <div class="panel-title-row">
                                     <span class="drag-grip" aria-hidden="true"></span>
@@ -321,7 +343,7 @@
                             </div>
                         </section>
 
-                        <section class="appearance-tile panel dash-panel" data-panel="appearance" data-svg="dash.appearance-section" aria-labelledby="appearance-heading">
+                        <section class="dashboard-panel appearance-panel appearance-tile panel dash-panel" data-panel="appearance" data-svg="dash.appearance-section" aria-labelledby="appearance-heading">
                             <div class="panel-header panel-drag-header" data-panel-handle title="Drag to rearrange" aria-label="Drag to rearrange Appearance. Arrow keys also move.">
                                 <div class="panel-title-row">
                                     <span class="drag-grip" aria-hidden="true"></span>
@@ -382,8 +404,10 @@
                                 </div>
                             </div>
                         </section>
+                        </div>
+                        </section>
 
-                        <aside class="voice-groups panel dash-panel" data-panel="groups" aria-labelledby="groups-heading">
+                        <section class="dashboard-panel voice-groups-panel voice-groups panel dash-panel" data-panel="groups" aria-labelledby="groups-heading">
                             <div class="panel-header panel-drag-header" data-panel-handle title="Drag to rearrange" aria-label="Drag to rearrange Voice Groups. Arrow keys also move.">
                                 <div class="panel-title-row">
                                     <span class="drag-grip" aria-hidden="true"></span>
@@ -407,7 +431,7 @@
                             </p>
                             <div class="groups-error" data-svg="groups.error" hidden role="alert"></div>
                             <div class="group-list" data-svg="groups.list" role="list"></div>
-                        </aside>
+                        </section>
                     </div>
                 </div>
             </section>
@@ -590,7 +614,9 @@
     </script>
     <script type="module">
         window.PROJECT_VERSION = "@@PROJECT_VERSION@@";
-        window.BUILD_ID = "@@GIT_COMMIT@@";
+        window.BUILD_ID = "@@BUILD_ID@@";
+        window.PROTOCOL_VERSION = Number("@@PROTOCOL_VERSION@@");
+        window.FRONTEND_SCHEMA = Number("@@FRONTEND_SCHEMA@@");
 
         import { SvgBuilder } from './js/utils/builder.js';
         import { handleCopyCommand } from './js/clipboard.js';

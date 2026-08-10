@@ -1,3 +1,6 @@
+// Stamped by Gradle processResources — must match server/frontend build ID.
+const WORKLET_BUILD_ID = "@@BUILD_ID@@";
+
 class Microphone extends AudioWorkletProcessor {
     constructor() {
         super();
@@ -10,6 +13,7 @@ class Microphone extends AudioWorkletProcessor {
         this._framesProduced = 0;
         this._quantumSequence = 0;
         this._metricsEvery = 375; // ~1s at 128-sample / 48 kHz
+        this._buildAnnounced = false;
         this.port.onmessage = (event) => {
             const data = event.data || {};
             if (data.type === "setVadBypass") {
@@ -17,8 +21,12 @@ class Microphone extends AudioWorkletProcessor {
                 if (this._bypassVad) {
                     this._hangover = 0;
                 }
+            } else if (data.type === "pingBuild") {
+                this.port.postMessage({ type: "workletBuild", buildId: WORKLET_BUILD_ID });
             }
         };
+        this.port.postMessage({ type: "workletBuild", buildId: WORKLET_BUILD_ID });
+        this._buildAnnounced = true;
     }
 
     process(inputs, outputs) {

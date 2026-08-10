@@ -124,6 +124,23 @@ public final class ClientCompatibilityValidator {
                 return INVALID_CLIENT_INFO;
             }
             serverVersion = version.trim();
+
+            // Protocol 3+ membership/build handshake fields are required for web clients.
+            if (!clientType.has("protocolVersion")) {
+                return ClientCompatibilityResult.rejected(
+                        "Outdated client protocol. Please refresh.",
+                        ConnectionStates.DisconnectCodes.OUTDATED_CLIENT.getCode(),
+                        "protocol_unsupported"
+                );
+            }
+            int protocolVersion = clientType.optInt("protocolVersion", -1);
+            if (protocolVersion < 3) {
+                return ClientCompatibilityResult.rejected(
+                        "Outdated client protocol. Please refresh.",
+                        ConnectionStates.DisconnectCodes.OUTDATED_CLIENT.getCode(),
+                        "protocol_unsupported"
+                );
+            }
         }
 
         return ClientCompatibilityResult.accepted(ClientIdentity.web(serverVersion, clientBuild));

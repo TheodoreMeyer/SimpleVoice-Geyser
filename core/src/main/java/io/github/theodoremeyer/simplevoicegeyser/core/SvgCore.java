@@ -38,12 +38,17 @@ public final class SvgCore {
     public static final String VERSION = BuildInfo.PROJECT_VERSION;
 
     /**
-     * Build Git Commit ID. Generated during Gradle Build. This is always the latest commit hash of the branch.
-     * <p>
-     * Please note that 'Gradle clean' may have to get run if caches don't fix themselves,
+     * Full cache-busting build identity (version-git[-dirty]-timestamp).
+     * Generated once per Gradle invocation — never a static short git hash alone.
      */
     @SuppressWarnings("ConstantConditions")
     public static final String BUILD_ID = BuildInfo.BUILD_ID;
+
+    /** WebSocket / client protocol version expected by this server build. */
+    public static final int PROTOCOL_VERSION = BuildInfo.PROTOCOL_VERSION;
+
+    /** Frontend schema revision expected by this server build. */
+    public static final int FRONTEND_SCHEMA = BuildInfo.FRONTEND_SCHEMA;
 
     /**
      * Config system
@@ -104,6 +109,11 @@ public final class SvgCore {
                 getLogger().info("Debug mode enabled.");
                 getLogger().setDebug(true);
             }
+
+            getLogger().info("[SVG] Running build: " + BUILD_ID);
+            getLogger().info("[SVG] Frontend resources: " + BUILD_ID
+                    + " protocol=" + PROTOCOL_VERSION
+                    + " frontendSchema=" + FRONTEND_SCHEMA);
 
             getLogger().info("client.vctimeout is currently documented but inactive in this dev build.");
 

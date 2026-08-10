@@ -223,6 +223,13 @@ public final class SvgConfig {
     public final ConfigKey<Boolean> DEBUG =
             new ConfigKey <>(this, "debug", false);
 
+    /**
+     * When false (default for recovery), dashboard panels use the canonical fixed layout
+     * and custom dragging/persisted placements are ignored.
+     */
+    public final ConfigKey<Boolean> DASHBOARD_CUSTOM_LAYOUT_ENABLED =
+            new ConfigKey<>(this, "dashboard.custom-layout-enabled", false);
+
     public final ConfigKey<Boolean> UPDATE_CHECKER_ENABLED =
             new ConfigKey <>(this, "updatechecker.enable", true);
 
@@ -288,6 +295,7 @@ public final class SvgConfig {
             GROUPS_MAX_NAME_LENGTH,
             GROUPS_ALLOWED_TYPES,
             DEBUG,
+            DASHBOARD_CUSTOM_LAYOUT_ENABLED,
             UPDATE_CHECKER_ENABLED,
             CONFIG_VERSION
     );

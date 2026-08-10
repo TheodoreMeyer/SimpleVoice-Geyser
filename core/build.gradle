@@ -35,24 +35,119 @@ tasks.test {
     useJUnitPlatform()
 }
 
+//-----------
+// Immutable per-invocation build identity (shared by Java + web packaging)
+//-----------
+def svgProtocolVersion = 3
+def svgFrontendSchema = 4
+
+def currentGitCommit() {
+    try {
+        return providers.exec {
+            commandLine("git", "rev-parse", "--short", "HEAD")
+        }.standardOutput.asText.get().trim()
+    } catch (Exception ignored) {
+        return "unknown"
+    }
+}
+
+def isGitDirty() {
+    try {
+        def out = providers.exec {
+            commandLine("git", "status", "--porcelain")
+        }.standardOutput.asText.get().trim()
+        return !out.isEmpty()
+    } catch (Exception ignored) {
+        return true
+    }
+}
+
+def buildMetaFile = layout.buildDirectory.file("svg-build-meta.properties")
+
+tasks.register("generateBuildMeta") {
+    description = "Generate one immutable build ID for this Gradle invocation"
+    outputs.file(buildMetaFile)
+    // Always regenerate so cache-busting IDs never stick across rebuilds.
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def gitCommit = currentGitCommit()
+        def dirty = isGitDirty()
+        def builtAt = java.time.Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS)
+        def builtAtStamp = builtAt.toString()
+                .replace(":", "")
+                .replace("-", "")
+        // 0.1.3-fbffe2c-dirty-20260810T061500Z
+        def dirtyPart = dirty ? "-dirty" : ""
+        def fullBuildId = "${project.version}-${gitCommit}${dirtyPart}-${builtAtStamp}"
+
+        def props = new Properties()
+        props.setProperty("pluginVersion", project.version.toString())
+        props.setProperty("buildId", fullBuildId)
+        props.setProperty("gitCommit", gitCommit)
+        props.setProperty("dirty", dirty ? "true" : "false")
+        props.setProperty("builtAtUtc", builtAt.toString())
+        props.setProperty("protocolVersion", String.valueOf(svgProtocolVersion))
+        props.setProperty("frontendSchema", String.valueOf(svgFrontendSchema))
+
+        def file = buildMetaFile.get().asFile
+        file.parentFile.mkdirs()
+        file.withWriter("UTF-8") { writer ->
+            props.store(writer, "SimpleVoice-Geyser build metadata")
+        }
+        println("SVG build identity: ${fullBuildId}")
+    }
+}
+
+def loadBuildMeta = {
+    def file = buildMetaFile.get().asFile
+    if (!file.exists()) {
+        throw new GradleException("Missing build metadata. Run generateBuildMeta first.")
+    }
+    def props = new Properties()
+    file.withInputStream { props.load(it) }
+    return props
+}
+
 tasks.processResources {
+    dependsOn(tasks.named("generateBuildMeta"))
     from(sourceSets.main.resources.srcDirs)
 
     from("web") {
         into("web")
         exclude("**/*.test.mjs")
 
-        filesMatching("index.html") {
+        // Stamp HTML, CSS, JS (including worklets) with the same build ID.
+        filesMatching(["**/*.html", "**/*.js", "**/*.css", "**/*.mjs"]) {
             filter { line ->
-                line.replace(
-                        "@@GIT_COMMIT@@",
-                        currentGitCommit()
-                ).replace(
-                        "@@PROJECT_VERSION@@",
-                        project.version.toString()
-                )
+                def meta = loadBuildMeta()
+                line.replace("@@BUILD_ID@@", meta.getProperty("buildId"))
+                        .replace("@@GIT_COMMIT@@", meta.getProperty("buildId"))
+                        .replace("@@PROJECT_VERSION@@", meta.getProperty("pluginVersion"))
+                        .replace("@@PROTOCOL_VERSION@@", meta.getProperty("protocolVersion"))
+                        .replace("@@FRONTEND_SCHEMA@@", meta.getProperty("frontendSchema"))
+                        .replace("@@BUILT_AT_UTC@@", meta.getProperty("builtAtUtc"))
+                        .replace("@@GIT_SHORT@@", meta.getProperty("gitCommit"))
+                        .replace("@@DIRTY@@", meta.getProperty("dirty"))
             }
         }
+    }
+
+    doLast {
+        def meta = loadBuildMeta()
+        def outDir = destinationDir
+        def infoFile = new File(outDir, "web/build-info.json")
+        infoFile.parentFile.mkdirs()
+        infoFile.text = """{
+  "pluginVersion": "${meta.getProperty("pluginVersion")}",
+  "buildId": "${meta.getProperty("buildId")}",
+  "gitCommit": "${meta.getProperty("gitCommit")}",
+  "dirty": ${meta.getProperty("dirty")},
+  "builtAtUtc": "${meta.getProperty("builtAtUtc")}",
+  "protocolVersion": ${meta.getProperty("protocolVersion")},
+  "frontendSchema": ${meta.getProperty("frontendSchema")}
+}
+"""
     }
 }
 
@@ -67,6 +162,7 @@ java {
 
 tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn(tasks.named("processResources"))
 }
 
 publishing {
@@ -82,63 +178,55 @@ publishing {
         }
     }
 }
-//-----------
-//Build Identifier
-//-----------
-def currentGitCommit() {
-    try {
-        return providers.exec {
-            commandLine("git", "rev-parse", "--short", "HEAD")
-        }.standardOutput.asText.get().trim()
-    } catch (Exception ignored) {
-        return "unknown"
-    }
-}
-println("Gradle sees commit: ${currentGitCommit()}")
 
-// BuildInfo.java generation
 tasks.register("generateBuildInfo") {
-
+    dependsOn(tasks.named("generateBuildMeta"))
     def outputDir = layout.buildDirectory.dir("generated/sources/buildinfo")
-
     outputs.dir(outputDir)
-
-    inputs.property("gitCommit", currentGitCommit())
+    inputs.file(buildMetaFile)
+    outputs.upToDateWhen { false }
 
     doLast {
-        def gitCommit = currentGitCommit()
-
+        def meta = loadBuildMeta()
         def file = outputDir.get()
                 .file("io/github/theodoremeyer/simplevoicegeyser/core/BuildInfo.java")
                 .asFile
-
         file.parentFile.mkdirs()
-
         file.text = """
 package io.github.theodoremeyer.simplevoicegeyser.core;
 
 /**
- * Auto-generated build metadata.
+ * Auto-generated build metadata for one Gradle invocation.
  */
 public final class BuildInfo {
 
     private BuildInfo() {}
 
-    /**
-     * Git commit hash used for this build.
-     */
-    public static final String BUILD_ID = "${gitCommit}";
+    /** Full cache-busting build identity (version-git[-dirty]-timestamp). */
+    public static final String BUILD_ID = "${meta.getProperty("buildId")}";
 
-    /**
-    * Project version used for this build.
-    */
-    public static final String PROJECT_VERSION = "${project.version}";
+    /** Project version. */
+    public static final String PROJECT_VERSION = "${meta.getProperty("pluginVersion")}";
+
+    /** Short git commit when available. */
+    public static final String GIT_COMMIT = "${meta.getProperty("gitCommit")}";
+
+    /** Whether the worktree was dirty at build time. */
+    public static final boolean DIRTY = ${meta.getProperty("dirty")};
+
+    /** UTC build timestamp. */
+    public static final String BUILT_AT_UTC = "${meta.getProperty("builtAtUtc")}";
+
+    /** WebSocket / client protocol version. */
+    public static final int PROTOCOL_VERSION = ${meta.getProperty("protocolVersion")};
+
+    /** Frontend layout/schema revision expected by this server build. */
+    public static final int FRONTEND_SCHEMA = ${meta.getProperty("frontendSchema")};
 }
 """
     }
 }
 
-// make Gradle compile generated source
 sourceSets.main.java.srcDir(
         layout.buildDirectory.dir("generated/sources/buildinfo")
 )
@@ -146,3 +234,80 @@ sourceSets.main.java.srcDir(
 tasks.compileJava.dependsOn(tasks.generateBuildInfo)
 tasks.sourcesJar.dependsOn(tasks.generateBuildInfo)
 tasks.javadocJar.dependsOn(tasks.generateBuildInfo)
+
+/**
+ * Fail the build if packaged web resources still carry placeholders or diverge
+ * from the generated build identity.
+ */
+tasks.register("verifyPackagedWebResources") {
+    dependsOn(tasks.named("processResources"), tasks.named("jar"))
+    inputs.file(buildMetaFile)
+    doLast {
+        def meta = loadBuildMeta()
+        def buildId = meta.getProperty("buildId")
+        def webDir = new File(tasks.named("processResources").get().destinationDir, "web")
+        def index = new File(webDir, "index.html")
+        def info = new File(webDir, "build-info.json")
+        def mic = new File(webDir, "js/audio/microphone.js")
+        def appearance = new File(webDir, "js/appearance.js")
+        def layout = new File(webDir, "js/dashboard-layout.js")
+        def styles = new File(webDir, "css/styles.css")
+        def decoder = new File(webDir, "js/audio/vendor/opus-decoder.min.js")
+
+        [
+                index, info, mic, appearance, layout, styles, decoder
+        ].each { f ->
+            if (!f.exists()) {
+                throw new GradleException("Missing packaged web resource: ${f}")
+            }
+        }
+
+        def indexText = index.getText("UTF-8")
+        def infoText = info.getText("UTF-8")
+        if (indexText.contains("@@BUILD_ID@@") || indexText.contains("@@GIT_COMMIT@@")) {
+            throw new GradleException("Placeholder build IDs remain in packaged index.html")
+        }
+        if (!indexText.contains(buildId)) {
+            throw new GradleException("Packaged index.html missing buildId=${buildId}")
+        }
+        if (!infoText.contains(buildId)) {
+            throw new GradleException("Packaged build-info.json missing buildId=${buildId}")
+        }
+        // Reject unexpected reuse of a known-stale static short hash as the *only* asset version.
+        if (indexText.contains("?v=92450f9") || indexText.contains("BUILD_ID = \"92450f9\"")) {
+            throw new GradleException("Stale short hash 92450f9 still used as asset version")
+        }
+        if (!mic.getText("UTF-8").contains(buildId) && !mic.getText("UTF-8").contains("WORKLET_BUILD_ID")) {
+            // microphone.js must be stamped or define WORKLET_BUILD_ID constant
+            throw new GradleException("microphone.js is not build-stamped")
+        }
+        if (!styles.getText("UTF-8").contains("dashboard-upper")
+                || !styles.getText("UTF-8").contains("dashboard-right")) {
+            throw new GradleException("Canonical layout CSS selectors missing from packaged styles.css")
+        }
+        if (!appearance.getText("UTF-8").contains("svg.dashboard.appearance.v4")
+                && !appearance.getText("UTF-8").contains("appearance.v4")) {
+            throw new GradleException("appearance.js missing v4 storage key")
+        }
+        def groups = new File(webDir, "js/groups.js")
+        if (!groups.exists() || !groups.getText("UTF-8").contains("currentGroupId")) {
+            throw new GradleException("groups.js missing currentGroupId membership handling")
+        }
+        if (!mic.getText("UTF-8").contains(buildId)) {
+            throw new GradleException("microphone.js missing stamped buildId=${buildId}")
+        }
+        def decoderLoader = new File(webDir, "js/audio/vendor/opus-decoder-loader.js")
+        if (!decoderLoader.exists() || !decoderLoader.getText("UTF-8").contains(buildId)) {
+            throw new GradleException("opus-decoder-loader.js missing stamped buildId")
+        }
+        println("Verified packaged web resources for buildId=${buildId}")
+    }
+}
+
+tasks.named("jar").configure {
+    finalizedBy(tasks.named("verifyPackagedWebResources"))
+}
+
+tasks.named("test").configure {
+    dependsOn(tasks.named("verifyPackagedWebResources"))
+}

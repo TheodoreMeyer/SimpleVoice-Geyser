@@ -2,9 +2,15 @@
  * Local ESM loader for the vendored opus-decoder UMD bundle (no CDN).
  * WASM is embedded in the min bundle; CSP must allow wasm-unsafe-eval (not unsafe-eval).
  */
+export const DECODER_BUILD_ID = "@@BUILD_ID@@";
+export const DECODER_PACKAGE_VERSION = "0.7.11-local";
+
 let loadPromise = null;
 
 export async function loadOpusDecoderModule() {
+    if (typeof globalThis !== "undefined") {
+        globalThis.DECODER_BUILD_ID = DECODER_BUILD_ID;
+    }
     if (globalThis.__svgOpusDecoderModule) {
         return globalThis.__svgOpusDecoderModule;
     }
@@ -16,7 +22,11 @@ export async function loadOpusDecoderModule() {
                 return;
             }
             const script = document.createElement("script");
-            script.src = new URL("./opus-decoder.min.js", import.meta.url).href;
+            const url = new URL("./opus-decoder.min.js", import.meta.url);
+            if (DECODER_BUILD_ID && !String(DECODER_BUILD_ID).includes("@@")) {
+                url.searchParams.set("v", DECODER_BUILD_ID);
+            }
+            script.src = url.href;
             script.async = true;
             script.onload = () => {
                 const mod = globalThis["opus-decoder"];
@@ -30,8 +40,16 @@ export async function loadOpusDecoderModule() {
             document.head.appendChild(script);
         }).then((mod) => {
             globalThis.__svgOpusDecoderModule = mod;
+            globalThis.DECODER_BUILD_ID = DECODER_BUILD_ID;
             return mod;
         });
     }
     return loadPromise;
+}
+
+export function getDecoderBuildIdentity() {
+    return {
+        buildId: DECODER_BUILD_ID,
+        packageVersion: DECODER_PACKAGE_VERSION
+    };
 }

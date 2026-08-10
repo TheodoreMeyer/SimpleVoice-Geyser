@@ -1,5 +1,6 @@
 package io.github.theodoremeyer.simplevoicegeyser.core.server.servlets;
 
+import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -115,16 +116,18 @@ public final class ResourceServlet extends HttpServlet {
     }
 
     /**
-     * HTML is never cached. Fingerprinted assets ({@code ?v=buildId}) may be cached long.
-     * Unversioned JS/CSS use {@code no-cache} so transitive ES module imports cannot stick
-     * to a stale UI while {@code index.html} was already refreshed.
+     * HTML and build-info must revalidate. Fingerprinted assets ({@code ?v=fullBuildId})
+     * may be cached long. Unversioned mutable JS/CSS/WASM must never be immutable.
      */
     private static void applyCacheHeaders(String path, HttpServletRequest req, HttpServletResponse resp) {
         String lower = path.toLowerCase();
-        if (lower.endsWith(".html") || lower.equals("/index.html") || lower.equals("/")) {
-            resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        String etag = "\"" + SvgCore.BUILD_ID + "\"";
+        resp.setHeader("ETag", etag);
+
+        boolean buildMeta = lower.endsWith("/build-info.json") || lower.equals("/build-info.json");
+        if (lower.endsWith(".html") || lower.equals("/index.html") || lower.equals("/") || buildMeta) {
+            resp.setHeader("Cache-Control", "no-cache, must-revalidate");
             resp.setHeader("Pragma", "no-cache");
-            resp.setHeader("Expires", "0");
             return;
         }
 
@@ -135,6 +138,7 @@ public final class ResourceServlet extends HttpServlet {
                 || lower.endsWith(".png")
                 || lower.endsWith(".ico")
                 || lower.endsWith(".svg")
+                || lower.endsWith(".wasm")
                 || lower.endsWith(".woff2");
 
         if (staticAsset && versioned) {
@@ -144,10 +148,10 @@ public final class ResourceServlet extends HttpServlet {
 
         if (staticAsset) {
             // Critical for ES module graphs: child imports often omit ?v=.
-            resp.setHeader("Cache-Control", "no-cache");
+            resp.setHeader("Cache-Control", "no-cache, must-revalidate");
             return;
         }
 
-        resp.setHeader("Cache-Control", "no-cache");
+        resp.setHeader("Cache-Control", "no-cache, must-revalidate");
     }
 }

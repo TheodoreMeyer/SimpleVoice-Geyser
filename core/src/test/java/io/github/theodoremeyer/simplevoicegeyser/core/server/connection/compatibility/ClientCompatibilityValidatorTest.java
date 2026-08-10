@@ -54,10 +54,37 @@ class ClientCompatibilityValidatorTest {
         ClientCompatibilityResult result = validate(joinWithClientType(new JSONObject()
                 .put("type", "Web")
                 .put("serverVersion", SERVER_VERSION)
-                .put("serverBuild", BUILD_ID)));
+                .put("serverBuild", BUILD_ID)
+                .put("protocolVersion", 3)));
 
         assertTrue(result.accepted());
         assertEquals(ClientIdentity.web(SERVER_VERSION, BUILD_ID), result.identity());
+    }
+
+    @Test
+    void rejectsWebClientTypeMissingProtocolVersion() {
+        ClientCompatibilityResult result = validate(joinWithClientType(new JSONObject()
+                .put("type", "Web")
+                .put("serverVersion", SERVER_VERSION)
+                .put("serverBuild", BUILD_ID)));
+
+        assertFalse(result.accepted());
+        assertEquals("Outdated client protocol. Please refresh.", result.message());
+        assertEquals(ConnectionStates.DisconnectCodes.OUTDATED_CLIENT.getCode(), result.closeCode());
+        assertEquals("protocol_unsupported", result.closeReason());
+    }
+
+    @Test
+    void rejectsWebClientTypeWithOldProtocolVersion() {
+        ClientCompatibilityResult result = validate(joinWithClientType(new JSONObject()
+                .put("type", "Web")
+                .put("serverVersion", SERVER_VERSION)
+                .put("serverBuild", BUILD_ID)
+                .put("protocolVersion", 2)));
+
+        assertFalse(result.accepted());
+        assertEquals("Outdated client protocol. Please refresh.", result.message());
+        assertEquals("protocol_unsupported", result.closeReason());
     }
 
     @Test
@@ -65,7 +92,8 @@ class ClientCompatibilityValidatorTest {
         ClientCompatibilityResult result = validate(joinWithClientType(new JSONObject()
                 .put("type", "Web")
                 .put("serverVersion", SERVER_VERSION)
-                .put("serverBuild", "other-build")));
+                .put("serverBuild", "other-build")
+                .put("protocolVersion", 3)));
 
         assertUpdateRequired(result, "Outdated client. Please refresh.");
     }
@@ -74,7 +102,8 @@ class ClientCompatibilityValidatorTest {
     void rejectsWebClientTypeWithoutServerVersionAsInvalidClientInfo() {
         ClientCompatibilityResult result = validate(joinWithClientType(new JSONObject()
                 .put("type", "Web")
-                .put("serverBuild", BUILD_ID)));
+                .put("serverBuild", BUILD_ID)
+                .put("protocolVersion", 3)));
 
         assertInvalidClientInfo(result);
     }
@@ -167,7 +196,8 @@ class ClientCompatibilityValidatorTest {
                 joinWithClientType(new JSONObject()
                         .put("type", "Web")
                         .put("serverVersion", SERVER_VERSION)
-                        .put("serverBuild", BUILD_ID)),
+                        .put("serverBuild", BUILD_ID)
+                        .put("protocolVersion", 3)),
                 new ClientTypePolicy(false, List.of("Svg-App"))
         );
 
