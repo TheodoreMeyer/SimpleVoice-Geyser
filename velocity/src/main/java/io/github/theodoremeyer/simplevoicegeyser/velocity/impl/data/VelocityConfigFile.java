@@ -62,6 +62,16 @@ public class VelocityConfigFile {
         return config.optString(path, def);
     }
 
+    public String getNestedString(String object, String key, String def) {
+        Object value = config.opt(object);
+        return value instanceof JSONObject nested ? nested.optString(key, def) : def;
+    }
+
+    public boolean getNestedBoolean(String object, String key, boolean def) {
+        Object value = config.opt(object);
+        return value instanceof JSONObject nested ? nested.optBoolean(key, def) : def;
+    }
+
     public boolean getBoolean(String path, boolean def) {
         return config.optBoolean(path, def);
     }
@@ -154,8 +164,13 @@ public class VelocityConfigFile {
         defaults.put("server.audio.transport-mode", "auto");
         defaults.put("server.audio.allow-legacy-fallback", true);
         defaults.put("proxy.enabled", false);
+        defaults.put("proxy.bind_address", "0.0.0.0");
+        defaults.put("proxy.port", 8081);
         defaults.put("proxy.shared-secret", generateRandomSecret());
         defaults.put("proxy.token-ttl-seconds", 120);
+        defaults.put("ssl.type", "none");
+        defaults.put("ssl.file.cert", "ssl/cert.pem");
+        defaults.put("ssl.file.key", "ssl/key.pem");
         defaults.put("debug", false);
         defaults.put("updatechecker.enable", true);
         defaults.put("config-version", "0.1.1-dev-migration1");
