@@ -15,7 +15,7 @@ public interface Platform {
     /**
      * Disable in case of error
      */
-    void disable();
+    void platformDisable();
 
     /**
      * The Prefix for Logging

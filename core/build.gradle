@@ -41,7 +41,7 @@ tasks.processResources {
     from("web") {
         into("web")
 
-        filesMatching("index.html") {
+        filesMatching("*.html") {
             filter { line ->
                 line.replace(
                         "@@GIT_COMMIT@@",

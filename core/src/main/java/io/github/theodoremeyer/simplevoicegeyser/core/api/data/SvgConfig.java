@@ -56,6 +56,16 @@ public final class SvgConfig {
     public final ConfigKey<Boolean> WEB_CHAT_ENABLED =
             new ConfigKey<>(this, "client.web-chat-enabled", true);
 
+    public final ConfigKey<Boolean> JOIN_MESSAGE_ENABLED =
+            new ConfigKey<>(this, "client.join-message.enabled", true);
+
+    public final ConfigKey<List<String>> JOIN_MESSAGE_TEXT =
+            new ConfigKey<>(this, "client.join-message.text", List.of(
+                    "This Server Uses SimpleVoice-Geyser.",
+                    "To set it up, run /svg pswd [password],",
+                    "Then join Via the server's SVG website."
+            ));
+
     public final ConfigKey<Boolean> DEFAULT_GROUP_ENABLED =
             new ConfigKey <>(this, "server.group.default.enabled", true);
 

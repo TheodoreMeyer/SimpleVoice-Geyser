@@ -1,4 +1,5 @@
 import {Logger} from "./utils/logger.js";
+import {SvgLang} from "./utils/lang.js";
 import {PttController} from "./ptt.js";
 
 /**
@@ -16,9 +17,6 @@ export class SvgUI {
     /** @type {import("./utils/types.js").PttElements} */
     ptt;
 
-    /** @type {import("./utils/types.js").DevElements} */
-    dev;
-
 
     /**
      * @param {SvgUIOptions} options
@@ -31,7 +29,6 @@ export class SvgUI {
         this.form = options.form;
         this.audio = options.audio;
         this.ptt = options.ptt;
-        this.dev = options.dev;
 
         this.pttController = null;
     }
@@ -42,7 +39,7 @@ export class SvgUI {
         const option = document.createElement("option");
         option.disabled = true;
         option.selected = true;
-        option.textContent = label;
+        SvgLang.setElement(option, label);
 
         select.appendChild(option);
         select.disabled = true;
@@ -63,16 +60,16 @@ export class SvgUI {
 
         if (!available) {
             const fallbackReason =
-                reason || "Audio device APIs are unavailable.";
+                reason || SvgLang.string("audioFallbackDefaultReason");
 
             this.setSelectUnavailable(
                 micSelect,
-                "Microphone unavailable"
+                "microphoneUnavailableLabel"
             );
 
             this.setSelectUnavailable(
                 speakerSelect,
-                "Speaker unavailable"
+                "speakerUnavailableLabel"
             );
 
             Logger.log(`[Audio] ${fallbackReason}`);
@@ -83,9 +80,11 @@ export class SvgUI {
             const option = document.createElement("option");
 
             option.value = mic.deviceId;
-            option.textContent =
-                mic.label ||
-                `Microphone ${micSelect.options.length + 1}`;
+            const micIndex = micSelect.options.length + 1;
+            SvgLang.setElement(option,
+                () => mic.label ||
+                    `${SvgLang.string("microphoneIndexPrefix")} ${micIndex}`
+            );
 
             micSelect.appendChild(option);
         }
@@ -94,9 +93,11 @@ export class SvgUI {
             const option = document.createElement("option");
 
             option.value = speaker.deviceId;
-            option.textContent =
-                speaker.label ||
-                `Speaker ${speakerSelect.options.length + 1}`;
+            const speakerIndex = speakerSelect.options.length + 1;
+            SvgLang.setElement(option,
+                () => speaker.label ||
+                    `${SvgLang.string("speakerIndexPrefix")} ${speakerIndex}`
+            );
 
             speakerSelect.appendChild(option);
         }
@@ -104,7 +105,7 @@ export class SvgUI {
         if (microphones.length === 0) {
             this.setSelectUnavailable(
                 micSelect,
-                "No microphones detected"
+                "noMicrophoneDetectedLabel"
             );
         } else {
             micSelect.disabled = false;
@@ -113,7 +114,7 @@ export class SvgUI {
         if (speakers.length === 0) {
             this.setSelectUnavailable(
                 speakerSelect,
-                "No speakers detected"
+                "noSpeakerDetectedLabel"
             );
         } else {
             speakerSelect.disabled = false;
@@ -170,28 +171,6 @@ export class SvgUI {
             exitFullscreenPttBtn,
             allowBackgroundPttCheckbox
         } = this.ptt;
-
-        const {
-            devToggle,
-            devContent
-        } = this.dev;
-
-        devContent.classList.add("dev-hidden");
-
-        devToggle.addEventListener("click",
-            () => {
-
-                const isHidden =
-                    devContent.classList.toggle(
-                        "dev-hidden"
-                    );
-
-                devToggle.textContent =
-                    !isHidden
-                        ? "Developer Tools ▲"
-                        : "Developer Tools ▼";
-            }
-        );
 
         this.audioController.setMicIndicator(micIndicator);
 
@@ -267,19 +246,22 @@ export class SvgUI {
                     this.webSocketController.disconnect();
                     this.audioController.stopMic();
                     this.pttController.reset();
-                    joinButton.textContent = "Join";
+                    SvgLang.setElement(joinButton, "joinBtnUnconnectedLabel");
                     return;
                 }
 
                 this.webSocketController.connect(usernameInput.value,
                     passwordInput.value,
 
-                    async (connected, username) => {
-                        if (connected) {
+                    async (status) => {
+                        if (status.connected) {
 
-                            statusEl.textContent = "Connected as " + username;
-                            statusEl.style.backgroundColor = "#005f00";
-                            joinButton.textContent = "Leave";
+                            SvgLang.setElement(statusEl,
+                                () => `${SvgLang.string("statusConnectedAsPrefix")} ${status.username}`
+                            );
+                            statusEl.classList.remove("disconnected");
+                            statusEl.classList.add("connected");
+                            SvgLang.setElement(joinButton, "joinBtnConnectedLabel");
                             micSelect.disabled = true;
                             speakerSelect.disabled = true;
                             const runtime = this.audioController.getAudioRuntime();
@@ -302,12 +284,13 @@ export class SvgUI {
                                 );
                             }
                         } else {
-                            statusEl.textContent = "Disconnected";
-                            statusEl.style.backgroundColor = "#5f0000";
+                            SvgLang.setElement(statusEl, "statusDisconnectedLabel");
+                            statusEl.classList.remove("connected");
+                            statusEl.classList.add("disconnected");
                             micSelect.disabled = false;
                             speakerSelect.disabled = false;
                             this.pttController.reset();
-                            joinButton.textContent = "Join";
+                            SvgLang.setElement(joinButton, "joinBtnUnconnectedLabel");
                         }
                     }
                 );
@@ -321,9 +304,11 @@ export class SvgUI {
 
                 this.pttController.setMuted(muted);
 
-                muteBtn.textContent = muted
-                        ? "Unmute"
-                        : "Mute";
+                SvgLang.setElement(muteBtn,
+                    () => muted
+                        ? SvgLang.string("muteBtnUnmuteLabel")
+                        : SvgLang.string("muteBtnMuteLabel")
+                );
 
                 muteBtn.classList.toggle("muted", muted);
 

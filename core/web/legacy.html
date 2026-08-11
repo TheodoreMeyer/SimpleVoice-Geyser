@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="build-id" content="@@GIT_COMMIT@@">
+    <title>SimpleVoice-Geyser</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/ptt.css">
+    <link rel="icon" href="images/svg-temp.png" type="image/x-icon">
+    <link rel="stylesheet" href="css/presets.css">
+    <!--<link rel="manifest" href="/manifest.json">-->
+</head>
+
+<body>
+    <h1><span svg-lang="joinLabel"></span></h1>
+    <div id="form-container">
+        <form id="joinForm" data-svg="form">
+            <label for="username" svg-lang="usernameInput"></label>
+            <input data-svg="form.username" type="text" id="username" name="username" required autocomplete="username">
+
+            <label for="password" svg-lang="passwordInput"></label>
+            <input data-svg="form.password" type="password" id="password" name="password" required autocomplete="svg-password">
+
+            <label for="mic" svg-lang="micSelect"></label>
+            <select id="mic" name="mic" data-svg="audio.mic">
+                <option disabled selected svg-lang="micLoad"></option>
+            </select>
+
+            <label for="speaker" svg-lang="speakSelect"></label>
+            <select id="speaker" name="speaker" data-svg="audio.speaker">
+                <option disabled selected svg-lang="speakLoad"></option>
+            </select>
+
+            <button type="submit" id="joinbtn" data-svg="form.join" svg-lang="joinBtnText"></button>
+        </form>
+    </div>
+    <!-- Added translated spanish to noscript text and moved its css into styles.css-->
+    <noscript>
+        <div class="noscript-container">
+            <h2>Error:</h2>
+            <p>JavaScript is required to use this application.</p>
+            <hr>
+            <p>Se requiere JavaScript para utilizar esta aplicación.</p>
+        </div>
+    </noscript>
+    <div id="main-vc-container">
+        <br>
+        <div id="status" data-svg="form.status" svg-lang="joinWait"></div>
+        <div id="log" data-svg="chat.log"></div>
+        <br>
+        <div id="inputArea">
+            <label for="msgInput" svg-lang="msgText"></label>
+            <input data-svg="chat.input" type="text" id="msgInput" placeholder="Type a message..." />
+            <button id="messageButton" data-svg="chat.send" svg-lang="sendBtnText"></button>
+        </div>
+    </div>
+    <br>
+    <div id="controls">
+        <div id="controls-main">
+            <div class="controls-card" id="micCard" data-svg="ptt.mic-card">
+                <div class="control-group">
+                    <span class="control-label" svg-lang="micSLabel"></span>
+                    <div id="micControls">
+                        <button id="muteBtn" class="unmuted" data-svg="audio.mute" svg-lang="muteBtnText"></button>
+                        <span id="micIndicator" title="Mic activity" data-svg="audio.indicator"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-card">
+                <div class="control-group">
+                    <span class="control-label" svg-lang="transmitModeLabel"></span>
+                    <select id="transmitModeSelect" aria-label="Transmit mode" data-svg="ptt.mode">
+                        <option value="voice" svg-lang="voiceActivityText"></option>
+                        <option value="ptt" svg-lang="pushToTalkText"></option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="controls-card controls-card-ptt dev-hidden" id="pttCard" data-svg="ptt.card">
+                <div class="control-group" id="pttBindingControls" data-svg="ptt.binding-controls">
+                    <span class="control-label" data-svg="ptt.binding-label" svg-lang="pttBindingLabel"></span>
+                    <div class="ptt-action-row">
+                        <button id="bindPttBtn" type="button" data-svg="ptt.bind" svg-lang="bindPttBtnText"></button>
+                        <button id="clearPttBtn" type="button" data-svg="ptt.clear" svg-lang="clearPttBtnText"></button>
+                    </div>
+                    <small id="control-label" svg-lang="pttBindingDescription"></small>
+                    <label class="ptt-background-toggle">
+                        <input type="checkbox" id="allowBackgroundPtt" data-svg="ptt.allow-background"/>
+                        <span svg-lang="allowBackgroundPttText"></span>
+                    </label>
+                </div>
+
+                <div class="control-group" id="pttControls" data-svg="ptt.controls">
+                    <span class="control-label" svg-lang="pttLabel"></span>
+                    <div>
+                        <button id="pushToTalkBtn" class="pttButton" type="button" data-svg="ptt.button" svg-lang="pushToTalkBtnText"></button>
+                        <button id="fullscreenPttBtn" type="button" data-svg="ptt.fullscreen" svg-lang="fullscreenPttBtnText"></button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="controls-divider"></div>
+    </div>
+    <div id="color-editor">
+        <h2 svg-lang="colorEditorLabel"></h2>
+        <div id="preset-field"></div>
+    </div>
+    <!--Added more links and tweaked github image-->
+    <div style="margin-left: auto; margin-right: auto;">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+
+            <a href="https://github.com/TheodoreMeyer/SimpleVoice-Geyser" target="_blank"
+                style="display: flex; align-items: center; gap: 10px; text-decoration: none; line-height: 1;">
+                <span
+                    style="width: 25px !important; height: 25px !important; max-width: 25px !important; min-width: 25px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                    <img src="https://github.com/favicon.ico" alt="github icon">
+                </span>
+                <span>Theodore Meyer</span>
+            </a>
+
+            <a href="https://modrinth.com/plugin/simplevoice-geyser" target="_blank"
+                style="display: flex; align-items: center; gap: 10px; text-decoration: none; line-height: 1;">
+                <span
+                    style="width: 25px !important; height: 25px !important; max-width: 25px !important; min-width: 25px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                    <img src="https://modrinth.com/favicon.ico" alt="modrinth logo"
+                        style="width: 100% !important; height: 100% !important; max-width: 100% !important; object-fit: contain; display: block;">
+                </span>
+                <span>SimpleVoice-Geyser</span>
+            </a>
+
+            <a href="https://theodoremeyer.github.io/projects/simplevoicegeyser/" target="_blank"
+                style="display: flex; align-items: center; gap: 10px; text-decoration: none; line-height: 1;">
+                <span
+                    style="width: 25px !important; height: 25px !important; max-width: 25px !important; min-width: 25px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-file-earmark-fill"
+                        viewBox="0 0 16 16"
+                        style="width: 100% !important; height: 100% !important; max-width: 100% !important; display: block;">
+                        <path
+                            d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2m5.5 1.5v2a1 1 0 0 0 1 1h2z" />
+                    </svg>
+                </span>
+                <span>Docs</span>
+            </a>
+
+        </div>
+    </div>
+    <!--bug report button-->
+    <button class="report-button" title="Click to report a bug"
+        onclick="window.open('https://github.com/TheodoreMeyer/SimpleVoice-Geyser/issues', '_blank');">
+        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-bug"
+            viewBox="0 0 16 16">
+            <path
+                d="M4.355.522a.5.5 0 0 1 .623.333l.291.956A5 5 0 0 1 8 1c1.007 0 1.946.298 2.731.811l.29-.956a.5.5 0 1 1 .957.29l-.41 1.352A5 5 0 0 1 13 6h.5a.5.5 0 0 0 .5-.5V5a.5.5 0 0 1 1 0v.5A1.5 1.5 0 0 1 13.5 7H13v1h1.5a.5.5 0 0 1 0 1H13v1h.5a1.5 1.5 0 0 1 1.5 1.5v.5a.5.5 0 1 1-1 0v-.5a.5.5 0 0 0-.5-.5H13a5 5 0 0 1-10 0h-.5a.5.5 0 0 0-.5.5v.5a.5.5 0 1 1-1 0v-.5A1.5 1.5 0 0 1 2.5 10H3V9H1.5a.5.5 0 0 1 0-1H3V7h-.5A1.5 1.5 0 0 1 1 5.5V5a.5.5 0 0 1 1 0v.5a.5.5 0 0 0 .5.5H3c0-1.364.547-2.601 1.432-3.503l-.41-1.352a.5.5 0 0 1 .333-.623M4 7v4a4 4 0 0 0 3.5 3.97V7zm4.5 0v7.97A4 4 0 0 0 12 11V7zM12 6a4 4 0 0 0-1.334-2.982A3.98 3.98 0 0 0 8 2a3.98 3.98 0 0 0-2.667 1.018A4 4 0 0 0 4 6z" />
+        </svg>
+    </button>
+    <!--fixed when hovering over hold to talk button covering up exit full screen button-->
+    <div id="pttFullscreenOverlay" aria-hidden="true" data-svg="ptt.overlay">
+        <button id="pushToTalkFullscreenBtn" class="pttButton" type="button" data-svg="ptt.overlay-button" svg-lang="pushToTalkFullscreenBtnText"></button>
+        <br>
+        <button id="exitFullscreenPttBtn" type="button" data-svg="ptt.overlay-exit" svg-lang="exitFullscreenPttBtnText"></button>
+    </div>
+    <script>
+        const availablePresets = ['default', 'dark', 'light', 'green', 'blue', 'purple', 'red', 'yellow', 'cyan', 'monochrome', 'monokai', 'orange', 'mint', 'rose'];
+        const savedPreset = localStorage.getItem('preset');
+        availablePresets.forEach(preset => {
+            document.getElementById('preset-field').insertAdjacentHTML('beforeend', `<button class="preset-btn" data-preset="${preset}">${preset.charAt(0).toUpperCase() + preset.slice(1)}</button>`);
+        });
+        applyPreset(availablePresets.includes(savedPreset) ? savedPreset : 'default');
+
+        document.querySelectorAll('#color-editor button[data-preset]').forEach(button => {
+            button.addEventListener('click', () => {
+                const preset = button.getAttribute('data-preset');
+                applyPreset(preset);
+            });
+        });
+
+        function applyPreset(preset) {
+            for (const name of availablePresets) {
+                document.body.classList.remove(`preset-${name}`);
+            }
+            document.body.classList.add(`preset-${preset}`);
+            localStorage.setItem('preset', preset);
+        }
+    </script>
+    <script type="module">
+        window.PROJECT_VERSION = "@@PROJECT_VERSION@@";
+        window.BUILD_ID = "@@GIT_COMMIT@@";
+
+        /** @import {SvgClientOptions} from './js/types.js' */
+        import { SvgBuilder } from './js/utils/builder.js';
+        import { SvgLang } from "./js/utils/lang.js";
+
+        SvgLang.detectLanguage();
+
+        const client = SvgBuilder.fromDocument().build();
+
+        await client.start();
+    </script>
+
+</body>
+
+</html>

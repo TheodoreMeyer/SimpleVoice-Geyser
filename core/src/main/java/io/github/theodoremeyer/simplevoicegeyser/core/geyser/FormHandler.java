@@ -27,7 +27,7 @@ public final class FormHandler {
      * Entry to set up Cumulus forms
      * @param manager the Group Manager
      */
-    public FormHandler(GroupManager manager) {
+    FormHandler(GroupManager manager) {
         this.groupManager = manager;
     }
 

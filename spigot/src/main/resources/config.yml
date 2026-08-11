@@ -22,6 +22,20 @@ client:
   # Allows players using web-chat to chat in-game
   web-chat-enabled: true
 
+  join-message:
+
+    #default: true
+    # Enables join messages for web clients.
+    enabled: true
+
+    # Default: provided below
+    # The text svg sends when a player joins
+    text:
+      - "This Server Uses SimpleVoice-Geyser."
+      - "To set it up, run /svg pswd [password],"
+      - "Then join Via the server's SVG website."
+
+
   allowedTypes:
 
     # default: true
