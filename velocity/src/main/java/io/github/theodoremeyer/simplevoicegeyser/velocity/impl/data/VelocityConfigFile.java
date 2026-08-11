@@ -51,15 +51,25 @@ public class VelocityConfigFile {
     }
 
     public synchronized void set(String path, Object value) {
-        config.put(path, value);
+        String[] parts = path.split("\\.");
+        JSONObject target = config;
+        for (int i = 0; i < parts.length - 1; i++) {
+            Object child = target.opt(parts[i]);
+            if (!(child instanceof JSONObject)) {
+                child = new JSONObject();
+                target.put(parts[i], child);
+            }
+            target = (JSONObject) child;
+        }
+        target.put(parts[parts.length - 1], value);
     }
 
     public String getString(String path) {
-        return config.optString(path, null);
+        return getValue(path, null);
     }
 
     public String getString(String path, String def) {
-        return config.optString(path, def);
+        return getValue(path, def);
     }
 
     public String getNestedString(String object, String key, String def) {
@@ -73,11 +83,13 @@ public class VelocityConfigFile {
     }
 
     public boolean getBoolean(String path, boolean def) {
-        return config.optBoolean(path, def);
+        Object value = getRawValue(path);
+        return value instanceof Boolean ? (Boolean) value : def;
     }
 
     public int getInt(String path, int def) {
-        return config.optInt(path, def);
+        Object value = getRawValue(path);
+        return value instanceof Number ? ((Number) value).intValue() : def;
     }
 
     public double getDouble(String path, double def) {
@@ -101,18 +113,13 @@ public class VelocityConfigFile {
     }
 
     public MigrationReport migrateFromBundledDefaults(String trigger) {
-        JSONObject defaults = loadBundledDefaults();
+        JSONObject defaults = nestedDefaults();
         if (defaults.isEmpty()) {
             return new MigrationReport("json", "", 0, false);
         }
 
         int addedKeys = 0;
-        for (String key : defaults.keySet()) {
-            if (!config.has(key)) {
-                config.put(key, defaults.get(key));
-                addedKeys++;
-            }
-        }
+        addedKeys = mergeMissing(config, defaults);
 
         if (addedKeys == 0) {
             return new MigrationReport("json", "", 0, false);
@@ -126,6 +133,74 @@ public class VelocityConfigFile {
     private JSONObject loadBundledDefaults() {
         JSONObject defaults = new JSONObject();
         codeDefaults().forEach(defaults::put);
+        return defaults;
+    }
+
+    private static int mergeMissing(JSONObject target, JSONObject defaults) {
+        int added = 0;
+        for (String key : defaults.keySet()) {
+            Object value = defaults.get(key);
+            if (value instanceof JSONObject defaultObject) {
+                Object existing = target.opt(key);
+                if (!(existing instanceof JSONObject)) {
+                    target.put(key, new JSONObject());
+                    existing = target.get(key);
+                }
+                added += mergeMissing((JSONObject) existing, defaultObject);
+            } else if (!target.has(key)) {
+                target.put(key, value);
+                added++;
+            }
+        }
+        return added;
+    }
+
+    private Object getRawValue(String path) {
+        Object nested = getNestedValue(path);
+        if (nested != null) return nested;
+        return config.opt(path);
+    }
+
+    private Object getNestedValue(String path) {
+        Object current = config;
+        for (String part : path.split("\\.")) {
+            if (!(current instanceof JSONObject object) || !object.has(part)) return null;
+            current = object.get(part);
+        }
+        return current;
+    }
+
+    private <T> T getValue(String path, T def) {
+        Object value = getRawValue(path);
+        return value == null || JSONObject.NULL.equals(value) ? def : (T) value;
+    }
+
+    private static JSONObject nestedDefaults() {
+        JSONObject defaults = new JSONObject();
+        defaults.put("clients", new JSONObject()
+                .put("default", new JSONObject()
+                        .put("enabled", true)
+                        .put("url", "ws://127.0.0.1:8001/ws")
+                        .put("verify_ssl", false)
+                        .put("auth", new JSONObject().put("global", true)))
+                .put("lobby", new JSONObject()
+                        .put("enabled", false)
+                        .put("url", "ws://127.0.0.1:8002/ws")
+                        .put("verify_ssl", false)
+                        .put("auth", new JSONObject()
+                                .put("global", false)
+                                .put("secret", ""))));
+        defaults.put("proxy", new JSONObject()
+                .put("bind_address", "0.0.0.0")
+                .put("port", 8080)
+                .put("shared_secret", generateRandomSecret())
+                .put("token-ttl-seconds", 120));
+        defaults.put("ssl", new JSONObject()
+                .put("type", "none")
+                .put("file", new JSONObject()
+                        .put("cert", "ssl/cert.pem")
+                        .put("key", "ssl/key.pem")));
+        defaults.put("config_version", "0.1.4");
         return defaults;
     }
 
@@ -163,17 +238,9 @@ public class VelocityConfigFile {
         defaults.put("server.security.auth-lock-duration", 8);
         defaults.put("server.audio.transport-mode", "auto");
         defaults.put("server.audio.allow-legacy-fallback", true);
-        defaults.put("proxy.enabled", false);
-        defaults.put("proxy.bind_address", "0.0.0.0");
-        defaults.put("proxy.port", 8081);
-        defaults.put("proxy.shared-secret", generateRandomSecret());
-        defaults.put("proxy.token-ttl-seconds", 120);
-        defaults.put("ssl.type", "none");
-        defaults.put("ssl.file.cert", "ssl/cert.pem");
-        defaults.put("ssl.file.key", "ssl/key.pem");
         defaults.put("debug", false);
         defaults.put("updatechecker.enable", true);
-        defaults.put("config-version", "0.1.1-dev-migration1");
+        defaults.put("config_version", "0.1.4");
         return defaults;
     }
 

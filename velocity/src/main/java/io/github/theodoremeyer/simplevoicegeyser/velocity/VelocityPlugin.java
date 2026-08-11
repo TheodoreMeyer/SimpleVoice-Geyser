@@ -19,9 +19,7 @@ import org.slf4j.Logger;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.security.SecureRandom;
 import java.time.Duration;
-import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,10 +66,9 @@ public final class VelocityPlugin {
                 new VelocityCommand(passwordStore)
         );
 
-        int port = configFile.getInt("proxy.port", configFile.getInt("proxy.web.port", 8081));
-        String host = configFile.getString("proxy.bind_address",
-                configFile.getString("proxy.web.bind-address", "0.0.0.0"));
-        Duration idleTimeout = Duration.ofMinutes(configFile.getInt("proxy.web.idle-timeout-minutes", 2));
+        int port = configFile.getInt("proxy.port", 8080);
+        String host = configFile.getString("proxy.bind_address", "0.0.0.0");
+        Duration idleTimeout = Duration.ofMinutes(2);
 
         File certificate = null;
         File key = null;
@@ -96,7 +93,7 @@ public final class VelocityPlugin {
             return;
         }
 
-        String backendUrl = resolveBackendUrl(event.getServer().getServerInfo().getName());
+        String backendUrl = resolveClientUrl(event.getServer().getServerInfo().getName());
         if (backendUrl != null && !backendUrl.isBlank()) {
             socket.reconnectBackend(backendUrl);
         }
@@ -136,7 +133,7 @@ public final class VelocityPlugin {
     }
 
     public int getProxyIdleTimeoutMinutes() {
-        return configFile.getInt("proxy.web.idle-timeout-minutes", 2);
+        return 2;
     }
 
     public void registerSession(UUID uuid, ProxyWebSocket socket) {
@@ -150,64 +147,37 @@ public final class VelocityPlugin {
         activeSessions.computeIfPresent(uuid, (ignored, current) -> current == socket ? null : current);
     }
 
-    public String resolveBackendUrl(Player player) {
+    public String resolveClientUrl(Player player) {
         String serverName = player.getCurrentServer()
                 .map(conn -> conn.getServerInfo().getName())
                 .orElse("default");
-        return resolveBackendUrl(serverName);
+        return resolveClientUrl(serverName);
     }
 
-    public String resolveBackendUrl(String routeName) {
-        String normalized = routeName == null ? "default" : routeName.trim();
+    public String resolveClientUrl(String clientName) {
+        String normalized = clientName == null ? "default" : clientName.trim();
         if (normalized.isEmpty()) {
             normalized = "default";
         }
 
-        String routeKey = "proxy.routes." + normalized + ".url";
-        String backendUrl = configFile.getString(routeKey, "");
-        if (!backendUrl.isBlank()) {
-            return backendUrl;
-        }
-
-        backendUrl = configFile.getString("proxy.routes.default.url", "");
-        if (!backendUrl.isBlank()) {
-            return backendUrl;
-        }
-
-        return configFile.getString("proxy.backend.url", "");
+        return configFile.getString("clients." + normalized + ".url", "");
     }
 
-    public synchronized String createProxyToken(UUID uuid, String username) {
-        String secret = configFile.getString("proxy.shared-secret", "");
-        if (secret == null || secret.isBlank()) {
-            secret = generateFallbackSecret();
-            configFile.set("proxy.shared-secret", secret);
-            configFile.save();
-        }
+    public synchronized String createProxyToken(UUID uuid, String username, String clientName) {
+        String authPath = "clients." + clientName + ".auth";
+        boolean global = configFile.getBoolean(authPath + ".global", true);
+        String secret = global ? configFile.getString("proxy.shared_secret", "")
+                : configFile.getString(authPath + ".secret", "");
         int ttlSeconds = configFile.getInt("proxy.token-ttl-seconds", 120);
         return ProxyAuthToken.create(uuid, username, secret, Duration.ofSeconds(ttlSeconds));
     }
 
     public String createProxyToken(Player player) {
-        return createProxyToken(player.getUniqueId(), player.getUsername());
+        return createProxyToken(player.getUniqueId(), player.getUsername(), "default");
     }
 
     private void ensureProxyDefaults() {
-        ensureDefault("proxy.port", 8081);
-        ensureDefault("proxy.bind_address", "0.0.0.0");
-        ensureDefault("ssl.type", "none");
-        ensureDefault("ssl.file.cert", "ssl/cert.pem");
-        ensureDefault("ssl.file.key", "ssl/key.pem");
-        ensureDefault("proxy.web.port", 8081);
-        ensureDefault("proxy.web.bind-address", "0.0.0.0");
-        ensureDefault("proxy.web.idle-timeout-minutes", 2);
-        String secret = configFile.getString("proxy.shared-secret", "");
-        if (secret == null || secret.isBlank()) {
-            configFile.set("proxy.shared-secret", generateFallbackSecret());
-        }
-        ensureDefault("proxy.token-ttl-seconds", 120);
-        ensureDefault("proxy.backend.url", "ws://127.0.0.1:8080/ws");
-        ensureDefault("proxy.routes.default.url", "ws://127.0.0.1:8080/ws");
+        configFile.migrateFromBundledDefaults("proxy");
         configFile.save();
     }
 
@@ -225,9 +195,4 @@ public final class VelocityPlugin {
         }
     }
 
-    private static String generateFallbackSecret() {
-        byte[] bytes = new byte[32];
-        new SecureRandom().nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-    }
 }
