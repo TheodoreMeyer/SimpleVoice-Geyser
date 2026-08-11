@@ -1,0 +1,22 @@
+{
+  "clients": {
+    "default": {
+      "enabled": true,
+      "url": "ws://127.0.0.1:8080/ws",
+      "verify_ssl": false
+    }
+  },
+  "proxy": {
+    "bind_address": "0.0.0.0",
+    "port": 8081,
+    "shared_secret": ""
+  },
+  "ssl": {
+    "type": "none",
+    "file": {
+      "cert": "ssl/cert.pem",
+      "key": "ssl/key.pem"
+    }
+  },
+  "config_version": "0.1.4"
+}

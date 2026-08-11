@@ -68,11 +68,19 @@ public final class VelocityPlugin {
                 new VelocityCommand(passwordStore)
         );
 
-        int port = configFile.getInt("proxy.web.port", 8081);
-        String host = configFile.getString("proxy.web.bind-address", "0.0.0.0");
+        int port = configFile.getInt("proxy.port", configFile.getInt("proxy.web.port", 8081));
+        String host = configFile.getString("proxy.bind_address",
+                configFile.getString("proxy.web.bind-address", "0.0.0.0"));
         Duration idleTimeout = Duration.ofMinutes(configFile.getInt("proxy.web.idle-timeout-minutes", 2));
 
-        this.webServer = new ProxyJettyServer(host, port, idleTimeout);
+        File certificate = null;
+        File key = null;
+        if ("file".equalsIgnoreCase(configFile.getString("ssl.type", "none"))) {
+            certificate = resolveConfigPath(configFile.getString("ssl.file.cert", "ssl/cert.pem"));
+            key = resolveConfigPath(configFile.getString("ssl.file.key", "ssl/key.pem"));
+        }
+
+        this.webServer = new ProxyJettyServer(host, port, idleTimeout, certificate, key);
         try {
             webServer.start(this);
             logger.info("[Proxy] Web frontend started on {}:{}", host, port);
@@ -185,6 +193,11 @@ public final class VelocityPlugin {
     }
 
     private void ensureProxyDefaults() {
+        ensureDefault("proxy.port", 8081);
+        ensureDefault("proxy.bind_address", "0.0.0.0");
+        ensureDefault("ssl.type", "none");
+        ensureDefault("ssl.file.cert", "ssl/cert.pem");
+        ensureDefault("ssl.file.key", "ssl/key.pem");
         ensureDefault("proxy.web.port", 8081);
         ensureDefault("proxy.web.bind-address", "0.0.0.0");
         ensureDefault("proxy.web.idle-timeout-minutes", 2);
@@ -196,6 +209,14 @@ public final class VelocityPlugin {
         ensureDefault("proxy.backend.url", "ws://127.0.0.1:8080/ws");
         ensureDefault("proxy.routes.default.url", "ws://127.0.0.1:8080/ws");
         configFile.save();
+    }
+
+    private File resolveConfigPath(String configuredPath) {
+        File path = new File(configFile.getFile().getParentFile(), configuredPath);
+        if (!path.isFile()) {
+            throw new IllegalArgumentException("SSL file does not exist: " + path.getAbsolutePath());
+        }
+        return path;
     }
 
     private void ensureDefault(String key, Object value) {
