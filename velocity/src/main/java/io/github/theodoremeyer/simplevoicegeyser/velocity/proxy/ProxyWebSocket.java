@@ -135,7 +135,11 @@ public final class ProxyWebSocket {
             return;
         }
 
-        JSONObject join = buildBackendJoinPayload();
+        String clientName = playerUuid == null ? "default" : plugin.getServer().getPlayer(playerUuid)
+                .flatMap(player -> player.getCurrentServer())
+                .map(connection -> connection.getServerInfo().getName())
+                .orElse("default");
+        JSONObject join = buildBackendJoinPayload(clientName);
         relay.updateJoinPayload(join.toString());
         if (lastCapabilitiesRequest != null) {
             relay.updateCapabilitiesPayload(lastCapabilitiesRequest.toString());
@@ -172,7 +176,10 @@ public final class ProxyWebSocket {
             return;
         }
 
-        String backendUrl = plugin.resolveBackendUrl(player);
+        String clientName = player.getCurrentServer()
+                .map(connection -> connection.getServerInfo().getName())
+                .orElse("default");
+        String backendUrl = plugin.resolveClientUrl(clientName);
         if (backendUrl == null || backendUrl.isBlank()) {
             sendRaw(ConnectionStates.MessageType.ERROR, "Proxy backend is not configured for this server.", false);
             return;
@@ -182,17 +189,17 @@ public final class ProxyWebSocket {
         this.playerName = player.getUsername();
         this.lastJoinRequest = new JSONObject(json.toString());
 
-        JSONObject backendJoin = buildBackendJoinPayload();
+        JSONObject backendJoin = buildBackendJoinPayload(clientName);
         this.relay = new BackendRelay(session, plugin.getLogger());
         this.currentBackendUrl = backendUrl;
         plugin.registerSession(playerUuid, this);
         relay.connect(backendUrl, backendJoin.toString());
     }
 
-    private JSONObject buildBackendJoinPayload() {
+    private JSONObject buildBackendJoinPayload(String clientName) {
         JSONObject join = new JSONObject(lastJoinRequest.toString());
         join.put("password", "");
-        join.put("proxyToken", plugin.createProxyToken(playerUuid, playerName));
+        join.put("proxyToken", plugin.createProxyToken(playerUuid, playerName, clientName));
         return join;
     }
 
