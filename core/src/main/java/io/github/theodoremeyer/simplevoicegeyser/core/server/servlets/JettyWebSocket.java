@@ -9,11 +9,13 @@ import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.Con
 import io.github.theodoremeyer.simplevoicegeyser.core.server.packets.PacketHandler;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * Class that handles talking to the Client
@@ -246,8 +248,8 @@ public final class JettyWebSocket {
         boolean secureContext = audio.optBoolean("secureContext", false);
 
         if (audioNegotiation == null) {
-            AudioTransportPreference preference = AudioTransportPreference.fromConfig(
-                    SvgCore.getConfig().AUDIO_TRANSPORT_MODE.get()
+            AudioTransportMode preference = AudioTransportMode.fromConfig(
+                    SvgCore.getConfig()
             );
             boolean allowLegacyFallback = Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_ALLOW_LEGACY_FALLBACK.get());
             audioNegotiation = new AudioSessionNegotiation(preference, allowLegacyFallback);
@@ -353,7 +355,9 @@ public final class JettyWebSocket {
         return session;
     }
 
-     * @param connection connection
+     /**
+      * Set the associated SvgConnection.
+      * @param connection connection
      */
     public void setConnection(SvgConnection connection) {        this.connection = connection;
     }

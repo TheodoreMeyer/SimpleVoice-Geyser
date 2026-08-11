@@ -2,7 +2,9 @@ package io.github.theodoremeyer.simplevoicegeyser.core.api.data;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents the configuration for Simple Voice Geyser. This class is responsible for loading and saving the configuration file, as well as providing access to the configuration values.

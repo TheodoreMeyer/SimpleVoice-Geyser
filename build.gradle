@@ -107,8 +107,11 @@ ext.applySvgRelocations = { task ->
     task.relocate("jakarta.servlet", "io.github.theodoremeyer.simplevoicegeyser.shadow.servlet")
     task.relocate("org.json", "io.github.theodoremeyer.simplevoicegeyser.shadow.json")
     task.relocate("org.mindrot", "io.github.theodoremeyer.simplevoicegeyser.shadow.mindrot")
-    task.relocate("org.slf4j", "io.github.theodoremeyer.simplevoicegeyser.shadow.slf4j")
+    // Velocity injects its own org.slf4j.Logger into plugin constructors.
+    // Keep that API type unrelocated while isolating the remaining SLF4J types.
+    task.relocate("org.slf4j", "io.github.theodoremeyer.simplevoicegeyser.shadow.slf4j") {
+        exclude("org.slf4j.Logger")
+    }
     logger.info("Loaded relocations for", task)
 
 }
-
