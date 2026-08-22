@@ -81,6 +81,7 @@ public final class VelocityPlugin {
         try {
             webServer.start(this);
             logger.info("[Proxy] Web frontend started on {}:{}", host, port);
+            logger.info("[Proxy] Serving web client build {}", BuildInfo.BUILD_ID);
         } catch (Exception e) {
             logger.error("[Proxy] Failed to start web frontend", e);
         }

@@ -1,7 +1,6 @@
 package io.github.theodoremeyer.simplevoicegeyser.velocity.proxy;
 
 import com.velocitypowered.api.proxy.Player;
-import io.github.theodoremeyer.simplevoicegeyser.velocity.BuildInfo;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.VelocityPlugin;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.eclipse.jetty.websocket.api.Session;
@@ -149,10 +148,6 @@ public final class ProxyWebSocket {
     }
 
     private void join(@NonNull JSONObject json) {
-        if (!checkClientBuild(json)) {
-            return;
-        }
-
         if (relay != null) {
             sendRaw(ConnectionStates.MessageType.ERROR, "Already authenticated.", false);
             return;
@@ -201,34 +196,6 @@ public final class ProxyWebSocket {
         join.put("password", "");
         join.put("proxyToken", plugin.createProxyToken(playerUuid, playerName, clientName));
         return join;
-    }
-
-    private boolean checkClientBuild(JSONObject json) {
-        String clientBuild = json.optString("build", "");
-        if (clientBuild.isEmpty()) {
-            sendRaw(ConnectionStates.MessageType.ERROR, "Client missing build id. Update required.", false);
-            closeUpdateRequired();
-            return false;
-        }
-
-        if (!BuildInfo.BUILD_ID.equals(clientBuild)) {
-            sendRaw(ConnectionStates.MessageType.ERROR, "Outdated client. Please refresh.", false);
-            closeUpdateRequired();
-            return false;
-        }
-
-        return true;
-    }
-
-    private void closeUpdateRequired() {
-        if (session == null || !session.isOpen()) {
-            return;
-        }
-
-        try {
-            session.close(ConnectionStates.DisconnectCodes.OUTDATED_CLIENT.getCode(), "update_required");
-        } catch (Exception ignored) {
-        }
     }
 
     private void sendRaw(ConnectionStates.MessageType type, String message, boolean fatal) {
