@@ -17,7 +17,7 @@ public final class BackendRelay {
     private static final int MAX_MESSAGE_SIZE = 1024 * 1024;
     private final Session clientSession;
     private final Logger logger;
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
     private final AtomicLong connectionIdCounter = new AtomicLong();
     private volatile WebSocket backendSocket;
     private volatile long currentConnectionId;
@@ -32,24 +32,34 @@ public final class BackendRelay {
         this.logger = logger;
     }
 
-    public synchronized void connect(String backendUrl, String joinPayload) {
-        this.backendUrl = backendUrl;
-        this.joinPayload = joinPayload;
-        long id = connectionIdCounter.incrementAndGet();
-        currentConnectionId = id;
-        try {
-            backendSocket = httpClient.newWebSocketBuilder()
-                    .connectTimeout(CONNECT_TIMEOUT)
-                    .buildAsync(URI.create(backendUrl), new Listener(id)).join();
-            if (this.joinPayload != null && !this.joinPayload.isBlank()) sendText(backendSocket, this.joinPayload);
-            if (capabilitiesPayload != null && !capabilitiesPayload.isBlank()) sendText(backendSocket, capabilitiesPayload);
-        } catch (Exception e) {
-            if (currentConnectionId == id) {
-                logger.error("Failed to connect backend relay to {}", backendUrl, e);
-                closeBackend(1011, "backend_connect_failed");
-                closeClient(1011, "backend_connect_failed");
-            }
+    public void connect(String backendUrl, String joinPayload) {
+        long id;
+        synchronized (this) {
+            this.backendUrl = backendUrl;
+            this.joinPayload = joinPayload;
+            id = connectionIdCounter.incrementAndGet();
+            currentConnectionId = id;
         }
+        HTTP_CLIENT.newWebSocketBuilder()
+                    .connectTimeout(CONNECT_TIMEOUT)
+                    .buildAsync(URI.create(backendUrl), new Listener(id))
+                    .whenComplete((socket, error) -> {
+                        synchronized (BackendRelay.this) {
+                            if (currentConnectionId != id) {
+                                if (socket != null) socket.sendClose(1000, "stale_connection");
+                                return;
+                            }
+                            if (error != null) {
+                                logger.error("Failed to connect backend relay to {}", backendUrl, error);
+                                closeBackend(1011, "backend_connect_failed");
+                                closeClient(1011, "backend_connect_failed");
+                                return;
+                            }
+                            backendSocket = socket;
+                            if (joinPayload != null && !joinPayload.isBlank()) sendText(socket, joinPayload);
+                            if (capabilitiesPayload != null && !capabilitiesPayload.isBlank()) sendText(socket, capabilitiesPayload);
+                        }
+                    });
     }
 
     public synchronized void reconnect(String newBackendUrl) {
@@ -61,7 +71,7 @@ public final class BackendRelay {
     }
 
     public synchronized void forwardText(String text) { WebSocket socket = backendSocket; if (socket != null) sendText(socket, text); }
-    public synchronized void forwardBinary(byte[] bytes, int offset, int length) { WebSocket socket = backendSocket; if (socket != null) sendBinary(socket, ByteBuffer.wrap(bytes, offset, length)); }
+    public synchronized void forwardBinary(byte[] bytes, int offset, int length) { WebSocket socket = backendSocket; if (socket != null) { byte[] copy = java.util.Arrays.copyOfRange(bytes, offset, offset + length); sendBinary(socket, ByteBuffer.wrap(copy)); } }
     public synchronized void close(int code, String reason) { closeBackend(code, reason); closeClient(code, reason); }
     public void updateJoinPayload(String payload) { joinPayload = payload; }
     public void updateCapabilitiesPayload(String payload) { capabilitiesPayload = payload; }
@@ -127,11 +137,11 @@ public final class BackendRelay {
                 socket.sendClose(1009, "message_too_large");
                 return CompletableFuture.completedFuture(null);
             }
-            if (binaryBuffer == null) binaryBuffer = ByteBuffer.allocate(frameSize);
+            if (binaryBuffer == null) binaryBuffer = ByteBuffer.allocate(Math.max(1, frameSize));
             else if (binaryBuffer.remaining() < frameSize) {
                 int required = binaryBuffer.position() + frameSize;
                 int capacity = binaryBuffer.capacity();
-                while (capacity < required) capacity = Math.min(MAX_MESSAGE_SIZE, capacity * 2);
+                while (capacity < required) capacity = Math.min(MAX_MESSAGE_SIZE, Math.max(required, Math.max(1, capacity * 2)));
                 ByteBuffer expanded = ByteBuffer.allocate(capacity); binaryBuffer.flip(); expanded.put(binaryBuffer); binaryBuffer = expanded;
             }
             binaryBuffer.put(data);

@@ -16,6 +16,7 @@ public final class ProxyPasswordStore {
     private final File file;
     private final Logger logger;
     private JSONObject data;
+    private boolean writable;
 
     public ProxyPasswordStore(File dataFolder, Logger logger) {
         this.file = new File(dataFolder, "accounts.json");
@@ -45,6 +46,14 @@ public final class ProxyPasswordStore {
 
     public synchronized boolean validatePassword(String username, String password) {
         UUID uuid = getUUID(username);
+        return validatePassword(username, password, uuid);
+    }
+
+    public synchronized boolean validatePassword(String username, String password, UUID expectedUuid) {
+        UUID uuid = getUUID(username);
+        if (expectedUuid == null || !expectedUuid.equals(uuid)) {
+            return false;
+        }
         if (uuid == null) {
             return false;
         }
@@ -83,21 +92,29 @@ public final class ProxyPasswordStore {
                     file.getParentFile().mkdirs();
                 }
                 Files.writeString(file.toPath(), "{}", StandardCharsets.UTF_8);
+                writable = true;
                 return new JSONObject();
             }
 
             String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
             if (content.isBlank()) {
+                writable = true;
                 return new JSONObject();
             }
+            writable = true;
             return new JSONObject(content);
         } catch (Exception e) {
-            logger.warn("Failed to load proxy accounts file, starting fresh", e);
+            logger.warn("Failed to load proxy accounts file; password updates are disabled", e);
+            writable = false;
             return new JSONObject();
         }
     }
 
     private synchronized void save() {
+        if (!writable) {
+            logger.warn("Skipping save because the existing proxy accounts file could not be loaded");
+            return;
+        }
         try {
             Files.writeString(file.toPath(), data.toString(2), StandardCharsets.UTF_8);
         } catch (IOException e) {

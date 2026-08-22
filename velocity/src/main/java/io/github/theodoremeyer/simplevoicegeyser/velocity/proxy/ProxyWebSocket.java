@@ -29,6 +29,7 @@ public final class ProxyWebSocket {
     private JSONObject lastJoinRequest;
     private JSONObject lastCapabilitiesRequest;
     private String currentBackendUrl;
+    private final Object lifecycleLock = new Object();
 
     public ProxyWebSocket(VelocityPlugin plugin) {
         this.plugin = plugin;
@@ -47,20 +48,22 @@ public final class ProxyWebSocket {
             return;
         }
 
-        if (relay != null) {
-            message = message.trim();
-            if (message.startsWith("{")) {
-                try {
-                    JSONObject json = new JSONObject(message);
-                    if ("capabilities".equals(json.optString("type", ""))) {
-                        this.lastCapabilitiesRequest = new JSONObject(json.toString());
-                        relay.updateCapabilitiesPayload(json.toString());
+        synchronized (lifecycleLock) {
+            if (relay != null) {
+                message = message.trim();
+                if (message.startsWith("{")) {
+                    try {
+                        JSONObject json = new JSONObject(message);
+                        if ("capabilities".equals(json.optString("type", ""))) {
+                            this.lastCapabilitiesRequest = new JSONObject(json.toString());
+                            relay.updateCapabilitiesPayload(json.toString());
+                        }
+                    } catch (Exception ignored) {
                     }
-                } catch (Exception ignored) {
                 }
+                relay.forwardText(message);
+                return;
             }
-            relay.forwardText(message);
-            return;
         }
 
         message = message.trim();
@@ -87,25 +90,29 @@ public final class ProxyWebSocket {
 
     @OnWebSocketMessage
     public void onMessage(byte[] buffer, int offset, int length) {
-        if (relay == null) {
-            return;
+        synchronized (lifecycleLock) {
+            if (relay == null) {
+                return;
+            }
+            relay.forwardBinary(buffer, offset, length);
         }
-        relay.forwardBinary(buffer, offset, length);
     }
 
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
         plugin.getLogger().debug("[Proxy] Session close status=" + statusCode + " reason=" + reason);
-        if (relay != null) {
-            relay.close(statusCode, reason);
-            relay = null;
+        synchronized (lifecycleLock) {
+            if (relay != null) {
+                relay.close(statusCode, reason);
+                relay = null;
+            }
+            currentBackendUrl = null;
+            lastJoinRequest = null;
+            lastCapabilitiesRequest = null;
         }
         if (playerUuid != null) {
             plugin.unregisterSession(playerUuid, this);
         }
-        currentBackendUrl = null;
-        lastJoinRequest = null;
-        lastCapabilitiesRequest = null;
         playerUuid = null;
         playerName = null;
     }
@@ -116,19 +123,22 @@ public final class ProxyWebSocket {
     }
 
     public synchronized void onProxyDisconnect() {
-        if (relay != null) {
-            relay.close(ConnectionStates.DisconnectCodes.PLAYER_LEAVE.getCode(), "left the game");
-            relay = null;
+        synchronized (lifecycleLock) {
+            if (relay != null) {
+                relay.close(ConnectionStates.DisconnectCodes.PLAYER_LEAVE.getCode(), "left the game");
+                relay = null;
+            }
+            currentBackendUrl = null;
+            lastJoinRequest = null;
+            lastCapabilitiesRequest = null;
         }
-        currentBackendUrl = null;
-        lastJoinRequest = null;
-        lastCapabilitiesRequest = null;
     }
 
-    public synchronized void reconnectBackend(String backendUrl) {
-        if (relay == null || lastJoinRequest == null || playerUuid == null) {
-            return;
-        }
+    public void reconnectBackend(String backendUrl) {
+        synchronized (lifecycleLock) {
+            if (relay == null || lastJoinRequest == null || playerUuid == null) {
+                return;
+            }
 
         if (backendUrl == null || backendUrl.isBlank() || backendUrl.equals(currentBackendUrl)) {
             return;
@@ -145,6 +155,7 @@ public final class ProxyWebSocket {
         }
         relay.reconnect(backendUrl);
         currentBackendUrl = backendUrl;
+        }
     }
 
     private void join(@NonNull JSONObject json) {
@@ -166,7 +177,7 @@ public final class ProxyWebSocket {
             return;
         }
 
-        if (!plugin.getPasswordStore().validatePassword(username, password)) {
+        if (!plugin.getPasswordStore().validatePassword(username, password, player.getUniqueId())) {
             sendRaw(ConnectionStates.MessageType.ERROR, "Access Denied: Invalid username or password.", false);
             return;
         }
@@ -182,13 +193,17 @@ public final class ProxyWebSocket {
 
         this.playerUuid = player.getUniqueId();
         this.playerName = player.getUsername();
-        this.lastJoinRequest = new JSONObject(json.toString());
+        JSONObject sanitizedJoin = new JSONObject(json.toString());
+        sanitizedJoin.remove("password");
+        synchronized (lifecycleLock) {
+            this.lastJoinRequest = sanitizedJoin;
 
         JSONObject backendJoin = buildBackendJoinPayload(clientName);
         this.relay = new BackendRelay(session, plugin.getLogger());
         this.currentBackendUrl = backendUrl;
         plugin.registerSession(playerUuid, this);
         relay.connect(backendUrl, backendJoin.toString());
+        }
     }
 
     private JSONObject buildBackendJoinPayload(String clientName) {

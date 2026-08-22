@@ -56,12 +56,17 @@ public final class VelocityCommand implements RawCommand {
             return;
         }
 
-        if (args.length < 2 || args[1].isBlank()) {
+        if (args.length < 2) {
             player.sendMessage("Usage: /svg pswd <password>");
             return;
         }
 
-        passwordStore.setPassword(player.getUniqueId(), player.getName(), args[1]);
+        String password = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
+        if (password.isBlank()) {
+            player.sendMessage("Usage: /svg pswd <password>");
+            return;
+        }
+        passwordStore.setPassword(player.getUniqueId(), player.getName(), password);
         player.sendMessage("Password set successfully.");
     }
 

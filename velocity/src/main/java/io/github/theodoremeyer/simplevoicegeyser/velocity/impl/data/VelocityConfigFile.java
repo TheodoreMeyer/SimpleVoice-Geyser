@@ -21,6 +21,7 @@ public class VelocityConfigFile {
     private static final Logger LOGGER = Logger.getLogger(VelocityConfigFile.class.getName());
     private final File configFile;
     private volatile JSONObject config;
+    private volatile boolean writable = true;
 
     public VelocityConfigFile(File configFile) {
         this.configFile = configFile;
@@ -42,7 +43,8 @@ public class VelocityConfigFile {
             String content = Files.readString(configFile.toPath());
             return new JSONObject(content);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Failed to load config.json, using defaults", e);
+            LOGGER.log(Level.WARNING, "Failed to load config.json, preserving existing configuration", e);
+            writable = false;
             return new JSONObject();
         }
     }
@@ -102,6 +104,10 @@ public class VelocityConfigFile {
     }
 
     public synchronized void save() {
+        if (!writable) {
+            LOGGER.warning("Skipping save because the existing config.json could not be loaded");
+            return;
+        }
         try {
             Files.writeString(configFile.toPath(), config.toString(2));
         } catch (IOException e) {

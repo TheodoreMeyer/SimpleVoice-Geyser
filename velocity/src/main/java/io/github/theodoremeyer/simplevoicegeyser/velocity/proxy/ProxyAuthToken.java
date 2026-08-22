@@ -10,6 +10,9 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.UUID;
 
 public final class ProxyAuthToken {
@@ -18,6 +21,7 @@ public final class ProxyAuthToken {
     private static final Base64.Encoder B64 = Base64.getUrlEncoder().withoutPadding();
     private static final Base64.Decoder B64D = Base64.getUrlDecoder();
     private static final SecureRandom RANDOM = new SecureRandom();
+    private static final Map<String, Long> USED_NONCES = new HashMap<>();
 
     private ProxyAuthToken() {}
 
@@ -37,7 +41,7 @@ public final class ProxyAuthToken {
         return payloadB64 + "." + sigB64;
     }
 
-    public static Claims validate(String token, String secret) {
+    public static synchronized Claims validate(String token, String secret) {
         if (token == null || token.isBlank() || secret == null || secret.isBlank()) {
             return null;
         }
@@ -76,12 +80,27 @@ public final class ProxyAuthToken {
         }
 
         try {
-            return new Claims(
+            Claims claims = new Claims(
                     UUID.fromString(payload.getString("uuid")),
                     payload.optString("username", ""),
                     exp,
                     payload.optString("nonce", "")
             );
+            if (claims.nonce().isBlank()) {
+                return null;
+            }
+            long now = Instant.now().getEpochSecond();
+            Iterator<Map.Entry<String, Long>> iterator = USED_NONCES.entrySet().iterator();
+            while (iterator.hasNext()) {
+                if (iterator.next().getValue() <= now) {
+                    iterator.remove();
+                }
+            }
+            if (USED_NONCES.containsKey(claims.nonce())) {
+                return null;
+            }
+            USED_NONCES.put(claims.nonce(), exp);
+            return claims;
         } catch (Exception e) {
             return null;
         }

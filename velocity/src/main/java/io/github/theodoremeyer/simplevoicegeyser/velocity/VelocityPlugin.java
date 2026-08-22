@@ -70,15 +70,14 @@ public final class VelocityPlugin {
         String host = configFile.getString("proxy.bind_address", "0.0.0.0");
         Duration idleTimeout = Duration.ofMinutes(2);
 
-        File certificate = null;
-        File key = null;
-        if ("file".equalsIgnoreCase(configFile.getString("ssl.type", "none"))) {
-            certificate = resolveConfigPath(configFile.getString("ssl.file.cert", "ssl/cert.pem"));
-            key = resolveConfigPath(configFile.getString("ssl.file.key", "ssl/key.pem"));
-        }
-
-        this.webServer = new ProxyJettyServer(host, port, idleTimeout, certificate, key);
         try {
+            File certificate = null;
+            File key = null;
+            if ("file".equalsIgnoreCase(configFile.getString("ssl.type", "none"))) {
+                certificate = resolveConfigPath(configFile.getString("ssl.file.cert", "ssl/cert.pem"));
+                key = resolveConfigPath(configFile.getString("ssl.file.key", "ssl/key.pem"));
+            }
+            this.webServer = new ProxyJettyServer(host, port, idleTimeout, certificate, key);
             webServer.start(this);
             logger.info("[Proxy] Web frontend started on {}:{}", host, port);
             logger.info("[Proxy] Serving web client build {}", BuildInfo.BUILD_ID);
@@ -165,10 +164,17 @@ public final class VelocityPlugin {
     }
 
     public synchronized String createProxyToken(UUID uuid, String username, String clientName) {
-        String authPath = "clients." + clientName + ".auth";
+        String normalized = clientName == null ? "default" : clientName.trim();
+        if (normalized.isEmpty()) {
+            normalized = "default";
+        }
+        String authPath = "clients." + normalized + ".auth";
         boolean global = configFile.getBoolean(authPath + ".global", true);
         String secret = global ? configFile.getString("proxy.shared_secret", "")
                 : configFile.getString(authPath + ".secret", "");
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("No nonblank signing secret configured for client " + normalized);
+        }
         int ttlSeconds = configFile.getInt("proxy.token-ttl-seconds", 120);
         return ProxyAuthToken.create(uuid, username, secret, Duration.ofSeconds(ttlSeconds));
     }

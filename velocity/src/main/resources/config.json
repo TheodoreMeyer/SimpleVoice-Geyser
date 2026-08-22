@@ -21,7 +21,7 @@
   "proxy": {
     "bind_address": "0.0.0.0",
     "port": 8080,
-  "shared_secret": "GENERATED_ON_FIRST_START",
+    "shared_secret": "GENERATED_ON_FIRST_START",
     "token-ttl-seconds": 120
   },
   "ssl": {
