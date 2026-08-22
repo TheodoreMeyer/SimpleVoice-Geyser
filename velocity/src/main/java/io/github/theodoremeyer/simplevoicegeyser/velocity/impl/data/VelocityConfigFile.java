@@ -10,8 +10,6 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,7 +29,14 @@ public class VelocityConfigFile {
 
     private JSONObject load() {
         if (!configFile.exists()) {
-            return new JSONObject();
+            try (var resource = VelocityConfigFile.class.getClassLoader().getResourceAsStream("config.json")) {
+                if (resource != null) {
+                    return new JSONObject(new String(resource.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+                }
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Failed to load bundled config.json", e);
+            }
+            return nestedDefaults();
         }
         try {
             String content = Files.readString(configFile.toPath());
@@ -113,46 +118,20 @@ public class VelocityConfigFile {
     }
 
     public MigrationReport migrateFromBundledDefaults(String trigger) {
-        JSONObject defaults = nestedDefaults();
-        if (defaults.isEmpty()) {
-            return new MigrationReport("json", "", 0, false);
-        }
-
-        int addedKeys = 0;
-        addedKeys = mergeMissing(config, defaults);
-
-        if (addedKeys == 0) {
-            return new MigrationReport("json", "", 0, false);
-        }
-
-        String backupPath = backupCurrentConfig();
-        save();
-        return new MigrationReport("json", backupPath, addedKeys, true);
-    }
-
-    private JSONObject loadBundledDefaults() {
-        JSONObject defaults = new JSONObject();
-        codeDefaults().forEach(defaults::put);
-        return defaults;
-    }
-
-    private static int mergeMissing(JSONObject target, JSONObject defaults) {
-        int added = 0;
-        for (String key : defaults.keySet()) {
-            Object value = defaults.get(key);
-            if (value instanceof JSONObject defaultObject) {
-                Object existing = target.opt(key);
-                if (!(existing instanceof JSONObject)) {
-                    target.put(key, new JSONObject());
-                    existing = target.get(key);
-                }
-                added += mergeMissing((JSONObject) existing, defaultObject);
-            } else if (!target.has(key)) {
-                target.put(key, value);
-                added++;
+        JSONObject proxy = config.optJSONObject("proxy");
+        if (proxy == null || (!proxy.has("shared_secret")
+                || proxy.optString("shared_secret", "").isBlank()
+                || "GENERATED_ON_FIRST_START".equals(proxy.optString("shared_secret")))) {
+            if (proxy == null) {
+                proxy = new JSONObject();
+                config.put("proxy", proxy);
             }
+            proxy.put("shared_secret", generateRandomSecret());
+            String backupPath = backupCurrentConfig();
+            save();
+            return new MigrationReport("json", backupPath, 1, true);
         }
-        return added;
+        return new MigrationReport("json", "", 0, false);
     }
 
     private Object getRawValue(String path) {
@@ -216,32 +195,6 @@ public class VelocityConfigFile {
         } catch (IOException e) {
             throw new RuntimeException("Failed backing up config.json", e);
         }
-    }
-
-    private static Map<String, Object> codeDefaults() {
-        Map<String, Object> defaults = new LinkedHashMap<>();
-        defaults.put("config-info", "This file is used to configure Simple Voice Geyser. "
-                + "For more information, see the wiki: https://theodoremeyer.github.io/projects/simplevoicegeyser/");
-        defaults.put("client.vctimeout", 30);
-        defaults.put("client.idletimeout", 2);
-        defaults.put("client.requireBedrock", false);
-        defaults.put("client.useEmoteForSVG", true);
-        defaults.put("client.web-chat-enabled", true);
-        defaults.put("server.group.default.enabled", true);
-        defaults.put("server.group.default.password", "1a2b");
-        defaults.put("server.group.default.force-on-web-join", false);
-        defaults.put("server.port", 8080);
-        defaults.put("server.bind-address", "0.0.0.0");
-        defaults.put("server.context-path", "/");
-        defaults.put("server.security.max-auth-failures", 5);
-        defaults.put("server.security.auth-fail-duration", 3);
-        defaults.put("server.security.auth-lock-duration", 8);
-        defaults.put("server.audio.transport-mode", "auto");
-        defaults.put("server.audio.allow-legacy-fallback", true);
-        defaults.put("debug", false);
-        defaults.put("updatechecker.enable", true);
-        defaults.put("config_version", "0.1.4");
-        return defaults;
     }
 
     public record MigrationReport(String mode, String backupPath, int addedKeys, boolean migrated) {}
