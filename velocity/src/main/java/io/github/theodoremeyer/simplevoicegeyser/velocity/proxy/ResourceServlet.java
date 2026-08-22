@@ -44,7 +44,8 @@ public final class ResourceServlet extends HttpServlet {
 
             resp.setContentType(mime);
 
-            resp.setHeader("Cache-Control", "public, max-age=3600");
+            // Web assets and their websocket protocol change together on plugin updates.
+            resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 
             in.transferTo(resp.getOutputStream());
         }

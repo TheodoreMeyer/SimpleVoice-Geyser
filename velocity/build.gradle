@@ -38,7 +38,7 @@ tasks.processResources {
                 line.replace(
                         "@@GIT_COMMIT@@",
                         currentGitCommit()
-                )
+                ).replace("@@PROJECT_VERSION@@", project.version.toString())
             }
         }
     }
