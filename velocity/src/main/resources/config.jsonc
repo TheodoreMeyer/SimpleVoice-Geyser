@@ -1,0 +1,35 @@
+{
+  "clients": {
+    "default": {
+      "enabled": true,
+      "url": "ws://127.0.0.1:8001/ws",
+      "verify_ssl": false,
+      "auth": {
+        "global": true
+      }
+    },
+    "lobby": {
+      "enabled": false,
+      "url": "ws://127.0.0.1:8002/ws",
+      "verify_ssl": false,
+      "auth": {
+        "global": false,
+        "secret": ""
+      }
+    }
+  },
+  "proxy": {
+    "bind_address": "0.0.0.0",
+    "port": 8080,
+    "shared_secret": "GENERATED_ON_FIRST_START",
+    "token-ttl-seconds": 120
+  },
+  "ssl": {
+    "type": "none",
+    "file": {
+      "cert": "ssl/cert.pem",
+      "key": "ssl/key.pem"
+    }
+  },
+  "config_version": "0.1.4"
+}

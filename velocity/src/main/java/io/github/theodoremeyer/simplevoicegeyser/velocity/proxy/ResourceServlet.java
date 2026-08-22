@@ -1,4 +1,4 @@
-package io.github.theodoremeyer.simplevoicegeyser.core.server.servlets;
+package io.github.theodoremeyer.simplevoicegeyser.velocity.proxy;
 
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,47 +7,29 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 
-/**
- * Servlet responsible for serving static resources packaged inside the plugin JAR.
- */
 public final class ResourceServlet extends HttpServlet {
 
-    /**
-     * Holds an instance of {@link FileManager} to manage resource extraction and access.
-     */
-    private final FileManager fileManager;
+    public ResourceServlet() {}
 
-    /**
-     * Create the servlet
-     */
-    public ResourceServlet() {
-        this.fileManager = new FileManager();
-        fileManager.extractAssets();
-    }
+    private static final String RESOURCE_ROOT = "/web";
 
-    /**
-     * Handles HTTP GET requests and serves the requested static resource.
-     * @param req  the HTTP request
-     * @param resp the HTTP response
-     * @throws IOException if the resource cannot be read or written
-     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 
         String path = req.getPathInfo();
 
-        // Root request → serve index.html
         if (path == null || path.equals("/")) {
             path = "/index.html";
         }
 
-        // Prevent directory traversal attacks
         if (path.contains("..") || path.contains("\\")) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
-        try (InputStream in = fileManager.getResourceStream(path)) {
+        String resourcePath = RESOURCE_ROOT + path;
+
+        try (InputStream in = getClass().getResourceAsStream(resourcePath)) {
 
             if (in == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -61,7 +43,8 @@ public final class ResourceServlet extends HttpServlet {
             }
 
             resp.setContentType(mime);
-            // Never retain an older client after the plugin updates its protocol.
+
+            // Web assets and their websocket protocol change together on plugin updates.
             resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 
             in.transferTo(resp.getOutputStream());
