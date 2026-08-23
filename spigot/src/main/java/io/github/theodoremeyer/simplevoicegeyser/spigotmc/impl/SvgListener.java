@@ -18,9 +18,8 @@ public class SvgListener implements Listener {
         Player player = event.getPlayer();
 
         BukkitPlayer bukkitPlayer = new BukkitPlayer(player);
-        SvgCore.getJoinMessageHandler().sendJoinMessage(bukkitPlayer);
-
         SvgCore.getPlayerManager().addPlayer(bukkitPlayer);
+        SvgCore.getJoinMessageHandler().sendJoinMessage(bukkitPlayer);
     }
 
     @EventHandler

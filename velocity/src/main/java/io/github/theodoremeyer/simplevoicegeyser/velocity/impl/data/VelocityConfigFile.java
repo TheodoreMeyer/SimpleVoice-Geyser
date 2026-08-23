@@ -278,6 +278,7 @@ public class VelocityConfigFile {
         defaults.put("proxy", new JSONObject()
                 .put("bind_address", "0.0.0.0")
                 .put("port", 8080)
+                .put("transfer-timeout-seconds", 60)
                 .put("shared_secret", generateRandomSecret())
                 .put("token-ttl-seconds", 120));
         defaults.put("ssl", new JSONObject()

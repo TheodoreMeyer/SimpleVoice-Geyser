@@ -183,6 +183,15 @@ public final class ProxyWebSocket {
         }
     }
 
+    /** Notify the browser that the backend is temporarily changing servers. */
+    public void beginServerChange() {
+        synchronized (lifecycleLock) {
+            if (relay != null) {
+                sendRaw(ConnectionStates.MessageType.STATUS, "Changing server", false);
+            }
+        }
+    }
+
     /**
      * Move an authenticated browser session to a different backend, e.g. when
      * the player switched Velocity servers. Rebuilds the join payload with a

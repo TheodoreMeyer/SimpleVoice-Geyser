@@ -103,6 +103,7 @@ public final class ProxyJettyServer {
         server.setHandler(context);
 
         context.addServlet(new ServletHolder(new ResourceServlet()), "/*");
+        context.addServlet(new ServletHolder(new PlayerStateServlet(plugin)), "/api/player-state");
 
         JettyWebSocketServletContainerInitializer.configure(context, (servletContext, wsContainer) -> {
             wsContainer.addMapping("/ws", (req, resp) -> new ProxyWebSocket(plugin));

@@ -23,6 +23,10 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import org.json.JSONObject;
 
 /**
  * Velocity plugin entry point for the SimpleVoice-Geyser proxy frontend.
@@ -46,6 +50,8 @@ public final class VelocityPlugin {
     private final Path dataDirectory;
 
     private final Map<UUID, ProxyWebSocket> activeSessions = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> pendingServerChanges = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService transferTimeouts = Executors.newSingleThreadScheduledExecutor();
 
     private VelocityConfigFile configFile;
     private ProxyPasswordStore passwordStore;
@@ -134,6 +140,7 @@ public final class VelocityPlugin {
      */
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
+        pendingServerChanges.remove(event.getPlayer().getUniqueId());
         ProxyWebSocket socket = activeSessions.remove(event.getPlayer().getUniqueId());
         if (socket != null) {
             socket.onProxyDisconnect();
@@ -147,6 +154,7 @@ public final class VelocityPlugin {
      */
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent event) {
+        transferTimeouts.shutdownNow();
         activeSessions.values().forEach(ProxyWebSocket::onProxyDisconnect);
         activeSessions.clear();
         try {
@@ -188,6 +196,50 @@ public final class VelocityPlugin {
      */
     public int getProxyIdleTimeoutMinutes() {
         return 2;
+    }
+
+    public boolean isValidControlSecret(String secret) {
+        String configured = configFile.getString("proxy.shared_secret", "");
+        return secret != null && !configured.isBlank() && configured.equals(secret);
+    }
+
+    public JSONObject updatePlayerState(UUID uuid, String username, boolean joined) {
+        Player player = server.getPlayer(uuid).orElse(null);
+        if (player == null || !player.getUsername().equalsIgnoreCase(username)) {
+            return new JSONObject().put("passwordSet", false).put("changingServer", false);
+        }
+
+        if (joined) {
+            boolean changingServer = pendingServerChanges.remove(uuid) != null;
+            return new JSONObject()
+                    .put("passwordSet", passwordStore.isPasswordSet(username))
+                    .put("changingServer", changingServer);
+        }
+
+        ProxyWebSocket socket = activeSessions.get(uuid);
+        if (socket == null) {
+            return new JSONObject().put("passwordSet", passwordStore.isPasswordSet(username)).put("changingServer", false);
+        }
+
+        long deadline = System.currentTimeMillis() + getTransferTimeoutSeconds() * 1000L;
+        pendingServerChanges.put(uuid, deadline);
+        socket.beginServerChange();
+        transferTimeouts.schedule(() -> {
+            Long currentDeadline = pendingServerChanges.get(uuid);
+            if (currentDeadline != null && currentDeadline == deadline) {
+                pendingServerChanges.remove(uuid);
+                activeSessions.remove(uuid, socket);
+                socket.onProxyDisconnect();
+            }
+        }, getTransferTimeoutSeconds(), TimeUnit.SECONDS);
+
+        return new JSONObject()
+                .put("passwordSet", passwordStore.isPasswordSet(username))
+                .put("changingServer", true);
+    }
+
+    private int getTransferTimeoutSeconds() {
+        return Math.max(1, configFile.getInt("proxy.transfer-timeout-seconds", 60));
     }
 
     /**
