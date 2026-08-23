@@ -123,7 +123,7 @@ public final class VelocityPlugin {
 
         String backendUrl = resolveClientUrl(event.getServer().getServerInfo().getName());
         if (backendUrl != null && !backendUrl.isBlank()) {
-            socket.reconnectBackend(backendUrl);
+            socket.reconnectBackend(event.getServer().getServerInfo().getName(), backendUrl);
         }
     }
 

@@ -31,7 +31,6 @@ public final class BackendRelay {
     private volatile String backendUrl;
     private volatile String joinPayload;
     private volatile String capabilitiesPayload;
-    private volatile boolean suppressClientClose;
     private CompletableFuture<WebSocket> sendChain = CompletableFuture.completedFuture(null);
 
     /**
@@ -75,9 +74,17 @@ public final class BackendRelay {
                                 closeClient(1011, "backend_connect_failed");
                                 return;
                             }
+                            WebSocket previousSocket = backendSocket;
                             backendSocket = socket;
-                            if (joinPayload != null && !joinPayload.isBlank()) sendText(socket, joinPayload);
-                            if (capabilitiesPayload != null && !capabilitiesPayload.isBlank()) sendText(socket, capabilitiesPayload);
+                            if (previousSocket != null) {
+                                try {
+                                    previousSocket.sendClose(1000, "backend_switch");
+                                } catch (Exception e) {
+                                    logger.debug("Failed to close previous backend websocket cleanly", e);
+                                }
+                            }
+                            if (joinPayload != null && !joinPayload.isBlank()) sendText(socket, joinPayload, id);
+                            if (capabilitiesPayload != null && !capabilitiesPayload.isBlank()) sendText(socket, capabilitiesPayload, id);
                         }
                     });
     }
@@ -89,10 +96,6 @@ public final class BackendRelay {
      * @param newBackendUrl WebSocket URL of the backend to switch to
      */
     public synchronized void reconnect(String newBackendUrl) {
-        currentConnectionId = connectionIdCounter.incrementAndGet();
-        suppressClientClose = true;
-        try { closeBackend(1000, "backend_switch"); }
-        finally { suppressClientClose = false; }
         connect(newBackendUrl, joinPayload);
     }
 
@@ -101,7 +104,7 @@ public final class BackendRelay {
      *
      * @param text raw text frame to relay
      */
-    public synchronized void forwardText(String text) { WebSocket socket = backendSocket; if (socket != null) sendText(socket, text); }
+    public synchronized void forwardText(String text) { WebSocket socket = backendSocket; if (socket != null) sendText(socket, text, currentConnectionId); }
 
     /**
      * Forward a binary frame from the browser to the backend, if connected.
@@ -110,7 +113,7 @@ public final class BackendRelay {
      * @param offset start offset of the frame within {@code bytes}
      * @param length number of bytes in the frame
      */
-    public synchronized void forwardBinary(byte[] bytes, int offset, int length) { WebSocket socket = backendSocket; if (socket != null) { byte[] copy = java.util.Arrays.copyOfRange(bytes, offset, offset + length); sendBinary(socket, ByteBuffer.wrap(copy)); } }
+    public synchronized void forwardBinary(byte[] bytes, int offset, int length) { WebSocket socket = backendSocket; if (socket != null) { byte[] copy = java.util.Arrays.copyOfRange(bytes, offset, offset + length); sendBinary(socket, ByteBuffer.wrap(copy), currentConnectionId); } }
 
     /**
      * Close both the backend socket and the browser session.
@@ -138,28 +141,32 @@ public final class BackendRelay {
         WebSocket socket = backendSocket; backendSocket = null;
         if (socket != null) try { socket.sendClose(code, reason); } catch (Exception e) { logger.debug("Failed to close backend websocket cleanly", e); }
     }
-    private void sendText(WebSocket socket, String text) {
+    private void sendText(WebSocket socket, String text, long connectionId) {
         sendChain = sendChain.handle((ignored, error) -> null)
                 .thenCompose(ignored -> socket.sendText(text, true))
                 .whenComplete((ignored, error) -> {
                     if (error != null) {
                         logger.debug("Failed to send backend text frame", error);
-                        closeClient(1011, "backend_send_failed");
+                        if (connectionId == currentConnectionId && backendSocket == socket) {
+                            closeClient(1011, "backend_send_failed");
+                        }
                     }
                 });
     }
-    private void sendBinary(WebSocket socket, ByteBuffer data) {
+    private void sendBinary(WebSocket socket, ByteBuffer data, long connectionId) {
         sendChain = sendChain.handle((ignored, error) -> null)
                 .thenCompose(ignored -> socket.sendBinary(data, true))
                 .whenComplete((ignored, error) -> {
                     if (error != null) {
                         logger.debug("Failed to send backend binary frame", error);
-                        closeClient(1011, "backend_send_failed");
+                        if (connectionId == currentConnectionId && backendSocket == socket) {
+                            closeClient(1011, "backend_send_failed");
+                        }
                     }
                 });
     }
     private void closeClient(int code, String reason) {
-        if (suppressClientClose || !clientSession.isOpen()) return;
+        if (!clientSession.isOpen()) return;
         try { clientSession.close(code, reason); } catch (Exception e) { logger.debug("Failed to close client websocket cleanly", e); }
     }
 

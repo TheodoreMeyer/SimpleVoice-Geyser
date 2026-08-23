@@ -188,9 +188,10 @@ public final class ProxyWebSocket {
      * the player switched Velocity servers. Rebuilds the join payload with a
      * fresh proxy token for the new backend.
      *
+     * @param clientName configured client name of the new backend
      * @param backendUrl WebSocket URL of the new backend
      */
-    public void reconnectBackend(String backendUrl) {
+    public void reconnectBackend(String clientName, String backendUrl) {
         synchronized (lifecycleLock) {
             if (relay == null || lastJoinRequest == null || playerUuid == null) {
                 return;
@@ -200,10 +201,6 @@ public final class ProxyWebSocket {
             return;
         }
 
-        String clientName = playerUuid == null ? "default" : plugin.getServer().getPlayer(playerUuid)
-                .flatMap(player -> player.getCurrentServer())
-                .map(connection -> connection.getServerInfo().getName())
-                .orElse("default");
         JSONObject join = buildBackendJoinPayload(clientName);
         relay.updateJoinPayload(join.toString());
         if (lastCapabilitiesRequest != null) {
