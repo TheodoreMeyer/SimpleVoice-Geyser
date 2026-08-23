@@ -30,6 +30,15 @@ For Host-Specific setup, see [Hosting Guides]({% project_link guides %}).
 * LuckPerms (optional)
 * Floodgate (optional)
 
+### Velocity Proxy Frontend (optional)
+
+For networks running behind a Velocity proxy, a separate proxy plugin hosts the web client and moves voice sessions between backend servers automatically.
+
+* Velocity 3.x
+* Simple Voice Geyser on each backend server
+
+See: [Velocity Proxy Setup]({% project_link velocity %})
+
 > Simple Voice Geyser depends on Simple Voice Chat and will not function without it.
 
 ---
@@ -205,6 +214,8 @@ Use a reverse proxy (e.g., Nginx, Caddy) to provide:
 
 * HTTPS (TLS)
 * Secure WebSocket (WSS)
+
+If your network runs behind a Velocity proxy, the SVG Velocity plugin can host the web frontend and terminate TLS itself. See: [Velocity Proxy Setup]({% project_link velocity %}).
 
 ---
 

@@ -107,7 +107,9 @@ HTTPS proxy-Correct solution
 ## Built-in TLS
 
 The Velocity proxy can terminate TLS directly by setting `ssl.type` to `file`.
-Jetty 11 expects the configured certificate file to be a Java keystore (JKS or
-PKCS12), and `ssl.file.key` is used as its keystore password. Paths are relative
-to the plugin configuration directory. A reverse proxy remains recommended for
-PEM certificate and private-key files.
+It expects `ssl.file.cert` to be an X.509 PEM certificate and `ssl.file.key`
+to be an unencrypted PKCS#8 PEM private key; paths are relative to the plugin
+configuration directory. A reverse proxy remains recommended for certificate
+chains and automatic renewal. See
+[Velocity Proxy Setup]({% project_link velocity %}) for the full configuration
+reference.
