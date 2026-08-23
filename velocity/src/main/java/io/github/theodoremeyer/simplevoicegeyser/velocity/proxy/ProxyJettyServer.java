@@ -25,11 +25,26 @@ import java.util.regex.Pattern;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.KeyFactory;
 
+/**
+ * Embedded Jetty server that hosts the proxy's web frontend: static web client
+ * resources and the {@code /ws} WebSocket endpoint browsers connect to.
+ * Optionally serves HTTPS using a PEM certificate/key pair from disk.
+ */
 public final class ProxyJettyServer {
 
     private final Server server;
     private final Duration idleTimeout;
 
+    /**
+     * Create the server connector without starting it.
+     *
+     * @param host        address to bind to (e.g. {@code 0.0.0.0})
+     * @param port        port to listen on
+     * @param idleTimeout how long an open connection may stay idle before being dropped
+     * @param certificate X.509 PEM certificate file for TLS, or {@code null} to serve plain HTTP
+     * @param key         unencrypted PKCS#8 PEM private key matching the certificate, or {@code null}
+     * @throws Exception if reading or parsing the TLS files fails
+     */
     public ProxyJettyServer(String host, int port, Duration idleTimeout, File certificate, File key) throws Exception {
         this.server = new Server();
         this.idleTimeout = idleTimeout;
@@ -75,6 +90,13 @@ public final class ProxyJettyServer {
         return store;
     }
 
+    /**
+     * Register the static resource servlet and the {@code /ws} WebSocket handler,
+     * then start accepting connections.
+     *
+     * @param plugin the plugin instance handed to new {@link ProxyWebSocket} sessions
+     * @throws Exception if Jetty fails to start
+     */
     public void start(VelocityPlugin plugin) throws Exception {
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
@@ -90,6 +112,11 @@ public final class ProxyJettyServer {
         server.start();
     }
 
+    /**
+     * Stop the server and disconnect all clients.
+     *
+     * @throws Exception if Jetty fails to stop cleanly
+     */
     public void stop() throws Exception {
         server.stop();
     }

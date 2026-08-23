@@ -15,6 +15,15 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.UUID;
 
+/**
+ * Server-side handler for one browser WebSocket session.
+ * <p>
+ * Until a session is authenticated via a {@code join} message it only accepts
+ * that handshake; afterwards all text and binary frames are relayed to the
+ * player's current backend through a {@link BackendRelay}. When the player
+ * switches servers, {@link #reconnectBackend(String)} moves the same browser
+ * session onto the new backend.
+ */
 @WebSocket
 public final class ProxyWebSocket {
 
@@ -31,10 +40,20 @@ public final class ProxyWebSocket {
     private String currentBackendUrl;
     private final Object lifecycleLock = new Object();
 
+    /**
+     * Create a handler for a new browser session.
+     *
+     * @param plugin the plugin instance used for config, auth, and session tracking
+     */
     public ProxyWebSocket(VelocityPlugin plugin) {
         this.plugin = plugin;
     }
 
+    /**
+     * Called when the browser connects; applies the configured idle timeout.
+     *
+     * @param session the newly opened Jetty WebSocket session
+     */
     @OnWebSocketConnect
     public void onConnect(Session session) {
         this.session = session;
@@ -42,6 +61,13 @@ public final class ProxyWebSocket {
         plugin.getLogger().info("[Proxy] WebSocket connected: " + session.getRemoteAddress());
     }
 
+    /**
+     * Handle a text frame from the browser. Before authentication only a
+     * {@code join} request is accepted; afterwards frames are relayed to the
+     * backend, with {@code capabilities} messages also cached for reconnects.
+     *
+     * @param message raw text frame received from the browser
+     */
     @OnWebSocketMessage
     public void onMessage(String message) {
         if (message == null || message.trim().isEmpty()) {
@@ -88,6 +114,13 @@ public final class ProxyWebSocket {
         }
     }
 
+    /**
+     * Handle a binary frame from the browser; ignored until authenticated.
+     *
+     * @param buffer buffer containing the frame
+     * @param offset start offset of the frame within {@code buffer}
+     * @param length number of bytes in the frame
+     */
     @OnWebSocketMessage
     public void onMessage(byte[] buffer, int offset, int length) {
         synchronized (lifecycleLock) {
@@ -98,6 +131,13 @@ public final class ProxyWebSocket {
         }
     }
 
+    /**
+     * Called when the browser disconnects; tears down the backend relay and
+     * unregisters the session from the plugin.
+     *
+     * @param statusCode WebSocket close code sent by the browser
+     * @param reason     human-readable close reason
+     */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
         plugin.getLogger().debug("[Proxy] Session close status=" + statusCode + " reason=" + reason);
@@ -117,11 +157,20 @@ public final class ProxyWebSocket {
         playerName = null;
     }
 
+    /**
+     * Called on WebSocket transport errors; logged at debug level only.
+     *
+     * @param error the error thrown by the transport
+     */
     @OnWebSocketError
     public void onError(Throwable error) {
         plugin.getLogger().debug("[Proxy] websocket error", error);
     }
 
+    /**
+     * Tear down the backend relay because the player left the network,
+     * closing the browser session with {@link ConnectionStates.DisconnectCodes#PLAYER_LEAVE}.
+     */
     public synchronized void onProxyDisconnect() {
         synchronized (lifecycleLock) {
             if (relay != null) {
@@ -134,6 +183,13 @@ public final class ProxyWebSocket {
         }
     }
 
+    /**
+     * Move an authenticated browser session to a different backend, e.g. when
+     * the player switched Velocity servers. Rebuilds the join payload with a
+     * fresh proxy token for the new backend.
+     *
+     * @param backendUrl WebSocket URL of the new backend
+     */
     public void reconnectBackend(String backendUrl) {
         synchronized (lifecycleLock) {
             if (relay == null || lastJoinRequest == null || playerUuid == null) {

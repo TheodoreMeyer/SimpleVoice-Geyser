@@ -15,6 +15,14 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Signed short-lived token the proxy issues to browser sessions so they can
+ * authenticate against a backend server.
+ * <p>
+ * This variant additionally enforces single use: every nonce seen by
+ * {@link #validate(String, String)} is remembered until its expiry, so a
+ * token cannot be replayed.
+ */
 public final class ProxyAuthToken {
 
     private static final String HMAC_ALG = "HmacSHA256";
@@ -25,8 +33,25 @@ public final class ProxyAuthToken {
 
     private ProxyAuthToken() {}
 
+    /**
+     * Parsed payload of a validated proxy auth token.
+     *
+     * @param uuid      UUID of the player the token was issued for
+     * @param username  username of the player the token was issued for
+     * @param expiresAt epoch second at which the token expires
+     * @param nonce     random value unique to this token issuance
+     */
     public record Claims(UUID uuid, String username, long expiresAt, String nonce) {}
 
+    /**
+     * Create a new signed, short-lived proxy auth token for a player session.
+     *
+     * @param uuid     UUID of the player to issue the token for
+     * @param username username of the player to issue the token for
+     * @param secret   shared secret used to sign the token; must match the secret used for validation
+     * @param ttl      how long the token stays valid; values below one second are treated as one second
+     * @return the signed token as {@code base64url(payload) + "." + base64url(signature)}
+     */
     public static String create(UUID uuid, String username, String secret, Duration ttl) {
         long now = Instant.now().getEpochSecond();
         JSONObject payload = new JSONObject();
@@ -41,6 +66,16 @@ public final class ProxyAuthToken {
         return payloadB64 + "." + sigB64;
     }
 
+    /**
+     * Validate a signed proxy auth token against the shared secret and mark its
+     * nonce as used. A valid token is accepted exactly once; replaying it returns
+     * {@code null}. The token is rejected if it is malformed, the signature does
+     * not match, its {@code exp} claim is in the past, or its nonce was already seen.
+     *
+     * @param token  token string produced by {@link #create(UUID, String, String, Duration)}
+     * @param secret shared secret the token was signed with
+     * @return the parsed claims if the token is valid, unexpired, and unused, otherwise {@code null}
+     */
     public static synchronized Claims validate(String token, String secret) {
         if (token == null || token.isBlank() || secret == null || secret.isBlank()) {
             return null;

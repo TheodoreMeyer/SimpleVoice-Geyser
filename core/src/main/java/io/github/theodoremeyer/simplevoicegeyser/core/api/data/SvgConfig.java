@@ -54,30 +54,42 @@ public final class SvgConfig {
             new ConfigKey <>(this, "config-info", "This file is used to configure Simple Voice Geyser. " +
                     "For more information, see the wiki: https://theodoremeyer.github.io/projects/simplevoicegeyser/");
 
+    /** Voice chat client timeout in seconds. Documented but not enforced yet. */
     public final ConfigKey<Integer> VC_TIMEOUT =
             new ConfigKey <>(this, "client.vctimeout", 30);
 
+    /** How long a connected web client may sit idle before its session is dropped, in minutes. */
     public final ConfigKey<Integer> IDLE_TIMEOUT =
             new ConfigKey <>(this, "client.idletimeout", 2);
 
+    /** Whether clients must be connecting through Geyser (Bedrock) to use the voice server. */
     public final ConfigKey<Boolean> REQUIRE_BEDROCK =
             new ConfigKey <>(this, "client.requireBedrock", false);
 
+    /** Whether the configured emote can be used as a trigger to activate voice on Bedrock clients. */
     public final ConfigKey<Boolean> USE_EMOTE =
             new ConfigKey <>(this, "client.useEmoteForSVG", true);
 
+    /**
+     * Whether {@link #CLIENT_ALLOWED_TYPES_LIST} acts as a blacklist ({@code true})
+     * or a whitelist ({@code false}).
+     */
     public final ConfigKey<Boolean> CLIENT_ALLOWED_TYPES_BLACKLIST =
             new ConfigKey<>(this, "client.allowedTypes.isBlackList", true);
 
+    /** Client types allowed (whitelist) or blocked (blacklist) by the client type policy. */
     public final ConfigKey<List<String>> CLIENT_ALLOWED_TYPES_LIST =
             new ConfigKey<>(this, "client.allowedTypes.list", List.of());
 
+    /** Whether chat sent from the web client is enabled. */
     public final ConfigKey<Boolean> WEB_CHAT_ENABLED =
             new ConfigKey<>(this, "client.web-chat-enabled", true);
 
+    /** Whether players are shown an informational message about SimpleVoice-Geyser when they join. */
     public final ConfigKey<Boolean> JOIN_MESSAGE_ENABLED =
             new ConfigKey<>(this, "client.join-message.enabled", true);
 
+    /** Lines shown to players on join while {@link #JOIN_MESSAGE_ENABLED} is on. */
     public final ConfigKey<List<String>> JOIN_MESSAGE_TEXT =
             new ConfigKey<>(this, "client.join-message.text", List.of(
                     "This Server Uses SimpleVoice-Geyser.",
@@ -85,36 +97,47 @@ public final class SvgConfig {
                     "Then join Via the server's SVG website."
             ));
 
+    /** Whether the default voice group exists and can be joined. */
     public final ConfigKey<Boolean> DEFAULT_GROUP_ENABLED =
             new ConfigKey <>(this, "server.group.default.enabled", true);
 
+    /** Password required to join the default voice group. */
     public final ConfigKey<String> DEFAULT_GROUP_PASSWORD =
             new ConfigKey <>(this, "server.group.default.password", "1a2b");
 
+    /** Whether players are placed into the default group automatically when they join via web. */
     public final ConfigKey<Boolean> DEFAULT_GROUP_FORCE_ON_WEB_JOIN =
             new ConfigKey <>(this, "server.group.default.force-on-web-join", false);
 
+    /** TCP port the built-in web server listens on. */
     public final ConfigKey<Integer> PORT =
             new ConfigKey <>(this, "server.port", 8080);
 
+    /** Network address the built-in web server binds to (e.g. {@code 0.0.0.0} for all interfaces). */
     public final ConfigKey<String> BIND_ADDRESS =
             new ConfigKey <>(this, "server.bind-address", "0.0.0.0");
 
+    /** URL context path under which the web UI is served; always normalized to start with {@code /}. */
     public final ConfigKey<String> CONTEXT_PATH =
             new ConfigKey <>(this, "server.context-path", "/");
 
+    /** Failed authentication attempts allowed within the failure window before the client is locked out. */
     public final ConfigKey<Integer> MAX_AUTH_FAILURES =
             new ConfigKey <>(this, "server.security.max-auth-failures", 5);
 
+    /** Length of the window in which failed auth attempts are counted, in minutes. */
     public final ConfigKey<Integer> AUTH_FAILURE_DURATION =
             new ConfigKey <>(this, "server.security.auth-fail-duration", 3);
 
+    /** How long a client stays locked out after exceeding {@link #MAX_AUTH_FAILURES}, in minutes. */
     public final ConfigKey<Integer> AUTH_LOCK_DURATION =
             new ConfigKey <>(this, "server.security.auth-lock-duration", 8);
 
+    /** Audio transport used for voice traffic ({@code svg-v2}, {@code legacy}, or {@code auto}). */
     public final ConfigKey<String> AUDIO_TRANSPORT_MODE =
             new ConfigKey <>(this, "server.audio.transport-mode", "svg-v2");
 
+    /** Whether legacy-only web clients may fall back to the deprecated LEGACY transport. */
     public final ConfigKey<Boolean> AUDIO_ALLOW_LEGACY_FALLBACK =
             new ConfigKey <>(this, "server.audio.allow-legacy-fallback", true);
 
@@ -122,21 +145,27 @@ public final class SvgConfig {
     public final ConfigKey<Boolean> AUDIO_MIC_ALLOW_LEGACY =
             new ConfigKey<>(this, "server.audio.mic.allowLegacy", true);
 
+    /** Whether proxy token authentication is enabled for backends sitting behind a proxy. */
     public final ConfigKey<Boolean> PROXY_ENABLED =
             new ConfigKey <>(this, "proxy.enabled", false);
 
+    /** Shared secret used to sign and verify proxy auth tokens (see {@code ProxyAuthToken}). */
     public final ConfigKey<String> PROXY_SHARED_SECRET =
             new ConfigKey <>(this, "proxy.shared-secret", "simplevoice-geyser-proxy-secret");
 
+    /** Lifetime of a proxy auth token, in seconds. */
     public final ConfigKey<Integer> PROXY_TOKEN_TTL_SECONDS =
             new ConfigKey <>(this, "proxy.token-ttl-seconds", 120);
 
+    /** Whether verbose debug logging is enabled. */
     public final ConfigKey<Boolean> DEBUG =
             new ConfigKey <>(this, "debug", false);
 
+    /** Whether an update check runs against the project's release feed at startup. */
     public final ConfigKey<Boolean> UPDATE_CHECKER_ENABLED =
             new ConfigKey <>(this, "updatechecker.enable", true);
 
+    /** Version marker of the config schema; updated automatically on migration. */
     public final ConfigKey<String> CONFIG_VERSION =
             new ConfigKey <>(this, "config-version", SvgCore.VERSION);
 

@@ -7,8 +7,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Serves the bundled web client (resources under {@code /web}) and rejects
+ * path traversal attempts. Responses are sent with no-store caching so the
+ * client build always matches the plugin.
+ */
 public final class ResourceServlet extends HttpServlet {
 
+    /** Default constructor required by the servlet container. */
     public ResourceServlet() {}
 
     private static final String RESOURCE_ROOT = "/web";

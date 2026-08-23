@@ -14,6 +14,14 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * JSON-backed configuration file for the Velocity proxy module.
+ * <p>
+ * Values are read via dotted paths (e.g. {@code clients.lobby.url}) that
+ * resolve into nested JSON objects; a missing file falls back to the bundled
+ * {@code config.json} resource or built-in defaults. If the existing file is
+ * unreadable the config becomes read-only to avoid overwriting user data.
+ */
 public class VelocityConfigFile {
 
     private static final DateTimeFormatter BACKUP_TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
@@ -23,6 +31,11 @@ public class VelocityConfigFile {
     private volatile JSONObject config;
     private volatile boolean writable = true;
 
+    /**
+     * Load the configuration from the given file.
+     *
+     * @param configFile the {@code config.json} file to load and save
+     */
     public VelocityConfigFile(File configFile) {
         this.configFile = configFile;
         this.config = load();
@@ -49,14 +62,30 @@ public class VelocityConfigFile {
         }
     }
 
+    /**
+     * Get all top-level keys of the config.
+     * @return set of top-level key names
+     */
     public Set<String> getKeys() {
         return config.keySet();
     }
 
+    /**
+     * Check whether a top-level key exists.
+     *
+     * @param key top-level key name
+     * @return {@code true} if the key is present at the root level
+     */
     public boolean has(String key) {
         return config.has(key);
     }
 
+    /**
+     * Set a value at a dotted path, creating intermediate objects as needed.
+     *
+     * @param path  dotted config path (e.g. {@code clients.default.url})
+     * @param value value to store; may be any JSON-serializable object
+     */
     public synchronized void set(String path, Object value) {
         String[] parts = path.split("\\.");
         JSONObject target = config;
@@ -71,38 +100,94 @@ public class VelocityConfigFile {
         target.put(parts[parts.length - 1], value);
     }
 
+    /**
+     * Get a string value at a dotted path, or {@code null} if missing.
+     *
+     * @param path dotted config path
+     * @return the stored string, or {@code null}
+     */
     public String getString(String path) {
         return getValue(path, null);
     }
 
+    /**
+     * Get a string value at a dotted path with a fallback.
+     *
+     * @param path dotted config path
+     * @param def  value returned when the key is missing or null
+     * @return the stored string, or {@code def}
+     */
     public String getString(String path, String def) {
         return getValue(path, def);
     }
 
+    /**
+     * Get a string from inside one nested object (e.g. {@code clients.lobby} + {@code url}).
+     *
+     * @param object name of the parent JSON object at the root level
+     * @param key    key inside that object
+     * @param def    value returned when either level is missing
+     * @return the stored string, or {@code def}
+     */
     public String getNestedString(String object, String key, String def) {
         Object value = config.opt(object);
         return value instanceof JSONObject nested ? nested.optString(key, def) : def;
     }
 
+    /**
+     * Get a boolean from inside one nested object (e.g. {@code clients.lobby} + {@code enabled}).
+     *
+     * @param object name of the parent JSON object at the root level
+     * @param key    key inside that object
+     * @param def    value returned when either level is missing
+     * @return the stored boolean, or {@code def}
+     */
     public boolean getNestedBoolean(String object, String key, boolean def) {
         Object value = config.opt(object);
         return value instanceof JSONObject nested ? nested.optBoolean(key, def) : def;
     }
 
+    /**
+     * Get a boolean value at a dotted path.
+     *
+     * @param path dotted config path
+     * @param def  value returned when the key is missing or not a boolean
+     * @return the stored boolean, or {@code def}
+     */
     public boolean getBoolean(String path, boolean def) {
         Object value = getRawValue(path);
         return value instanceof Boolean ? (Boolean) value : def;
     }
 
+    /**
+     * Get an integer value at a dotted path.
+     *
+     * @param path dotted config path
+     * @param def  value returned when the key is missing or not numeric
+     * @return the stored integer, or {@code def}
+     */
     public int getInt(String path, int def) {
         Object value = getRawValue(path);
         return value instanceof Number ? ((Number) value).intValue() : def;
     }
 
+    /**
+     * Get a double value at a dotted path.
+     *
+     * @param path dotted config path
+     * @param def  value returned when the key is missing or not numeric
+     * @return the stored double, or {@code def}
+     */
     public double getDouble(String path, double def) {
         return config.optDouble(path, def);
     }
 
+    /**
+     * Write the current config to disk as pretty-printed JSON.
+     * Skipped if the existing file could not be loaded (read-only mode).
+     *
+     * @throws RuntimeException if writing fails and the file was writable
+     */
     public synchronized void save() {
         if (!writable) {
             LOGGER.warning("Skipping save because the existing config.json could not be loaded");
@@ -115,14 +200,29 @@ public class VelocityConfigFile {
         }
     }
 
+    /**
+     * Reload the config from disk, discarding unsaved in-memory changes.
+     */
     public synchronized void reload() {
         this.config = load();
     }
 
+    /**
+     * Get the underlying config file.
+     * @return the file this config was loaded from
+     */
     public File getFile() {
         return configFile;
     }
 
+    /**
+     * Run any migrations needed to bring an older bundled config up to date.
+     * Currently generates a random {@code proxy.shared_secret} when missing or
+     * blank, backing up the previous file first.
+     *
+     * @param trigger short label describing what invoked the migration
+     * @return a report describing whether anything was changed
+     */
     public MigrationReport migrateFromBundledDefaults(String trigger) {
         JSONObject proxy = config.optJSONObject("proxy");
         if (proxy == null || (!proxy.has("shared_secret")
@@ -203,6 +303,14 @@ public class VelocityConfigFile {
         }
     }
 
+    /**
+     * Outcome of a config migration.
+     *
+     * @param mode       config format the migration ran against (always {@code "json"})
+     * @param backupPath absolute path of the pre-migration backup, or {@code ""} if none was made
+     * @param addedKeys  number of keys added during migration
+     * @param migrated   whether any changes were written
+     */
     public record MigrationReport(String mode, String backupPath, int addedKeys, boolean migrated) {}
 
     private static String generateRandomSecret() {

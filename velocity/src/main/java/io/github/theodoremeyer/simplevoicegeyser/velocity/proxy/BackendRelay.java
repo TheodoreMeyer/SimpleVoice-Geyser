@@ -12,6 +12,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * Bridges a browser WebSocket session to the WebSocket of a SimpleVoice-Geyser
+ * backend server, forwarding text and binary frames in both directions.
+ * <p>
+ * Stale connections (e.g. after {@link #reconnect(String)}) are detected via
+ * monotonically increasing connection ids and closed instead of forwarded.
+ */
 public final class BackendRelay {
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
     private static final int MAX_MESSAGE_SIZE = 1024 * 1024;
@@ -27,11 +34,24 @@ public final class BackendRelay {
     private volatile boolean suppressClientClose;
     private CompletableFuture<WebSocket> sendChain = CompletableFuture.completedFuture(null);
 
+    /**
+     * Create a relay for the given browser session.
+     *
+     * @param clientSession the browser WebSocket session to serve
+     * @param logger        logger used for diagnostics
+     */
     public BackendRelay(Session clientSession, Logger logger) {
         this.clientSession = clientSession;
         this.logger = logger;
     }
 
+    /**
+     * Open a WebSocket connection to a backend and forward the join payload to it.
+     * Any previous connection is invalidated; its socket is closed if it completes later.
+     *
+     * @param backendUrl  WebSocket URL of the backend to connect to
+     * @param joinPayload JSON join message sent to the backend once connected, or {@code null}
+     */
     public void connect(String backendUrl, String joinPayload) {
         long id;
         synchronized (this) {
@@ -62,6 +82,12 @@ public final class BackendRelay {
                     });
     }
 
+    /**
+     * Switch to a different backend without closing the browser session.
+     * Re-sends the stored join and capability payloads on the new connection.
+     *
+     * @param newBackendUrl WebSocket URL of the backend to switch to
+     */
     public synchronized void reconnect(String newBackendUrl) {
         currentConnectionId = connectionIdCounter.incrementAndGet();
         suppressClientClose = true;
@@ -70,10 +96,42 @@ public final class BackendRelay {
         connect(newBackendUrl, joinPayload);
     }
 
+    /**
+     * Forward a text frame from the browser to the backend, if connected.
+     *
+     * @param text raw text frame to relay
+     */
     public synchronized void forwardText(String text) { WebSocket socket = backendSocket; if (socket != null) sendText(socket, text); }
+
+    /**
+     * Forward a binary frame from the browser to the backend, if connected.
+     *
+     * @param bytes  source buffer
+     * @param offset start offset of the frame within {@code bytes}
+     * @param length number of bytes in the frame
+     */
     public synchronized void forwardBinary(byte[] bytes, int offset, int length) { WebSocket socket = backendSocket; if (socket != null) { byte[] copy = java.util.Arrays.copyOfRange(bytes, offset, offset + length); sendBinary(socket, ByteBuffer.wrap(copy)); } }
+
+    /**
+     * Close both the backend socket and the browser session.
+     *
+     * @param code   WebSocket close code
+     * @param reason human-readable close reason
+     */
     public synchronized void close(int code, String reason) { closeBackend(code, reason); closeClient(code, reason); }
+
+    /**
+     * Replace the join payload sent when (re)connecting to a backend.
+     *
+     * @param payload new JSON join payload, or {@code null} to clear it
+     */
     public void updateJoinPayload(String payload) { joinPayload = payload; }
+
+    /**
+     * Replace the capabilities payload sent after the join payload.
+     *
+     * @param payload new JSON capabilities payload, or {@code null} to clear it
+     */
     public void updateCapabilitiesPayload(String payload) { capabilitiesPayload = payload; }
 
     private void closeBackend(int code, String reason) {

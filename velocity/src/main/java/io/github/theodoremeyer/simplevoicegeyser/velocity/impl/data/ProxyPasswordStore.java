@@ -11,6 +11,10 @@ import java.nio.file.Files;
 import java.util.Locale;
 import java.util.UUID;
 
+/**
+ * Persistent store of BCrypt-hashed web client passwords, keyed by player UUID
+ * in {@code accounts.json} inside the plugin data folder.
+ */
 public final class ProxyPasswordStore {
 
     private final File file;
@@ -18,12 +22,25 @@ public final class ProxyPasswordStore {
     private JSONObject data;
     private boolean writable;
 
+    /**
+     * Create the store and load (or initialize) {@code accounts.json}.
+     *
+     * @param dataFolder plugin data directory containing the accounts file
+     * @param logger     logger used for load/save diagnostics
+     */
     public ProxyPasswordStore(File dataFolder, Logger logger) {
         this.file = new File(dataFolder, "accounts.json");
         this.logger = logger;
         this.data = load();
     }
 
+    /**
+     * Look up the UUID an account was registered under, matching usernames
+     * case-insensitively.
+     *
+     * @param username account username to search for
+     * @return the stored UUID, or {@code null} if no matching account exists
+     */
     public synchronized UUID getUUID(String username) {
         String normalized = normalize(username);
         for (String key : data.keySet()) {
@@ -39,16 +56,40 @@ public final class ProxyPasswordStore {
         return null;
     }
 
+    /**
+     * Check whether an account with the given username exists.
+     *
+     * @param username account username to check
+     * @return {@code true} if a password is stored for this username
+     */
     public synchronized boolean isPasswordSet(String username) {
         UUID uuid = getUUID(username);
         return uuid != null && data.has(uuid.toString());
     }
 
+    /**
+     * Validate credentials without checking which player is asking.
+     * Prefer {@link #validatePassword(String, String, UUID)} so a player can
+     * only authenticate as themselves.
+     *
+     * @param username account username
+     * @param password plaintext password to check
+     * @return {@code true} if the password matches the stored hash
+     */
     public synchronized boolean validatePassword(String username, String password) {
         UUID uuid = getUUID(username);
         return validatePassword(username, password, uuid);
     }
 
+    /**
+     * Validate that the given password belongs to the given username and that
+     * the account's stored UUID matches the expected player UUID.
+     *
+     * @param username    account username
+     * @param password    plaintext password to check
+     * @param expectedUuid UUID of the online player attempting authentication
+     * @return {@code true} if all three match
+     */
     public synchronized boolean validatePassword(String username, String password, UUID expectedUuid) {
         UUID uuid = getUUID(username);
         if (expectedUuid == null || !expectedUuid.equals(uuid)) {
@@ -76,6 +117,14 @@ public final class ProxyPasswordStore {
         }
     }
 
+    /**
+     * Set or replace the password for a player, hashing it with BCrypt and
+     * persisting the store immediately.
+     *
+     * @param uuid     UUID of the player the account belongs to
+     * @param username account username to register
+     * @param password new plaintext password
+     */
     public synchronized void setPassword(UUID uuid, String username, String password) {
         String hash = BCrypt.hashpw(password, BCrypt.gensalt(12));
         JSONObject entry = new JSONObject();

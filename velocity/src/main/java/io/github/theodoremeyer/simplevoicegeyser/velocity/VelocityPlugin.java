@@ -24,6 +24,14 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Velocity plugin entry point for the SimpleVoice-Geyser proxy frontend.
+ * <p>
+ * Hosts a web server browsers connect to, tracks authenticated browser
+ * sessions per player ({@link #activeSessions}), and moves each session to
+ * the backend matching the player's current Velocity server. Also registers
+ * the {@code /svg} command used to set web client passwords.
+ */
 @Plugin(
         id = "simplevoice-geyser",
         name = "SimpleVoice-Geyser",
@@ -43,6 +51,14 @@ public final class VelocityPlugin {
     private ProxyPasswordStore passwordStore;
     private ProxyJettyServer webServer;
 
+    /**
+     * Create the plugin container; dependencies are provided by Velocity's
+     * injection framework.
+     *
+     * @param server        Velocity proxy server instance
+     * @param logger        SLF4J logger scoped to this plugin
+     * @param dataDirectory plugin data directory (created on initialize)
+     */
     @Inject
     public VelocityPlugin(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
         this.server = server;
@@ -50,6 +66,12 @@ public final class VelocityPlugin {
         this.dataDirectory = dataDirectory;
     }
 
+    /**
+     * Initialize the plugin on proxy startup: load config, register commands,
+     * and start the web frontend.
+     *
+     * @param event proxy initialization event
+     */
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
         File dataDir = dataDirectory.toFile();
@@ -86,6 +108,12 @@ public final class VelocityPlugin {
         }
     }
 
+    /**
+     * Move a player's authenticated browser session to the backend matching
+     * the server they just connected to.
+     *
+     * @param event server connection event
+     */
     @Subscribe
     public void onServerConnected(ServerConnectedEvent event) {
         ProxyWebSocket socket = activeSessions.get(event.getPlayer().getUniqueId());
@@ -99,6 +127,11 @@ public final class VelocityPlugin {
         }
     }
 
+    /**
+     * Close a player's browser session when they disconnect from the network.
+     *
+     * @param event player disconnect event
+     */
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
         ProxyWebSocket socket = activeSessions.remove(event.getPlayer().getUniqueId());
@@ -107,6 +140,11 @@ public final class VelocityPlugin {
         }
     }
 
+    /**
+     * Shut down all browser sessions and stop the web frontend.
+     *
+     * @param event proxy shutdown event
+     */
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent event) {
         activeSessions.values().forEach(ProxyWebSocket::onProxyDisconnect);
@@ -120,22 +158,45 @@ public final class VelocityPlugin {
         }
     }
 
+    /**
+     * Get the proxy server instance.
+     * @return Velocity's {@link ProxyServer}
+     */
     public ProxyServer getServer() {
         return server;
     }
 
+    /**
+     * Get this plugin's logger.
+     * @return SLF4J logger scoped to this plugin
+     */
     public Logger getLogger() {
         return logger;
     }
 
+    /**
+     * Get the web client password store.
+     * @return the shared {@link ProxyPasswordStore}, or {@code null} before initialization
+     */
     public ProxyPasswordStore getPasswordStore() {
         return passwordStore;
     }
 
+    /**
+     * Get how long a browser session may stay idle before being dropped.
+     * @return idle timeout in minutes
+     */
     public int getProxyIdleTimeoutMinutes() {
         return 2;
     }
 
+    /**
+     * Track an authenticated browser session for a player. If another session
+     * is already registered for that player it is disconnected first.
+     *
+     * @param uuid   UUID of the player the session belongs to
+     * @param socket the authenticated browser session
+     */
     public void registerSession(UUID uuid, ProxyWebSocket socket) {
         ProxyWebSocket replaced = activeSessions.put(uuid, socket);
         if (replaced != null && replaced != socket) {
@@ -143,10 +204,22 @@ public final class VelocityPlugin {
         }
     }
 
+    /**
+     * Remove a browser session from tracking, but only if it is still the one registered.
+     *
+     * @param uuid   UUID of the player
+     * @param socket session expected to currently be registered
+     */
     public void unregisterSession(UUID uuid, ProxyWebSocket socket) {
         activeSessions.computeIfPresent(uuid, (ignored, current) -> current == socket ? null : current);
     }
 
+    /**
+     * Resolve the backend WebSocket URL configured for the server a player is on.
+     *
+     * @param player player whose current server is used as lookup key
+     * @return configured backend URL, or {@code ""} when unconfigured
+     */
     public String resolveClientUrl(Player player) {
         String serverName = player.getCurrentServer()
                 .map(conn -> conn.getServerInfo().getName())
@@ -154,6 +227,13 @@ public final class VelocityPlugin {
         return resolveClientUrl(serverName);
     }
 
+    /**
+     * Resolve the backend WebSocket URL configured under {@code clients.<name>.url},
+     * falling back to {@code default} for blank or unknown names.
+     *
+     * @param clientName name of the backend client entry in config
+     * @return configured backend URL, or {@code ""} when unconfigured
+     */
     public String resolveClientUrl(String clientName) {
         String normalized = clientName == null ? "default" : clientName.trim();
         if (normalized.isEmpty()) {
@@ -163,6 +243,17 @@ public final class VelocityPlugin {
         return configFile.getString("clients." + normalized + ".url", "");
     }
 
+    /**
+     * Sign a proxy auth token for a player using the secret configured for the
+     * given backend client entry: its per-client secret, or the global
+     * {@code proxy.shared_secret} when {@code auth.global} is enabled.
+     *
+     * @param uuid       UUID of the player to issue the token for
+     * @param username   username of the player to issue the token for
+     * @param clientName name of the backend client entry the token targets
+     * @return the signed token string for the browser to present to the backend
+     * @throws IllegalStateException if no non-blank signing secret is configured
+     */
     public synchronized String createProxyToken(UUID uuid, String username, String clientName) {
         String normalized = clientName == null ? "default" : clientName.trim();
         if (normalized.isEmpty()) {
@@ -179,6 +270,13 @@ public final class VelocityPlugin {
         return ProxyAuthToken.create(uuid, username, secret, Duration.ofSeconds(ttlSeconds));
     }
 
+    /**
+     * Sign a proxy auth token for a player targeting the {@code default} client entry.
+     *
+     * @param player player to issue the token for
+     * @return the signed token string
+     * @throws IllegalStateException if no signing secret is configured
+     */
     public String createProxyToken(Player player) {
         return createProxyToken(player.getUniqueId(), player.getUsername(), "default");
     }

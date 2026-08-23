@@ -12,10 +12,20 @@ import net.kyori.adventure.text.Component;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * The {@code /svg} command. Players use {@code /svg pswd <password>} to set
+ * (or change) the password protecting their web client account; console gets
+ * usage help only.
+ */
 public final class VelocityCommand implements RawCommand {
 
     private final ProxyPasswordStore passwordStore;
 
+    /**
+     * Create the command.
+     *
+     * @param passwordStore store used to persist player passwords
+     */
     public VelocityCommand(ProxyPasswordStore passwordStore) {
         this.passwordStore = passwordStore;
     }
