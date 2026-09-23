@@ -17,6 +17,9 @@ dependencies {
     // CORE MODULE
     implementation(project(":core"))
 
+    // Logging
+    implementation("org.slf4j:slf4j-jdk14:2.0.16")
+
     // Simple Voice Chat API
     compileOnly("de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}")
 }
@@ -44,7 +47,6 @@ tasks.shadowJar {
     from(project(":core").sourceSets.main.output)
 
 }
-
 tasks.withType(Jar).configureEach {
     archiveBaseName.set("Svg-Spigot")
 }
