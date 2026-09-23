@@ -203,6 +203,8 @@ public final class SvgConfig {
             WEB_CHAT_ENABLED,
             CLIENT_ALLOWED_TYPES_BLACKLIST,
             CLIENT_ALLOWED_TYPES_LIST,
+            JOIN_MESSAGE_ENABLED,
+            JOIN_MESSAGE_TEXT,
             DEFAULT_GROUP_ENABLED,
             DEFAULT_GROUP_PASSWORD,
             DEFAULT_GROUP_FORCE_ON_WEB_JOIN,
