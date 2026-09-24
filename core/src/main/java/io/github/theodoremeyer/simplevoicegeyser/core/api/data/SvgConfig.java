@@ -12,52 +12,24 @@ import java.util.Map;
 public final class SvgConfig {
 
     /**
-     * Canonical config defaults used by all platforms.
+     * Canonical config defaults generated dynamically from registered config key definitions.
      * @return map of dotted config paths to default values
-     * <p>
-     * May be removed
      */
     public static Map<String, Object> codeDefaults() {
-
-        Map<String, Object> defaults = new LinkedHashMap<>();
-        defaults.put("config-info", "This file is used to configure Simple Voice Geyser. "
-                + "For more information, see the wiki: https://theodoremeyer.github.io/projects/simplevoicegeyser/");
-        defaults.put("client.vctimeout", 30);
-        defaults.put("client.idletimeout", 2);
-        defaults.put("client.requireBedrock", false);
-        defaults.put("client.useEmoteForSVG", true);
-        defaults.put("client.web-chat-enabled", true);
-        defaults.put("server.group.default.enabled", true);
-        defaults.put("server.group.default.password", "1a2b");
-        defaults.put("server.group.default.force-on-web-join", false);
-        defaults.put("server.port", 8080);
-        defaults.put("server.bind-address", "0.0.0.0");
-        defaults.put("server.context-path", "/");
-        defaults.put("server.security.max-auth-failures", 5);
-        defaults.put("server.security.auth-fail-duration", 3);
-        defaults.put("server.security.auth-lock-duration", 8);
-        defaults.put("server.audio.transport-mode", "auto");
-        defaults.put("server.audio.allow-legacy-fallback", true);
-        defaults.put("proxy.enabled", false);
-        defaults.put("proxy.control-url", "");
-        defaults.put("proxy.shared-secret", "simplevoice-geyser-proxy-secret");
-        defaults.put("proxy.verify-ssl", true);
-        defaults.put("proxy.token-ttl-seconds", 120);
-        defaults.put("debug", false);
-        defaults.put("updatechecker.enable", true);
-        defaults.put("config-version", "0.1.1-dev-migration1");
-        return defaults;
+        return new SvgConfig(null).getCodeDefaults();
     }
 
     private final SvgFile file;
 
     /**
      * Create the Config with an associated config file
-     * @param file file
+     * @param file file; if null, defaults are initialized without file binding
      */
     public SvgConfig(SvgFile file) {
         this.file = file;
-        applyDefaults();
+        if (file != null) {
+            applyDefaults();
+        }
     }
 
     /**
@@ -203,8 +175,6 @@ public final class SvgConfig {
             WEB_CHAT_ENABLED,
             CLIENT_ALLOWED_TYPES_BLACKLIST,
             CLIENT_ALLOWED_TYPES_LIST,
-            JOIN_MESSAGE_ENABLED,
-            JOIN_MESSAGE_TEXT,
             DEFAULT_GROUP_ENABLED,
             DEFAULT_GROUP_PASSWORD,
             DEFAULT_GROUP_FORCE_ON_WEB_JOIN,
@@ -225,6 +195,18 @@ public final class SvgConfig {
             UPDATE_CHECKER_ENABLED,
             CONFIG_VERSION
     );
+
+    /**
+     * Map of dotted config paths to default values generated dynamically from registered keys.
+     * @return map of dotted config paths to default values
+     */
+    public Map<String, Object> getCodeDefaults() {
+        Map<String, Object> defaults = new LinkedHashMap<>();
+        for (ConfigKey<?> key : ALL_KEYS) {
+            defaults.put(key.path(), key.def());
+        }
+        return defaults;
+    }
 
     /**
      * Apply Defaults to the file if any are missing

@@ -359,7 +359,8 @@ public final class JettyWebSocket {
       * Set the associated SvgConnection.
       * @param connection connection
      */
-    public void setConnection(SvgConnection connection) {        this.connection = connection;
+    public void setConnection(SvgConnection connection) {
+        this.connection = connection;
     }
 
     /**

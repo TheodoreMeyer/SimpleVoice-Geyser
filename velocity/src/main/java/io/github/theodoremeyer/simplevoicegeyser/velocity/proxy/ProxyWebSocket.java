@@ -13,6 +13,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -21,7 +22,7 @@ import java.util.UUID;
  * Until a session is authenticated via a {@code join} message it only accepts
  * that handshake; afterwards all text and binary frames are relayed to the
  * player's current backend through a {@link BackendRelay}. When the player
- * switches servers, {@link #reconnectBackend(String)} moves the same browser
+ * switches servers, {@link #reconnectBackend(String, String)} moves the same browser
  * session onto the new backend.
  */
 @WebSocket
@@ -206,17 +207,17 @@ public final class ProxyWebSocket {
                 return;
             }
 
-        if (backendUrl == null || backendUrl.isBlank() || backendUrl.equals(currentBackendUrl)) {
-            return;
-        }
+            if (backendUrl == null || backendUrl.isBlank() || backendUrl.equals(currentBackendUrl)) {
+                return;
+            }
 
-        JSONObject join = buildBackendJoinPayload(clientName);
-        relay.updateJoinPayload(join.toString());
-        if (lastCapabilitiesRequest != null) {
-            relay.updateCapabilitiesPayload(lastCapabilitiesRequest.toString());
-        }
-        relay.reconnect(backendUrl);
-        currentBackendUrl = backendUrl;
+            JSONObject join = buildBackendJoinPayload(clientName);
+            relay.updateJoinPayload(join.toString());
+            if (lastCapabilitiesRequest != null) {
+                relay.updateCapabilitiesPayload(lastCapabilitiesRequest.toString());
+            }
+            relay.reconnect(backendUrl);
+            currentBackendUrl = backendUrl;
         }
     }
 
@@ -239,9 +240,22 @@ public final class ProxyWebSocket {
             return;
         }
 
+        String authKey = username.toLowerCase(Locale.ROOT);
+        if (plugin.getAuthRateLimiter() != null && !plugin.getAuthRateLimiter().allow(authKey)) {
+            sendRaw(ConnectionStates.MessageType.ERROR, "Too many failed login attempts. Reset your password in-game with /svg pswd [password].", false);
+            return;
+        }
+
         if (!plugin.getPasswordStore().validatePassword(username, password, player.getUniqueId())) {
+            if (plugin.getAuthRateLimiter() != null) {
+                plugin.getAuthRateLimiter().recordFailure(authKey);
+            }
             sendRaw(ConnectionStates.MessageType.ERROR, "Access Denied: Invalid username or password.", false);
             return;
+        }
+
+        if (plugin.getAuthRateLimiter() != null) {
+            plugin.getAuthRateLimiter().reset(authKey);
         }
 
         String clientName = player.getCurrentServer()
@@ -260,11 +274,11 @@ public final class ProxyWebSocket {
         synchronized (lifecycleLock) {
             this.lastJoinRequest = sanitizedJoin;
 
-        JSONObject backendJoin = buildBackendJoinPayload(clientName);
-        this.relay = new BackendRelay(session, plugin.getLogger());
-        this.currentBackendUrl = backendUrl;
-        plugin.registerSession(playerUuid, this);
-        relay.connect(backendUrl, backendJoin.toString());
+            JSONObject backendJoin = buildBackendJoinPayload(clientName);
+            this.relay = new BackendRelay(session, plugin.getLogger());
+            this.currentBackendUrl = backendUrl;
+            plugin.registerSession(playerUuid, this);
+            relay.connect(backendUrl, backendJoin.toString());
         }
     }
 

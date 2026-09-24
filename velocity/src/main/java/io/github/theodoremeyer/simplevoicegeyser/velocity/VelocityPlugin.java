@@ -10,35 +10,32 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.auth.ProxyAuthRateLimiter;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.proxy.ProxyAuthToken;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.data.ProxyPasswordStore;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.data.VelocityConfigFile;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.proxy.ProxyJettyServer;
+import io.github.theodoremeyer.simplevoicegeyser.velocity.proxy.ProxySessionManager;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.proxy.ProxyWebSocket;
 import org.slf4j.Logger;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.json.JSONObject;
 
 /**
  * Velocity plugin entry point for the SimpleVoice-Geyser proxy frontend.
  * <p>
  * Hosts a web server browsers connect to, tracks authenticated browser
- * sessions per player ({@link #activeSessions}), and moves each session to
+ * sessions per player via {@link ProxySessionManager}, and moves each session to
  * the backend matching the player's current Velocity server. Also registers
  * the {@code /svg} command used to set web client passwords.
  */
 @Plugin(
-        id = "simplevoice-geyser",
-        name = "SimpleVoice-Geyser",
+        id = "svg",
+        name = "SVG",
         version = "0.1.2",
         description = "Proxy frontend for Simple Voice Geyser.",
         authors = {"TheodoreMeyer"}
@@ -49,10 +46,8 @@ public final class VelocityPlugin {
     private final Logger logger;
     private final Path dataDirectory;
 
-    private final Map<UUID, ProxyWebSocket> activeSessions = new ConcurrentHashMap<>();
-    private final Map<UUID, Long> pendingServerChanges = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService transferTimeouts = Executors.newSingleThreadScheduledExecutor();
-
+    private ProxySessionManager sessionManager;
+    private ProxyAuthRateLimiter authRateLimiter;
     private VelocityConfigFile configFile;
     private ProxyPasswordStore passwordStore;
     private ProxyJettyServer webServer;
@@ -88,6 +83,17 @@ public final class VelocityPlugin {
         this.configFile = new VelocityConfigFile(new File(dataDir, "config.json"));
         ensureProxyDefaults();
         this.passwordStore = new ProxyPasswordStore(dataDir, logger);
+        this.sessionManager = new ProxySessionManager(this);
+
+        int maxFailures = configFile.getInt("proxy.security.max-auth-failures", 5);
+        int failureDuration = configFile.getInt("proxy.security.auth-fail-duration", 3);
+        int lockDuration = configFile.getInt("proxy.security.auth-lock-duration", 8);
+        this.authRateLimiter = new ProxyAuthRateLimiter(
+                maxFailures,
+                Duration.ofMinutes(failureDuration),
+                Duration.ofMinutes(lockDuration),
+                logger
+        );
 
         server.getCommandManager().register(
                 server.getCommandManager().metaBuilder("svg").build(),
@@ -122,14 +128,8 @@ public final class VelocityPlugin {
      */
     @Subscribe
     public void onServerConnected(ServerConnectedEvent event) {
-        ProxyWebSocket socket = activeSessions.get(event.getPlayer().getUniqueId());
-        if (socket == null) {
-            return;
-        }
-
-        String backendUrl = resolveClientUrl(event.getServer().getServerInfo().getName());
-        if (backendUrl != null && !backendUrl.isBlank()) {
-            socket.reconnectBackend(event.getServer().getServerInfo().getName(), backendUrl);
+        if (sessionManager != null) {
+            sessionManager.onServerConnected(event);
         }
     }
 
@@ -140,10 +140,8 @@ public final class VelocityPlugin {
      */
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
-        pendingServerChanges.remove(event.getPlayer().getUniqueId());
-        ProxyWebSocket socket = activeSessions.remove(event.getPlayer().getUniqueId());
-        if (socket != null) {
-            socket.onProxyDisconnect();
+        if (sessionManager != null) {
+            sessionManager.onDisconnect(event);
         }
     }
 
@@ -154,9 +152,9 @@ public final class VelocityPlugin {
      */
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent event) {
-        transferTimeouts.shutdownNow();
-        activeSessions.values().forEach(ProxyWebSocket::onProxyDisconnect);
-        activeSessions.clear();
+        if (sessionManager != null) {
+            sessionManager.shutdown();
+        }
         try {
             if (webServer != null) {
                 webServer.stop();
@@ -191,6 +189,22 @@ public final class VelocityPlugin {
     }
 
     /**
+     * Get the authentication rate limiter.
+     * @return the {@link ProxyAuthRateLimiter}
+     */
+    public ProxyAuthRateLimiter getAuthRateLimiter() {
+        return authRateLimiter;
+    }
+
+    /**
+     * Get the session manager.
+     * @return the {@link ProxySessionManager}
+     */
+    public ProxySessionManager getSessionManager() {
+        return sessionManager;
+    }
+
+    /**
      * Get how long a browser session may stay idle before being dropped.
      * @return idle timeout in minutes
      */
@@ -205,37 +219,7 @@ public final class VelocityPlugin {
 
     public JSONObject updatePlayerState(UUID uuid, String username, boolean joined) {
         Player player = server.getPlayer(uuid).orElse(null);
-        if (player == null || !player.getUsername().equalsIgnoreCase(username)) {
-            return new JSONObject().put("passwordSet", false).put("changingServer", false);
-        }
-
-        if (joined) {
-            boolean changingServer = pendingServerChanges.remove(uuid) != null;
-            return new JSONObject()
-                    .put("passwordSet", passwordStore.isPasswordSet(username))
-                    .put("changingServer", changingServer);
-        }
-
-        ProxyWebSocket socket = activeSessions.get(uuid);
-        if (socket == null) {
-            return new JSONObject().put("passwordSet", passwordStore.isPasswordSet(username)).put("changingServer", false);
-        }
-
-        long deadline = System.currentTimeMillis() + getTransferTimeoutSeconds() * 1000L;
-        pendingServerChanges.put(uuid, deadline);
-        socket.beginServerChange();
-        transferTimeouts.schedule(() -> {
-            Long currentDeadline = pendingServerChanges.get(uuid);
-            if (currentDeadline != null && currentDeadline == deadline) {
-                pendingServerChanges.remove(uuid);
-                activeSessions.remove(uuid, socket);
-                socket.onProxyDisconnect();
-            }
-        }, getTransferTimeoutSeconds(), TimeUnit.SECONDS);
-
-        return new JSONObject()
-                .put("passwordSet", passwordStore.isPasswordSet(username))
-                .put("changingServer", true);
+        return sessionManager.updatePlayerState(uuid, username, joined, passwordStore, player, getTransferTimeoutSeconds());
     }
 
     private int getTransferTimeoutSeconds() {
@@ -243,27 +227,27 @@ public final class VelocityPlugin {
     }
 
     /**
-     * Track an authenticated browser session for a player. If another session
-     * is already registered for that player it is disconnected first.
+     * Track an authenticated browser session for a player.
      *
      * @param uuid   UUID of the player the session belongs to
      * @param socket the authenticated browser session
      */
     public void registerSession(UUID uuid, ProxyWebSocket socket) {
-        ProxyWebSocket replaced = activeSessions.put(uuid, socket);
-        if (replaced != null && replaced != socket) {
-            replaced.onProxyDisconnect();
+        if (sessionManager != null) {
+            sessionManager.registerSession(uuid, socket);
         }
     }
 
     /**
-     * Remove a browser session from tracking, but only if it is still the one registered.
+     * Remove a browser session from tracking.
      *
      * @param uuid   UUID of the player
      * @param socket session expected to currently be registered
      */
     public void unregisterSession(UUID uuid, ProxyWebSocket socket) {
-        activeSessions.computeIfPresent(uuid, (ignored, current) -> current == socket ? null : current);
+        if (sessionManager != null) {
+            sessionManager.unregisterSession(uuid, socket);
+        }
     }
 
     /**
@@ -345,11 +329,4 @@ public final class VelocityPlugin {
         }
         return path;
     }
-
-    private void ensureDefault(String key, Object value) {
-        if (!configFile.has(key)) {
-            configFile.set(key, value);
-        }
-    }
-
 }
