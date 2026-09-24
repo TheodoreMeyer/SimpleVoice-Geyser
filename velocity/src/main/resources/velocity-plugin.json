@@ -1,6 +1,6 @@
 {
-    "id": "simplevoice-geyser",
-    "name": "SimpleVoice-Geyser",
+    "id": "svg",
+    "name": "SVG",
     "version": "${plugin_version}",
     "description": "Proxy frontend for Simple Voice Geyser.",
     "authors": ["TheodoreMeyer"],

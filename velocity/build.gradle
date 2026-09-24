@@ -20,6 +20,7 @@ dependencies {
     implementation("org.eclipse.jetty:jetty-servlet:11.0.25")
     implementation("org.eclipse.jetty.websocket:websocket-servlet:11.0.25")
     implementation("org.eclipse.jetty.websocket:websocket-jetty-server:11.0.25")
+    implementation("org.slf4j:slf4j-jdk14:2.0.16")
 }
 
 tasks.processResources {
