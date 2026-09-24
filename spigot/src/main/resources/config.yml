@@ -90,6 +90,24 @@ server:
     # During migration, fallback to legacy transport for incompatible clients.
     allow-legacy-fallback: true
 
+proxy:
+
+  # Set true when this server is running behind the SVG Velocity proxy.
+  enabled: false
+
+  # URL of Velocity's player-state endpoint, for example http://127.0.0.1:8080/api/player-state.
+  control-url: ""
+
+  # Must match Velocity's proxy.shared_secret.
+  shared-secret: simplevoice-geyser-proxy-secret
+
+  # default: true
+  # Verify TLS certificates when control-url uses https.
+  # Set false only if Velocity terminates TLS with a self-signed certificate.
+  verify-ssl: true
+
+  token-ttl-seconds: 120
+
 # default: false
 # Debug logs
 # Do NOT use this in production. This will very quickly fill up your server logs.

@@ -3,6 +3,9 @@ package io.github.theodoremeyer.simplevoicegeyser.core.managers;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.SvgConnection;
+import io.github.theodoremeyer.simplevoicegeyser.core.proxy.ProxyControlClient;
+import io.github.theodoremeyer.simplevoicegeyser.core.proxy.ProxyPlayerState;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collection;
@@ -77,11 +80,21 @@ public final class PlayerManager {
      * @param player the player to remove
      */
     public void removePlayer(SvgPlayer player) {
-        SvgCore.getConnectionManager().disconnect(
-                player.getUniqueId(),
-                ConnectionStates.DisconnectCodes.PLAYER_LEAVE.getCode(),
-                "Player left the game."
+        ProxyPlayerState proxyState = ProxyControlClient.updatePlayerState(
+                player.getUniqueId(), player.getName(), false
         );
+        if (proxyState.changingServer()) {
+            SvgConnection connection = SvgCore.getConnectionManager().get(player.getUniqueId());
+            if (connection != null) {
+                connection.sendStatus("Changing server");
+            }
+        } else {
+            SvgCore.getConnectionManager().disconnect(
+                    player.getUniqueId(),
+                    ConnectionStates.DisconnectCodes.PLAYER_LEAVE.getCode(),
+                    "Player left the game."
+            );
+        }
         //SvgCore.getWsManager().playerLeave(player);
 
         players.remove(player.getUniqueId());

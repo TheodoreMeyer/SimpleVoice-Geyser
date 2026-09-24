@@ -107,8 +107,6 @@ ext.applySvgRelocations = { task ->
     task.relocate("jakarta.servlet", "io.github.theodoremeyer.simplevoicegeyser.shadow.servlet")
     task.relocate("org.json", "io.github.theodoremeyer.simplevoicegeyser.shadow.json")
     task.relocate("org.mindrot", "io.github.theodoremeyer.simplevoicegeyser.shadow.mindrot")
-    //task.relocate("org.slf4j", "io.github.theodoremeyer.simplevoicegeyser.shadow.slf4j")
     logger.info("Loaded relocations for", task)
 
 }
-

@@ -25,6 +25,8 @@ It supports both Java and Bedrock players, bridging the gap between platforms se
 * Spigot
 * Fabric
 
+A Velocity proxy frontend is also available for networks running multiple backend servers. See: [Velocity Proxy Setup]({% project_link velocity %}).
+
 ## Requirements
 
 ### Common

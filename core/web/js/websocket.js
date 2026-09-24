@@ -37,7 +37,7 @@ export class SvgWebSocket {
         void warmupAudioDecompiler();
 
         this.audioController.onMicData((packet) => {
-            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            if (this.ws && this.ws.readyState === WebSocket.OPEN && !this.changingServer) {
                 this.ws.send(packet);
             }
         });
@@ -73,6 +73,7 @@ export class SvgWebSocket {
         this.reconnectAttempts = 0;
         this.manualClose = false;
         this.hasJoined = false;
+        this.changingServer = false;
         this.fatalAuthError = false;
         this.capabilitiesSent = false;
         this.rxBinaryFrames = 0;
@@ -138,8 +139,20 @@ export class SvgWebSocket {
                     }
 
                     if (packetType === "status" && msg.includes("connected as")) {
+                        this.changingServer = false;
                         this.hasJoined = true;
                         await this.#sendCapabilitiesOnce();
+                        this.#runEventListeners("statusChange", {
+                            connected: true,
+                            username: this.lastCredentials?.username
+                        });
+                    } else if (packetType === "status" && msg.includes("changing server")) {
+                        this.changingServer = true;
+                        this.#runEventListeners("statusChange", {
+                            connected: false,
+                            changingServer: true,
+                            username: this.lastCredentials?.username
+                        });
                     }
 
                     if (packetType === "capabilities_ack") {
@@ -295,7 +308,7 @@ export class SvgWebSocket {
     }
 
     sendChat(msg) {
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN && !this.changingServer) {
             this.ws.send(JSON.stringify({ type: "chat", message: msg }));
         }
     }
