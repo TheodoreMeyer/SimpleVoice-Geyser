@@ -1,3 +1,7 @@
+---
+title: Hosting Guides
+---
+
 # Setting Up The Server - Minecraft Hosting Provider
 If you are hosting your server with a Minecraft hosting provider, please look if a guide for your hoster exists in the list below.
 
