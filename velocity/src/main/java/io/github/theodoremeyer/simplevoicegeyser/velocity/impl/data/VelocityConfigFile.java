@@ -266,15 +266,11 @@ public class VelocityConfigFile {
                 .put("default", new JSONObject()
                         .put("enabled", true)
                         .put("url", "ws://127.0.0.1:8001/ws")
-                        .put("verify_ssl", false)
-                        .put("auth", new JSONObject().put("global", true)))
+                        .put("verify_ssl", false))
                 .put("lobby", new JSONObject()
                         .put("enabled", false)
                         .put("url", "ws://127.0.0.1:8002/ws")
-                        .put("verify_ssl", false)
-                        .put("auth", new JSONObject()
-                                .put("global", false)
-                                .put("secret", ""))));
+                        .put("verify_ssl", false)));
         defaults.put("proxy", new JSONObject()
                 .put("bind_address", "0.0.0.0")
                 .put("port", 8080)

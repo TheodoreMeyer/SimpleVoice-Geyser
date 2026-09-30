@@ -3,19 +3,12 @@
     "default": {
       "enabled": true,
       "url": "ws://127.0.0.1:8001/ws",
-      "verify_ssl": false,
-      "auth": {
-        "global": true
-      }
+      "verify_ssl": false
     },
     "lobby": {
       "enabled": false,
       "url": "ws://127.0.0.1:8002/ws",
-      "verify_ssl": false,
-      "auth": {
-        "global": false,
-        "secret": ""
-      }
+      "verify_ssl": false
     }
   },
   "proxy": {
