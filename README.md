@@ -46,8 +46,6 @@ A Geyser Extension to allow Bedrock Clients to connect with Simple voice Chat.
 
 ## Features to be worked on
 - External Webserver (you host the vc connection at your website)
-- Support
-  - Velocity
 - More Web browser support.
 
 ## Suggestions?

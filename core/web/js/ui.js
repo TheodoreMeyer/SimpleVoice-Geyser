@@ -284,6 +284,15 @@ export class SvgUI {
                                 );
                             }
                         } else {
+                            if (status.changingServer) {
+                                statusEl.innerText = "Changing server...";
+                                statusEl.classList.remove("disconnected");
+                                statusEl.classList.add("connected");
+                                micSelect.disabled = true;
+                                speakerSelect.disabled = true;
+                                SvgLang.setElement(joinButton, "joinBtnConnectedLabel");
+                                return;
+                            }
                             SvgLang.setElement(statusEl, "statusDisconnectedLabel");
                             statusEl.classList.remove("connected");
                             statusEl.classList.add("disconnected");

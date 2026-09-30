@@ -21,9 +21,8 @@ public class SvgListener {
             ServerPlayer player = handler.player;
 
             FabricPlayer fabricPlayer = new FabricPlayer(player);
-            SvgCore.getJoinMessageHandler().sendJoinMessage(fabricPlayer);
-
             SvgCore.getPlayerManager().addPlayer(fabricPlayer);
+            SvgCore.getJoinMessageHandler().sendJoinMessage(fabricPlayer);
         });
 
         // LEAVE
