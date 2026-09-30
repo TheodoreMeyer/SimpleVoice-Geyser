@@ -99,10 +99,10 @@ Each entry under `clients` maps a **Velocity server name** (as defined in `veloc
 | `enabled`               | `true`                   | Whether this backend can be connected to                                    |
 | `url`                   | `ws://127.0.0.1:8001/ws` | Backend SVG websocket URL (must include the `/ws` path)                      |
 | `verify_ssl`            | `false`                  | Reserved for TLS-protected backend URLs; not enforced by current builds      |
-| `auth.global`           | `true`                   | Use the global `proxy.shared_secret` to sign tokens for this backend         |
-| `auth.secret`           | `""`                     | Per-backend signing secret, used when `auth.global` is `false`. Required if set |
 
 A special `default` entry is used when a player's current server has no matching entry. Unknown or blank server names fall back to `default`.
+
+All backend entries use the global `proxy.shared_secret`. Per-backend auth secrets are not supported, because sessions must be transferable between backend servers.
 
 ### `proxy`
 

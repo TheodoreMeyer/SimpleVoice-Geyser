@@ -281,8 +281,8 @@ public final class VelocityPlugin {
 
     /**
      * Sign a proxy auth token for a player using the secret configured for the
-     * given backend client entry: its per-client secret, or the global
-     * {@code proxy.shared_secret} when {@code auth.global} is enabled.
+     * global {@code proxy.shared_secret}. All backends use the same signing
+     * secret so browser sessions can transfer between servers.
      *
      * @param uuid       UUID of the player to issue the token for
      * @param username   username of the player to issue the token for
@@ -295,10 +295,7 @@ public final class VelocityPlugin {
         if (normalized.isEmpty()) {
             normalized = "default";
         }
-        String authPath = "clients." + normalized + ".auth";
-        boolean global = configFile.getBoolean(authPath + ".global", true);
-        String secret = global ? configFile.getString("proxy.shared_secret", "")
-                : configFile.getString(authPath + ".secret", "");
+        String secret = configFile.getString("proxy.shared_secret", "");
         if (secret == null || secret.isBlank()) {
             throw new IllegalStateException("No nonblank signing secret configured for client " + normalized);
         }

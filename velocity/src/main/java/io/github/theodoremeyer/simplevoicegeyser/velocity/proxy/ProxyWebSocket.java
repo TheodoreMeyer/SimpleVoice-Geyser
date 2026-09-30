@@ -33,12 +33,7 @@ public final class ProxyWebSocket {
     private final VelocityPlugin plugin;
 
     private Session session;
-    private BackendRelay relay;
-    private UUID playerUuid;
-    private String playerName;
-    private JSONObject lastJoinRequest;
-    private JSONObject lastCapabilitiesRequest;
-    private String currentBackendUrl;
+    private PlayerState playerState;
     private final Object lifecycleLock = new Object();
 
     /**
@@ -76,19 +71,18 @@ public final class ProxyWebSocket {
         }
 
         synchronized (lifecycleLock) {
-            if (relay != null) {
+            if (playerState != null) {
                 message = message.trim();
                 if (message.startsWith("{")) {
                     try {
                         JSONObject json = new JSONObject(message);
                         if ("capabilities".equals(json.optString("type", ""))) {
-                            this.lastCapabilitiesRequest = new JSONObject(json.toString());
-                            relay.updateCapabilitiesPayload(json.toString());
+                            playerState.setCapabilitiesRequest(new JSONObject(json.toString()));
                         }
                     } catch (Exception ignored) {
                     }
                 }
-                relay.forwardText(message);
+                playerState.relay().forwardText(message);
                 return;
             }
         }
@@ -109,6 +103,9 @@ public final class ProxyWebSocket {
             }
 
             join(json);
+        } catch (IllegalStateException e) {
+            plugin.getLogger().error("[Proxy] Failed to create backend authentication token", e);
+            sendRaw(ConnectionStates.MessageType.ERROR, "Proxy authentication is not configured.", false);
         } catch (Exception e) {
             plugin.getLogger().debug("[Proxy] Error reading client data", e);
             sendRaw(ConnectionStates.MessageType.ERROR, "Malformed message.", false);
@@ -125,10 +122,10 @@ public final class ProxyWebSocket {
     @OnWebSocketMessage
     public void onMessage(byte[] buffer, int offset, int length) {
         synchronized (lifecycleLock) {
-            if (relay == null) {
+            if (playerState == null) {
                 return;
             }
-            relay.forwardBinary(buffer, offset, length);
+            playerState.relay().forwardBinary(buffer, offset, length);
         }
     }
 
@@ -142,20 +139,17 @@ public final class ProxyWebSocket {
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
         plugin.getLogger().debug("[Proxy] Session close status=" + statusCode + " reason=" + reason);
+        UUID uuid = null;
         synchronized (lifecycleLock) {
-            if (relay != null) {
-                relay.close(statusCode, reason);
-                relay = null;
+            if (playerState != null) {
+                uuid = playerState.uuid();
+                playerState.close(statusCode, reason);
+                playerState = null;
             }
-            currentBackendUrl = null;
-            lastJoinRequest = null;
-            lastCapabilitiesRequest = null;
         }
-        if (playerUuid != null) {
-            plugin.unregisterSession(playerUuid, this);
+        if (uuid != null) {
+            plugin.unregisterSession(uuid, this);
         }
-        playerUuid = null;
-        playerName = null;
     }
 
     /**
@@ -174,20 +168,17 @@ public final class ProxyWebSocket {
      */
     public synchronized void onProxyDisconnect() {
         synchronized (lifecycleLock) {
-            if (relay != null) {
-                relay.close(ConnectionStates.DisconnectCodes.PLAYER_LEAVE.getCode(), "left the game");
-                relay = null;
+            if (playerState != null) {
+                playerState.close(ConnectionStates.DisconnectCodes.PLAYER_LEAVE.getCode(), "left the game");
+                playerState = null;
             }
-            currentBackendUrl = null;
-            lastJoinRequest = null;
-            lastCapabilitiesRequest = null;
         }
     }
 
     /** Notify the browser that the backend is temporarily changing servers. */
     public void beginServerChange() {
         synchronized (lifecycleLock) {
-            if (relay != null) {
+            if (playerState != null) {
                 sendRaw(ConnectionStates.MessageType.STATUS, "Changing server", false);
             }
         }
@@ -203,26 +194,20 @@ public final class ProxyWebSocket {
      */
     public void reconnectBackend(String clientName, String backendUrl) {
         synchronized (lifecycleLock) {
-            if (relay == null || lastJoinRequest == null || playerUuid == null) {
+            if (playerState == null || playerState.joinRequest() == null) {
                 return;
             }
 
-            if (backendUrl == null || backendUrl.isBlank() || backendUrl.equals(currentBackendUrl)) {
+            if (backendUrl == null || backendUrl.isBlank() || playerState.isOn(backendUrl)) {
                 return;
             }
 
-            JSONObject join = buildBackendJoinPayload(clientName);
-            relay.updateJoinPayload(join.toString());
-            if (lastCapabilitiesRequest != null) {
-                relay.updateCapabilitiesPayload(lastCapabilitiesRequest.toString());
-            }
-            relay.reconnect(backendUrl);
-            currentBackendUrl = backendUrl;
+            playerState.changeBackend(clientName, backendUrl);
         }
     }
 
     private void join(@NonNull JSONObject json) {
-        if (relay != null) {
+        if (playerState != null) {
             sendRaw(ConnectionStates.MessageType.ERROR, "Already authenticated.", false);
             return;
         }
@@ -267,26 +252,15 @@ public final class ProxyWebSocket {
             return;
         }
 
-        this.playerUuid = player.getUniqueId();
-        this.playerName = player.getUsername();
         JSONObject sanitizedJoin = new JSONObject(json.toString());
         sanitizedJoin.remove("password");
         synchronized (lifecycleLock) {
-            this.lastJoinRequest = sanitizedJoin;
-
-            JSONObject backendJoin = buildBackendJoinPayload(clientName);
-            this.relay = new BackendRelay(session, plugin.getLogger());
-            this.currentBackendUrl = backendUrl;
-            plugin.registerSession(playerUuid, this);
-            relay.connect(backendUrl, backendJoin.toString());
+            PlayerState newState = new PlayerState(session, plugin, player.getUniqueId(), player.getUsername());
+            newState.setJoinRequest(sanitizedJoin);
+            newState.connect(clientName, backendUrl);
+            this.playerState = newState;
+            plugin.registerSession(player.getUniqueId(), this);
         }
-    }
-
-    private JSONObject buildBackendJoinPayload(String clientName) {
-        JSONObject join = new JSONObject(lastJoinRequest.toString());
-        join.put("password", "");
-        join.put("proxyToken", plugin.createProxyToken(playerUuid, playerName, clientName));
-        return join;
     }
 
     private void sendRaw(ConnectionStates.MessageType type, String message, boolean fatal) {
