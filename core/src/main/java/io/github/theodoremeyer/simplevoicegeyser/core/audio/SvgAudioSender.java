@@ -7,6 +7,10 @@ import de.maxhenkel.voicechat.api.opus.OpusEncoder;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
  * Audio Sender to send Clients Audio to server
@@ -29,6 +33,18 @@ public final class SvgAudioSender {
      * Audio Encoder to encode the audio for svc
      */
     private final OpusEncoder encoder;
+    private final ThreadPoolExecutor audioExecutor = new ThreadPoolExecutor(
+            1,
+            1,
+            0L,
+            TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<>(8),
+            runnable -> {
+                Thread thread = new Thread(runnable, "SVG-Audio-Uplink");
+                thread.setDaemon(true);
+                return thread;
+            }
+    );
 
     /**
      * Class Constructor. Creates and registers the audio sender
@@ -62,42 +78,53 @@ public final class SvgAudioSender {
      * @param pcmData data to send for player
      */
     public void sendOpus(byte[] pcmData) {
+        if (pcmData == null) {
+            return;
+        }
 
-        SvgCore.getLogger().debug( "AudioSender: received audio data from websocket!");
+        byte[] frame = pcmData.clone();
+        try {
+            audioExecutor.execute(() -> encodeAndSend(frame));
+        } catch (RejectedExecutionException e) {
+            SvgCore.getLogger().debug("[AudioSender] Dropping queued audio frame for " + playerUuid);
+        }
+    }
 
-        //AudioThread.execute(() -> {
-
-            byte[] encoded;
-            try {
-                short[] pcmShorts = serverApi.getAudioConverter().bytesToShorts(pcmData);
-                if (pcmShorts.length != 960) {
-                    SvgCore.getLogger().warning(
-                            "[AudioSender] Invalid frame size: " + pcmShorts.length + " (expected 960)"
-                    );
-                    return;
-                }
-
-                encoded = encoder.encode(pcmShorts); // PCM to Opus encoded
-                if (encoded == null || encoded.length == 0) {
-                    SvgCore.getLogger().warning("[AudioSender] Encoder returned empty data for: " + playerUuid);
-                    return;
-                }
-            } catch (Exception e) {
-                SvgCore.getLogger().debug("AudioSender: Encoding failed for " + playerUuid, e);
+    private void encodeAndSend(byte[] pcmData) {
+        byte[] encoded;
+        try {
+            short[] pcmShorts = serverApi.getAudioConverter().bytesToShorts(pcmData);
+            if (pcmShorts.length != 960) {
+                SvgCore.getLogger().warning(
+                        "[AudioSender] Invalid frame size: " + pcmShorts.length + " (expected 960)"
+                );
                 return;
             }
 
-            boolean success = delegate.send(encoded);
-            if (!success) {
+            encoded = encoder.encode(pcmShorts);
+            if (encoded == null || encoded.length == 0) {
+                SvgCore.getLogger().warning("[AudioSender] Encoder returned empty data for: " + playerUuid);
+                return;
+            }
+        } catch (Exception e) {
+            SvgCore.getLogger().debug("[AudioSender] Encoding failed for " + playerUuid, e);
+            return;
+        }
+
+        try {
+            if (!delegate.send(encoded)) {
                 SvgCore.getLogger().warning("[AudioSender] Failed to send audio for: " + playerUuid);
             }
-        //});
+        } catch (Exception e) {
+            SvgCore.getLogger().debug("[AudioSender] Failed to deliver audio for " + playerUuid, e);
+        }
     }
 
     /**
      * Closes the AudioSender, and ends decoder
      */
     public void unregister() {
+        audioExecutor.shutdownNow();
         try {
             if (encoder != null) {
                 encoder.resetState();

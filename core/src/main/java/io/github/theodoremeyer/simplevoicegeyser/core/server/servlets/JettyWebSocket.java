@@ -51,14 +51,19 @@ public final class JettyWebSocket {
      */
     @OnWebSocketConnect
     public void onConnect(Session session) {
-        this.session = session;
-        session.setIdleTimeout(Duration.ofMinutes(SvgCore.getConfig().IDLE_TIMEOUT.get()));
-        AudioTransportMode preference = AudioTransportMode.fromConfig(SvgCore.getConfig());
-        boolean allowLegacyFallback = Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_ALLOW_LEGACY_FALLBACK.get());
+        try {
+            this.session = session;
+            session.setIdleTimeout(Duration.ofMinutes(SvgCore.getConfig().IDLE_TIMEOUT.get()));
+            AudioTransportMode preference = AudioTransportMode.fromConfig(SvgCore.getConfig());
+            boolean allowLegacyFallback = Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_ALLOW_LEGACY_FALLBACK.get());
 
-        this.audioNegotiation = new AudioSessionNegotiation(preference, allowLegacyFallback);
-        SvgCore.getLogger().info("[Websocket] WebSocket connected: " + session.getRemoteAddress());
-        SvgCore.getLogger().debug("WebSocket: Session opened remote=" + session.getRemoteAddress());
+            this.audioNegotiation = new AudioSessionNegotiation(preference, allowLegacyFallback);
+            SvgCore.getLogger().info("[Websocket] WebSocket connected: " + session.getRemoteAddress());
+            SvgCore.getLogger().debug("WebSocket: Session opened remote=" + session.getRemoteAddress());
+        } catch (RuntimeException e) {
+            SvgCore.getLogger().severe("[WebSocket] Failed to initialize connection: " + e.getMessage());
+            closeWithError("Server audio configuration is invalid.");
+        }
     }
 
     /**
@@ -88,9 +93,10 @@ public final class JettyWebSocket {
 
             packetHandler.handle(this, json);
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             SvgCore.getLogger().severe("[VCBridge] Exception: " + e.getMessage());
             SvgCore.getLogger().debug("VCBridge: error reading client data", e);
+            sendRaw(ConnectionStates.MessageType.ERROR, "Unable to process websocket message.", false);
         }
     }
 
@@ -102,6 +108,10 @@ public final class JettyWebSocket {
      */
     @OnWebSocketMessage
     public void onMessage(byte[] buffer, int offset, int length) {
+        if (buffer == null || offset < 0 || length < 0 || offset > buffer.length - length) {
+            SvgCore.getLogger().debug("WebSocket: Dropping invalid binary frame");
+            return;
+        }
         if (connection == null || !connection.isAuthenticated()) {
             SvgCore.getLogger().debug("WebSocket: Dropping pre-auth binary frame bytes=" + length);
             return;
@@ -117,10 +127,14 @@ public final class JettyWebSocket {
             );
         }
 
-        if (connection.getAudioSender() != null) {
-            connection.getAudioSender().sendOpus(Arrays.copyOfRange(buffer, offset, offset + length));
-        } else {
-            SvgCore.getLogger().debug("WebSocket: audioSender is null for uuid=" + connection.getUuid() + ", dropping binary frame");
+        try {
+            if (connection.getAudioSender() != null) {
+                connection.getAudioSender().sendOpus(Arrays.copyOfRange(buffer, offset, offset + length));
+            } else {
+                SvgCore.getLogger().debug("WebSocket: audioSender is null for uuid=" + connection.getUuid() + ", dropping binary frame");
+            }
+        } catch (RuntimeException e) {
+            SvgCore.getLogger().debug("WebSocket: Failed to queue audio frame", e);
         }
     }
 
@@ -306,6 +320,16 @@ public final class JettyWebSocket {
             session.getRemote().sendString(json.toString());
         } catch (IOException e) {
             SvgCore.getLogger().debug("WebSocket: Failed to send raw packet", e);
+        }
+    }
+
+    private void closeWithError(String message) {
+        sendRaw(ConnectionStates.MessageType.ERROR, message, true);
+        if (session != null && session.isOpen()) {
+            try {
+                session.close(ConnectionStates.DisconnectCodes.FATAL_ERROR.getCode(), "server_initialization_failed");
+            } catch (Exception ignored) {
+            }
         }
     }
 

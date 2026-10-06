@@ -136,15 +136,20 @@ export class SvgAudio {
             audioConstraints.deviceId = { exact: deviceId };
         }
 
-        this.microphoneStream = await navigator.mediaDevices.getUserMedia({
-            audio: audioConstraints
-        });
+        try {
+            this.microphoneStream = await navigator.mediaDevices.getUserMedia({
+                audio: audioConstraints
+            });
 
-        this.micSource = this.audioContext.createMediaStreamSource(this.microphoneStream);
-        this.micNode = new AudioWorkletNode(this.audioContext, "mic-capture");
+            this.micSource = this.audioContext.createMediaStreamSource(this.microphoneStream);
+            this.micNode = new AudioWorkletNode(this.audioContext, "mic-capture");
 
-        this.micSource.connect(this.micNode);
-        this.micNode.port.onmessage = (event) => this.#handleMicMessage(event);
+            this.micSource.connect(this.micNode);
+            this.micNode.port.onmessage = (event) => this.#handleMicMessage(event);
+        } catch (error) {
+            this.stopMic();
+            throw error;
+        }
     }
 
     #handleMicMessage(event) {

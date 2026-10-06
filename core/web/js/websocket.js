@@ -9,6 +9,7 @@ import {Logger} from "./utils/logger.js";
 export class SvgWebSocket {
 
     static MAX_RECONNECT_ATTEMPTS = 5;
+    static MAX_MIC_BUFFERED_BYTES = 19200;
     static DisconnectPolicy = {
         FATAL: new Set([4003, 4004, 4005]),
         NO_RECONNECT: new Set([4001, 4004, 4005, 4006]),
@@ -38,7 +39,14 @@ export class SvgWebSocket {
 
         this.audioController.onMicData((packet) => {
             if (this.ws && this.ws.readyState === WebSocket.OPEN && !this.changingServer) {
-                this.ws.send(packet);
+                if (this.ws.bufferedAmount > SvgWebSocket.MAX_MIC_BUFFERED_BYTES) {
+                    return;
+                }
+                try {
+                    this.ws.send(packet);
+                } catch (error) {
+                    Logger.debug(`[AudioTX] Failed to send microphone packet: ${error?.message || error}`);
+                }
             }
         });
     }
@@ -61,7 +69,15 @@ export class SvgWebSocket {
         });
     }
     #runEventListeners(type, ...args) {
-        this.#eventListeners[type].forEach(listener => listener.func(...args));
+        this.#eventListeners[type].forEach(listener => {
+            try {
+                Promise.resolve(listener.func(...args)).catch(error => {
+                    Logger.debug(`[WebSocket] Event listener failed: ${error?.message || error}`);
+                });
+            } catch (error) {
+                Logger.debug(`[WebSocket] Event listener failed: ${error?.message || error}`);
+            }
+        });
     }
     #removeTemporaryEventListeners() {
         for (const type in this.#eventListeners) {

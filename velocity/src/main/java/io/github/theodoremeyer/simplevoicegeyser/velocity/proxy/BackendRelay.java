@@ -28,10 +28,12 @@ public final class BackendRelay {
     private final AtomicLong connectionIdCounter = new AtomicLong();
     private volatile WebSocket backendSocket;
     private volatile long currentConnectionId;
-    private volatile String backendUrl;
     private volatile String joinPayload;
     private volatile String capabilitiesPayload;
-    private CompletableFuture<WebSocket> sendChain = CompletableFuture.completedFuture(null);
+    private CompletableFuture<WebSocket> textSendChain = CompletableFuture.completedFuture(null);
+    private CompletableFuture<WebSocket> binarySendChain = CompletableFuture.completedFuture(null);
+    private int pendingBinaryFrames;
+    private static final int MAX_PENDING_BINARY_FRAMES = 4;
 
     /**
      * Create a relay for the given browser session.
@@ -54,7 +56,6 @@ public final class BackendRelay {
     public void connect(String backendUrl, String joinPayload) {
         long id;
         synchronized (this) {
-            this.backendUrl = backendUrl;
             this.joinPayload = joinPayload;
             id = connectionIdCounter.incrementAndGet();
             currentConnectionId = id;
@@ -104,7 +105,12 @@ public final class BackendRelay {
      *
      * @param text raw text frame to relay
      */
-    public synchronized void forwardText(String text) { WebSocket socket = backendSocket; if (socket != null) sendText(socket, text, currentConnectionId); }
+    public synchronized void forwardText(String text) {
+        WebSocket socket = backendSocket;
+        if (socket != null) {
+            sendText(socket, text, currentConnectionId);
+        }
+    }
 
     /**
      * Forward a binary frame from the browser to the backend, if connected.
@@ -113,7 +119,16 @@ public final class BackendRelay {
      * @param offset start offset of the frame within {@code bytes}
      * @param length number of bytes in the frame
      */
-    public synchronized void forwardBinary(byte[] bytes, int offset, int length) { WebSocket socket = backendSocket; if (socket != null) { byte[] copy = java.util.Arrays.copyOfRange(bytes, offset, offset + length); sendBinary(socket, ByteBuffer.wrap(copy), currentConnectionId); } }
+    public synchronized void forwardBinary(byte[] bytes, int offset, int length) {
+        WebSocket socket = backendSocket;
+        if (socket == null || pendingBinaryFrames >= MAX_PENDING_BINARY_FRAMES) {
+            return;
+        }
+
+        byte[] copy = java.util.Arrays.copyOfRange(bytes, offset, offset + length);
+        pendingBinaryFrames++;
+        sendBinary(socket, ByteBuffer.wrap(copy), currentConnectionId);
+    }
 
     /**
      * Close both the backend socket and the browser session.
@@ -121,7 +136,10 @@ public final class BackendRelay {
      * @param code   WebSocket close code
      * @param reason human-readable close reason
      */
-    public synchronized void close(int code, String reason) { closeBackend(code, reason); closeClient(code, reason); }
+    public synchronized void close(int code, String reason) {
+        closeBackend(code, reason);
+        closeClient(code, reason);
+    }
 
     /**
      * Replace the join payload sent when (re)connecting to a backend.
@@ -138,32 +156,50 @@ public final class BackendRelay {
     public void updateCapabilitiesPayload(String payload) { capabilitiesPayload = payload; }
 
     private void closeBackend(int code, String reason) {
-        WebSocket socket = backendSocket; backendSocket = null;
-        if (socket != null) try { socket.sendClose(code, reason); } catch (Exception e) { logger.debug("Failed to close backend websocket cleanly", e); }
+        WebSocket socket = backendSocket;
+        backendSocket = null;
+        if (socket != null) {
+            try {
+                socket.sendClose(code, reason);
+            } catch (Exception e) {
+                logger.debug("Failed to close backend websocket cleanly", e);
+            }
+        }
     }
     private void sendText(WebSocket socket, String text, long connectionId) {
-        sendChain = sendChain.handle((ignored, error) -> null)
-                .thenCompose(ignored -> socket.sendText(text, true))
+        textSendChain = textSendChain.handle((ignored, error) -> null)
+                .thenCompose(ignored -> isCurrent(socket, connectionId)
+                        ? socket.sendText(text, true)
+                        : CompletableFuture.completedFuture(null))
                 .whenComplete((ignored, error) -> {
                     if (error != null) {
                         logger.debug("Failed to send backend text frame", error);
-                        if (connectionId == currentConnectionId && backendSocket == socket) {
+                        if (isCurrent(socket, connectionId)) {
                             closeClient(1011, "backend_send_failed");
                         }
                     }
                 });
     }
     private void sendBinary(WebSocket socket, ByteBuffer data, long connectionId) {
-        sendChain = sendChain.handle((ignored, error) -> null)
-                .thenCompose(ignored -> socket.sendBinary(data, true))
+        binarySendChain = binarySendChain.handle((ignored, error) -> null)
+                .thenCompose(ignored -> isCurrent(socket, connectionId)
+                        ? socket.sendBinary(data, true)
+                        : CompletableFuture.completedFuture(null))
                 .whenComplete((ignored, error) -> {
+                    synchronized (BackendRelay.this) {
+                        pendingBinaryFrames = Math.max(0, pendingBinaryFrames - 1);
+                    }
                     if (error != null) {
                         logger.debug("Failed to send backend binary frame", error);
-                        if (connectionId == currentConnectionId && backendSocket == socket) {
+                        if (isCurrent(socket, connectionId)) {
                             closeClient(1011, "backend_send_failed");
                         }
                     }
                 });
+    }
+
+    private synchronized boolean isCurrent(WebSocket socket, long connectionId) {
+        return connectionId == currentConnectionId && backendSocket == socket;
     }
     private void closeClient(int code, String reason) {
         if (!clientSession.isOpen()) return;
