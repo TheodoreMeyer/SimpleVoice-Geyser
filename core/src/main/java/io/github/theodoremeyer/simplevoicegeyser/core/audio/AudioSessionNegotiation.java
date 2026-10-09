@@ -16,6 +16,7 @@ public final class AudioSessionNegotiation {
     private volatile boolean clientSupportsOpusDecoder = false;
     private volatile boolean secureContext = false;
     private volatile AudioTransportMode selectedMode = AudioTransportMode.LEGACY;
+    private volatile MicAudioFormat selectedMicFormat = MicAudioFormat.PCM16LE;
     private volatile long fallbackCount = 0;
 
     /**
@@ -30,7 +31,7 @@ public final class AudioSessionNegotiation {
     }
 
     /**
-     * Update known capabilities of the client
+     * Update known capabilities of a PCM-only client.
      * @param supportsLegacy whether client supports legacy
      * @param supportsSvgV2 whether client supports v2
      * @param supportsOpusDecoder whether client can decode opus
@@ -42,11 +43,30 @@ public final class AudioSessionNegotiation {
             boolean supportsOpusDecoder,
             boolean isSecureContext
     ) {
+        updateClientCapabilities(supportsLegacy, supportsSvgV2, supportsOpusDecoder, isSecureContext, false);
+    }
+
+    /**
+     * Update known capabilities including the microphone encoder.
+     * @param supportsLegacy whether client supports legacy
+     * @param supportsSvgV2 whether client supports v2
+     * @param supportsOpusDecoder whether client can decode opus
+     * @param isSecureContext whether client is running in secure context
+     * @param supportsOpusMic whether client can encode microphone audio as Opus
+     */
+    public synchronized void updateClientCapabilities(
+            boolean supportsLegacy,
+            boolean supportsSvgV2,
+            boolean supportsOpusDecoder,
+            boolean isSecureContext,
+            boolean supportsOpusMic
+    ) {
         clientCapsReceived = true;
         clientSupportsLegacy = supportsLegacy;
         clientSupportsSvgV2 = supportsSvgV2;
         clientSupportsOpusDecoder = supportsOpusDecoder;
         secureContext = isSecureContext;
+        selectedMicFormat = supportsOpusMic ? MicAudioFormat.OPUS : MicAudioFormat.PCM16LE;
 
         AudioTransportMode previous = selectedMode;
         selectedMode = resolveMode();
@@ -61,6 +81,14 @@ public final class AudioSessionNegotiation {
      */
     public AudioTransportMode getSelectedMode() {
         return selectedMode;
+    }
+
+    /**
+     * Get the selected client-to-server microphone format.
+     * @return selected microphone format
+     */
+    public MicAudioFormat getSelectedMicFormat() {
+        return selectedMicFormat;
     }
 
     /**
@@ -90,6 +118,7 @@ public final class AudioSessionNegotiation {
                 + " legacy=" + clientSupportsLegacy
                 + " svgV2=" + clientSupportsSvgV2
                 + " opusDecoder=" + clientSupportsOpusDecoder
+                + " micFormat=" + selectedMicFormat.protocolName()
                 + " secure=" + secureContext
                 + " fallbackAllowed=" + allowLegacyFallback
                 + " fallbackCount=" + fallbackCount;

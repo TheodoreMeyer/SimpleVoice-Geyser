@@ -3,6 +3,7 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.servlets;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiation;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioTransportMode;
+import io.github.theodoremeyer.simplevoicegeyser.core.audio.MicAudioFormat;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.SvgConnection;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.ConnectionAuthenticator;
@@ -116,7 +117,20 @@ public final class JettyWebSocket {
         }
 
         if (connection.getAudioSender() != null) {
-            connection.getAudioSender().sendOpus(Arrays.copyOfRange(buffer, offset, offset + length));
+            MicAudioFormat format = audioNegotiation == null
+                    ? MicAudioFormat.PCM16LE
+                    : audioNegotiation.getSelectedMicFormat();
+            if (!format.acceptsPacketLength(length)) {
+                SvgCore.getLogger().debug("WebSocket: Dropping malformed " + format.protocolName()
+                        + " microphone frame bytes=" + length);
+                return;
+            }
+            byte[] packet = Arrays.copyOfRange(buffer, offset, offset + length);
+            if (format == MicAudioFormat.OPUS) {
+                connection.getAudioSender().sendEncodedOpus(packet);
+            } else {
+                connection.getAudioSender().sendPcm16le(packet);
+            }
         } else {
             SvgCore.getLogger().debug("WebSocket: audioSender is null for uuid=" + connection.getUuid() + ", dropping binary frame");
         }

@@ -3,6 +3,7 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.packets;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiation;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioTransportMode;
+import io.github.theodoremeyer.simplevoicegeyser.core.audio.MicAudioFormat;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.servlets.JettyWebSocket;
 import org.json.JSONArray;
@@ -75,6 +76,18 @@ public final class CapabilitiesPacket implements Packet {
         boolean secureContext =
                 audio.optBoolean("secureContext", false);
 
+        JSONArray micFormats = audio.optJSONArray("micFormats");
+        boolean supportsOpusMic = false;
+        if (micFormats != null) {
+            for (int i = 0; i < micFormats.length(); i++) {
+                if (MicAudioFormat.OPUS.protocolName().equalsIgnoreCase(
+                        String.valueOf(micFormats.opt(i)).trim())) {
+                    supportsOpusMic = true;
+                    break;
+                }
+            }
+        }
+
         AudioSessionNegotiation negotiation = socket.getAudioNegotiation();
 
         if (negotiation == null) {
@@ -92,7 +105,8 @@ public final class CapabilitiesPacket implements Packet {
                 supportsLegacy,
                 supportsSvgV2,
                 supportsOpusDecoder,
-                secureContext
+                secureContext,
+                supportsOpusMic
         );
 
         AudioTransportMode selected = negotiation.getSelectedMode();
@@ -104,6 +118,7 @@ public final class CapabilitiesPacket implements Packet {
                         ? "svg-v2"
                         : "legacy");
         ack.put("fallbackCount", negotiation.getFallbackCount());
+        ack.put("selectedMicFormat", negotiation.getSelectedMicFormat().protocolName());
 
         if (!socket.sendJson(ack)) {
             SvgCore.getLogger().debug(
@@ -120,6 +135,7 @@ public final class CapabilitiesPacket implements Packet {
                         + " legacy=" + supportsLegacy
                         + " svgV2=" + supportsSvgV2
                         + " opusDecoder=" + supportsOpusDecoder
+                        + " micFormat=" + negotiation.getSelectedMicFormat().protocolName()
                         + " secure=" + secureContext
                         + " selected="
                         + selected.name().toLowerCase(Locale.ROOT)
