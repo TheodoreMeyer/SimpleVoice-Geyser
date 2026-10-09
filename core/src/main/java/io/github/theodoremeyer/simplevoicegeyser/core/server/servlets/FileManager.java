@@ -133,6 +133,10 @@ class FileManager {
                 "/web/images/flags-1x1/it.svg",
                 "images/flags-1x1/it.svg"
         );
+        extractResource(
+                "/web/images/flags-1x1/es.svg",
+                "images/flags-1x1/es.svg"
+        );
 
         versioning.save();
 
