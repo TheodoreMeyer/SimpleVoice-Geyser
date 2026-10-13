@@ -4,26 +4,15 @@ import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 
 import java.util.List;
 
-/**
- * Represents the configuration for Simple Voice Geyser. This class is responsible for loading and saving the configuration file, as well as providing access to the configuration values.
- */
 public final class SvgConfig {
 
     private final SvgFile file;
 
-    /**
-     * Create the Config with an associated config file
-     * @param file file
-     */
     public SvgConfig(SvgFile file) {
         this.file = file;
         applyDefaults();
     }
 
-    /**
-     * Get the underlying file
-     * @return SvgFile
-     */
     public SvgFile getFile() {
         if (file == null) {
             throw new IllegalStateException("SvgConfig not initialized");
@@ -99,6 +88,10 @@ public final class SvgConfig {
     public final ConfigKey<Boolean> AUDIO_ALLOW_LEGACY_FALLBACK =
             new ConfigKey <>(this, "server.audio.allow-legacy-fallback", true);
 
+    /** Disabling PCM excludes clients without Opus microphone encoding. */
+    public final ConfigKey<Boolean> AUDIO_MIC_ALLOW_LEGACY =
+            new ConfigKey<>(this, "server.audio.mic.allowLegacy", true);
+
     public final ConfigKey<Boolean> DEBUG =
             new ConfigKey <>(this, "debug", false);
 
@@ -130,14 +123,12 @@ public final class SvgConfig {
             MAX_AUTH_FAILURES,
             AUDIO_TRANSPORT_MODE,
             AUDIO_ALLOW_LEGACY_FALLBACK,
+            AUDIO_MIC_ALLOW_LEGACY,
             DEBUG,
             UPDATE_CHECKER_ENABLED,
             CONFIG_VERSION
     );
 
-    /**
-     * Apply Defaults to the file if any are missing
-     */
     public void applyDefaults() {
         SvgFile file = getFile();
 
@@ -145,7 +136,6 @@ public final class SvgConfig {
         int addedKeys = 0;
         boolean modified = false;
 
-        // Add any missing config keys
         for (ConfigKey<?> key : ALL_KEYS) {
             if (!key.exists()) {
 
@@ -159,7 +149,6 @@ public final class SvgConfig {
             }
         }
 
-        // Normalize context path if needed
         String currentContext = CONTEXT_PATH.get();
         String normalizedContext = normalizeContextPath(currentContext);
         if (!normalizedContext.equals(currentContext)) {
@@ -172,7 +161,6 @@ public final class SvgConfig {
             file.set(CONTEXT_PATH.path(), normalizedContext);
         }
 
-        // Update config version if needed
         if (!SvgCore.VERSION.equals(CONFIG_VERSION.get())) {
 
             if (!modified) {
@@ -196,11 +184,6 @@ public final class SvgConfig {
         }
     }
 
-    /**
-     * Take the ContextPath and try to normalize it
-     * @param contextPath path to normalize
-     * @return the normalized version
-     */
     public static String normalizeContextPath(String contextPath) {
         if (contextPath == null) {
             return "/";

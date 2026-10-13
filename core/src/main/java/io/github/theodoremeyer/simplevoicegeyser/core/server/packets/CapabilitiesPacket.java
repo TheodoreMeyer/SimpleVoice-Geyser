@@ -11,14 +11,8 @@ import org.json.JSONObject;
 
 import java.util.Locale;
 
-/**
- * Handles incoming Capabilities packet from client
- */
 public final class CapabilitiesPacket implements Packet {
 
-    /**
-     * No args required
-     */
     public CapabilitiesPacket() {}
 
     @Override
@@ -43,7 +37,7 @@ public final class CapabilitiesPacket implements Packet {
 
         JSONArray protocols = audio.optJSONArray("protocols");
 
-        // TODO 0.1.3: Remove legacy fallback when svg-v2 is required for supported clients.
+        // TODO: Remove receive fallback when supported clients require SVG-V2.
         boolean supportsLegacy = true;
         boolean supportsSvgV2 = false;
 
@@ -95,7 +89,8 @@ public final class CapabilitiesPacket implements Packet {
                     AudioTransportMode.fromConfig(SvgCore.getConfig()),
                     Boolean.TRUE.equals(
                             SvgCore.getConfig().AUDIO_ALLOW_LEGACY_FALLBACK.get()
-                    )
+                    ),
+                    Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_MIC_ALLOW_LEGACY.get())
             );
 
             socket.setAudioNegotiation(negotiation);
@@ -108,6 +103,10 @@ public final class CapabilitiesPacket implements Packet {
                 secureContext,
                 supportsOpusMic
         );
+
+        if (!socket.enforceMicFormatPolicy()) {
+            return;
+        }
 
         AudioTransportMode selected = negotiation.getSelectedMode();
 
