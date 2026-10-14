@@ -2,13 +2,11 @@ package io.github.theodoremeyer.simplevoicegeyser.core.audio;
 
 import java.util.Locale;
 
-/**
- * Holds per-session client capabilities and resolves active audio transport mode.
- */
 public final class AudioSessionNegotiation {
 
     private final AudioTransportMode serverPreference;
     private final boolean allowLegacyFallback;
+    private final boolean allowLegacyMic;
 
     private volatile boolean clientCapsReceived = false;
     private volatile boolean clientSupportsLegacy = true;
@@ -16,37 +14,43 @@ public final class AudioSessionNegotiation {
     private volatile boolean clientSupportsOpusDecoder = false;
     private volatile boolean secureContext = false;
     private volatile AudioTransportMode selectedMode = AudioTransportMode.LEGACY;
+    private volatile MicAudioFormat selectedMicFormat = MicAudioFormat.PCM16LE;
     private volatile long fallbackCount = 0;
 
-    /**
-     * Create a new negotiation instance with the given server preference and fallback policy.
-     * @param serverPreference the server preference of type
-     * @param allowLegacyFallback whether to allow backwards compatibility.
-     */
     public AudioSessionNegotiation(AudioTransportMode serverPreference, boolean allowLegacyFallback) {
+        this(serverPreference, allowLegacyFallback, true);
+    }
+
+    public AudioSessionNegotiation(AudioTransportMode serverPreference, boolean allowLegacyFallback, boolean allowLegacyMic) {
         this.serverPreference = serverPreference;
         this.allowLegacyFallback = allowLegacyFallback;
+        this.allowLegacyMic = allowLegacyMic;
         this.selectedMode = resolveMode();
     }
 
-    /**
-     * Update known capabilities of the client
-     * @param supportsLegacy whether client supports legacy
-     * @param supportsSvgV2 whether client supports v2
-     * @param supportsOpusDecoder whether client can decode opus
-     * @param isSecureContext whether client is running in secure context
-     */
+    /** Compatibility overload for clients without microphone encoder capabilities. */
     public synchronized void updateClientCapabilities(
             boolean supportsLegacy,
             boolean supportsSvgV2,
             boolean supportsOpusDecoder,
             boolean isSecureContext
     ) {
+        updateClientCapabilities(supportsLegacy, supportsSvgV2, supportsOpusDecoder, isSecureContext, false);
+    }
+
+    public synchronized void updateClientCapabilities(
+            boolean supportsLegacy,
+            boolean supportsSvgV2,
+            boolean supportsOpusDecoder,
+            boolean isSecureContext,
+            boolean supportsOpusMic
+    ) {
         clientCapsReceived = true;
         clientSupportsLegacy = supportsLegacy;
         clientSupportsSvgV2 = supportsSvgV2;
         clientSupportsOpusDecoder = supportsOpusDecoder;
         secureContext = isSecureContext;
+        selectedMicFormat = supportsOpusMic ? MicAudioFormat.OPUS : MicAudioFormat.PCM16LE;
 
         AudioTransportMode previous = selectedMode;
         selectedMode = resolveMode();
@@ -55,34 +59,26 @@ public final class AudioSessionNegotiation {
         }
     }
 
-    /**
-     * Get chosen mode/protocol for client
-     * @return selected mode
-     */
     public AudioTransportMode getSelectedMode() {
         return selectedMode;
     }
 
-    /**
-     * Has client caps been received
-     * @return clientCapsReceived
-     */
+    public MicAudioFormat getSelectedMicFormat() {
+        return selectedMicFormat;
+    }
+
+    public boolean isMicFormatAllowed() {
+        return allowLegacyMic || (clientCapsReceived && selectedMicFormat == MicAudioFormat.OPUS);
+    }
+
     public boolean isClientCapsReceived() {
         return clientCapsReceived;
     }
 
-    /**
-     * Get the amount of audio sent through legacy
-     * @return long, the count
-     */
     public long getFallbackCount() {
         return fallbackCount;
     }
 
-    /**
-     * Get a summary of all client capability data.
-     * @return returns summary as a string
-     */
     public String summary() {
         return "pref=" + serverPreference.name().toLowerCase(Locale.ROOT)
                 + " selected=" + selectedMode.name().toLowerCase(Locale.ROOT)
@@ -90,6 +86,8 @@ public final class AudioSessionNegotiation {
                 + " legacy=" + clientSupportsLegacy
                 + " svgV2=" + clientSupportsSvgV2
                 + " opusDecoder=" + clientSupportsOpusDecoder
+                + " micFormat=" + selectedMicFormat.protocolName()
+                + " micLegacyAllowed=" + allowLegacyMic
                 + " secure=" + secureContext
                 + " fallbackAllowed=" + allowLegacyFallback
                 + " fallbackCount=" + fallbackCount;
@@ -100,9 +98,7 @@ public final class AudioSessionNegotiation {
             return AudioTransportMode.LEGACY;
         }
 
-        // Server prefers SVG-V2.
 
-        // Before receiving capabilities, assume legacy if fallback is allowed.
         if (!clientCapsReceived) {
             return allowLegacyFallback
                     ? AudioTransportMode.LEGACY

@@ -2,8 +2,11 @@ class Microphone extends AudioWorkletProcessor {
     constructor() {
         super();
 
-        // Hangover counter (measured in render quanta)
         this._hangover = 0;
+        this._frame = new Float32Array(960);
+        this._frameOffset = 0;
+        this._frameSpeech = false;
+        this._frameStart = 0;
     }
 
     process(inputs) {
@@ -33,13 +36,19 @@ class Microphone extends AudioWorkletProcessor {
             this._hangover--;
         }
 
-        const isSpeech = this._hangover > 0;
-
-        // ---- 4) Send data to main thread ----
-        this.port.postMessage({
-            samples: new Float32Array(input), // COPY
-            speech: isSpeech
-        });
+        this._frameSpeech ||= this._hangover > 0;
+        for (let i = 0; i < input.length; i++) {
+            if (this._frameOffset === 0) this._frameStart = currentFrame + i;
+            this._frame[this._frameOffset++] = input[i];
+            if (this._frameOffset === this._frame.length) {
+                const samples = this._frame;
+                this._frame = new Float32Array(960);
+                this._frameOffset = 0;
+                const timestamp = Math.round(this._frameStart * 1000000 / sampleRate);
+                this.port.postMessage({samples, speech: this._frameSpeech, timestamp}, [samples.buffer]);
+                this._frameSpeech = false;
+            }
+        }
 
         return true;
     }

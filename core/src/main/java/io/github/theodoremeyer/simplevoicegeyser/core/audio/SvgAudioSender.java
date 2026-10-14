@@ -33,6 +33,10 @@ public final class SvgAudioSender {
      * Audio Encoder to encode the audio for svc
      */
     private final OpusEncoder encoder;
+    /**
+     * Single-threaded, bounded uplink queue. Both the PCM and raw-Opus paths run through it
+     * so packet order is preserved and the websocket IO thread never blocks on encoding/sending.
+     */
     private final ThreadPoolExecutor audioExecutor = new ThreadPoolExecutor(
             1,
             1,
@@ -74,17 +78,40 @@ public final class SvgAudioSender {
     }
 
     /**
-     * Sends Opus-encoded audio to the player if conditions are met.
-     * @param pcmData data to send for player
+     * Queues PCM16LE microphone audio to be Opus-encoded and sent to the player.
+     * Used for clients that cannot encode Opus themselves (see {@link MicAudioFormat#PCM16LE}).
+     * @param pcmData PCM16LE data to send
      */
-    public void sendOpus(byte[] pcmData) {
+    public void sendPcm16le(byte[] pcmData) {
         if (pcmData == null) {
             return;
         }
 
         byte[] frame = pcmData.clone();
+        enqueue(() -> encodeAndSend(frame));
+    }
+
+    /**
+     * Queues an already validated raw Opus packet to be sent directly to Simple Voice Chat.
+     * Used for clients that encode Opus themselves (see {@link MicAudioFormat#OPUS}).
+     * @param opusData raw Opus packet data
+     */
+    public void sendEncodedOpus(byte[] opusData) {
+        if (opusData == null || opusData.length == 0) {
+            return;
+        }
+
+        byte[] packet = opusData.clone();
+        enqueue(() -> deliver(packet));
+    }
+
+    /**
+     * Hand a task to the uplink thread, dropping it if the queue is full.
+     * @param task task to run
+     */
+    private void enqueue(Runnable task) {
         try {
-            audioExecutor.execute(() -> encodeAndSend(frame));
+            audioExecutor.execute(task);
         } catch (RejectedExecutionException e) {
             SvgCore.getLogger().debug("[AudioSender] Dropping queued audio frame for " + playerUuid);
         }
@@ -111,8 +138,12 @@ public final class SvgAudioSender {
             return;
         }
 
+        deliver(encoded);
+    }
+
+    private void deliver(byte[] opusPacket) {
         try {
-            if (!delegate.send(encoded)) {
+            if (!delegate.send(opusPacket)) {
                 SvgCore.getLogger().warning("[AudioSender] Failed to send audio for: " + playerUuid);
             }
         } catch (Exception e) {

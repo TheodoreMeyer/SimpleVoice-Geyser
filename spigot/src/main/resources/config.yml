@@ -90,6 +90,12 @@ server:
     # During migration, fallback to legacy transport for incompatible clients.
     allow-legacy-fallback: true
 
+    mic:
+      # default: true
+      # Allow PCM microphone uploads for older clients, including SVG-App 1.0.2.
+      # Set false to require an Opus-capable microphone client, independently of receive mode.
+      allowLegacy: true
+
 proxy:
 
   # Set true when this server is running behind the SVG Velocity proxy.
