@@ -251,7 +251,11 @@ public final class JettyWebSocket {
                     SvgCore.getConfig()
             );
             boolean allowLegacyFallback = Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_ALLOW_LEGACY_FALLBACK.get());
-            audioNegotiation = new AudioSessionNegotiation(preference, allowLegacyFallback);
+            audioNegotiation = new AudioSessionNegotiation(
+                    preference,
+                    allowLegacyFallback,
+                    Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_MIC_ALLOW_LEGACY.get())
+            );
         }
 
         audioNegotiation.updateClientCapabilities(
