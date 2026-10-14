@@ -3,8 +3,6 @@ import {Logger} from "../utils/logger.js";
 export class SvgAudio {
 
     static MIC_HOLD_MS = 120;
-    static PACKET_SIZE = 960;
-    static BUFFER_SIZE = SvgAudio.PACKET_SIZE * 20;
 
     audioContext;
 
@@ -15,14 +13,12 @@ export class SvgAudio {
         this.microphoneStream = null;
         this.micNode = null;
         this.micSource = null;
+        this.micStartPromise = null;
+        this.micGeneration = 0;
         this.muted = false;
         this.micActiveUntil = 0;
-        this.micBuffer = new Int16Array(SvgAudio.BUFFER_SIZE);
-        this.speechBuffer = new Uint8Array(SvgAudio.BUFFER_SIZE);
-        this.writeIndex = 0;
-        this.readIndex = 0;
-        this.available = 0;
         this.micIndicator = null;
+        this.micTransmissionEnabled = false;
         this.isPttActive = () => true;
         this.getTransmitMode = () => "voice";
 
@@ -61,6 +57,7 @@ export class SvgAudio {
         }
 
         this.audioContext = new AudioContextCtor({ sampleRate: 48000 });
+        this.audioRuntime.sampleRate = this.audioContext.sampleRate;
 
         if (this.audioContext.sampleRate !== 48000) {
             console.warn("WRONG SAMPLE RATE:", this.audioContext.sampleRate);
@@ -92,11 +89,15 @@ export class SvgAudio {
             this.audioWorkletNode = null;
         }
 
-        this.audioRuntime.canCaptureMic = !!this.audioWorkletNode && this.audioRuntime.mediaDevicesSupported;
+        this.audioRuntime.canCaptureMic = !!this.audioWorkletNode
+            && this.audioRuntime.mediaDevicesSupported
+            && this.audioContext.sampleRate === 48000;
         this.audioRuntime.canSelectOutput = this.audioRuntime.canSelectOutput || !!this.audioContext.setSinkId;
 
         if (!this.audioRuntime.canCaptureMic && !this.audioRuntime.degradedReason) {
-            this.audioRuntime.degradedReason = "Microphone capture is unavailable in this browser/context.";
+            this.audioRuntime.degradedReason = this.audioContext.sampleRate !== 48000
+                ? `Microphone capture requires 48000 Hz; this browser provides ${this.audioContext.sampleRate} Hz.`
+                : "Microphone capture is unavailable in this browser/context.";
         }
 
         return { ...this.audioRuntime };
@@ -110,6 +111,10 @@ export class SvgAudio {
         this.micHandler = handler;
     }
 
+    setMicTransmissionEnabled(enabled) {
+        this.micTransmissionEnabled = enabled;
+    }
+
     setTransmitModeProvider(fn) {
         this.getTransmitMode = fn;
     }
@@ -119,55 +124,67 @@ export class SvgAudio {
     }
 
     async startMic(deviceId) {
+        if (this.micNode) return;
+        if (this.micStartPromise) return this.micStartPromise;
         if (!this.audioRuntime.canCaptureMic || !this.audioContext) {
             throw new Error("Microphone capture is not supported in this browser/context.");
         }
 
-        await this.audioContext.resume();
-
-        const audioConstraints = {
-            noiseSuppression: true,
-            echoCancellation: true,
-            autoGainControl: true,
-            channelCount: 1,
-            sampleRate: 48000
-        };
-        if (deviceId) {
-            audioConstraints.deviceId = { exact: deviceId };
+        const startup = this.#startMicCapture(deviceId, this.micGeneration);
+        this.micStartPromise = startup;
+        try {
+            await startup;
+        } finally {
+            if (this.micStartPromise === startup) this.micStartPromise = null;
         }
+    }
 
-        this.microphoneStream = await navigator.mediaDevices.getUserMedia({
-            audio: audioConstraints
-        });
+    async #startMicCapture(deviceId, generation) {
+        let stream, source, node;
+        try {
+            await this.audioContext.resume();
+            if (generation !== this.micGeneration) return;
 
-        this.micSource = this.audioContext.createMediaStreamSource(this.microphoneStream);
-        this.micNode = new AudioWorkletNode(this.audioContext, "mic-capture");
+            const audioConstraints = {
+                noiseSuppression: true,
+                echoCancellation: true,
+                autoGainControl: true,
+                channelCount: 1,
+                sampleRate: 48000
+            };
+            if (deviceId) {
+                audioConstraints.deviceId = { exact: deviceId };
+            }
 
-        this.micSource.connect(this.micNode);
-        this.micNode.port.onmessage = (event) => this.#handleMicMessage(event);
+            stream = await navigator.mediaDevices.getUserMedia({audio: audioConstraints});
+            if (generation !== this.micGeneration) {
+                stream.getTracks().forEach(track => track.stop());
+                return;
+            }
+
+            source = this.audioContext.createMediaStreamSource(stream);
+            node = new AudioWorkletNode(this.audioContext, "mic-capture");
+            source.connect(node);
+            node.port.onmessage = (event) => {
+                if (generation === this.micGeneration) this.#handleMicMessage(event);
+            };
+
+            this.microphoneStream = stream;
+            this.micSource = source;
+            this.micNode = node;
+        } catch (error) {
+            node?.disconnect();
+            source?.disconnect();
+            stream?.getTracks().forEach(track => track.stop());
+            throw error;
+        }
     }
 
     #handleMicMessage(event) {
-        const { samples, speech } = event.data;
+        const { samples, speech, timestamp } = event.data;
         const now = performance.now();
-        const speechValue = speech ? 1 : 0;
-
         const mode = this.getTransmitMode();
         const pttActive = this.isPttActive();
-
-        for (let i = 0; i < samples.length; i++) {
-            const s = Math.max(-1, Math.min(1, samples[i]));
-            this.micBuffer[this.writeIndex] = s < 0 ? s * 0x8000 : s * 0x7fff;
-            this.speechBuffer[this.writeIndex] = speechValue;
-
-            this.writeIndex = (this.writeIndex + 1) % SvgAudio.BUFFER_SIZE;
-
-            if (this.available < SvgAudio.BUFFER_SIZE) {
-                this.available++;
-            } else {
-                this.readIndex = (this.readIndex + 1) % SvgAudio.BUFFER_SIZE;
-            }
-        }
 
         if (this.micIndicator) {
             if (mode === "ptt") {
@@ -180,23 +197,8 @@ export class SvgAudio {
             }
         }
 
-        while (this.available >= SvgAudio.PACKET_SIZE) {
-            const packet = new Int16Array(SvgAudio.PACKET_SIZE);
-            let packetHasSpeech = false;
-
-            for (let i = 0; i < SvgAudio.PACKET_SIZE; i++) {
-                packet[i] = this.micBuffer[this.readIndex];
-                if (this.speechBuffer[this.readIndex] !== 0) {
-                    packetHasSpeech = true;
-                }
-                this.readIndex = (this.readIndex + 1) % SvgAudio.BUFFER_SIZE;
-            }
-
-            this.available -= SvgAudio.PACKET_SIZE;
-
-            if (this.shouldSendPacket(mode, packetHasSpeech, pttActive)) {
-                this.micHandler?.(packet.slice().buffer);
-            }
+        if (this.micTransmissionEnabled && this.shouldSendPacket(mode, speech, pttActive)) {
+            this.micHandler?.({samples, speech, timestamp});
         }
     }
 
@@ -208,6 +210,8 @@ export class SvgAudio {
     }
 
     stopMic() {
+        this.micGeneration++;
+        this.micStartPromise = null;
         if (this.micNode) {
             this.micNode.port.onmessage = null;
             this.micNode.disconnect();
@@ -223,11 +227,6 @@ export class SvgAudio {
             this.microphoneStream.getTracks().forEach(t => t.stop());
             this.microphoneStream = null;
         }
-
-        this.writeIndex = 0;
-        this.readIndex = 0;
-        this.available = 0;
-        this.speechBuffer.fill(0);
 
         if (this.micIndicator) {
             this.micIndicator.classList.remove("active");
@@ -262,12 +261,10 @@ export class SvgAudio {
     }
 
     resetAudioState() {
+        this.stopMic();
         this.audioWorkletNode?.port.postMessage({ type: "reset" });
 
-        this.writeIndex = 0;
-        this.readIndex = 0;
-        this.available = 0;
-        this.speechBuffer.fill(0);
+        this.micTransmissionEnabled = false;
     }
 
     #normalizeAudioPacket(input) {
@@ -356,5 +353,9 @@ export class SvgAudio {
 
     getAudioRuntime() {
         return { ...this.audioRuntime };
+    }
+
+    getAudioContextTimeUs() {
+        return this.audioContext ? this.audioContext.currentTime * 1000000 : -Infinity;
     }
 }
