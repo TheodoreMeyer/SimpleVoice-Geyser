@@ -183,9 +183,7 @@ public final class JettyWebSocket {
         SvgCore.getLogger().info("[WebSocket] Error: " + type + ": " + message);
     }
 
-
     private boolean checkClientBuild(JSONObject json) {
-
         String clientBuild = json.optString("build", "");
 
         if (clientBuild.isEmpty()) {
@@ -283,7 +281,8 @@ public final class JettyWebSocket {
                         + " opusDecoder=" + supportsOpusDecoder
                         + " secure=" + secureContext
                         + " selected=" + selected.name().toLowerCase(Locale.ROOT)
-        );    }
+        );
+    }
 
     //Senders
 
@@ -355,7 +354,6 @@ public final class JettyWebSocket {
         return false;
     }
 
-
     public SvgConnection getConnection() {
         return connection;
     }
@@ -376,9 +374,9 @@ public final class JettyWebSocket {
         return session;
     }
 
-     /**
-      * Set the associated SvgConnection.
-      * @param connection connection
+    /**
+     * Set the associated SvgConnection.
+     * @param connection connection
      */
     public void setConnection(SvgConnection connection) {
         this.connection = connection;

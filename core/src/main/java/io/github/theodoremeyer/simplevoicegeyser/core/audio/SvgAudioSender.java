@@ -87,6 +87,8 @@ public final class SvgAudioSender {
             return;
         }
 
+        SvgCore.getLogger().debug("AudioSender: received audio data from websocket!");
+
         byte[] frame = pcmData.clone();
         enqueue(() -> encodeAndSend(frame));
     }
@@ -134,7 +136,7 @@ public final class SvgAudioSender {
                 return;
             }
         } catch (Exception e) {
-            SvgCore.getLogger().debug("[AudioSender] Encoding failed for " + playerUuid, e);
+            SvgCore.getLogger().debug("AudioSender: Encoding failed for " + playerUuid, e);
             return;
         }
 

@@ -127,13 +127,13 @@ public final class SvgConfig {
     public final ConfigKey<Boolean> AUDIO_ALLOW_LEGACY_FALLBACK =
             new ConfigKey <>(this, "server.audio.allow-legacy-fallback", true);
 
-    /** Whether PCM microphone uploads are allowed for clients without Opus microphone encoding. Disabling this excludes those clients. */
+    /** Disabling PCM excludes clients without Opus microphone encoding. */
     public final ConfigKey<Boolean> AUDIO_MIC_ALLOW_LEGACY =
             new ConfigKey<>(this, "server.audio.mic.allowLegacy", true);
 
     /** Whether proxy token authentication is enabled for backends sitting behind a proxy. */
     public final ConfigKey<Boolean> PROXY_ENABLED =
-            new ConfigKey <>(this, "proxy.enabled", false);
+            new ConfigKey<>(this, "proxy.enabled", false);
 
     /** HTTP URL of the Velocity proxy control endpoint, when proxy integration is enabled. */
     public final ConfigKey<String> PROXY_CONTROL_URL =
@@ -141,15 +141,15 @@ public final class SvgConfig {
 
     /** Shared secret used to sign and verify proxy auth tokens (see {@code ProxyAuthToken}). */
     public final ConfigKey<String> PROXY_SHARED_SECRET =
-            new ConfigKey <>(this, "proxy.shared-secret", "simplevoice-geyser-proxy-secret");
+            new ConfigKey<>(this, "proxy.shared-secret", "simplevoice-geyser-proxy-secret");
 
     /** Whether TLS certificates of the proxy control endpoint are verified (disable for self-signed). */
     public final ConfigKey<Boolean> PROXY_VERIFY_SSL =
-            new ConfigKey <>(this, "proxy.verify-ssl", true);
+            new ConfigKey<>(this, "proxy.verify-ssl", true);
 
     /** Lifetime of a proxy auth token, in seconds. */
     public final ConfigKey<Integer> PROXY_TOKEN_TTL_SECONDS =
-            new ConfigKey <>(this, "proxy.token-ttl-seconds", 120);
+            new ConfigKey<>(this, "proxy.token-ttl-seconds", 120);
 
     /** Whether verbose debug logging is enabled. */
     public final ConfigKey<Boolean> DEBUG =

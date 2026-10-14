@@ -185,6 +185,13 @@ export class SvgWebSocket {
                         this.#destroyMicEncoder();
                     }
 
+                    if (packetType === "status" && isBackendTransferStatus(msg)) {
+                        this.micFormatAcknowledged = false;
+                        this.micPcmRenegotiationPending = false;
+                        this.audioController.setMicTransmissionEnabled(false);
+                        this.#destroyMicEncoder();
+                    }
+
                     if (packetType === "capabilities_ack") {
                         Logger.log(`[AudioRX] Server selected transport mode: ${data.selectedMode || "legacy"}`);
                         await this.#applyMicFormatAck(data.selectedMicFormat);
@@ -442,6 +449,96 @@ export class SvgWebSocket {
             Logger.log(`[AudioTX] Opus encoding unavailable: ${error?.message || error}`);
             return false;
         }
+    }
+
+    async #applyMicFormatAck(format) {
+        this.audioController.setMicTransmissionEnabled(false);
+        this.micFormatAcknowledged = false;
+        this.selectedMicFormat = micFormatFromAck(format);
+        if (this.selectedMicFormat === "opus" && !this.micEncoder && !await this.#configureMicEncoder()) {
+            await this.#renegotiatePcmMic(new Error("Opus encoder could not be initialized"));
+            return;
+        }
+        this.micPcmRenegotiationPending = false;
+        this.micFormatAcknowledged = true;
+        this.audioController.setMicTransmissionEnabled(true);
+        Logger.log(`[AudioTX] Server selected microphone format: ${this.selectedMicFormat}`);
+    }
+
+    #sendMicFrame({samples, timestamp}) {
+        if (!this.micFormatAcknowledged || !this.ws || this.ws.readyState !== WebSocket.OPEN
+            || !isMicFrameFresh(
+                timestamp,
+                this.audioController.getAudioContextTimeUs(),
+                SvgWebSocket.MAX_MIC_FRAME_AGE_MS
+            )) return;
+
+        if (this.selectedMicFormat === "opus") {
+            if (!this.micEncoder || this.micEncoder.encodeQueueSize >= 2
+                || this.micPendingCaptureTimes.length >= 2
+                || this.ws.bufferedAmount > SvgWebSocket.MAX_OPUS_BUFFERED_BYTES) return;
+            const data = new AudioData({
+                format: "f32-planar",
+                sampleRate: 48000,
+                numberOfFrames: 960,
+                numberOfChannels: 1,
+                timestamp,
+                data: samples
+            });
+            try {
+                this.micPendingCaptureTimes.push(timestamp);
+                this.micEncoder.encode(data);
+            } catch (error) {
+                void this.#renegotiatePcmMic(error);
+            } finally {
+                data.close();
+            }
+            return;
+        }
+
+        if (this.ws.bufferedAmount > SvgWebSocket.MAX_PCM_BUFFERED_BYTES) return;
+
+        const packet = new ArrayBuffer(1920);
+        const view = new DataView(packet);
+        for (let i = 0; i < 960; i++) {
+            const sample = Math.max(-1, Math.min(1, samples[i]));
+            view.setInt16(i * 2, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+        }
+        this.ws.send(packet);
+    }
+
+    #destroyMicEncoder() {
+        this.micEncoderGeneration++;
+        this.micPendingCaptureTimes.length = 0;
+        if (this.micEncoder && this.micEncoder.state !== "closed") {
+            try {
+                this.micEncoder.close();
+            } catch {
+            }
+        }
+        this.micEncoder = null;
+    }
+
+    async #renegotiatePcmMic(error) {
+        if (this.micPcmRenegotiationPending
+            || (!this.micFormatAcknowledged && this.selectedMicFormat !== "opus")) return;
+        this.micPcmRenegotiationPending = true;
+        this.micFormatAcknowledged = false;
+        this.audioController.setMicTransmissionEnabled(false);
+        this.#destroyMicEncoder();
+        Logger.log(`[AudioTX] Opus disabled; requesting PCM format: ${error?.message || error}`);
+
+        const socket = this.ws;
+        if (!this.lastCapabilities || !socket || socket.readyState !== WebSocket.OPEN) {
+            this.micPcmRenegotiationPending = false;
+            return;
+        }
+        const payload = {
+            ...this.lastCapabilities,
+            audio: {...this.lastCapabilities.audio, micFormats: ["pcm16le"]}
+        };
+        this.lastCapabilities = payload;
+        socket.send(JSON.stringify(payload));
     }
 
     async #applyMicFormatAck(format) {
