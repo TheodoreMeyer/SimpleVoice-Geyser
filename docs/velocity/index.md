@@ -172,14 +172,11 @@ The proxy can terminate TLS directly instead of relying on a reverse proxy:
 
 ## Commands
 
-The proxy registers `/svg`:
+The proxy plugin intercepts the `/svg pswd` command when it has a password attached. 
+   - This allows geyser forms to still work for bedrock players.
+   - It is still required to be between 8 and 32 characters long.
 
-| Command                | Description                                        |
-|------------------------|----------------------------------------------------|
-| `/svg pswd <password>` | Set (or change) the password for the web client     |
-| `/svg help`            | Show usage help                                     |
-
-Console can only see usage help; passwords must be set by players. Passwords are stored per player on the proxy and hashed.
+All other passwords are forwarded to backend.
 
 ---
 

@@ -1,91 +1,104 @@
+
 package io.github.theodoremeyer.simplevoicegeyser.velocity;
 
-import com.velocitypowered.api.command.CommandSource;
-import com.velocitypowered.api.command.RawCommand;
-import com.velocitypowered.api.proxy.ConsoleCommandSource;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.proxy.Player;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.data.ProxyPasswordStore;
-import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.sender.VelocityConsole;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.sender.VelocityPlayer;
-import net.kyori.adventure.text.Component;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.Arrays;
 
 /**
- * The {@code /svg} command. Players use {@code /svg pswd <password>} to set
- * (or change) the password protecting their web client account; console gets
- * usage help only.
+ * Intercepts /svg pswd <password> on Velocity.
+ * <br>
+ * A bare /svg pswd is forwarded to the backend so its Geyser
+ * integration can open the Bedrock password form.
+ * Other /svg commands are also forwarded to the backend.
+ * <br>
+ * TODO: implement /svg reload to reload proxy config too.
  */
-public final class VelocityCommand implements RawCommand {
+public final class VelocityCommand {
+
+    private static final String ROOT_COMMAND = "svg";
+    private static final String PASSWORD_SUBCOMMAND = "pswd";
 
     private final ProxyPasswordStore passwordStore;
 
-    /**
-     * Create the command.
-     *
-     * @param passwordStore store used to persist player passwords
-     */
     public VelocityCommand(ProxyPasswordStore passwordStore) {
         this.passwordStore = passwordStore;
     }
 
-    @Override
-    public void execute(Invocation invocation) {
-        CommandSource source = invocation.source();
-        String[] args = invocation.arguments().isBlank() ? new String[0] : invocation.arguments().split(" ", -1);
+    @Subscribe
+    public void onCommandExecute(CommandExecuteEvent event) {
 
-        if (source instanceof Player player) {
-            VelocityPlayer svgPlayer = new VelocityPlayer(player);
-            onCommand(svgPlayer, args);
-        } else if (source instanceof ConsoleCommandSource console) {
-            onCommand(new VelocityConsole(console), args);
+        // Only intercept player commands.
+        if (!(event.getCommandSource() instanceof Player player)) {
+            return;
         }
+
+        String command = event.getCommand();
+
+        if (command == null || command.isBlank()) {
+            return;
+        }
+
+        String[] args = command.trim().split("\\s+");
+
+        // Ignore commands other than /svg.
+        if (args.length == 0
+                || !ROOT_COMMAND.equalsIgnoreCase(args[0])) {
+            return;
+        }
+
+        // Forward /svg itself, all non-password subcommands,
+        // and bare /svg pswd to the backend to allow geyser's cumulus form if needed.
+        if (args.length < 3
+                || !PASSWORD_SUBCOMMAND.equalsIgnoreCase(args[1])) {
+            event.setResult(
+                    CommandExecuteEvent.CommandResult.forwardToServer()
+            );
+            return;
+        }
+
+        // Only /svg pswd <password> is handled on Velocity.
+        event.setResult(
+                CommandExecuteEvent.CommandResult.denied()
+        );
+
+        handlePasswordCommand(new VelocityPlayer(player), args);
     }
 
-    @Override
-    public List<String> suggest(Invocation invocation) {
-        String[] args = invocation.arguments().isBlank() ? new String[0] : invocation.arguments().split(" ", -1);
-        if (args.length <= 1) {
-            String input = args.length == 0 ? "" : args[0].toLowerCase();
-            return List.of("help", "pswd").stream()
-                    .filter(s -> s.startsWith(input))
-                    .toList();
-        }
-        return Collections.emptyList();
-    }
+    private void handlePasswordCommand(
+            VelocityPlayer player,
+            String[] args
+    ) {
+        String password = String.join(
+                " ",
+                Arrays.copyOfRange(args, 2, args.length)
+        );
 
-    private void onCommand(VelocityPlayer player, String[] args) {
-        if (args.length == 0 || args[0].isBlank() || "help".equalsIgnoreCase(args[0])) {
-            player.sendMessage("/svg pswd <password>");
-            return;
-        }
-
-        if (!"pswd".equalsIgnoreCase(args[0])) {
-            player.sendMessage("Unknown subcommand.");
-            return;
-        }
-
-        if (args.length < 2) {
-            player.sendMessage("Usage: /svg pswd <password>");
-            return;
-        }
-
-        String password = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
         if (password.isBlank()) {
             player.sendMessage("Usage: /svg pswd <password>");
+            player.sendMessage("Password must be between 8 and 32 characters.");
             return;
         }
-        passwordStore.setPassword(player.getUniqueId(), player.getName(), password);
+
+        if (!isPasswordLengthValid(password)) {
+            player.sendMessage("Password must be between 8 and 32 characters.");
+            return;
+        }
+
+        passwordStore.setPassword(
+                player.getUniqueId(),
+                player.getName(),
+                password
+        );
+
         player.sendMessage("Password set successfully.");
     }
 
-    private void onCommand(VelocityConsole console, String[] args) {
-        if (args.length == 0 || args[0].isBlank() || "help".equalsIgnoreCase(args[0])) {
-            console.sendMessage("Use /svg pswd <password> from a player account.");
-            return;
-        }
-
-        console.sendMessage("This command can only be used by players.");
+    public boolean isPasswordLengthValid(String password) {
+        return password != null && password.length() >= 8 && password.length() <= 32;
     }
 }

@@ -11,19 +11,19 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.auth.ProxyAuthRateLimiter;
-import io.github.theodoremeyer.simplevoicegeyser.velocity.proxy.ProxyAuthToken;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.data.ProxyPasswordStore;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.data.VelocityConfigFile;
+import io.github.theodoremeyer.simplevoicegeyser.velocity.proxy.ProxyAuthToken;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.proxy.ProxyJettyServer;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.proxy.ProxySessionManager;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.proxy.ProxyWebSocket;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.UUID;
-import org.json.JSONObject;
 
 /**
  * Velocity plugin entry point for the SimpleVoice-Geyser proxy frontend.
@@ -95,8 +95,8 @@ public final class VelocityPlugin {
                 logger
         );
 
-        server.getCommandManager().register(
-                server.getCommandManager().metaBuilder("svg").build(),
+        server.getEventManager().register(
+                this,
                 new VelocityCommand(passwordStore)
         );
 
