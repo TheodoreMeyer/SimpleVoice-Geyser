@@ -310,6 +310,10 @@ public class VelocityConfigFile {
      */
     public record MigrationReport(String mode, String backupPath, int addedKeys, boolean migrated) {}
 
+    /**
+     * Used to help simplify things for the user
+     * @return proxy secret
+     */
     private static String generateRandomSecret() {
         byte[] bytes = new byte[32];
         RANDOM.nextBytes(bytes);

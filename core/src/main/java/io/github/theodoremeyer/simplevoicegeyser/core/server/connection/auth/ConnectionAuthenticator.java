@@ -87,10 +87,18 @@ public final class ConnectionAuthenticator {
             String authKey = username.toLowerCase(Locale.ROOT);
 
             if (proxyToken != null && !proxyToken.isBlank()) {
+                if (!isProxyTokenAuthenticationConfigured()) {
+                    return AuthResponse.failure(
+                            "Proxy authentication is disabled or not configured."
+                    );
+                }
+
                 AuthResponse proxyAuth = authenticateProxy(username, proxyToken);
+
                 if (!proxyAuth.success()) {
                     return proxyAuth;
                 }
+
                 authRateLimiter.reset(authKey);
                 return proxyAuth;
             }
@@ -197,6 +205,21 @@ public final class ConnectionAuthenticator {
         }
 
         return AuthResponse.success(claims.uuid(), player);
+    }
+
+    /**
+     * Checks whether proxy token authentication is enabled and configured.
+     *
+     * @return true if proxy token authentication may be attempted
+     */
+    private boolean isProxyTokenAuthenticationConfigured() {
+        if (!SvgCore.getConfig().PROXY_ENABLED.get()) {
+            return false;
+        }
+
+        String secret = SvgCore.getConfig().PROXY_SHARED_SECRET.get();
+
+        return secret != null && !secret.isBlank();
     }
 
     /**

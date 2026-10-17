@@ -139,9 +139,13 @@ public final class SvgConfig {
     public final ConfigKey<String> PROXY_CONTROL_URL =
             new ConfigKey<>(this, "proxy.control-url", "");
 
-    /** Shared secret used to sign and verify proxy auth tokens (see {@code ProxyAuthToken}). */
+    /**
+     * Shared secret used to sign and verify proxy authentication tokens.
+     * <br>
+     * No default secret is provided. It must be explicitly set.
+     */
     public final ConfigKey<String> PROXY_SHARED_SECRET =
-            new ConfigKey <>(this, "proxy.shared-secret", "simplevoice-geyser-proxy-secret");
+            new ConfigKey<>(this, "proxy.shared-secret", "");
 
     /** Whether TLS certificates of the proxy control endpoint are verified (disable for self-signed). */
     public final ConfigKey<Boolean> PROXY_VERIFY_SSL =
