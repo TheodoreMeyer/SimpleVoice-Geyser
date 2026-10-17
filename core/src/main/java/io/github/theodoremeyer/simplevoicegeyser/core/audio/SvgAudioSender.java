@@ -7,6 +7,10 @@ import de.maxhenkel.voicechat.api.opus.OpusEncoder;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
  * Audio Sender to send Clients Audio to server
@@ -29,6 +33,22 @@ public final class SvgAudioSender {
      * Audio Encoder to encode the audio for svc
      */
     private final OpusEncoder encoder;
+    /**
+     * Single-threaded, bounded uplink queue. Both the PCM and raw-Opus paths run through it
+     * so packet order is preserved and the websocket IO thread never blocks on encoding/sending.
+     */
+    private final ThreadPoolExecutor audioExecutor = new ThreadPoolExecutor(
+            1,
+            1,
+            0L,
+            TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<>(8),
+            runnable -> {
+                Thread thread = new Thread(runnable, "SVG-Audio-Uplink");
+                thread.setDaemon(true);
+                return thread;
+            }
+    );
 
     /**
      * Class Constructor. Creates and registers the audio sender
@@ -58,13 +78,48 @@ public final class SvgAudioSender {
     }
 
     /**
-     * Encodes PCM16LE microphone audio and sends it to the player.
+     * Queues PCM16LE microphone audio to be Opus-encoded and sent to the player.
+     * Used for clients that cannot encode Opus themselves (see {@link MicAudioFormat#PCM16LE}).
      * @param pcmData PCM16LE data to send
      */
     public void sendPcm16le(byte[] pcmData) {
+        if (pcmData == null) {
+            return;
+        }
 
-        SvgCore.getLogger().debug( "AudioSender: received audio data from websocket!");
+        SvgCore.getLogger().debug("AudioSender: received audio data from websocket!");
 
+        byte[] frame = pcmData.clone();
+        enqueue(() -> encodeAndSend(frame));
+    }
+
+    /**
+     * Queues an already validated raw Opus packet to be sent directly to Simple Voice Chat.
+     * Used for clients that encode Opus themselves (see {@link MicAudioFormat#OPUS}).
+     * @param opusData raw Opus packet data
+     */
+    public void sendEncodedOpus(byte[] opusData) {
+        if (opusData == null || opusData.length == 0) {
+            return;
+        }
+
+        byte[] packet = opusData.clone();
+        enqueue(() -> deliver(packet));
+    }
+
+    /**
+     * Hand a task to the uplink thread, dropping it if the queue is full.
+     * @param task task to run
+     */
+    private void enqueue(Runnable task) {
+        try {
+            audioExecutor.execute(task);
+        } catch (RejectedExecutionException e) {
+            SvgCore.getLogger().debug("[AudioSender] Dropping queued audio frame for " + playerUuid);
+        }
+    }
+
+    private void encodeAndSend(byte[] pcmData) {
         byte[] encoded;
         try {
             short[] pcmShorts = serverApi.getAudioConverter().bytesToShorts(pcmData);
@@ -85,18 +140,16 @@ public final class SvgAudioSender {
             return;
         }
 
-        if (!delegate.send(encoded)) {
-            SvgCore.getLogger().warning("[AudioSender] Failed to send audio for: " + playerUuid);
-        }
+        deliver(encoded);
     }
 
-    /**
-     * Sends a validated raw Opus packet directly to Simple Voice Chat.
-     * @param opusData raw Opus packet data
-     */
-    public void sendEncodedOpus(byte[] opusData) {
-        if (!delegate.send(opusData)) {
-            SvgCore.getLogger().warning("[AudioSender] Failed to send Opus audio for: " + playerUuid);
+    private void deliver(byte[] opusPacket) {
+        try {
+            if (!delegate.send(opusPacket)) {
+                SvgCore.getLogger().warning("[AudioSender] Failed to send audio for: " + playerUuid);
+            }
+        } catch (Exception e) {
+            SvgCore.getLogger().debug("[AudioSender] Failed to deliver audio for " + playerUuid, e);
         }
     }
 
@@ -104,6 +157,7 @@ public final class SvgAudioSender {
      * Closes the AudioSender, and ends decoder
      */
     public void unregister() {
+        audioExecutor.shutdownNow();
         try {
             if (encoder != null) {
                 encoder.resetState();

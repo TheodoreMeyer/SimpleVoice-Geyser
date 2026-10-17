@@ -9,9 +9,9 @@ import {
     isBackendTransferStatus,
     isMicFrameFresh,
     isSupportedOpusChunk,
+    MIC_OPUS_ENCODER_CONFIG,
     micFormatFromAck,
-    micFormatsForEncoder,
-    MIC_OPUS_ENCODER_CONFIG
+    micFormatsForEncoder
 } from "./audio/mic-format.mjs";
 
 export class SvgWebSocket {
@@ -71,7 +71,15 @@ export class SvgWebSocket {
         });
     }
     #runEventListeners(type, ...args) {
-        this.#eventListeners[type].forEach(listener => listener.func(...args));
+        this.#eventListeners[type].forEach(listener => {
+            try {
+                Promise.resolve(listener.func(...args)).catch(error => {
+                    Logger.debug(`[WebSocket] Event listener failed: ${error?.message || error}`);
+                });
+            } catch (error) {
+                Logger.debug(`[WebSocket] Event listener failed: ${error?.message || error}`);
+            }
+        });
     }
     #removeTemporaryEventListeners() {
         for (const type in this.#eventListeners) {
@@ -84,6 +92,7 @@ export class SvgWebSocket {
         this.reconnectAttempts = 0;
         this.manualClose = false;
         this.hasJoined = false;
+        this.changingServer = false;
         this.fatalAuthError = false;
         this.capabilitiesSent = false;
         this.micFormatAcknowledged = false;
@@ -153,8 +162,27 @@ export class SvgWebSocket {
                     }
 
                     if (packetType === "status" && msg.includes("connected as")) {
+                        this.changingServer = false;
                         this.hasJoined = true;
                         await this.#sendCapabilitiesOnce();
+                        this.#runEventListeners("statusChange", {
+                            connected: true,
+                            username: this.lastCredentials?.username
+                        });
+                    } else if (packetType === "status" && msg.includes("changing server")) {
+                        this.changingServer = true;
+                        this.#runEventListeners("statusChange", {
+                            connected: false,
+                            changingServer: true,
+                            username: this.lastCredentials?.username
+                        });
+                    }
+
+                    if (packetType === "status" && isBackendTransferStatus(msg)) {
+                        this.micFormatAcknowledged = false;
+                        this.micPcmRenegotiationPending = false;
+                        this.audioController.setMicTransmissionEnabled(false);
+                        this.#destroyMicEncoder();
                     }
 
                     if (packetType === "status" && isBackendTransferStatus(msg)) {
@@ -322,7 +350,7 @@ export class SvgWebSocket {
     }
 
     sendChat(msg) {
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN && !this.changingServer) {
             this.ws.send(JSON.stringify({ type: "chat", message: msg }));
         }
     }
@@ -423,22 +451,8 @@ export class SvgWebSocket {
         }
     }
 
-    async #applyMicFormatAck(format) {
-        this.audioController.setMicTransmissionEnabled(false);
-        this.micFormatAcknowledged = false;
-        this.selectedMicFormat = micFormatFromAck(format);
-        if (this.selectedMicFormat === "opus" && !this.micEncoder && !await this.#configureMicEncoder()) {
-            await this.#renegotiatePcmMic(new Error("Opus encoder could not be initialized"));
-            return;
-        }
-        this.micPcmRenegotiationPending = false;
-        this.micFormatAcknowledged = true;
-        this.audioController.setMicTransmissionEnabled(true);
-        Logger.log(`[AudioTX] Server selected microphone format: ${this.selectedMicFormat}`);
-    }
-
     #sendMicFrame({samples, timestamp}) {
-        if (!this.micFormatAcknowledged || !this.ws || this.ws.readyState !== WebSocket.OPEN
+        if (!this.micFormatAcknowledged || this.changingServer || !this.ws || this.ws.readyState !== WebSocket.OPEN
             || !isMicFrameFresh(
                 timestamp,
                 this.audioController.getAudioContextTimeUs(),
@@ -479,18 +493,6 @@ export class SvgWebSocket {
         this.ws.send(packet);
     }
 
-    #destroyMicEncoder() {
-        this.micEncoderGeneration++;
-        this.micPendingCaptureTimes.length = 0;
-        if (this.micEncoder && this.micEncoder.state !== "closed") {
-            try {
-                this.micEncoder.close();
-            } catch {
-            }
-        }
-        this.micEncoder = null;
-    }
-
     async #renegotiatePcmMic(error) {
         if (this.micPcmRenegotiationPending
             || (!this.micFormatAcknowledged && this.selectedMicFormat !== "opus")) return;
@@ -511,6 +513,32 @@ export class SvgWebSocket {
         };
         this.lastCapabilities = payload;
         socket.send(JSON.stringify(payload));
+    }
+
+    async #applyMicFormatAck(format) {
+        this.audioController.setMicTransmissionEnabled(false);
+        this.micFormatAcknowledged = false;
+        this.selectedMicFormat = micFormatFromAck(format);
+        if (this.selectedMicFormat === "opus" && !this.micEncoder && !await this.#configureMicEncoder()) {
+            await this.#renegotiatePcmMic(new Error("Opus encoder could not be initialized"));
+            return;
+        }
+        this.micPcmRenegotiationPending = false;
+        this.micFormatAcknowledged = true;
+        this.audioController.setMicTransmissionEnabled(true);
+        Logger.log(`[AudioTX] Server selected microphone format: ${this.selectedMicFormat}`);
+    }
+
+    #destroyMicEncoder() {
+        this.micEncoderGeneration++;
+        this.micPendingCaptureTimes.length = 0;
+        if (this.micEncoder && this.micEncoder.state !== "closed") {
+            try {
+                this.micEncoder.close();
+            } catch {
+            }
+        }
+        this.micEncoder = null;
     }
 
      async #handleIncomingBinaryFrame(arrayBuffer) {

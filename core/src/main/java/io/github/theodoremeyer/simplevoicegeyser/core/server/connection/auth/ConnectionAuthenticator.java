@@ -56,6 +56,22 @@ public final class ConnectionAuthenticator {
             String username,
             String password
     ) {
+        return authenticate(username, password, null);
+    }
+
+    /**
+     * Attempts to authenticate a websocket client.
+     *
+     * @param username username
+     * @param password password
+     * @param proxyToken optional proxy-auth token
+     * @return auth response
+     */
+    public AuthResponse authenticate(
+            String username,
+            String password,
+            String proxyToken
+    ) {
 
         try {
 
@@ -69,6 +85,23 @@ public final class ConnectionAuthenticator {
             }
 
             String authKey = username.toLowerCase(Locale.ROOT);
+
+            if (proxyToken != null && !proxyToken.isBlank()) {
+                if (!isProxyTokenAuthenticationConfigured()) {
+                    return AuthResponse.failure(
+                            "Proxy authentication is disabled or not configured."
+                    );
+                }
+
+                AuthResponse proxyAuth = authenticateProxy(username, proxyToken);
+
+                if (!proxyAuth.success()) {
+                    return proxyAuth;
+                }
+
+                authRateLimiter.reset(authKey);
+                return proxyAuth;
+            }
 
             if (!authRateLimiter.allow(authKey)) {
 
@@ -143,6 +176,50 @@ public final class ConnectionAuthenticator {
                     "Internal server error."
             );
         }
+    }
+
+    private AuthResponse authenticateProxy(String username, String proxyToken) {
+        String secret = SvgCore.getConfig().PROXY_SHARED_SECRET.get();
+        ProxyAuthToken.Claims claims = ProxyAuthToken.validate(proxyToken, secret);
+        if (claims == null) {
+            return AuthResponse.failure("Proxy authentication failed.");
+        }
+
+        if (!claims.username().equalsIgnoreCase(username)) {
+            return AuthResponse.failure("Proxy authentication failed.");
+        }
+
+        SvgPlayer player = SvgCore.getPlayerManager().getPlayer(claims.uuid());
+        if (player == null) {
+            return AuthResponse.failure("Timeout: You didn’t join the server in time.");
+        }
+
+        AuthResponse permissionResult = validatePermissions(player);
+        if (!permissionResult.success()) {
+            return permissionResult;
+        }
+
+        AuthResponse voiceChatResult = validateVoiceChat(claims.uuid());
+        if (!voiceChatResult.success()) {
+            return voiceChatResult;
+        }
+
+        return AuthResponse.success(claims.uuid(), player);
+    }
+
+    /**
+     * Checks whether proxy token authentication is enabled and configured.
+     *
+     * @return true if proxy token authentication may be attempted
+     */
+    private boolean isProxyTokenAuthenticationConfigured() {
+        if (!SvgCore.getConfig().PROXY_ENABLED.get()) {
+            return false;
+        }
+
+        String secret = SvgCore.getConfig().PROXY_SHARED_SECRET.get();
+
+        return secret != null && !secret.isBlank();
     }
 
     /**

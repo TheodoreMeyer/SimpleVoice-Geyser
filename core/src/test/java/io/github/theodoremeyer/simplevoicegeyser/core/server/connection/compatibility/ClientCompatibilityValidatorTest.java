@@ -61,13 +61,14 @@ class ClientCompatibilityValidatorTest {
     }
 
     @Test
-    void rejectsWebClientTypeWithMismatchedBuild() {
+    void acceptsWebClientTypeWithMismatchedBuildWhenVersionsMatch() {
         ClientCompatibilityResult result = validate(joinWithClientType(new JSONObject()
                 .put("type", "Web")
                 .put("serverVersion", SERVER_VERSION)
                 .put("serverBuild", "other-build")));
 
-        assertUpdateRequired(result, "Outdated client. Please refresh.");
+        assertTrue(result.accepted());
+        assertEquals(ClientIdentity.web(SERVER_VERSION, "other-build"), result.identity());
     }
 
     @Test

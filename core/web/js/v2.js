@@ -33,8 +33,13 @@ document.getElementById("chatInput").addEventListener("keydown", (event) => {
 client.webSocketController.addEventListener("statusChange", (status) => {
     if (status.connected) {
         document.body.classList.add("connected");
+        alertOverlay.classList.add("dev-hidden");
     } else {
         document.body.classList.remove("connected");
+        if (status.changingServer) {
+            showAlertOverlay("Changing server...");
+            return;
+        }
         if (status.code === SvgWebSocket.DisconnectPolicy.OUTDATED || status.reason === "update_required") {
             showAlertOverlay("Outdated client. Reloading...");
             return;
