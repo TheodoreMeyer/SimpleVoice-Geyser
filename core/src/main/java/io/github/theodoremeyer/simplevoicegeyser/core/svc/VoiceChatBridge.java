@@ -9,6 +9,7 @@ import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.RemoveGroupEvent;
 import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.packets.GroupsBroadcaster;
 
 /**
  * The Class Bridging with Simple Voice Chat
@@ -44,15 +45,16 @@ public class VoiceChatBridge implements VoicechatPlugin {
         serverApi = event.getVoicechat();
         SvgCore.getLogger().info("[VCBridge] Voice chat server started: " + serverApi);
         for (Group group : serverApi.getGroups()) {
-            SvgCore.getGroupManager().addGroup(group);
+            SvgCore.getGroupManager().addGroup(group, false);
             SvgCore.getLogger().info("[VCBridge] Loaded group: " + group.getName());
         }
+        GroupsBroadcaster.broadcast();
     }
 
     private void onGroupCreated(CreateGroupEvent event) {
         Group group = event.getGroup();
         if (group != null) {
-            SvgCore.getGroupManager().addGroup(group);
+            SvgCore.getGroupManager().addGroup(group, true);
         }
     }
 

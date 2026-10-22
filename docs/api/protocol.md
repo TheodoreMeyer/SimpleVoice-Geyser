@@ -198,6 +198,8 @@ If `server.audio.transport-mode` is `auto`, the server selects `svg-v2` only whe
 
 ## Chat Packet
 
+Requires `client.web-chat-enabled` (default `true`). When disabled, web→game and game→web chat are both off.
+
 Client to server:
 
 ```json
@@ -211,19 +213,32 @@ Server behavior:
 
 | Condition                                    | Result                                                                       |
 |----------------------------------------------|------------------------------------------------------------------------------|
+| `web-chat-enabled` is false                  | Server sends an error.                                                       |
 | Client is not authenticated                  | Server sends an error.                                                       |
 | Message contains unsupported characters only | Server sends an error.                                                       |
-| Message is valid                             | Server forwards sanitized chat and echoes a chat response to the web client. |
+| Message is valid                             | Server forwards sanitized chat into Minecraft as `[Web Chat]: …`.            |
 
-Server chat response:
+The web client shows a local `[You] …` line. Other authenticated web clients receive the Minecraft chat mirror (below) after the message enters the game.
+
+### Server → client chat (Minecraft mirror)
+
+Public in-game chat is pushed to authenticated web clients:
 
 ```json
 {
   "type": "chat",
-  "message": "You: Hello from web chat",
+  "message": "<PlayerName> hello everyone",
   "fatal": false
 }
 ```
+
+| Source | Behavior |
+|--------|----------|
+| Player chats in Minecraft | All web clients get `<Name> message`. |
+| Web client sends chat | Peers get `<Name> message`; sender keeps local `[You]`. |
+| Cancelled chat events (mute plugins, etc.) | Not mirrored. |
+
+Whispers / private messages / commands are not mirrored.
 
 ## Server Status And Error Packets
 
@@ -320,7 +335,8 @@ In `svg-v2` mode, server-to-client audio uses a versioned binary frame. Multibyt
 | `sampleRate` |  2 bytes | Sample rate, normally `48000`              |
 | `channels`   |   1 byte | Source channel count                       |
 | `codec`      |   1 byte | `1=opus`, `2=pcm16le`                      |
-| `payloadLen` |  4 bytes | Payload length                             |
+| `payloadLen` |  4 bytes | Codec payload length                       |
+| `senderUUID` | 16 bytes | Optional; when `FLAG_HAS_SENDER` is set    |
 | `payload`    | variable | Codec payload                              |
 
 Known flag values:
@@ -330,8 +346,73 @@ Known flag values:
 | `FLAG_STATIC_PACKET`       | `0x01` | Source packet is static/non-positional.          |
 | `FLAG_DISTANCE_ATTENUATED` | `0x02` | Server calculated distance attenuation metadata. |
 | `FLAG_HAS_PAN`             | `0x04` | Frame includes pan metadata.                     |
+| `FLAG_HAS_SENDER`          | `0x08` | 16-byte big-endian sender UUID follows header.   |
 
-The current `svg-v2` receive path usually sends Opus payloads with compact spatial metadata. The browser decodes the payload and applies pan/gain locally before enqueueing PCM into the speaker worklet.
+The current `svg-v2` receive path usually sends Opus payloads with compact spatial metadata and the sender UUID. The browser decodes the payload, applies pan/gain, then multiplies by the user’s per-player receive volume before enqueueing PCM into the speaker worklet.
+
+### Server To Client `voice_players`
+
+After authentication and whenever a Minecraft player joins or leaves, the server pushes:
+
+```json
+{
+  "type": "voice_players",
+  "players": [
+    { "uuid": "…", "name": "…" }
+  ]
+}
+```
+
+Each websocket client receives a roster that excludes its own UUID. The web UI uses this list (plus recently heard UUIDs from audio frames) for the Adjust Volumes panel.
+
+### Server To Client `groups`
+
+After authentication and whenever groups change (create/remove/join/leave), the server pushes a personalized list:
+
+```json
+{
+  "type": "groups",
+  "groups": [
+    { "name": "Party", "type": "OPEN", "hasPassword": true }
+  ],
+  "current": "Party"
+}
+```
+
+| Field | Meaning |
+|-------|---------|
+| `groups[].name` | SVC group name |
+| `groups[].type` | `OPEN`, `NORMAL`, or `ISOLATED` |
+| `groups[].hasPassword` | Whether a password is required (secret never sent) |
+| `current` | Joined group name for this player, or `null` |
+| `currentType` / `currentHasPassword` | Metadata for the joined group |
+| `members` | Online players in `current`: `{ uuid, name, self }` |
+
+### Client To Server `join_group` / `leave_group` / `create_group`
+
+```json
+{ "type": "join_group", "name": "Party", "password": "optional" }
+```
+
+```json
+{ "type": "leave_group" }
+```
+
+```json
+{ "type": "create_group", "name": "Party", "password": "optional", "groupType": "isolated" }
+```
+
+`join_group` / `leave_group` require `svg.vc.group.join`. `create_group` requires `svg.vc.group.create`. Optional `groupType` is `isolated`, `normal`, or `open` (default **`isolated`**).
+
+Password is **join-only** (who may enter). It does **not** change audio isolation — that is entirely `groupType`:
+
+| `groupType` | Nearby outsiders hear members? | Members hear nearby outsiders? |
+|-------------|--------------------------------|--------------------------------|
+| `isolated` (default) | No | No |
+| `normal` | No | Yes |
+| `open` | Yes (party line) | Yes |
+
+Empty `password` = no join lock; a non-empty password requires the password to join. Failures return a normal `error` status message; success is followed by an updated `groups` push (after the creator has joined, so `current` matches the new group).
 
 ## Compatibility Rules
 

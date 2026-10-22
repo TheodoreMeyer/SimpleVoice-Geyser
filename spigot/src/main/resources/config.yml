@@ -1,9 +1,9 @@
 client:
 
-  # default: 30
-  # Timeout in seconds
-  # WARNING: Developer has disabled timeout enforcement for current dev builds.
-  vctimeout: 30
+  # default: 60
+  # Seconds a web/Svg-App client may wait after a valid password before the
+  # player must appear online in Minecraft (and Simple Voice Chat) to finish join.
+  vctimeout: 60
 
   # default: 2
   # Idle websocket timeout in minutes
@@ -17,6 +17,24 @@ client:
   # Allows bedrock clients to open the SVG menu via emotes.
   # WARNING: Make sure off-hand-emote is disabled in Geyser to avoid conflicts.
   useEmoteForSVG: true
+
+  # default: true
+  # When true, Svg-App must send clientType.serverVersion equal to this plugin version.
+  # When false, the same major.minor is accepted (any patch) as a temporary escape hatch.
+  require-latest: true
+
+  web:
+    # default: en
+    # Default UI language when the visitor has no saved preference (en, nl, pl, it, es).
+    default-language: en
+
+    # default: Simple Voice Chat
+    # Display name on the join page / browser title.
+    server-name: "Simple Voice Chat"
+
+    # default: empty
+    # Optional short subtitle under the server name.
+    tagline: ""
 
   # default: true
   # Allows players using web-chat to chat in-game
@@ -56,9 +74,10 @@ server:
     # Settings for the default group for SVG web players.
     default:
 
-      # default: true
-      # Decides whether the SVG group is created for players who use the website.
-      enabled: true
+      # default: false
+      # When true, all web/SVG clients join one shared OPEN group named "Svg" (party line).
+      # Leave false for normal Simple Voice Chat proximity (recommended).
+      enabled: false
 
       # default: 1a2b
       # Controls the default group's password.
@@ -105,6 +124,17 @@ debug: false
 # Check for plugin updates on startup.
 updatechecker:
   enable: true
+
+# Config file backups (written under plugins/SimpleVoice-Geyser/backups/configs/)
+config:
+  backups:
+    # default: true
+    # Create a backup before auto-updating config.yml with new keys / version.
+    enabled: true
+
+    # default: 6
+    # Max backups to keep. Oldest files are deleted first. Use 0 for unlimited.
+    max-files: 6
 
 # default: 0.1.1-dev-migration1
 # Internal config schema marker used for migration tracking.

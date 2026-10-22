@@ -23,6 +23,7 @@ It supports both Java and Bedrock players, bridging the gap between platforms se
 * Paper
 * Purpur
 * Spigot
+* Folia
 * Fabric
 
 ## Requirements

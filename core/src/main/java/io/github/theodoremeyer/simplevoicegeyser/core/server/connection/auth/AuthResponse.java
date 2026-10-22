@@ -30,6 +30,20 @@ public record AuthResponse(boolean success, String message,
     }
 
     /**
+     * Credentials accepted, but the player is not ready for voice yet
+     * (not online and/or Simple Voice Chat connection missing).
+     *
+     * @param uuid player uuid
+     * @return pending auth response
+     */
+    public static AuthResponse pending(UUID uuid) {
+        return new AuthResponse(
+                true, null,
+                uuid, null
+        );
+    }
+
+    /**
      * Failed auth result.
      *
      * @param message failure message
@@ -56,5 +70,14 @@ public record AuthResponse(boolean success, String message,
                 true, null,
                 null, null
         );
+    }
+
+    /**
+     * Whether credentials are valid but the Minecraft/SVC presence wait is still required.
+     *
+     * @return true when uuid is known and player is not yet attached
+     */
+    public boolean isPending() {
+        return success && uuid != null && player == null;
     }
 }

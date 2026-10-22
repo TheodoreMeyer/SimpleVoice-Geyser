@@ -6,6 +6,8 @@ import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiat
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.compatibility.ClientIdentity;
 import org.eclipse.jetty.websocket.api.Session;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,6 +74,13 @@ public final class ConnectionManager {
     }
 
     /**
+     * All active authenticated websocket connections.
+     */
+    public Collection<SvgConnection> getAll() {
+        return Collections.unmodifiableCollection(connections.values());
+    }
+
+    /**
      * Disconnnect a Client Connection
      * @param uuid player's Uuid
      * @param code Code
@@ -108,8 +117,19 @@ public final class ConnectionManager {
      * Disconnect all Connections
      */
     public void disconnectAll() {
+        disconnectAll("Server shutting down");
+    }
+
+    /**
+     * Disconnect all Connections with a custom close reason.
+     * @param reason websocket close reason
+     */
+    public void disconnectAll(String reason) {
+        String closeReason = reason == null || reason.isBlank()
+                ? "Server shutting down"
+                : reason;
         for (SvgConnection connection : connections.values()) {
-            connection.disconnect(1001, "Server shutting down");
+            connection.disconnect(1001, closeReason);
         }
 
         connections.clear();

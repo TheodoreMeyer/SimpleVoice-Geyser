@@ -25,7 +25,7 @@ public final class SvgConfig {
                     "For more information, see the wiki: https://theodoremeyer.github.io/projects/simplevoicegeyser/");
 
     public final ConfigKey<Integer> VC_TIMEOUT =
-            new ConfigKey <>(this, "client.vctimeout", 30);
+            new ConfigKey <>(this, "client.vctimeout", 60);
 
     public final ConfigKey<Integer> IDLE_TIMEOUT =
             new ConfigKey <>(this, "client.idletimeout", 2);
@@ -42,6 +42,25 @@ public final class SvgConfig {
     public final ConfigKey<List<String>> CLIENT_ALLOWED_TYPES_LIST =
             new ConfigKey<>(this, "client.allowedTypes.list", List.of());
 
+    /**
+     * When {@code true} (default), Svg-App must send {@code clientType.serverVersion} equal to
+     * {@link SvgCore#VERSION}. When {@code false}, the same major.minor is accepted (any patch).
+     */
+    public final ConfigKey<Boolean> REQUIRE_LATEST =
+            new ConfigKey<>(this, "client.require-latest", true);
+
+    /** ISO 639-1 code used when the browser has no saved preferredLanguage (en, nl, pl, it, es). */
+    public final ConfigKey<String> WEB_DEFAULT_LANGUAGE =
+            new ConfigKey<>(this, "client.web.default-language", "en");
+
+    /** Display name shown on the join page hero / document title. */
+    public final ConfigKey<String> WEB_SERVER_NAME =
+            new ConfigKey<>(this, "client.web.server-name", "Simple Voice Chat");
+
+    /** Optional short subtitle under the server name (empty = hidden). */
+    public final ConfigKey<String> WEB_TAGLINE =
+            new ConfigKey<>(this, "client.web.tagline", "");
+
     public final ConfigKey<Boolean> WEB_CHAT_ENABLED =
             new ConfigKey<>(this, "client.web-chat-enabled", true);
 
@@ -56,7 +75,7 @@ public final class SvgConfig {
             ));
 
     public final ConfigKey<Boolean> DEFAULT_GROUP_ENABLED =
-            new ConfigKey <>(this, "server.group.default.enabled", true);
+            new ConfigKey <>(this, "server.group.default.enabled", false);
 
     public final ConfigKey<String> DEFAULT_GROUP_PASSWORD =
             new ConfigKey <>(this, "server.group.default.password", "1a2b");
@@ -98,6 +117,12 @@ public final class SvgConfig {
     public final ConfigKey<Boolean> UPDATE_CHECKER_ENABLED =
             new ConfigKey <>(this, "updatechecker.enable", true);
 
+    public final ConfigKey<Boolean> CONFIG_BACKUPS_ENABLED =
+            new ConfigKey<>(this, ConfigBackupUtil.ENABLED_PATH, ConfigBackupUtil.DEFAULT_ENABLED);
+
+    public final ConfigKey<Integer> CONFIG_BACKUPS_MAX_FILES =
+            new ConfigKey<>(this, ConfigBackupUtil.MAX_FILES_PATH, ConfigBackupUtil.DEFAULT_MAX_FILES);
+
     public final ConfigKey<String> CONFIG_VERSION =
             new ConfigKey <>(this, "config-version", SvgCore.VERSION);
 
@@ -110,6 +135,10 @@ public final class SvgConfig {
             WEB_CHAT_ENABLED,
             CLIENT_ALLOWED_TYPES_BLACKLIST,
             CLIENT_ALLOWED_TYPES_LIST,
+            REQUIRE_LATEST,
+            WEB_DEFAULT_LANGUAGE,
+            WEB_SERVER_NAME,
+            WEB_TAGLINE,
             JOIN_MESSAGE_ENABLED,
             JOIN_MESSAGE_TEXT,
             DEFAULT_GROUP_ENABLED,
@@ -126,6 +155,8 @@ public final class SvgConfig {
             AUDIO_MIC_ALLOW_LEGACY,
             DEBUG,
             UPDATE_CHECKER_ENABLED,
+            CONFIG_BACKUPS_ENABLED,
+            CONFIG_BACKUPS_MAX_FILES,
             CONFIG_VERSION
     );
 

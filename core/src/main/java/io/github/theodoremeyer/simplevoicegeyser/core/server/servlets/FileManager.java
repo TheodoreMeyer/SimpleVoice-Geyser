@@ -3,13 +3,26 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.servlets;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.CodeSource;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.stream.Stream;
 
 class FileManager {
 
@@ -17,6 +30,15 @@ class FileManager {
      * Root directory inside the JAR where static files are stored.
      */
     protected static final String RESOURCE_ROOT = "/web";
+
+    /**
+     * Entry HTML embeds {@code BUILD_ID}; always overwrite from the JAR so joins
+     * do not fail with {@code update_required} against a stale disk copy.
+     */
+    private static final Set<String> ALWAYS_OVERWRITE = Set.of(
+            "index.html",
+            "legacy.html"
+    );
 
     /**
      * Local directory where web files are stored.
@@ -63,6 +85,10 @@ class FileManager {
     /**
      * Automatically extracts required web assets from the JAR
      * to the local file system on startup.
+     *
+     * <p>Extracts the full {@code /web/} tree (HTML/CSS/JS/images) so ES-module
+     * imports like {@code js/utils/lang.js} are always present on disk — not only
+     * a partial whitelist. Locally modified files are still preserved via versioning.</p>
      */
     void extractAssets() {
 
@@ -70,73 +96,16 @@ class FileManager {
         modifiedFiles.clear();
         outdatedFiles.clear();
 
-        extractResource(
-                "/web/legacy.html",
-                "legacy.html"
-        );
-        extractResource(
-                "/web/css/styles.css",
-                "css/styles.css"
-        );
-
-        extractResource(
-                "/web/index.html",
-                "index.html"
-        );
-        extractResource(
-                "/web/css/v2.css",
-                "css/v2.css"
-        );
-        extractResource(
-                "/web/js/v2.js",
-                "js/v2.js"
-        );
-
-        extractResource(
-                "/web/images/v2/background.png",
-                "images/v2/background.png"
-        );
-        extractResource(
-                "/web/images/v2/alert-background.png",
-                "images/v2/alert-background.png"
-        );
-        extractResource(
-                "/web/images/v2/close.png",
-                "images/v2/close.png"
-        );
-        extractResource(
-                "/web/images/v2/mic.png",
-                "images/v2/mic.png"
-        );
-        extractResource(
-                "/web/images/v2/docs.png",
-                "images/v2/docs.png"
-        );
-        extractResource(
-                "/web/images/v2/link.png",
-                "images/v2/link.png"
-        );
-        extractResource(
-                "/web/images/v2/bug-report.png",
-                "images/v2/bug-report.png"
-        );
-
-        extractResource(
-                "/web/images/flags-1x1/en.svg",
-                "images/flags-1x1/en.svg"
-        );
-        extractResource(
-                "/web/images/flags-1x1/pl.svg",
-                "images/flags-1x1/pl.svg"
-        );
-        extractResource(
-                "/web/images/flags-1x1/it.svg",
-                "images/flags-1x1/it.svg"
-        );
-        extractResource(
-                "/web/images/flags-1x1/es.svg",
-                "images/flags-1x1/es.svg"
-        );
+        int extracted = extractAllWebResources();
+        if (extracted == 0) {
+            SvgCore.getLogger().error(
+                    "[Web] Failed to discover bundled /web assets; UI modules may 404."
+            );
+        } else {
+            SvgCore.getLogger().info(
+                    "[Web] Processed " + extracted + " bundled web asset(s)."
+            );
+        }
 
         versioning.save();
 
@@ -146,6 +115,140 @@ class FileManager {
                 "Loaded Override web files from "
                         + webDirectory.getAbsolutePath()
         );
+    }
+
+    /**
+     * Discovers every regular file under {@code /web/} in the plugin JAR (or
+     * exploded classpath) and runs {@link #extractResource(String, String)}.
+     *
+     * @return number of resources processed
+     */
+    private int extractAllWebResources() {
+        int fromJar = extractWebResourcesFromPluginJar();
+        if (fromJar > 0) {
+            return fromJar;
+        }
+        return extractWebResourcesFromClasspathRoot();
+    }
+
+    /**
+     * Walk the plugin JAR file for entries under {@code web/}.
+     */
+    private int extractWebResourcesFromPluginJar() {
+        CodeSource codeSource = FileManager.class.getProtectionDomain().getCodeSource();
+        if (codeSource == null || codeSource.getLocation() == null) {
+            return 0;
+        }
+
+        try {
+            URI location = codeSource.getLocation().toURI();
+            File jarFile = new File(location);
+            if (!jarFile.isFile()) {
+                return 0;
+            }
+
+            int count = 0;
+            try (JarFile jar = new JarFile(jarFile)) {
+                Enumeration<JarEntry> entries = jar.entries();
+                while (entries.hasMoreElements()) {
+                    JarEntry entry = entries.nextElement();
+                    if (entry.isDirectory()) {
+                        continue;
+                    }
+                    String name = entry.getName();
+                    if (!name.startsWith("web/") || name.equals("web/")) {
+                        continue;
+                    }
+                    // Skip internal versioning file if ever packaged
+                    if (name.endsWith("/.versioning") || name.equals("web/.versioning")) {
+                        continue;
+                    }
+                    String relative = name.substring("web/".length());
+                    if (relative.isEmpty()) {
+                        continue;
+                    }
+                    extractResource("/" + name, relative);
+                    count++;
+                }
+            }
+            return count;
+        } catch (URISyntaxException | IOException e) {
+            SvgCore.getLogger().warning(
+                    "[Web] Could not scan plugin JAR for web assets: " + e.getMessage()
+            );
+            return 0;
+        }
+    }
+
+    /**
+     * Fallback when running from an exploded classpath (e.g. IDE).
+     */
+    private int extractWebResourcesFromClasspathRoot() {
+        URL rootUrl = FileManager.class.getResource(RESOURCE_ROOT);
+        if (rootUrl == null) {
+            return 0;
+        }
+
+        try {
+            URI uri = rootUrl.toURI();
+            if ("jar".equalsIgnoreCase(uri.getScheme())) {
+                return extractWebResourcesFromJarUri(uri);
+            }
+
+            Path root = Path.of(uri);
+            int count = 0;
+            try (Stream<Path> walk = Files.walk(root)) {
+                for (Path path : (Iterable<Path>) walk.filter(Files::isRegularFile)::iterator) {
+                    String relative = root.relativize(path).toString().replace('\\', '/');
+                    if (relative.isEmpty() || relative.endsWith(".versioning")) {
+                        continue;
+                    }
+                    extractResource(RESOURCE_ROOT + "/" + relative, relative);
+                    count++;
+                }
+            }
+            return count;
+        } catch (URISyntaxException | IOException e) {
+            SvgCore.getLogger().warning(
+                    "[Web] Could not walk classpath /web tree: " + e.getMessage()
+            );
+            return 0;
+        }
+    }
+
+    private int extractWebResourcesFromJarUri(URI uri) throws IOException {
+        FileSystem fs = null;
+        boolean created = false;
+        try {
+            try {
+                fs = FileSystems.getFileSystem(uri);
+            } catch (Exception ignored) {
+                fs = FileSystems.newFileSystem(uri, Collections.emptyMap());
+                created = true;
+            }
+
+            Path root = fs.getPath(RESOURCE_ROOT);
+            if (!Files.exists(root)) {
+                return 0;
+            }
+
+            int count = 0;
+            try (Stream<Path> walk = Files.walk(root)) {
+                for (Path path : (Iterable<Path>) walk.filter(Files::isRegularFile)::iterator) {
+                    String relative = root.relativize(path).toString().replace('\\', '/');
+                    if (relative.isEmpty() || relative.endsWith(".versioning")) {
+                        continue;
+                    }
+                    extractResource(RESOURCE_ROOT + "/" + relative, relative);
+                    count++;
+                }
+            }
+            return count;
+        } finally {
+            if (created && fs != null) {
+                fs.close();
+            }
+        }
     }
 
     /**
@@ -195,6 +298,17 @@ class FileManager {
             byte[] bundledData = input.readAllBytes();
 
             String bundledHash = Versioning.hash(bundledData);
+
+            /*
+             * Entry HTML carries the jar BUILD_ID used for websocket auth.
+             * Always refresh from the JAR so upgrades cannot leave a stale
+             * build id (which causes an endless "Update required" reload loop).
+             */
+            if (ALWAYS_OVERWRITE.contains(outputPath)) {
+                writeFile(targetFile, bundledData);
+                versioning.setHash(outputPath, bundledHash);
+                return;
+            }
 
             /*
              * The local file does not exist.

@@ -4,6 +4,7 @@ import {
     getAudioDecompileStats,
     warmupAudioDecompiler
 } from "./audio/AudioByteDecompiler.js";
+import {applyMasterGainOnly, applyUserGain, noteHeard, setRoster} from "./audio/receive-volumes.js";
 import {Logger} from "./utils/logger.js";
 import {
     isBackendTransferStatus,
@@ -29,7 +30,9 @@ export class SvgWebSocket {
     };
     #eventListeners = {
         statusChange: [],
-        message: []
+        message: [],
+        voicePlayers: [],
+        groups: []
     };
 
     /**
@@ -44,6 +47,8 @@ export class SvgWebSocket {
         this.micEncoder = null;
         this.micEncoderGeneration = 0;
         this.micPendingCaptureTimes = [];
+        this._rxBinaryQueue = [];
+        this._rxBinaryProcessing = false;
         this.#resetState();
     }
 
@@ -81,6 +86,8 @@ export class SvgWebSocket {
 
     #resetState() {
         this.#destroyMicEncoder();
+        this._rxBinaryQueue = [];
+        this._rxBinaryProcessing = false;
         this.reconnectAttempts = 0;
         this.manualClose = false;
         this.hasJoined = false;
@@ -131,13 +138,9 @@ export class SvgWebSocket {
                     serverBuild: window.BUILD_ID || "unknown"
                 }
             }));
-            Logger.log("Connected.");
+            Logger.log("WebSocket open; joining...");
             this.reconnectAttempts = 0;
-
-            this.#runEventListeners("statusChange", {
-                connected: true,
-                username: this.lastCredentials.username
-            });
+            // UI "connected" waits for STATUS "Connected as ..." (pending Minecraft join possible).
         };
 
         this.ws.onmessage = async (event) => {
@@ -152,9 +155,32 @@ export class SvgWebSocket {
                         this.stopReconnection();
                     }
 
+                    if (packetType === "status" && (
+                        msg.includes("waiting for you to join minecraft")
+                        || msg.includes("waiting for voice chat")
+                    )) {
+                        // Keep the socket open; server is holding a pending join until MC/SVC ready.
+                        Logger.log(msg.includes("voice chat")
+                            ? "Waiting for voice chat..."
+                            : "Waiting for Minecraft join...");
+                        this.#runEventListeners("statusChange", {
+                            connected: false,
+                            waitingForMinecraft: true
+                        });
+                    }
+
                     if (packetType === "status" && msg.includes("connected as")) {
                         this.hasJoined = true;
+                        try {
+                            sessionStorage.removeItem("svgOutdatedReloadOnce");
+                        } catch {
+                            // ignore
+                        }
                         await this.#sendCapabilitiesOnce();
+                        this.#runEventListeners("statusChange", {
+                            connected: true,
+                            username: this.lastCredentials?.username
+                        });
                     }
 
                     if (packetType === "status" && isBackendTransferStatus(msg)) {
@@ -169,11 +195,33 @@ export class SvgWebSocket {
                         await this.#applyMicFormatAck(data.selectedMicFormat);
                     }
 
+                    if (packetType === "voice_players") {
+                        setRoster(data.players);
+                        this.#runEventListeners("voicePlayers", data.players);
+                    }
+
+                    if (packetType === "groups") {
+                        this.#runEventListeners("groups", {
+                            groups: data.groups || [],
+                            current: data.current ?? null,
+                            members: data.members || [],
+                            currentType: data.currentType ?? null,
+                            currentHasPassword: !!data.currentHasPassword
+                        });
+                    }
+
+                    if (packetType === "chat") {
+                        const chatMsg = String(data.message || "");
+                        if (chatMsg) {
+                            Logger.log(chatMsg);
+                        }
+                    }
+
                     if (packetType === "error") {
                         const isFatalError = msg.includes("bedrock player to join") ||
                             msg.includes("use /svg pswd") ||
                             msg.includes("access denied:") ||
-                            msg.includes("timeout") ||
+                            msg.includes("did not join the minecraft server in time") ||
                             msg.includes("left the game.");
 
                         if (isFatalError) {
@@ -209,7 +257,7 @@ export class SvgWebSocket {
                     })
                 }
             } else {
-                await this.#handleIncomingBinaryFrame(event.data);
+                this.#enqueueBinaryFrame(event.data);
             }
         };
 
@@ -231,9 +279,24 @@ export class SvgWebSocket {
 
             if (code === SvgWebSocket.DisconnectPolicy.OUTDATED || reason === "update_required") {
                 this.stopReconnection();
-                Logger.log("Outdated client. Reloading...");
-                alert("Update required. Reloading page.");
-                location.reload();
+                const reloadKey = "svgOutdatedReloadOnce";
+                if (!sessionStorage.getItem(reloadKey)) {
+                    sessionStorage.setItem(reloadKey, "1");
+                    Logger.log("Outdated client. Cache-bust reload once...");
+                    // Bust caches via a temporary query param; the page strips it
+                    // from the address bar on load (see index.html / v2.js).
+                    const url = new URL(location.href);
+                    url.searchParams.set("_svg", String(Date.now()));
+                    location.replace(url.toString());
+                    return;
+                }
+                sessionStorage.removeItem(reloadKey);
+                Logger.log("Outdated client after reload — server web assets are stale.");
+                alert(
+                    "Update required: the website build does not match the plugin.\n\n" +
+                    "On the server: stop, delete plugins/<SimpleVoice-Geyser>/web/, " +
+                    "install the matching jar, start, then hard-refresh (Ctrl+F5)."
+                );
                 return;
             }
 
@@ -251,8 +314,12 @@ export class SvgWebSocket {
                 return;
             }
 
-            if (code === SvgWebSocket.DisconnectPolicy.TIMEOUT) {
-                Logger.log("Timeout disconnect.");
+            if (code === SvgWebSocket.DisconnectPolicy.TIMEOUT
+                || reason === "join_wait_expired") {
+                this.fatalAuthError = true;
+                this.stopReconnection();
+                Logger.log("Join wait expired / timeout disconnect.");
+                return;
             }
 
             if (SvgWebSocket.DisconnectPolicy.NO_RECONNECT.has(code)) {
@@ -278,11 +345,8 @@ export class SvgWebSocket {
         };
 
         this.ws.onerror = () => {
+            // Do not stop reconnection here — onclose decides reconnect policy.
             Logger.log("WebSocket error occurred.");
-
-            if (this.ws.readyState !== WebSocket.OPEN) {
-                this.stopReconnection();
-            }
         };
     }
 
@@ -325,6 +389,47 @@ export class SvgWebSocket {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify({ type: "chat", message: msg }));
         }
+    }
+
+    /**
+     * @param {string} name
+     * @param {string} [password]
+     */
+    joinGroup(name, password) {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            return;
+        }
+        const payload = { type: "join_group", name: String(name || "") };
+        if (password) {
+            payload.password = String(password);
+        }
+        this.ws.send(JSON.stringify(payload));
+    }
+
+    leaveGroup() {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({ type: "leave_group" }));
+        }
+    }
+
+    /**
+     * @param {string} name
+     * @param {string} [password]
+     * @param {string} [groupType] isolated | normal | open (default isolated)
+     */
+    createGroup(name, password, groupType) {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            return;
+        }
+        const payload = {
+            type: "create_group",
+            name: String(name || "").trim(),
+            groupType: String(groupType || "isolated").trim().toLowerCase() || "isolated"
+        };
+        if (password) {
+            payload.password = String(password);
+        }
+        this.ws.send(JSON.stringify(payload));
     }
 
     async #sendCapabilitiesOnce() {
@@ -513,7 +618,35 @@ export class SvgWebSocket {
         socket.send(JSON.stringify(payload));
     }
 
-     async #handleIncomingBinaryFrame(arrayBuffer) {
+    /**
+     * Serialize binary RX so Opus decode/play never overlaps across frames.
+     * @param {ArrayBuffer} arrayBuffer
+     */
+    #enqueueBinaryFrame(arrayBuffer) {
+        this._rxBinaryQueue.push(arrayBuffer);
+        if (this._rxBinaryProcessing) {
+            return;
+        }
+        this._rxBinaryProcessing = true;
+        void this.#drainBinaryQueue();
+    }
+
+    async #drainBinaryQueue() {
+        try {
+            while (this._rxBinaryQueue.length > 0) {
+                const frame = this._rxBinaryQueue.shift();
+                await this.#handleIncomingBinaryFrame(frame);
+            }
+        } finally {
+            this._rxBinaryProcessing = false;
+            if (this._rxBinaryQueue.length > 0) {
+                this._rxBinaryProcessing = true;
+                void this.#drainBinaryQueue();
+            }
+        }
+    }
+
+    async #handleIncomingBinaryFrame(arrayBuffer) {
         this.rxBinaryFrames++;
         this.rxBinaryBytes += arrayBuffer.byteLength || 0;
 
@@ -527,6 +660,14 @@ export class SvgWebSocket {
 
             this.rxSvgV2Frames++;
             const packet = v2Result.packet;
+            const senderUuid = v2Result.meta?.senderUuid || null;
+            if (senderUuid) {
+                noteHeard(senderUuid);
+            }
+            packet.senderId = senderUuid || packet.senderId || "other";
+            if (packet?.samples) {
+                applyUserGain(packet.samples, senderUuid);
+            }
             if (packet.channels === 2) {
                 this.rxStereoFrames++;
             } else {
@@ -537,15 +678,20 @@ export class SvgWebSocket {
             return;
         }
 
-         this.rxLegacyFrames++;
+        this.rxLegacyFrames++;
         const packet = this.#decodeLegacyPcm16(arrayBuffer);
+        // Legacy PCM has no sender UUID — master volume only; mix under one "legacy" voice.
+        packet.senderId = "legacy";
+        if (packet?.samples) {
+            applyMasterGainOnly(packet.samples);
+        }
         if (packet.channels === 2) {
             this.rxStereoFrames++;
         } else {
             this.rxMonoFrames++;
         }
         this.audioController.playAudio(packet);
-         this.#maybeLogAudioStats();
+        this.#maybeLogAudioStats();
     }
 
     #maybeLogAudioStats() {

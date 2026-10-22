@@ -11,8 +11,6 @@ import org.json.JSONObject;
  */
 public class ChatPacket implements Packet {
 
-    private static final int MAX_WEB_CHAT_LENGTH = 200;
-
     /**
      * A no arg Constructor
      */
@@ -44,18 +42,18 @@ public class ChatPacket implements Packet {
             return;
         }
 
-        SanitizedChat sanitized = sanitizeChatMessage(json.optString("message", ""));
+        ChatSanitize.SanitizedChat sanitized = ChatSanitize.sanitize(json.optString("message", ""));
 
         SvgCore.getLogger().debug(
                 "WebChat: uuid=" + socket.getConnection().getUuid()
-                        + " originalLen=" + sanitized.originalLength
-                        + " sanitizedLen=" + sanitized.sanitized.length()
-                        + " removed=" + sanitized.removedCount
-                        + " truncated=" + sanitized.truncated
-                        + " dropped=" + sanitized.sanitized.isEmpty()
+                        + " originalLen=" + sanitized.originalLength()
+                        + " sanitizedLen=" + sanitized.sanitized().length()
+                        + " removed=" + sanitized.removedCount()
+                        + " truncated=" + sanitized.truncated()
+                        + " dropped=" + sanitized.sanitized().isEmpty()
         );
 
-        if (sanitized.sanitized.isEmpty()) {
+        if (sanitized.sanitized().isEmpty()) {
             socket.getConnection().sendError(
                     "Message contained unsupported characters and was not sent.",
                     false
@@ -64,16 +62,20 @@ public class ChatPacket implements Packet {
         }
 
         SvgPlayer player = socket.getConnection().getPlayer();
-
-        String outbound = "[Web Chat]: " + sanitized.sanitized;
+        String outbound = ChatSanitize.WEB_CHAT_PREFIX + sanitized.sanitized();
 
         try {
-            socket.getConnection().sendChat("You: " + sanitized.sanitized);
-
+            // Client already shows "[You] …" locally; Minecraft chat event fans out to peers.
             if (player != null) {
                 player.chat(outbound);
             } else {
                 socket.getConnection().sendStatus("You are not in-game. Message was broadcast.");
+
+                String displayName = socket.getConnection().getUuid() != null
+                        ? String.valueOf(socket.getConnection().getUuid())
+                        : "Web";
+                // Prefer connection player name when known later; use short label for offline web.
+                ChatBroadcaster.broadcast(displayName, sanitized.sanitized(), socket.getConnection().getUuid());
 
                 for (SvgPlayer other : SvgCore.getPlayerManager().getAllPlayers()) {
                     other.sendMessage(outbound);
@@ -92,61 +94,4 @@ public class ChatPacket implements Packet {
             );
         }
     }
-
-
-    private SanitizedChat sanitizeChatMessage(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return new SanitizedChat("", 0, false, 0);
-        }
-
-        int originalLength = raw.length();
-        StringBuilder sanitized = new StringBuilder(Math.min(originalLength, MAX_WEB_CHAT_LENGTH));
-        int removedCount = 0;
-        boolean truncated = false;
-        boolean prevSpace = false;
-
-        for (int i = 0; i < raw.length(); i++) {
-            char ch = raw.charAt(i);
-
-            if (ch == '\r' || ch == '\n' || ch == '\t') {
-                ch = ' ';
-            }
-
-            if (ch == '\u00A7' || ch < 0x20 || ch == 0x7F) {
-                removedCount++;
-                continue;
-            }
-
-            if (ch > 0x7E) {
-                removedCount++;
-                continue;
-            }
-
-            if (ch == ' ') {
-                if (prevSpace) {
-                    continue;
-                }
-                prevSpace = true;
-            } else {
-                prevSpace = false;
-            }
-
-            if (sanitized.length() >= MAX_WEB_CHAT_LENGTH) {
-                truncated = true;
-                break;
-            }
-
-            sanitized.append(ch);
-        }
-
-        String result = sanitized.toString().trim();
-        return new SanitizedChat(result, originalLength, truncated, removedCount);
-    }
-
-    private record SanitizedChat(
-            String sanitized,
-            int originalLength,
-            boolean truncated,
-            int removedCount
-    ) {}
 }

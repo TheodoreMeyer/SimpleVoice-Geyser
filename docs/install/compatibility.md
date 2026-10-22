@@ -34,15 +34,37 @@ Simple Voice Geyser uses a web-based client that relies on WebRTC. Browser suppo
 | 0.1.0-DEV | 1.20.1+    | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | ❌      |
 | 0.1.1     | 1.20.1+    | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | ❌     |
 | 0.1.2     | 1.20.1+    | 2.6.x      | 2.10.0-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ⚠️      |
-| 0.1.3     | 1.20.1+    | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
-| 0.1.4     | 1.20.1+    | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
+| 0.1.3     | 1.20.1–26.3 | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
+| 0.1.4     | 1.20.1–26.3 | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
 
 ### Requirements
 
-* Minecraft 1.20.1+
-* Simple Voice Chat 2.6.x+
+* Minecraft **1.20.1 through 26.3** (full **26.x** line for Paper / Purpur / Spigot)
+* Simple Voice Chat 2.6.x+ (use **2.6.24+** on Minecraft 26.3)
 * GeyserMC 2.10.1-SNAPSHOT+ (Optional)
 * Floodgate 2.2.5-SNAPSHOT+ (optional)
+
+---
+
+## Folia
+
+Folia support is **real region-threading support**, not only the `folia-supported` flag:
+
+* Player chat / messages / permission checks from Jetty run on the player's **EntityScheduler**
+* Spatial audio look-yaw is **cached on the entity thread** (never `Player#getLocation` from the audio executor)
+* Plugin declares `folia-supported: true` in `plugin.yml`
+* Compiles against Spigot API; Folia EntityScheduler is used at runtime via reflection (Spigot stays supported)
+
+| Version   | MC Version   | Voice Chat | Geyser           | Floodgate       | Status |
+|-----------|--------------|------------|------------------|-----------------|--------|
+| 0.1.4+ | **1.21.x–26.3** | 2.6.24+ | 2.10.1-SNAPSHOT+ (optional) | 2.2.5-SNAPSHOT+ (optional) | ✅ |
+
+### Requirements
+
+* Folia build matching your Minecraft version (**1.21.x through 26.3**)
+* Simple Voice Chat **2.6.24+** (includes Folia-related fixes)
+* Java **25+** for Minecraft 26.x Folia builds
+* Geyser is a soft-depend; many Folia setups run Geyser on a proxy/standalone process
 
 ---
 

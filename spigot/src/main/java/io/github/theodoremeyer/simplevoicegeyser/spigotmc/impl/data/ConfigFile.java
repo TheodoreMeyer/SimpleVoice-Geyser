@@ -1,21 +1,17 @@
 package io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data;
 
+import io.github.theodoremeyer.simplevoicegeyser.core.api.data.ConfigBackupUtil;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 
 public class ConfigFile extends SvgFile {
 
-    private static final DateTimeFormatter BACKUP_TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private final FileConfiguration config;
 
     private final File configFile;
@@ -97,16 +93,6 @@ public class ConfigFile extends SvgFile {
 
     @Override
     public String backup() {
-        if (!configFile.exists()) {
-            return "";
-        }
-        String ts = LocalDateTime.now().format(BACKUP_TS);
-        File backup = new File(configFile.getParentFile(), "config-" + ts + ".yml.bak");
-        try {
-            Files.copy(configFile.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            return backup.getAbsolutePath();
-        } catch (IOException e) {
-            throw new RuntimeException("Failed backing up config.yml", e);
-        }
+        return ConfigBackupUtil.backup(configFile, this, "yml");
     }
 }

@@ -1,132 +1,143 @@
+/**
+ * Per-voice ring buffers mixed in process() so concurrent talkers sum instead of append.
+ */
 class SpeakerProcessor extends AudioWorkletProcessor {
     constructor() {
         super();
 
-        // Ring buffer stores frame-aligned stereo samples.
-        this.leftBuffer = new Float32Array(48000); // 1 second at 48kHz
-        this.rightBuffer = new Float32Array(48000);
-        this.writeIndex = 0;
-        this.readIndex = 0;
-        this.available = 0;
-
+        this.voices = new Map();
         this.started = false;
 
-        //for testing/diagnostics
         this.underruns = 0;
         this._lastStatsTime = 0;
+        this.droppedFrames = 0;
 
-        this.MAX_BUFFER = this.leftBuffer.length;
-        this.TARGET_BUFFER = 960 * 7; // start playback when >= this
-        this.MIN_BUFFER = 960  * 3; // diagnostic threshold only
+        this.MAX_BUFFER = 48000; // 1 second at 48kHz per voice
+        this.TARGET_BUFFER = 960 * 7;
+        this.VOICE_IDLE_FRAMES = 128 * 30; // ~80ms * 30 ≈ drop idle voice
 
         this.lastSampleLeft = 0;
         this.lastSampleRight = 0;
-
-        this.droppedFrames = 0; //Dropped amount of frames
-
-        //For resetting state
         this.silenceFrames = 0;
         this.SILENCE_RESET_FRAMES = 128 * 15;
 
         this.port.onmessage = (event) => {
-            if (event.data.type === 'pcm') {
+            if (event.data.type === "pcm") {
                 const packet = event.data.buffer;
                 if (!packet) {
                     return;
                 }
 
-                // Backward compatible path for direct Float32Array mono payloads.
                 if (packet instanceof Float32Array) {
-                    this.enqueueMono(packet);
+                    this.enqueueMono("legacy", packet);
                     return;
                 }
 
                 const input = packet.samples;
                 const channels = packet.channels === 2 ? 2 : 1;
+                const senderId = String(packet.senderId || "legacy");
                 if (!(input instanceof Float32Array)) {
                     return;
                 }
 
                 if (channels === 2) {
-                    this.enqueueStereoInterleaved(input);
+                    this.enqueueStereoInterleaved(senderId, input);
                 } else {
-                    this.enqueueMono(input);
+                    this.enqueueMono(senderId, input);
                 }
-            } else if (event.data.type === 'reset') {
-                this.writeIndex = 0;
-                this.readIndex = 0;
-                this.available = 0;
-
+            } else if (event.data.type === "reset") {
+                this.voices.clear();
                 this.started = false;
                 this.lastSampleLeft = 0;
                 this.lastSampleRight = 0;
                 this.silenceFrames = 0;
                 this.underruns = 0;
                 this.droppedFrames = 0;
-
-                this.leftBuffer.fill(0);
-                this.rightBuffer.fill(0);
             }
-
         };
     }
 
-    enqueueFrame(left, right) {
-        if (this.available >= this.MAX_BUFFER) {
-            this.readIndex = (this.readIndex + 1) % this.MAX_BUFFER;
-            this.available--;
+    voiceFor(senderId) {
+        let voice = this.voices.get(senderId);
+        if (!voice) {
+            voice = {
+                left: new Float32Array(this.MAX_BUFFER),
+                right: new Float32Array(this.MAX_BUFFER),
+                writeIndex: 0,
+                readIndex: 0,
+                available: 0,
+                idleFrames: 0
+            };
+            this.voices.set(senderId, voice);
+        }
+        return voice;
+    }
+
+    enqueueFrame(voice, left, right) {
+        if (voice.available >= this.MAX_BUFFER) {
+            voice.readIndex = (voice.readIndex + 1) % this.MAX_BUFFER;
+            voice.available--;
             this.droppedFrames++;
         }
 
-        this.leftBuffer[this.writeIndex] = left;
-        this.rightBuffer[this.writeIndex] = right;
-        this.writeIndex = (this.writeIndex + 1) % this.MAX_BUFFER;
-        this.available++;
+        voice.left[voice.writeIndex] = left;
+        voice.right[voice.writeIndex] = right;
+        voice.writeIndex = (voice.writeIndex + 1) % this.MAX_BUFFER;
+        voice.available++;
+        voice.idleFrames = 0;
     }
 
-    enqueueMono(input) {
+    enqueueMono(senderId, input) {
+        const voice = this.voiceFor(senderId);
         for (let i = 0; i < input.length; i++) {
             const sample = input[i];
-            this.enqueueFrame(sample, sample);
+            this.enqueueFrame(voice, sample, sample);
         }
     }
 
-    enqueueStereoInterleaved(input) {
+    enqueueStereoInterleaved(senderId, input) {
+        const voice = this.voiceFor(senderId);
         const frameCount = Math.floor(input.length / 2);
         for (let i = 0; i < frameCount; i++) {
-            this.enqueueFrame(input[i * 2], input[i * 2 + 1]);
+            this.enqueueFrame(voice, input[i * 2], input[i * 2 + 1]);
         }
+    }
+
+    maxAvailable() {
+        let max = 0;
+        for (const voice of this.voices.values()) {
+            if (voice.available > max) {
+                max = voice.available;
+            }
+        }
+        return max;
     }
 
     process(inputs, outputs) {
         const outputLeft = outputs[0][0];
         const outputRight = outputs[0][1] || null;
         const framesNeeded = outputLeft.length;
+        const buffered = this.maxAvailable();
 
-        // --- detect prolonged silence (buffer fully drained) ---
-        if (this.available === 0) {
+        if (buffered === 0) {
             this.silenceFrames += framesNeeded;
-
             if (this.silenceFrames >= this.SILENCE_RESET_FRAMES) {
-                // Treat this like end-of-utterance
                 this.started = false;
                 this.lastSampleLeft = 0;
                 this.lastSampleRight = 0;
             }
-
             outputLeft.fill(0);
             if (outputRight) {
                 outputRight.fill(0);
             }
+            this.pruneIdleVoices(framesNeeded);
             return true;
-        } else {
-            // audio resumed, clear silence counter
-            this.silenceFrames = 0;
         }
 
-        // --- don't start until target buffer is filled ---
+        this.silenceFrames = 0;
+
         if (!this.started) {
-            if (this.available < this.TARGET_BUFFER) {
+            if (buffered < this.TARGET_BUFFER) {
                 outputLeft.fill(0);
                 if (outputRight) {
                     outputRight.fill(0);
@@ -136,48 +147,76 @@ class SpeakerProcessor extends AudioWorkletProcessor {
             this.started = true;
         }
 
-        let i = 0;
+        for (let i = 0; i < framesNeeded; i++) {
+            let leftSum = 0;
+            let rightSum = 0;
+            let contributed = 0;
 
-        // --- play available buffered audio ---
-        for (; i < framesNeeded; i++) {
-            if (this.available > 0) {
-                const left = this.leftBuffer[this.readIndex];
-                const right = this.rightBuffer[this.readIndex];
-                outputLeft[i] = left;
-                if (outputRight) {
-                    outputRight[i] = right;
+            for (const voice of this.voices.values()) {
+                if (voice.available > 0) {
+                    leftSum += voice.left[voice.readIndex];
+                    rightSum += voice.right[voice.readIndex];
+                    voice.readIndex = (voice.readIndex + 1) % this.MAX_BUFFER;
+                    voice.available--;
+                    voice.idleFrames = 0;
+                    contributed++;
+                } else {
+                    voice.idleFrames++;
                 }
+            }
+
+            let left;
+            let right;
+            if (contributed > 0) {
+                // Soft-limit mix peaks when several people talk.
+                left = Math.tanh(leftSum);
+                right = Math.tanh(rightSum);
                 this.lastSampleLeft = left;
                 this.lastSampleRight = right;
-
-                this.readIndex = (this.readIndex + 1) % this.MAX_BUFFER;
-                this.available--;
             } else {
-                // True underrun only: apply lightweight PLC once buffer is empty.
                 this.lastSampleLeft *= 0.995;
                 this.lastSampleRight *= 0.995;
                 const noise = (Math.random() * 2 - 1) * 0.00002;
-                outputLeft[i] = this.lastSampleLeft + noise;
-                if (outputRight) {
-                    outputRight[i] = this.lastSampleRight + noise;
-                }
+                left = this.lastSampleLeft + noise;
+                right = this.lastSampleRight + noise;
                 this.underruns++;
+            }
+
+            outputLeft[i] = left;
+            if (outputRight) {
+                outputRight[i] = right;
             }
         }
 
-        // --- diagnostics logging every 500ms ---
+        this.pruneIdleVoices(0);
+
         const now = this.currentTime;
         if (now - this._lastStatsTime > 0.5) {
             this.port.postMessage({
-                type: 'stats',
-                buffered: this.available,
-                underruns: this.underruns
+                type: "stats",
+                buffered: this.maxAvailable(),
+                underruns: this.underruns,
+                voices: this.voices.size
             });
             this._lastStatsTime = now;
         }
 
         return true;
     }
+
+    pruneIdleVoices(extraIdle) {
+        if (this.voices.size === 0) {
+            return;
+        }
+        for (const [id, voice] of this.voices) {
+            if (extraIdle > 0 && voice.available === 0) {
+                voice.idleFrames += extraIdle;
+            }
+            if (voice.available === 0 && voice.idleFrames >= this.VOICE_IDLE_FRAMES) {
+                this.voices.delete(id);
+            }
+        }
+    }
 }
 
-registerProcessor('pcm-player', SpeakerProcessor);
+registerProcessor("pcm-player", SpeakerProcessor);

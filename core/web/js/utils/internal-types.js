@@ -2,6 +2,7 @@
  * @import {FormElements} from "./types.js"
  * @import {AudioElements} from "./types.js"
  * @import {PttElements} from "./types.js"
+ * @import {ScreenElements} from "./types.js"
  * @import {AudioRuntime} from "./types.js"
  */
 
@@ -10,6 +11,7 @@
  * @property {FormElements} form
  * @property {AudioElements} audio
  * @property {PttElements} ptt
+ * @property {ScreenElements} screens
  * @property {SvgAudio} audioController
  * @property {SvgWebSocket} webSocketController
  * @property {AudioRuntime} audioRuntime

@@ -39,6 +39,15 @@ export class PttController {
             this.#updateTransmitModeUi();
         });
 
+        if (this.elements.activationMethodBtn) {
+            this.elements.activationMethodBtn.addEventListener("click", () => {
+                const next = this.#getTransmitMode() === "ptt" ? "voice" : "ptt";
+                this.elements.transmitModeSelect.value = next;
+                localStorage.setItem(TRANSMIT_MODE_KEY, next);
+                this.#updateTransmitModeUi();
+            });
+        }
+
         if (this.elements.allowBackgroundPttCheckbox) {
             this.elements.allowBackgroundPttCheckbox.checked = this.allowBackgroundPtt;
 
@@ -299,6 +308,12 @@ export class PttController {
         }
         if (this.elements.micCard) {
             this.elements.micCard.classList.toggle("dev-hidden", pttMode);
+        }
+
+        if (this.elements.activationMethodBtn) {
+            SvgLang.setElement(this.elements.activationMethodBtn, () => pttMode
+                ? SvgLang.string("pushToTalkText")
+                : SvgLang.string("voiceActivityText"));
         }
 
         this.elements.pttBindingControls.classList.toggle("dev-hidden", !pttMode);

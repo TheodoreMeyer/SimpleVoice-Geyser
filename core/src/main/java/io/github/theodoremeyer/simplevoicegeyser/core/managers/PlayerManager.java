@@ -3,10 +3,13 @@ package io.github.theodoremeyer.simplevoicegeyser.core.managers;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.packets.GroupsBroadcaster;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.packets.VoicePlayersBroadcaster;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,6 +57,41 @@ public final class PlayerManager {
     }
 
     /**
+     * Find an online player by username, ignoring case and an optional Floodgate leading dot.
+     * Used when accounts.json UUID is stale but the Bedrock player is already on the server.
+     *
+     * @param username login / stored username
+     * @return online player or null
+     */
+    @Nullable
+    public SvgPlayer findOnlineByUsername(String username) {
+        if (username == null || username.isBlank()) {
+            return null;
+        }
+        String trimmed = username.trim();
+        SvgPlayer exact = playersByName.get(trimmed);
+        if (exact != null) {
+            return exact;
+        }
+
+        String lower = trimmed.toLowerCase(Locale.ROOT);
+        String withoutDot = lower.startsWith(".") ? lower.substring(1) : lower;
+        String withDot = lower.startsWith(".") ? lower : "." + lower;
+
+        for (Map.Entry<String, SvgPlayer> entry : playersByName.entrySet()) {
+            String online = entry.getKey().toLowerCase(Locale.ROOT);
+            String onlineWithoutDot = online.startsWith(".") ? online.substring(1) : online;
+            if (online.equals(lower)
+                    || online.equals(withDot)
+                    || online.equals(withoutDot)
+                    || onlineWithoutDot.equals(withoutDot)) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
+    /**
      * Get a Collection of all online players
      * @return players
      */
@@ -67,8 +105,22 @@ public final class PlayerManager {
      * @param player the player to add
      */
     public void addPlayer(SvgPlayer player) {
+        addPlayer(player, true);
+    }
+
+    /**
+     * Add a player, optionally deferring web roster broadcasts (e.g. bulk seed on enable).
+     * @param player the player to add
+     * @param broadcast whether to push voice_players / groups to web clients
+     */
+    public void addPlayer(SvgPlayer player, boolean broadcast) {
         players.put(player.getUniqueId(), player);
         playersByName.put(player.getName(), player);
+        SvgCore.getPendingJoinWaiter().notifyPlayerJoined(player.getUniqueId());
+        if (broadcast) {
+            VoicePlayersBroadcaster.broadcast();
+            GroupsBroadcaster.broadcast();
+        }
     }
 
     /**
@@ -86,6 +138,8 @@ public final class PlayerManager {
 
         players.remove(player.getUniqueId());
         playersByName.remove(player.getName());
+        VoicePlayersBroadcaster.broadcast();
+        GroupsBroadcaster.broadcast();
     }
 
     // Is Player Online

@@ -67,8 +67,7 @@ public final class ConnectionStates {
         REPLACED(4001),
 
         /**
-         * Code Represented on a timeout
-         * Has not been completely implemented on server yet.
+         * Pending Minecraft join wait expired ({@code client.vctimeout}).
          */
         TIMEOUT(4002),
 

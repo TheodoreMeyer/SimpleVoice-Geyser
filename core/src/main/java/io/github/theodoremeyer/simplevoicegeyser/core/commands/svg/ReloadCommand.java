@@ -45,10 +45,21 @@ public class ReloadCommand implements SubCommand {
         configFile.reload();
         SvgCore.getConfig().applyDefaults();
 
-        sender.sendMessage(SvgCore.getPrefix() + "Reloaded SimpleVoiceGeyser Config");
-        sender.sendMessage("The reload will not update all config values used. Several settings (such as the server port) require the server to be restarted to take effect.");
-
-        // Apply debug
+        // Apply debug before web restart so Jetty logs use the new flag
         SvgCore.getLogger().setDebug(SvgCore.getConfig().DEBUG.get());
+
+        boolean webRestarted = SvgCore.restartWebServer();
+
+        sender.sendMessage(SvgCore.getPrefix() + "Reloaded SimpleVoiceGeyser Config");
+        if (webRestarted) {
+            sender.sendMessage(
+                    "Web server restarted — bind/port/context-path/idle-timeout and web branding apply now. "
+                            + "Connected web clients were disconnected and must rejoin."
+            );
+        } else {
+            sender.sendMessage(
+                    "Config reloaded, but the web server could not be restarted. Check the console and restart the Minecraft server if needed."
+            );
+        }
     }
 }

@@ -12,6 +12,7 @@ repositories {
 }
 
 dependencies {
+    // Spigot API — Folia EntityScheduler is used at runtime via reflection (see EntityThreadAccess)
     compileOnly("org.spigotmc:spigot-api:${spigot_api_version}-R0.1-SNAPSHOT")
 
     // CORE MODULE
@@ -57,16 +58,17 @@ tasks.jar {
 }
 
 tasks.runServer { // https://github.com/jpenilla/run-task/wiki
-    minecraftVersion("1.21.11")
+    minecraftVersion("26.3")
     downloadPlugins {
-        // Simple Voice Chat //
-        url("https://cdn.modrinth.com/data/9eGKb6K1/versions/FeJRj2X0/voicechat-bukkit-2.6.12.jar")
+        // Simple Voice Chat (2.6.24 adds explicit Paper 26.3 support)
+        url("https://cdn.modrinth.com/data/9eGKb6K1/versions/EJth3OAr/voicechat-bukkit-2.6.24.jar")
         // Geyser //
         url("https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot")
         // Floodgate //
         url("https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot")
-        // Via Version //
-        // Allows bedrock client to join on a later version - e.g bedrock 26.2 -> java 1.21.11
-        url("https://cdn.modrinth.com/data/P1OZGk5p/versions/ZhlgRvXY/ViaVersion-5.11.1-SNAPSHOT.jar?mr_download_reason=standalone&mr_game_version=1.21.11&mr_loader=paper")
+        // ViaVersion — protocol bridge for mixed Java/Bedrock clients on Paper 26.3
+        url("https://cdn.modrinth.com/data/P1OZGk5p/versions/vd9B8ESF/ViaVersion-5.12.2-SNAPSHOT.jar")
+        // ViaBackwards — older client protocols when harness runs on latest MC
+        url("https://cdn.modrinth.com/data/NpvuJQoq/versions/dWw67APC/ViaBackwards-5.12.1.jar")
     }
 }

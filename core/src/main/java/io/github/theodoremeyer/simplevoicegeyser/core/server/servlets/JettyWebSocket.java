@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.UUID;
 
 @WebSocket
 public final class JettyWebSocket {
@@ -26,6 +27,7 @@ public final class JettyWebSocket {
 
     private Session session;
     private SvgConnection connection;
+    private UUID pendingJoinUuid;
     private long binaryFrameCount = 0;
     private long binaryByteCount = 0;
     private long controlMessageCount = 0;
@@ -129,6 +131,11 @@ public final class JettyWebSocket {
                         + " transport=" + (audioNegotiation == null ? "n/a" : audioNegotiation.summary())
         );
 
+        if (pendingJoinUuid != null) {
+            SvgCore.getPendingJoinWaiter().cancelForSocket(pendingJoinUuid, this);
+            pendingJoinUuid = null;
+        }
+
         if (connection != null) {
             SvgCore.getLogger().info(
                     "[WebSocket] Closed for "
@@ -153,6 +160,12 @@ public final class JettyWebSocket {
 
             String sessionName = connection != null ? connection.getPlayer().getName() : "unknown session";
             SvgCore.getLogger().info("[WebSocket] Session timed out for " + sessionName);
+            return;
+        }
+
+        if (isBenignDisconnect(error)) {
+            SvgCore.getLogger().debug("WebSocket: benign disconnect", error);
+            return;
         }
 
         String type = error == null
@@ -165,6 +178,24 @@ public final class JettyWebSocket {
 
         SvgCore.getLogger().debug("WebSocket: websocket error", error);
         SvgCore.getLogger().info("[WebSocket] Error: " + type + ": " + message);
+    }
+
+    private static boolean isBenignDisconnect(Throwable error) {
+        if (error == null) {
+            return false;
+        }
+        if (error instanceof java.nio.channels.ClosedChannelException
+                || error instanceof java.io.EOFException) {
+            return true;
+        }
+        if (error instanceof IOException) {
+            String message = error.getMessage();
+            if (message != null) {
+                String lower = message.toLowerCase();
+                return lower.contains("closed") || lower.contains("broken pipe");
+            }
+        }
+        return false;
     }
 
     public void sendRaw(ConnectionStates.MessageType type, String message, boolean fatal) {
@@ -229,6 +260,26 @@ public final class JettyWebSocket {
 
     public void setConnection(SvgConnection connection) {
         this.connection = connection;
+    }
+
+    /**
+     * Marks this session as waiting for the player to join Minecraft.
+     *
+     * @param uuid player uuid
+     */
+    public void setPendingJoinUuid(UUID uuid) {
+        this.pendingJoinUuid = uuid;
+    }
+
+    /**
+     * Clears the pending-join marker when it still matches {@code uuid}.
+     *
+     * @param uuid player uuid
+     */
+    public void clearPendingJoinUuid(UUID uuid) {
+        if (uuid != null && uuid.equals(this.pendingJoinUuid)) {
+            this.pendingJoinUuid = null;
+        }
     }
 
     public long addJoinAttempt() {

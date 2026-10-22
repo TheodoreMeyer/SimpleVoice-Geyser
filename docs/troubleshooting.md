@@ -15,7 +15,21 @@ project: simplevoicegeyser
 
 ## Audio Sounds buggy
 - Make sure you have a good internet access.
+- If voice sounds **robotic or distorted** over a remote / WAN connection, see [Audio Transport → Microphone capture]({% project_link install/audio-transport %}).
+- If voice only sounds bad when **several people talk at once**, see [Audio Transport → Multi-talk decode and mix]({% project_link install/audio-transport %}).
 
+## Web chat panel only shows AudioRX / WebSocket lines
+- Wipe `plugins/<SimpleVoice-Geyser>/web/` and hard-refresh so the client logs inbound `type: "chat"` packets.
+- Ensure `client.web-chat-enabled: true` in `config.yml`.
+- Only **public** Minecraft chat is mirrored (not whispers/commands). Cancelled chat (mute plugins) is skipped.
+
+## People nearby hear my group (or I hear outsiders)
+- A **password** only locks who may join. It does **not** mute nearby players.
+- Audio isolation is the **group type** chosen when creating the group:
+  - **Isolated** — only members hear each other (default on web create)
+  - **Normal** — outsiders cannot hear you; you can still hear nearby non-members
+  - **Open** — party line; nearby outsiders hear you too
+- After create, the group menu title shows `(Isolated)` / `(Normal)` / `(Open)`. Wipe `plugins/.../web/` and hard-refresh if the type dropdown / hint is missing.
 
 ## Opening an issue:
 

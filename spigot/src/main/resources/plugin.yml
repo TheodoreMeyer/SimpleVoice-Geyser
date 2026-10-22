@@ -2,6 +2,7 @@ name: SimpleVoice-Geyser
 version: ${plugin_version}
 main: io.github.theodoremeyer.simplevoicegeyser.spigotmc.SvgPlugin
 api-version: ${spigot_version}
+folia-supported: true
 description: Plugin to allow Bedrock clients to join Simple Voice Chat.
 author: TheodoreMeyer
 website: https://theodoremeyer.github.io
@@ -31,12 +32,17 @@ permissions:
     default: true
 
   svg.vc.group:
-    description: Allows player to use voice chat group creation
+    description: Allows player to use voice chat group features
     default: true
     children:
+      svg.vc.group.join: true
       svg.vc.group.create: true
       svg.vc.group.type: true
       svg.vc.group.type.isolated: true
+
+  svg.vc.group.join:
+    description: "Allows the player to join and leave voice chat groups"
+    default: true
 
   svg.vc.group.create:
     description: "Allows the player to create voice chat groups"

@@ -16,10 +16,18 @@ For Host-Specific setup, see [Hosting Guides]({% project_link guides %}).
 
 ### Bukkit-based Servers (Paper / Purpur / Spigot)
 
-* Minecraft 1.21.8+
-* Simple Voice Chat 2.6.x+
+* Minecraft **1.20.1 through 26.3** (full **26.x** line)
+* Simple Voice Chat 2.6.x+ (use **2.6.24+** on Minecraft 26.3)
 * GeyserMC 2.10.1-SNAPSHOT+
 * Floodgate (optional, but recommended)
+
+### Folia
+
+* Folia build matching your Minecraft version (**1.21.x through 26.3**)
+* Simple Voice Chat **2.6.24+**
+* Same plugin jar as Paper/Purpur/Spigot (`folia-supported: true`; EntityScheduler via reflection + spatial yaw cache)
+
+See [Compatibility]({% project_link install/compatibility %}) for the full version tables.
 
 ### Fabric
 
@@ -66,10 +74,23 @@ The plugin is configured via:
 ```yaml
 client:
 
-   # default: 30
-   # Timeout in seconds
-   # WARNING: Developer Has disabled this for right now.
-   vctimeout: 30
+   # default: 60
+   # Seconds to wait after a valid web password for the player to join Minecraft
+   # (and Simple Voice Chat) before rejecting the pending join.
+   vctimeout: 60
+
+   web:
+     # default: en
+     # Default UI language when the visitor has no saved preference (en, nl, pl, it, es).
+     default-language: en
+
+     # default: Simple Voice Chat
+     # Display name on the join page / browser title.
+     server-name: "Simple Voice Chat"
+
+     # default: empty
+     # Optional short subtitle under the server name.
+     tagline: ""
 
    # default: 2
    # idle websocket timeout in minutes
@@ -178,7 +199,7 @@ config-version: 0.1.3
 
 ### Important Notes
 
-* `vctimeout` is currently not enforced and may be removed or re-enabled later
+* `vctimeout` controls how long a pending web join waits for the player to appear in Minecraft (default 60 seconds)
 * `useEmoteForSVG` may conflict with Geyser’s off-hand emote setting
 * `bind-address` controls network exposure:
 

@@ -28,6 +28,8 @@ public final class ClientCompatibilityValidator {
 
     /**
      * Validate the Compatibility of a client based on its join packet and expected server version/build.
+     * Svg-App must match {@code expectedServerVersion} exactly ({@code requireLatest} defaults to true).
+     *
      * @param join join packet
      * @param expectedServerVersion expected version
      * @param expectedBrowserBuild expected build
@@ -39,6 +41,27 @@ public final class ClientCompatibilityValidator {
             String expectedServerVersion,
             String expectedBrowserBuild,
             ClientTypePolicy policy
+    ) {
+        return validate(join, expectedServerVersion, expectedBrowserBuild, policy, true);
+    }
+
+    /**
+     * Validate client compatibility.
+     *
+     * @param join join packet
+     * @param expectedServerVersion expected plugin version
+     * @param expectedBrowserBuild expected web build id
+     * @param policy type policy
+     * @param requireLatest when true, Svg-App must match expected version exactly;
+     *                      when false, same major.minor (any patch) is accepted
+     * @return result
+     */
+    public static ClientCompatibilityResult validate(
+            JSONObject join,
+            String expectedServerVersion,
+            String expectedBrowserBuild,
+            ClientTypePolicy policy,
+            boolean requireLatest
     ) {
         if (!join.has("clientType")) {
             if (join.has("client")) {
@@ -77,7 +100,7 @@ public final class ClientCompatibilityValidator {
 
         return switch (type) {
             case WEB_TYPE -> validateBrowser(join, expectedServerVersion, expectedBrowserBuild, policy, clientType);
-            case SVG_APP_TYPE -> validateSvgApp(clientType, expectedServerVersion);
+            case SVG_APP_TYPE -> validateSvgApp(clientType, expectedServerVersion, requireLatest);
             default -> throw new IllegalStateException("Unexpected client type: " + type);
         };
     }
@@ -129,13 +152,23 @@ public final class ClientCompatibilityValidator {
         return ClientCompatibilityResult.accepted(ClientIdentity.web(serverVersion, clientBuild));
     }
 
-    private static ClientCompatibilityResult validateSvgApp(JSONObject clientType, String expectedServerVersion) {
+    private static ClientCompatibilityResult validateSvgApp(
+            JSONObject clientType,
+            String expectedServerVersion,
+            boolean requireLatest
+    ) {
         Object rawServerVersion = clientType.opt("serverVersion");
         if (!(rawServerVersion instanceof String serverVersion) || serverVersion.trim().isEmpty()) {
             return INVALID_CLIENT_INFO;
         }
 
-        if (!expectedServerVersion.equals(serverVersion.trim())) {
+        String trimmed = serverVersion.trim();
+        String expected = expectedServerVersion == null ? "" : expectedServerVersion.trim();
+        boolean compatible = requireLatest
+                ? expected.equals(trimmed)
+                : sameMajorMinor(expected, trimmed);
+
+        if (!compatible) {
             return ClientCompatibilityResult.rejected(
                     "This app version is not compatible with this server. Update the app.",
                     ConnectionStates.DisconnectCodes.OUTDATED_CLIENT.getCode(),
@@ -144,7 +177,32 @@ public final class ClientCompatibilityValidator {
         }
 
         return ClientCompatibilityResult.accepted(
-                ClientIdentity.svgApp(serverVersion.trim(), clientType.optString("serverBuild", ""))
+                ClientIdentity.svgApp(trimmed, clientType.optString("serverBuild", ""))
         );
+    }
+
+    /**
+     * Compares Major.minor (ignores patch and any -SNAPSHOT / -fork suffix on either side).
+     */
+    static boolean sameMajorMinor(String expected, String actual) {
+        String left = majorMinor(expected);
+        String right = majorMinor(actual);
+        return !left.isEmpty() && left.equals(right);
+    }
+
+    private static String majorMinor(String version) {
+        if (version == null || version.isBlank()) {
+            return "";
+        }
+        String core = version.trim();
+        int dash = core.indexOf('-');
+        if (dash >= 0) {
+            core = core.substring(0, dash);
+        }
+        String[] parts = core.split("\\.");
+        if (parts.length < 2) {
+            return core;
+        }
+        return parts[0] + "." + parts[1];
     }
 }

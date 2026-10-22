@@ -61,7 +61,15 @@ public final class ResourceServlet extends HttpServlet {
             }
 
             resp.setContentType(mime);
-            resp.setHeader("Cache-Control", "public, max-age=3600");
+
+            // ES modules change often across upgrades; avoid proxies/browsers caching
+            // stale 404s or old module graphs (common behind Nginx Proxy Manager).
+            String lowerPath = path.toLowerCase();
+            if (lowerPath.endsWith(".js") || lowerPath.endsWith(".mjs") || lowerPath.endsWith(".html")) {
+                resp.setHeader("Cache-Control", "no-cache, must-revalidate");
+            } else {
+                resp.setHeader("Cache-Control", "public, max-age=3600");
+            }
 
             in.transferTo(resp.getOutputStream());
         }

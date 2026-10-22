@@ -15,7 +15,10 @@ import org.eclipse.jetty.websocket.api.Session;
 
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -24,9 +27,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public final class SvgAudioListener {
 
+    private static final long DECODER_IDLE_NANOS = 10_000_000_000L; // 10s
+
     private final UUID listenerId;
     private final VoicechatServerApi serverApi;
-    private final OpusDecoder decoder;
+    /**
+     * Per <em>upstream SVC talker</em> Opus decoders for the legacy PCM path.
+     * This listener is 1:1 with a websocket, but it can receive interleaved Opus from many
+     * in-game players; Opus is stateful per stream, so one shared decoder sounds robotic.
+     */
+    private final Map<UUID, OpusDecoder> decoders = new HashMap<>();
+    private final Map<UUID, Long> decoderLastUsedNanos = new HashMap<>();
     private final Object decoderLock = new Object();
     private final AtomicBoolean closing = new AtomicBoolean(false);
     private final AtomicBoolean closed = new AtomicBoolean(false);
@@ -67,7 +78,6 @@ public final class SvgAudioListener {
         this.serverApi = serverApi;
         this.negotiation = negotiation;
         this.audioByteCompiler = SvgCore.getAudioByteCompiler();
-        decoder = serverApi.createDecoder();
     }
 
     /**
@@ -131,18 +141,26 @@ public final class SvgAudioListener {
                             pan,
                             distanceGain,
                             flags,
-                            opusData
+                            opusData,
+                            soundPacket.getSender()
                     );
                     packetSentSvgV2Count++;
                 } else {
                     // TODO 0.1.3: Remove this PCM websocket path with the legacy transport.
+                    UUID sender = soundPacket.getSender();
                     short[] pcm;
                     synchronized (decoderLock) {
                         if (closed.get() || closing.get()) {
                             packetClosedDropCount++;
                             return;
                         }
+                        OpusDecoder decoder = decoderForSender(sender);
+                        if (decoder == null) {
+                            packetDecodeFailedCount++;
+                            return;
+                        }
                         pcm = decoder.decode(opusData);
+                        pruneIdleDecoders(System.nanoTime());
                     }
                     if (pcm == null || pcm.length == 0) {
                         packetDecodeFailedCount++;
@@ -466,6 +484,16 @@ public final class SvgAudioListener {
     }
 
     private Double resolveReceiverYaw(VoicechatConnection receiverConnection) {
+        // Prefer platform-cached yaw (refreshed on entity/region thread). Never call
+        // Bukkit Player#getLocation from the SVG-Audio executor — unsafe on Folia.
+        var svgPlayer = SvgCore.getPlayerManager().getPlayer(listenerId);
+        if (svgPlayer != null) {
+            Double cached = svgPlayer.getCachedLookYaw();
+            if (cached != null) {
+                return cached;
+            }
+        }
+
         if (receiverConnection == null || receiverConnection.getPlayer() == null) {
             return null;
         }
@@ -474,18 +502,7 @@ public final class SvgAudioListener {
             return null;
         }
 
-        try {
-            Method getLocation = platformPlayer.getClass().getMethod("getLocation");
-            Object location = getLocation.invoke(platformPlayer);
-            if (location != null) {
-                Double yaw = invokeNumericNoArgs(location, "getYaw");
-                if (yaw != null) {
-                    return yaw;
-                }
-            }
-        } catch (Exception ignored) {
-        }
-
+        // Fabric / non-Bukkit fallback only (no Bukkit Location reflection).
         Double yaw = invokeNumericNoArgs(platformPlayer, "getYRot");
         if (yaw != null) {
             return yaw;
@@ -581,8 +598,7 @@ public final class SvgAudioListener {
         closing.set(true);
         try {
             synchronized (decoderLock) {
-                decoder.resetState();
-                decoder.close();
+                closeAllDecoders();
             }
             if (registeredListener != null) {
                 serverApi.unregisterAudioListener(registeredListener);
@@ -590,6 +606,63 @@ public final class SvgAudioListener {
             }
         } catch (Exception e) {
             SvgCore.getLogger().debug("AudioListener: Failed closing decoder for " + listenerId, e);
+        }
+    }
+
+    /** Must hold {@link #decoderLock}. */
+    private OpusDecoder decoderForSender(UUID sender) {
+        UUID key = sender != null ? sender : listenerId;
+        long now = System.nanoTime();
+        OpusDecoder existing = decoders.get(key);
+        if (existing != null) {
+            decoderLastUsedNanos.put(key, now);
+            return existing;
+        }
+        OpusDecoder created = serverApi.createDecoder();
+        if (created == null) {
+            SvgCore.getLogger().warning("AudioListener: Failed to create Opus decoder for sender " + key);
+            return null;
+        }
+        decoders.put(key, created);
+        decoderLastUsedNanos.put(key, now);
+        return created;
+    }
+
+    /** Must hold {@link #decoderLock}. */
+    private void pruneIdleDecoders(long nowNanos) {
+        if (decoders.size() <= 4) {
+            return;
+        }
+        Iterator<Map.Entry<UUID, Long>> it = decoderLastUsedNanos.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<UUID, Long> entry = it.next();
+            if (nowNanos - entry.getValue() < DECODER_IDLE_NANOS) {
+                continue;
+            }
+            OpusDecoder idle = decoders.remove(entry.getKey());
+            it.remove();
+            closeDecoderQuietly(idle);
+        }
+    }
+
+    /** Must hold {@link #decoderLock}. */
+    private void closeAllDecoders() {
+        for (OpusDecoder decoder : decoders.values()) {
+            closeDecoderQuietly(decoder);
+        }
+        decoders.clear();
+        decoderLastUsedNanos.clear();
+    }
+
+    private void closeDecoderQuietly(OpusDecoder decoder) {
+        if (decoder == null) {
+            return;
+        }
+        try {
+            decoder.resetState();
+            decoder.close();
+        } catch (Exception e) {
+            SvgCore.getLogger().debug("AudioListener: Failed closing per-sender decoder", e);
         }
     }
 }

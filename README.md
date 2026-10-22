@@ -4,15 +4,18 @@
 [Contributors](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/blob/master/Contributors.md)
 
 **Supports:**
-- [![Spigot](https://img.shields.io/badge/Spigot-1.20.1–26.1.2-orange?logo=spigotmc&logoColor=white)](https://www.spigotmc.org/resources/132386)
+- [![Spigot](https://img.shields.io/badge/Spigot-1.20.1–26.3-orange?logo=spigotmc&logoColor=white)](https://www.spigotmc.org/resources/132386)
 
 - <a href="https://papermc.io/">
     <img src="https://assets.papermc.io/brand/papermc_logo.min.svg" height="22"/>
-    <img src="https://img.shields.io/badge/Paper-1.20.1–26.1.2-3b82f6"/>
+    <img src="https://img.shields.io/badge/Paper-1.20.1–26.3-3b82f6"/>
   </a>
 - <a href="https://purpurmc.org/">
     <img src="https://purpurmc.org/docs/images/purpur-small.png" height="22"/>
-    <img src="https://img.shields.io/badge/Purpur-1.20.1–26.1.2-7c3aed"/>
+    <img src="https://img.shields.io/badge/Purpur-1.20.1–26.3-7c3aed"/>
+  </a>
+- <a href="https://papermc.io/software/folia">
+    <img src="https://img.shields.io/badge/Folia-1.21.x–26.3-00a86b"/>
   </a>
 - <a href="https://fabricmc.net/">
     <img src="https://fabricmc.net/assets/logo.png" height="22"/>

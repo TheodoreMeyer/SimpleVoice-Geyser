@@ -21,6 +21,9 @@ public final class PacketHandler {
         register(new ChatPacket());
         register(new JoinPacket());
         register(new CapabilitiesPacket());
+        register(new JoinGroupPacket());
+        register(new LeaveGroupPacket());
+        register(new CreateGroupPacket());
     }
 
     /**

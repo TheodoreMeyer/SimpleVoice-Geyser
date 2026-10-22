@@ -138,7 +138,9 @@ Leaves the current voice group.
 
 ## /svg reload
 
-* Reloads the plugin configuration. Please note that this does not reload everything.
+* Reloads the plugin configuration from disk.
+* Restarts the Jetty web server so settings such as `server.port`, `server.bind-address`, `server.context-path`, `client.idletimeout`, and web branding take effect.
+* Connected web clients are disconnected and must rejoin.
 * Requires * `svg.admin` permission.
 ---
 

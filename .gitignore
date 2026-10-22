@@ -7,3 +7,5 @@ gradlew.bat
 run/
 .DS_Store
 .fake
+# Local Velocity PR #61 worktree (keep separate from Folia/#105)
+velocity-pr61/

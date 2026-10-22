@@ -36,6 +36,12 @@ tasks.test {
 }
 
 tasks.processResources {
+    // Must re-filter HTML whenever commit/version changes — otherwise jar ships
+    // mismatched BuildInfo.BUILD_ID vs window.BUILD_ID → endless update_required.
+    def gitCommit = currentGitCommit()
+    inputs.property("gitCommit", gitCommit)
+    inputs.property("projectVersion", project.version.toString())
+
     from(sourceSets.main.resources.srcDirs)
 
     from("web") {
@@ -45,7 +51,7 @@ tasks.processResources {
             filter { line ->
                 line.replace(
                         "@@GIT_COMMIT@@",
-                        currentGitCommit()
+                        gitCommit
                 ).replace(
                         "@@PROJECT_VERSION@@",
                         project.version.toString()

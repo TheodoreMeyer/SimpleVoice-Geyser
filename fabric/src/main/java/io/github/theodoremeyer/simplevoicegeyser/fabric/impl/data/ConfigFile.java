@@ -1,6 +1,7 @@
 package io.github.theodoremeyer.simplevoicegeyser.fabric.impl.data;
 
 import com.google.gson.*;
+import io.github.theodoremeyer.simplevoicegeyser.core.api.data.ConfigBackupUtil;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.data.SvgFile;
 import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricLogger;
 
@@ -8,10 +9,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,7 +17,6 @@ import java.util.Set;
 public class ConfigFile extends SvgFile {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final DateTimeFormatter BACKUP_TS = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
     private final File file;
     private JsonObject data;
@@ -221,15 +217,9 @@ public class ConfigFile extends SvgFile {
 
     @Override
     public String backup() {
-        if (!file.exists()) {
-            return "";
-        }
-        String ts = LocalDateTime.now().format(BACKUP_TS);
-        File backup = new File(file.getParentFile(), "config-" + ts + ".json.bak");
         try {
-            Files.copy(file.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            return backup.getAbsolutePath();
-        } catch (IOException e) {
+            return ConfigBackupUtil.backup(file, this, "json");
+        } catch (RuntimeException e) {
             logger.error("[Config] Failed backing up config.json", e);
             return "";
         }

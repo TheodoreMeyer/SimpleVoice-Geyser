@@ -11,9 +11,13 @@ import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.BukkitLogger;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.SvgCommand;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.SvgListener;
 import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.data.ConfigFile;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.packets.GroupsBroadcaster;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.packets.VoicePlayersBroadcaster;
+import io.github.theodoremeyer.simplevoicegeyser.spigotmc.impl.sender.BukkitPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -79,6 +83,23 @@ public class SvgPlugin extends JavaPlugin implements Platform {
         command.setExecutor(new SvgCommand());
 
         Bukkit.getPluginManager().registerEvents(new SvgListener(), this);
+
+        // Players already online at enable never fired PlayerJoinEvent — seed PlayerManager
+        // so voice_players / Adjust Volumes show real names instead of UUID fragments.
+        boolean seeded = false;
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            if (SvgCore.getPlayerManager().getPlayer(online.getUniqueId()) != null) {
+                continue;
+            }
+            BukkitPlayer bukkitPlayer = new BukkitPlayer(online);
+            bukkitPlayer.startSpatialCache();
+            SvgCore.getPlayerManager().addPlayer(bukkitPlayer, false);
+            seeded = true;
+        }
+        if (seeded) {
+            VoicePlayersBroadcaster.broadcast();
+            GroupsBroadcaster.broadcast();
+        }
     }
 
     @Override

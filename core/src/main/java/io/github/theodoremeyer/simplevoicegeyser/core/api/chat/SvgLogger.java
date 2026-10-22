@@ -73,13 +73,24 @@ public interface SvgLogger {
     }
 
     /**
-     * Logs a debug message + error to logger
+     * Logs a debug message + throwable at info level (not error/SEVERE).
      * @param msg the debug message to log
-     * @param t the throwable associated with the error
+     * @param t the throwable associated with the message
      */
     default void debug(String msg, Throwable t) {
-        if (debug.get()) {
-            error("[DEBUG] " + msg, t);
+        if (!debug.get()) {
+            return;
+        }
+        info("[DEBUG] " + msg);
+        if (t == null) {
+            return;
+        }
+        java.io.StringWriter sw = new java.io.StringWriter();
+        t.printStackTrace(new java.io.PrintWriter(sw));
+        for (String line : sw.toString().split("\\R")) {
+            if (!line.isEmpty()) {
+                info("[DEBUG] " + line);
+            }
         }
     }
 }
