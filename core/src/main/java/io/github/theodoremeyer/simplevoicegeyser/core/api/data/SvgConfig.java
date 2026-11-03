@@ -6,6 +6,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Represents the configuration of the Simple Voice Geyser plugin, including server settings, client policies, and security options.
+ * This class provides access to configuration keys and their default values, as well as methods to apply defaults to a configuration file.
+ */
 public final class SvgConfig {
 
     /**
@@ -29,6 +33,11 @@ public final class SvgConfig {
         }
     }
 
+    /**
+     * Get the associated config file
+     * @throws IllegalStateException if the config was initialized without a file
+     * @return the associated SvgFile instance
+     */
     public SvgFile getFile() {
         if (file == null) {
             throw new IllegalStateException("SvgConfig not initialized");
@@ -270,7 +279,7 @@ public final class SvgConfig {
         }
     }
 
-    public static String normalizeContextPath(String contextPath) {
+    private static String normalizeContextPath(String contextPath) {
         if (contextPath == null) {
             return "/";
         }

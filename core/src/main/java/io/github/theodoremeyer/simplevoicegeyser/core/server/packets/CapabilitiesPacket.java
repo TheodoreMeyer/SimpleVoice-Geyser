@@ -11,8 +11,14 @@ import org.json.JSONObject;
 
 import java.util.Locale;
 
+/**
+ * Handles the "capabilities" packet sent by the client to inform the server of its audio capabilities.
+ */
 public final class CapabilitiesPacket implements Packet {
 
+    /**
+     * Constructs a new CapabilitiesPacket.
+     */
     public CapabilitiesPacket() {}
 
     @Override

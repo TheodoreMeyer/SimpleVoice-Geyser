@@ -66,6 +66,9 @@ public final class ProxyControlClient {
     /**
      * Update a player's state on the optional Velocity proxy without blocking the caller.
      *
+     * @param uuid the player's UUID
+     * @param username the player's username
+     * @param joined whether the player has joined or left the server
      * @return a future containing the reported state, or an unavailable state when the request fails
      */
     public static CompletableFuture<ProxyPlayerState> updatePlayerState(UUID uuid, String username, boolean joined) {
