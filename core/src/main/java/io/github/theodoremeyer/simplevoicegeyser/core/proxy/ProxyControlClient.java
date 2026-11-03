@@ -3,6 +3,9 @@ package io.github.theodoremeyer.simplevoicegeyser.core.proxy;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import org.json.JSONObject;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -11,9 +14,7 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.UUID;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import java.util.concurrent.CompletableFuture;
 
 /** Calls the optional Velocity control endpoint without exposing password data. */
 public final class ProxyControlClient {
@@ -62,14 +63,19 @@ public final class ProxyControlClient {
         }
     }
 
-    public static ProxyPlayerState updatePlayerState(UUID uuid, String username, boolean joined) {
+    /**
+     * Update a player's state on the optional Velocity proxy without blocking the caller.
+     *
+     * @return a future containing the reported state, or an unavailable state when the request fails
+     */
+    public static CompletableFuture<ProxyPlayerState> updatePlayerState(UUID uuid, String username, boolean joined) {
         if (!Boolean.TRUE.equals(SvgCore.getConfig().PROXY_ENABLED.get())) {
-            return ProxyPlayerState.unavailable();
+            return CompletableFuture.completedFuture(ProxyPlayerState.unavailable());
         }
 
         String configuredUrl = SvgCore.getConfig().PROXY_CONTROL_URL.get();
         if (configuredUrl == null || configuredUrl.isBlank()) {
-            return ProxyPlayerState.unavailable();
+            return CompletableFuture.completedFuture(ProxyPlayerState.unavailable());
         }
 
         JSONObject payload = new JSONObject();
@@ -86,19 +92,31 @@ public final class ProxyControlClient {
                     .header("X-SVG-Proxy-Secret", SvgCore.getConfig().PROXY_SHARED_SECRET.get())
                     .POST(HttpRequest.BodyPublishers.ofString(payload.toString()))
                     .build();
-            HttpResponse<String> response = getClient(verifySsl).send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() / 100 != 2) {
-                return ProxyPlayerState.unavailable();
-            }
+            return getClient(verifySsl)
+                    .sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .handle((response, error) -> {
+                        if (error != null) {
+                            SvgCore.getLogger().debug("Proxy control request failed", error);
+                            return ProxyPlayerState.unavailable();
+                        }
+                        if (response.statusCode() / 100 != 2) {
+                            return ProxyPlayerState.unavailable();
+                        }
 
-            JSONObject result = new JSONObject(response.body());
-            return new ProxyPlayerState(
-                    result.optBoolean("passwordSet", false),
-                    result.optBoolean("changingServer", false)
-            );
+                        try {
+                            JSONObject result = new JSONObject(response.body());
+                            return new ProxyPlayerState(
+                                    result.optBoolean("passwordSet", false),
+                                    result.optBoolean("changingServer", false)
+                            );
+                        } catch (Exception e) {
+                            SvgCore.getLogger().debug("Proxy control response was invalid", e);
+                            return ProxyPlayerState.unavailable();
+                        }
+                    });
         } catch (Exception e) {
             SvgCore.getLogger().debug("Proxy control request failed", e);
-            return ProxyPlayerState.unavailable();
+            return CompletableFuture.completedFuture(ProxyPlayerState.unavailable());
         }
     }
 }
