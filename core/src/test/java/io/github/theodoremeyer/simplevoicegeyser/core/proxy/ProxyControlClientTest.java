@@ -13,6 +13,7 @@ import io.github.theodoremeyer.simplevoicegeyser.core.data.PlayerVcPswd;
 import io.github.theodoremeyer.simplevoicegeyser.core.managers.JoinMessageHandler;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.compatibility.ClientIdentity;
 import io.github.theodoremeyer.simplevoicegeyser.core.svc.VoiceChatBridge;
+import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
@@ -256,6 +257,23 @@ class ProxyControlClientTest {
         assertEquals(0, replacementSession.closeCalls, "a stale quit response must not close a replacement session");
     }
 
+    @Test
+    void quitClosesVoiceConnectionUnlessProxyReportsServerChange() throws Exception {
+        for (boolean changingServer : new boolean[] {false, true}) {
+            requestHandler.set(exchange -> writeResponse(exchange, 200, "{\"changingServer\":" + changingServer + "}"));
+            TestPlayer player = new TestPlayer(UUID.randomUUID(), "TestPlayer");
+            SvgCore.getPlayerManager().addPlayer(player);
+            TestSession session = new TestSession();
+            SvgCore.getConnectionManager().connect(
+                    session.proxy(), player, null, new ClientIdentity("test", "test", null)
+            );
+
+            SvgCore.getPlayerManager().removePlayer(player).get(WAIT.toMillis(), TimeUnit.MILLISECONDS);
+
+            assertEquals(changingServer ? 0 : 1, session.closeCalls);
+        }
+    }
+
     private void assertState(String body, ProxyPlayerState expected) throws Exception {
         requestHandler.set(exchange -> writeResponse(exchange, 200, body));
         assertEquals(expected, update().get(WAIT.toMillis(), TimeUnit.MILLISECONDS));
@@ -315,6 +333,8 @@ class ProxyControlClientTest {
                             closeCalls++;
                             yield null;
                         }
+                        case "getRemote" -> Proxy.newProxyInstance(RemoteEndpoint.class.getClassLoader(),
+                                new Class<?>[]{RemoteEndpoint.class}, (remote, call, callArgs) -> null);
                         case "hashCode" -> System.identityHashCode(instance);
                         case "equals" -> instance == args[0];
                         case "toString" -> "TestSession";
