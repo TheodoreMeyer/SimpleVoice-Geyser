@@ -22,7 +22,11 @@ public class SvgListener {
 
             FabricPlayer fabricPlayer = new FabricPlayer(player);
             SvgCore.getPlayerManager().addPlayer(fabricPlayer);
-            SvgCore.getJoinMessageHandler().sendJoinMessage(fabricPlayer);
+            SvgCore.getJoinMessageHandler().sendJoinMessage(fabricPlayer)
+                    .exceptionally(throwable -> {
+                        SvgCore.getLogger().error("Error sending join message for player " + player.getName().getString(), throwable);
+                        return null;
+                    });
         });
 
         // LEAVE
@@ -34,7 +38,11 @@ public class SvgListener {
 
             if (player != null) {
                 player.isOnline = false;
-                SvgCore.getPlayerManager().removePlayer(player);
+                SvgCore.getPlayerManager().removePlayer(player)
+                        .exceptionally(throwable -> {
+                            SvgCore.getLogger().error("Error removing player " + player.getName() + " from player manager", throwable);
+                            return null;
+                        });
             }
         });
     }
