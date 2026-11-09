@@ -147,6 +147,7 @@ export class SvgAudio {
 
             // Browser AEC/NS/AGC can distort voice over WAN; keep raw capture instead.
             // Ported from https://github.com/TheodoreMeyer/SimpleVoice-Geyser/pull/52
+            // TODO: Consider adding a user preference to enable/disable these features, as some users may prefer them for local voice chat.
             const audioConstraints = {
                 noiseSuppression: false,
                 echoCancellation: false,
