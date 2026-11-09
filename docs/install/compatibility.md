@@ -34,13 +34,13 @@ Simple Voice Geyser uses a web-based client that relies on WebRTC. Browser suppo
 | 0.1.0-DEV | 1.20.1+    | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | ❌      |
 | 0.1.1     | 1.20.1+    | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | ❌     |
 | 0.1.2     | 1.20.1+    | 2.6.x      | 2.10.0-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ⚠️      |
-| 0.1.3     | 1.20.1+    | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
-| 0.1.4     | 1.20.1+    | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
+| 0.1.3     | 1.20.1–26.3 | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
+| 0.1.4     | 1.20.1–26.3 | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
 
 ### Requirements
 
-* Minecraft 1.20.1+
-* Simple Voice Chat 2.6.x+
+* Minecraft **1.20.1 through 26.3** (full **26.x** line for Paper / Purpur / Spigot)
+* Simple Voice Chat 2.6.x+ (use **2.6.24+** on Minecraft 26.3)
 * GeyserMC 2.10.1-SNAPSHOT+ (Optional)
 * Floodgate 2.2.5-SNAPSHOT+ (optional)
 

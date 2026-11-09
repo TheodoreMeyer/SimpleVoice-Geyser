@@ -15,7 +15,7 @@ project: simplevoicegeyser
 
 ## Audio Sounds buggy
 - Make sure you have a good internet access.
-
+- If voice sounds **robotic or distorted** over a remote / WAN connection, see [Audio Transport → Microphone capture]({% project_link install/audio-transport %}).
 
 ## Opening an issue:
 

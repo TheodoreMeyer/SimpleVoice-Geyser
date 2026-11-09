@@ -145,10 +145,12 @@ export class SvgAudio {
             await this.audioContext.resume();
             if (generation !== this.micGeneration) return;
 
+            // Browser AEC/NS/AGC can distort voice over WAN; keep raw capture instead.
+            // Ported from https://github.com/TheodoreMeyer/SimpleVoice-Geyser/pull/52
             const audioConstraints = {
-                noiseSuppression: true,
-                echoCancellation: true,
-                autoGainControl: true,
+                noiseSuppression: false,
+                echoCancellation: false,
+                autoGainControl: false,
                 channelCount: 1,
                 sampleRate: 48000
             };
