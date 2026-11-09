@@ -1,10 +1,12 @@
 ---
 title: Releases
 ---
+# Releases
+- As we transition to a new release-based doc system, specific changes can be found here.
+- Releases pages will now contain their own compat information later on.
 
-A Set of Releases and their changelogs for SimpleVoice-Geyser. This is a list of all releases, and their changelogs.
+## 0.1.4:
+- No specific doc file.
 
-Not all releases will be up here.
-
-## Releases
-- [0.1.3]({% project_link releases/0-1-3 %})
+## 0.1.3 Release:
+- Find it at: [0.1.3]({% project_link releases/0-1-3 %}).
