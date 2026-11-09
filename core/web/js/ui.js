@@ -284,6 +284,15 @@ export class SvgUI {
                                 );
                             }
                         } else {
+                            if (status.changingServer) {
+                                statusEl.innerText = "Changing server...";
+                                statusEl.classList.remove("disconnected");
+                                statusEl.classList.add("connected");
+                                micSelect.disabled = true;
+                                speakerSelect.disabled = true;
+                                SvgLang.setElement(joinButton, "joinBtnConnectedLabel");
+                                return;
+                            }
                             SvgLang.setElement(statusEl, "statusDisconnectedLabel");
                             statusEl.classList.remove("connected");
                             statusEl.classList.add("disconnected");
@@ -347,9 +356,12 @@ export class SvgUI {
 
                     this.audioController.stopMic();
 
-                    await this.audioController.startMic(
-                        micSelect.value
-                    );
+                    try {
+                        await this.audioController.startMic(micSelect.value);
+                    } catch (error) {
+                        console.error("Failed to switch microphone", error);
+                        Logger.log("Failed to switch microphone. Existing audio remains available.");
+                    }
                 }
             }
         );

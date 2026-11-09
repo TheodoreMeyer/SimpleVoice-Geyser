@@ -99,6 +99,7 @@ class JettyWebSocketMicPolicyTest {
             assertEquals("opus", f.messages.getFirst().getString("selectedMicFormat"));
             assertEquals("legacy", f.messages.getFirst().getString("selectedMode"));
             f.socket.onMessage(new byte[]{0, 10, 20, 0}, 1, 2);
+            assertTrue(f.audioSent.await(2, TimeUnit.SECONDS));
             assertArrayEquals(new byte[]{10, 20}, f.sentAudio.getFirst());
             f.socket.onMessage(new byte[1920], 0, 1920);
             assertEquals(1, f.sentAudio.size());
@@ -125,6 +126,7 @@ class JettyWebSocketMicPolicyTest {
             assertEquals("svg-v2", f.messages.getFirst().getString("selectedMode"));
             assertEquals("opus", f.messages.getFirst().getString("selectedMicFormat"));
             f.socket.onMessage(new byte[]{10}, 0, 1);
+            assertTrue(f.audioSent.await(2, TimeUnit.SECONDS));
             assertEquals(1, f.sentAudio.size());
             assertTrue(f.open);
         }
@@ -156,6 +158,7 @@ class JettyWebSocketMicPolicyTest {
         final List<JSONObject> messages = new ArrayList<>();
         final List<byte[]> sentAudio = new CopyOnWriteArrayList<>();
         final CountDownLatch pcmSent = new CountDownLatch(2);
+        final CountDownLatch audioSent = new CountDownLatch(1);
         final JettyWebSocket socket;
         final Session session;
         boolean open = true;
@@ -244,7 +247,7 @@ class JettyWebSocketMicPolicyTest {
                 return defaultValue(m.getReturnType());
             });
             AudioSender sender = proxy(AudioSender.class, (p, m, a) -> {
-                if (m.getName().equals("send")) { sentAudio.add((byte[]) a[0]); pcmSent.countDown(); return true; }
+                if (m.getName().equals("send")) { sentAudio.add((byte[]) a[0]); pcmSent.countDown(); audioSent.countDown(); return true; }
                 return defaultValue(m.getReturnType());
             });
             return proxy(VoicechatServerApi.class, (p, m, a) -> switch (m.getName()) {

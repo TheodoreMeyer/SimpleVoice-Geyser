@@ -18,9 +18,12 @@ public class SvgListener implements Listener {
         Player player = event.getPlayer();
 
         BukkitPlayer bukkitPlayer = new BukkitPlayer(player);
-        SvgCore.getJoinMessageHandler().sendJoinMessage(bukkitPlayer);
-
         SvgCore.getPlayerManager().addPlayer(bukkitPlayer);
+        SvgCore.getJoinMessageHandler().sendJoinMessage(bukkitPlayer)
+                .exceptionally(throwable -> {
+                    SvgCore.getLogger().error("Error sending join message for player " + player.getName(), throwable);
+                    return null;
+                });
     }
 
     @EventHandler
@@ -29,7 +32,11 @@ public class SvgListener implements Listener {
         SvgPlayer player = SvgCore.getPlayerManager().getPlayer(playerUuid);
 
         if (player != null) {
-            SvgCore.getPlayerManager().removePlayer(player);
+            SvgCore.getPlayerManager().removePlayer(player)
+                    .exceptionally(throwable -> {
+                        SvgCore.getLogger().error("Error removing player " + player.getName() + " from player manager", throwable);
+                        return null;
+                    });
         }
     }
 }

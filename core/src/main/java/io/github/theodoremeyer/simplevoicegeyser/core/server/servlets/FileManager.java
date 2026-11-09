@@ -71,10 +71,6 @@ class FileManager {
         outdatedFiles.clear();
 
         extractResource(
-                "/web/legacy.html",
-                "legacy.html"
-        );
-        extractResource(
                 "/web/css/styles.css",
                 "css/styles.css"
         );
@@ -111,10 +107,6 @@ class FileManager {
         extractResource(
                 "/web/images/v2/docs.png",
                 "images/v2/docs.png"
-        );
-        extractResource(
-                "/web/images/v2/link.png",
-                "images/v2/link.png"
         );
         extractResource(
                 "/web/images/v2/bug-report.png",

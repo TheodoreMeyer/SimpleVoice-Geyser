@@ -2,13 +2,16 @@ package io.github.theodoremeyer.simplevoicegeyser.core.managers;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgPlayer;
+import io.github.theodoremeyer.simplevoicegeyser.core.proxy.ProxyControlClient;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
+import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.SvgConnection;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -75,17 +78,35 @@ public final class PlayerManager {
      * remove a player
      * Used when player leaves server
      * @param player the player to remove
+     * @return completion of the asynchronous proxy-state check and connection handling
      */
-    public void removePlayer(SvgPlayer player) {
-        SvgCore.getConnectionManager().disconnect(
-                player.getUniqueId(),
-                ConnectionStates.DisconnectCodes.PLAYER_LEAVE.getCode(),
-                "Player left the game."
-        );
-        //SvgCore.getWsManager().playerLeave(player);
+    public CompletableFuture<Void> removePlayer(SvgPlayer player) {
+        UUID uuid = player.getUniqueId();
+        SvgConnection connection = SvgCore.getConnectionManager().get(uuid);
 
-        players.remove(player.getUniqueId());
-        playersByName.remove(player.getName());
+        players.remove(uuid, player);
+        playersByName.remove(player.getName(), player);
+
+        return ProxyControlClient.updatePlayerState(uuid, player.getName(), false)
+                .thenAccept(proxyState -> {
+                    // A reconnect may have replaced this player's voice connection while the request was pending.
+                    if (SvgCore.getConnectionManager().get(uuid) != connection) {
+                        return;
+                    }
+
+                    if (proxyState.changingServer()) {
+                        if (connection != null) {
+                            connection.sendStatus("Changing server");
+                        }
+                        return;
+                    }
+
+                    SvgCore.getConnectionManager().disconnect(
+                            uuid,
+                            ConnectionStates.DisconnectCodes.PLAYER_LEAVE.getCode(),
+                            "Player left the game."
+                    );
+                });
     }
 
     // Is Player Online

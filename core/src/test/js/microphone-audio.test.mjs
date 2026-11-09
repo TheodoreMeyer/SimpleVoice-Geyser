@@ -63,7 +63,7 @@ async function opusFixture(t) {
         setMicTransmissionEnabled: enabled => { txEnabled = enabled; },
         getAudioRuntime: () => ({sampleRate: 48000, workletSupported: true}),
         getAudioContextTimeUs: () => clock,
-        resetAudioState() {}
+        resetAudioState() { txEnabled = false; }
     };
     const client = new SvgWebSocket(controller);
     t.after(() => {
@@ -87,6 +87,22 @@ async function opusFixture(t) {
     await ack("opus");
     return {
         client, ack, open,
+        message: data => Socket.latest.onmessage({data: JSON.stringify(data)}),
+        reconnect: () => {
+            let retry;
+            const originalTimer = globalThis.setTimeout;
+            try {
+                globalThis.setTimeout = callback => { retry = callback; return 1; };
+                Socket.latest.readyState = 3;
+                Socket.latest.onclose({code: 1006, reason: "network drop"});
+            } finally {
+                globalThis.setTimeout = originalTimer;
+            }
+            assert.equal(typeof retry, "function");
+            retry();
+            Socket.latest.readyState = Socket.OPEN;
+            Socket.latest.onopen();
+        },
         get socket() { return Socket.latest; },
         enabled: () => txEnabled,
         setClock: value => { clock = value; },
@@ -98,6 +114,80 @@ async function opusFixture(t) {
         packets: () => Socket.latest.sent.filter(value => typeof value !== "string")
     };
 }
+
+test("automatic reconnect renegotiates PCM and Opus before resuming microphone packets", async t => {
+    for (const format of ["pcm16le", "opus"]) {
+        await t.test(format, async t => {
+            const f = await opusFixture(t);
+            let statuses = 0;
+            f.client.addEventListener("statusChange", () => statuses++);
+            const connected = {type: "status", message: "Connected as test-player"};
+            await f.message(connected);
+            await f.ack(format);
+            f.frame(1000000);
+            assert.equal(f.packets().length, 1);
+            f.reconnect();
+            assert.equal(f.enabled(), false);
+            f.frame(2000000);
+            assert.equal(f.packets().length, 0);
+            await f.message(connected);
+            await f.message(connected);
+            const capabilities = f.socket.sent.filter(value => typeof value === "string")
+                .map(value => JSON.parse(value)).filter(value => value.type === "capabilities");
+            assert.equal(capabilities.length, 1);
+            assert.equal(f.enabled(), false);
+            f.frame(2020000);
+            assert.equal(f.packets().length, 0);
+            await f.ack(format);
+            f.frame(2040000);
+            assert.equal(f.packets().length, 1);
+            assert.ok(statuses >= 4);
+            assert.equal(JSON.parse(f.socket.sent[0]).username, "test-player");
+        });
+    }
+});
+
+test("obsolete capability probes and acknowledgements cannot alter a replacement encoder", async t => {
+    for (const operation of ["capabilities", "ack"]) {
+        for (const fails of [false, true]) {
+            await t.test(`${operation}, rejects=${fails}`, async t => {
+                const f = await opusFixture(t);
+                const pending = deferred();
+                const encoderClass = globalThis.AudioEncoder;
+                const originalSupport = encoderClass.isConfigSupported;
+                let entered = false;
+                encoderClass.isConfigSupported = () => { entered = true; return pending.promise; };
+                t.after(() => { encoderClass.isConfigSupported = originalSupport; });
+                const connected = {type: "status", message: "Connected as test-player"};
+                if (operation === "ack") {
+                    await f.message({type: "status", message: "Changing server"});
+                }
+                const oldSocket = f.socket;
+                const oldOperation = operation === "ack" ? f.ack("opus") : f.message(connected);
+                for (let i = 0; i < 20 && !entered; i++) await Promise.resolve();
+                assert.equal(entered, true);
+                f.reconnect();
+                encoderClass.isConfigSupported = originalSupport;
+                await f.message(connected);
+                await f.ack("opus");
+                const replacement = f.client.micEncoder;
+                assert.ok(replacement);
+                if (fails) pending.reject(new Error("old probe failed"));
+                else pending.resolve({supported: true, config: MIC_OPUS_ENCODER_CONFIG});
+                await oldOperation;
+                assert.equal(f.client.micEncoder, replacement);
+                assert.equal(replacement.state, "configured");
+                assert.equal(f.enabled(), true);
+                const sent = f.socket.sent.length;
+                await oldSocket.onmessage({data: JSON.stringify({type: "status", message: "Changing server"})});
+                assert.equal(f.enabled(), true);
+                assert.equal(f.socket.sent.length, sent);
+                f.frame(2000000);
+                assert.equal(f.packets().length, 1);
+            });
+        }
+    }
+});
 
 test("Opus freshness follows capture time across long and repeated short gaps", async t => {
     for (const gap of [1000000, 80000]) {

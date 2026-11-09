@@ -61,7 +61,8 @@ public final class ResourceServlet extends HttpServlet {
             }
 
             resp.setContentType(mime);
-            resp.setHeader("Cache-Control", "public, max-age=3600");
+            // Never retain an older client after the plugin updates its protocol.
+            resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 
             in.transferTo(resp.getOutputStream());
         }
