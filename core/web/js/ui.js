@@ -354,13 +354,11 @@ export class SvgUI {
                         return;
                     }
 
-                    this.audioController.stopMic();
-
                     try {
-                        await this.audioController.startMic(micSelect.value);
+                        await this.audioController.switchMic(micSelect.value);
                     } catch (error) {
                         console.error("Failed to switch microphone", error);
-                        Logger.log("Failed to switch microphone. Existing audio remains available.");
+                        Logger.log("Failed to switch microphone. The previous microphone remains active.");
                     }
                 }
             }

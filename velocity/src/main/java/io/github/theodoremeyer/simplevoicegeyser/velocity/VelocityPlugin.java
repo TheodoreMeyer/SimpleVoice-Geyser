@@ -10,6 +10,7 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
+import io.github.theodoremeyer.simplevoicegeyser.velocity.geyser.GeyserForms;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.auth.ProxyAuthRateLimiter;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.data.ProxyPasswordStore;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.data.VelocityConfigFile;
@@ -21,7 +22,9 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -36,7 +39,6 @@ import java.util.UUID;
 @Plugin(
         id = "svg",
         name = "SVG",
-        version = "0.1.2",
         description = "Proxy frontend for Simple Voice Geyser.",
         authors = {"TheodoreMeyer"}
 )
@@ -51,6 +53,7 @@ public final class VelocityPlugin {
     private VelocityConfigFile configFile;
     private ProxyPasswordStore passwordStore;
     private ProxyJettyServer webServer;
+    private GeyserForms geyserForms;
 
     /**
      * Create the plugin container; dependencies are provided by Velocity's
@@ -85,6 +88,9 @@ public final class VelocityPlugin {
         this.passwordStore = new ProxyPasswordStore(dataDir, logger);
         this.sessionManager = new ProxySessionManager(this);
 
+        // Register Geyser forms if Geyser is present.
+        this.geyserForms = new GeyserForms(this);
+
         int maxFailures = configFile.getInt("proxy.security.max-auth-failures", 5);
         int failureDuration = configFile.getInt("proxy.security.auth-fail-duration", 3);
         int lockDuration = configFile.getInt("proxy.security.auth-lock-duration", 8);
@@ -97,7 +103,7 @@ public final class VelocityPlugin {
 
         server.getEventManager().register(
                 this,
-                new VelocityCommand(passwordStore)
+                new VelocityCommand(passwordStore, geyserForms)
         );
 
         int port = configFile.getInt("proxy.port", 8080);
@@ -214,7 +220,8 @@ public final class VelocityPlugin {
 
     public boolean isValidControlSecret(String secret) {
         String configured = configFile.getString("proxy.shared_secret", "");
-        return secret != null && !configured.isBlank() && configured.equals(secret);
+        return secret != null && !configured.isBlank()
+                && MessageDigest.isEqual(configured.getBytes(StandardCharsets.UTF_8), secret.getBytes(StandardCharsets.UTF_8));
     }
 
     public JSONObject updatePlayerState(UUID uuid, String username, boolean joined) {

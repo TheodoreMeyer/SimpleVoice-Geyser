@@ -11,6 +11,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Signed short-lived token used by the proxy to authenticate a browser session to a backend.
@@ -21,6 +22,7 @@ public final class ProxyAuthToken {
     private static final Base64.Encoder B64 = Base64.getUrlEncoder().withoutPadding();
     private static final Base64.Decoder B64D = Base64.getUrlDecoder();
     private static final SecureRandom RANDOM = new SecureRandom();
+    private static final ConcurrentHashMap<String, Long> USED_NONCES = new ConcurrentHashMap<>();
 
     private ProxyAuthToken() {}
 
@@ -61,7 +63,7 @@ public final class ProxyAuthToken {
      * Validate a signed proxy auth token against the shared secret.
      * <p>
      * The token is rejected if it is malformed, the signature does not match,
-     * or its {@code exp} claim is in the past.
+     * its {@code exp} claim is in the past, or it has already been used.
      *
      * @param token  token string produced by {@link #create(UUID, String, String, Duration)}
      * @param secret shared secret the token was signed with
@@ -106,12 +108,18 @@ public final class ProxyAuthToken {
         }
 
         try {
-            return new Claims(
+            Claims claims = new Claims(
                     UUID.fromString(payload.getString("uuid")),
                     payload.optString("username", ""),
                     exp,
                     payload.optString("nonce", "")
             );
+            if (claims.nonce().isBlank()) {
+                return null;
+            }
+            long now = Instant.now().getEpochSecond();
+            USED_NONCES.entrySet().removeIf(entry -> entry.getValue() <= now);
+            return USED_NONCES.putIfAbsent(claims.nonce(), claims.expiresAt()) == null ? claims : null;
         } catch (Exception e) {
             return null;
         }

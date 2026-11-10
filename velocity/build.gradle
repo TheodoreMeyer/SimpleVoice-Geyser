@@ -13,6 +13,8 @@ repositories {
 dependencies {
     compileOnly("com.velocitypowered:velocity-api:${velocity_api_version}")
     annotationProcessor("com.velocitypowered:velocity-api:${velocity_api_version}")
+    // Optional at runtime. Only classes in velocity.geyser reference this API.
+    compileOnly("org.geysermc.geyser:api:${geysermc_api_version}")
 
     implementation("org.json:json:20250107")
     implementation("org.mindrot:jbcrypt:0.4")
@@ -49,6 +51,14 @@ tasks.processResources {
                         "@@GIT_COMMIT@@",
                         currentGitCommit()
                 ).replace("@@PROJECT_VERSION@@", project.version.toString())
+            }
+        }
+        filesMatching("manifest.json") {
+            filter { line ->
+                line.replace(
+                        "@@PROJECT_VERSION@@",
+                        project.version.toString()
+                )
             }
         }
     }

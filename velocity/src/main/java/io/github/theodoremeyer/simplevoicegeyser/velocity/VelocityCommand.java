@@ -4,6 +4,7 @@ package io.github.theodoremeyer.simplevoicegeyser.velocity;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.proxy.Player;
+import io.github.theodoremeyer.simplevoicegeyser.velocity.geyser.GeyserForms;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.data.ProxyPasswordStore;
 import io.github.theodoremeyer.simplevoicegeyser.velocity.impl.sender.VelocityPlayer;
 
@@ -12,9 +13,8 @@ import java.util.Arrays;
 /**
  * Intercepts /svg pswd <password> on Velocity.
  * <br>
- * A bare /svg pswd is forwarded to the backend so its Geyser
- * integration can open the Bedrock password form.
- * Other /svg commands are also forwarded to the backend.
+ * A bare /svg pswd opens the optional proxy Geyser form, so proxy users never
+ * update the backend password store. Other commands are forwarded to backend.
  * <br>
  * TODO: implement /svg reload to reload proxy config too.
  */
@@ -24,9 +24,11 @@ public final class VelocityCommand {
     private static final String PASSWORD_SUBCOMMAND = "pswd";
 
     private final ProxyPasswordStore passwordStore;
+    private final GeyserForms bedrockPasswordForms;
 
-    public VelocityCommand(ProxyPasswordStore passwordStore) {
+    public VelocityCommand(ProxyPasswordStore passwordStore, GeyserForms bedrockPasswordForms) {
         this.passwordStore = passwordStore;
+        this.bedrockPasswordForms = bedrockPasswordForms;
     }
 
     @Subscribe
@@ -51,20 +53,23 @@ public final class VelocityCommand {
             return;
         }
 
-        // Forward /svg itself, all non-password subcommands,
-        // and bare /svg pswd to the backend to allow geyser's cumulus form if needed.
-        if (args.length < 3
-                || !PASSWORD_SUBCOMMAND.equalsIgnoreCase(args[1])) {
+        // Only password commands belong to the proxy authentication store.
+        if (args.length < 2 || !PASSWORD_SUBCOMMAND.equalsIgnoreCase(args[1])) {
             event.setResult(
                     CommandExecuteEvent.CommandResult.forwardToServer()
             );
             return;
         }
 
-        // Only /svg pswd <password> is handled on Velocity.
         event.setResult(
                 CommandExecuteEvent.CommandResult.denied()
         );
+
+        if (args.length == 2
+                && bedrockPasswordForms != null
+                && bedrockPasswordForms.openBedrockPasswordForm(player)) {
+            return;
+        }
 
         handlePasswordCommand(new VelocityPlayer(player), args);
     }

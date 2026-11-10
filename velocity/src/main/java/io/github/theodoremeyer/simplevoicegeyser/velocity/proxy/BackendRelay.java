@@ -30,8 +30,9 @@ public final class BackendRelay {
     private volatile long currentConnectionId;
     private volatile String joinPayload;
     private volatile String capabilitiesPayload;
-    private CompletableFuture<WebSocket> textSendChain = CompletableFuture.completedFuture(null);
-    private CompletableFuture<WebSocket> binarySendChain = CompletableFuture.completedFuture(null);
+
+    /** One chain for every outbound frame: java.net.http permits only one pending send. */
+    private CompletableFuture<?> sendChain = CompletableFuture.completedFuture(null);
     private int pendingBinaryFrames;
     private static final int MAX_PENDING_BINARY_FRAMES = 4;
 
@@ -171,34 +172,29 @@ public final class BackendRelay {
             }
         }
     }
-    private void sendText(WebSocket socket, String text, long connectionId) {
-        textSendChain = textSendChain.handle((ignored, error) -> null)
-                .thenCompose(ignored -> isCurrent(socket, connectionId)
-                        ? socket.sendText(text, true)
-                        : CompletableFuture.completedFuture(null))
-                .whenComplete((ignored, error) -> {
-                    if (error != null) {
-                        logger.debug("Failed to send backend text frame", error);
-                        if (isCurrent(socket, connectionId)) {
-                            closeClient(1011, "backend_send_failed");
-                        }
-                    }
-                });
+    private synchronized void sendText(WebSocket socket, String text, long connectionId) {
+        enqueueSend(socket, connectionId, () -> socket.sendText(text, true), "text", false);
     }
-    private void sendBinary(WebSocket socket, ByteBuffer data, long connectionId) {
-        binarySendChain = binarySendChain.handle((ignored, error) -> null)
+    private synchronized void sendBinary(WebSocket socket, ByteBuffer data, long connectionId) {
+        enqueueSend(socket, connectionId, () -> socket.sendBinary(data, true), "binary", true);
+    }
+
+    private void enqueueSend(WebSocket socket, long connectionId,
+                             java.util.function.Supplier<CompletableFuture<WebSocket>> send,
+                             String frameType, boolean binary) {
+        sendChain = sendChain.handle((ignored, error) -> null)
                 .thenCompose(ignored -> isCurrent(socket, connectionId)
-                        ? socket.sendBinary(data, true)
-                        : CompletableFuture.completedFuture(null))
+                        ? send.get() : CompletableFuture.completedFuture(null))
                 .whenComplete((ignored, error) -> {
-                    synchronized (BackendRelay.this) {
-                        pendingBinaryFrames = Math.max(0, pendingBinaryFrames - 1);
-                    }
-                    if (error != null) {
-                        logger.debug("Failed to send backend binary frame", error);
-                        if (isCurrent(socket, connectionId)) {
-                            closeClient(1011, "backend_send_failed");
+                    if (binary) {
+                        synchronized (BackendRelay.this) {
+                            pendingBinaryFrames = Math.max(0, pendingBinaryFrames - 1);
                         }
+                    }
+                    if (error != null && isCurrent(socket, connectionId)) {
+                        logger.debug("Failed to send backend {} frame", frameType, error);
+                        // Invalidate the relay so queued frames are skipped after a real send failure.
+                        close(1011, "backend_send_failed");
                     }
                 });
     }

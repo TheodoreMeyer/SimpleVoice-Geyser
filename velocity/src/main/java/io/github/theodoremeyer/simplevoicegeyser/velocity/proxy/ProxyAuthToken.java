@@ -10,18 +10,13 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.UUID;
 
 /**
  * Signed short-lived token the proxy issues to browser sessions so they can
  * authenticate against a backend server.
  * <p>
- * This variant additionally enforces single use: every nonce seen by
- * {@link #validate(String, String)} is remembered until its expiry, so a
- * token cannot be replayed.
+ * The backend is the token validation point and owns replay protection.
  */
 public final class ProxyAuthToken {
 
@@ -29,7 +24,6 @@ public final class ProxyAuthToken {
     private static final Base64.Encoder B64 = Base64.getUrlEncoder().withoutPadding();
     private static final Base64.Decoder B64D = Base64.getUrlDecoder();
     private static final SecureRandom RANDOM = new SecureRandom();
-    private static final Map<String, Long> USED_NONCES = new HashMap<>();
 
     private ProxyAuthToken() {}
 
@@ -66,17 +60,8 @@ public final class ProxyAuthToken {
         return payloadB64 + "." + sigB64;
     }
 
-    /**
-     * Validate a signed proxy auth token against the shared secret and mark its
-     * nonce as used. A valid token is accepted exactly once; replaying it returns
-     * {@code null}. The token is rejected if it is malformed, the signature does
-     * not match, its {@code exp} claim is in the past, or its nonce was already seen.
-     *
-     * @param token  token string produced by {@link #create(UUID, String, String, Duration)}
-     * @param secret shared secret the token was signed with
-     * @return the parsed claims if the token is valid, unexpired, and unused, otherwise {@code null}
-     */
-    public static synchronized Claims validate(String token, String secret) {
+    /** Validate a token for diagnostic use. Backend authentication uses its core counterpart. */
+    public static Claims validate(String token, String secret) {
         if (token == null || token.isBlank() || secret == null || secret.isBlank()) {
             return null;
         }
@@ -115,27 +100,12 @@ public final class ProxyAuthToken {
         }
 
         try {
-            Claims claims = new Claims(
+            return new Claims(
                     UUID.fromString(payload.getString("uuid")),
                     payload.optString("username", ""),
                     exp,
                     payload.optString("nonce", "")
             );
-            if (claims.nonce().isBlank()) {
-                return null;
-            }
-            long now = Instant.now().getEpochSecond();
-            Iterator<Map.Entry<String, Long>> iterator = USED_NONCES.entrySet().iterator();
-            while (iterator.hasNext()) {
-                if (iterator.next().getValue() <= now) {
-                    iterator.remove();
-                }
-            }
-            if (USED_NONCES.containsKey(claims.nonce())) {
-                return null;
-            }
-            USED_NONCES.put(claims.nonce(), exp);
-            return claims;
         } catch (Exception e) {
             return null;
         }

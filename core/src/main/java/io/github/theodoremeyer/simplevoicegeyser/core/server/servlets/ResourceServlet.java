@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.MessageDigest;
 
 /**
  * Servlet responsible for serving static resources packaged inside the plugin JAR.
@@ -61,10 +62,28 @@ public final class ResourceServlet extends HttpServlet {
             }
 
             resp.setContentType(mime);
-            // Never retain an older client after the plugin updates its protocol.
-            resp.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-
-            in.transferTo(resp.getOutputStream());
+            byte[] content = in.readAllBytes();
+            serveWithValidation(req, resp, path, content);
         }
+    }
+
+    private static void serveWithValidation(HttpServletRequest req, HttpServletResponse resp,
+                                            String path, byte[] content) throws IOException {
+        if (path.endsWith(".html") || path.endsWith("manifest.json")) {
+            resp.setHeader("Cache-Control", "no-cache");
+        } else {
+            try {
+                String etag = '\"' + java.util.HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(content)) + '\"';
+                resp.setHeader("Cache-Control", "no-cache");
+                resp.setHeader("ETag", etag);
+                if (etag.equals(req.getHeader("If-None-Match"))) {
+                    resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+                    return;
+                }
+            } catch (java.security.NoSuchAlgorithmException e) {
+                throw new IOException("SHA-256 is unavailable", e);
+            }
+        }
+        resp.getOutputStream().write(content);
     }
 }

@@ -10,13 +10,11 @@ import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.Con
 import io.github.theodoremeyer.simplevoicegeyser.core.server.packets.PacketHandler;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.*;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Locale;
 
 /**
  * Represents a WebSocket connection to a client, handling both control messages and binary audio frames.
@@ -217,111 +215,6 @@ public final class JettyWebSocket {
 
         SvgCore.getLogger().debug("WebSocket: websocket error", error);
         SvgCore.getLogger().info("[WebSocket] Error: " + type + ": " + message);
-    }
-
-    private boolean checkClientBuild(JSONObject json) {
-        String clientBuild = json.optString("build", "");
-
-        if (clientBuild.isEmpty()) {
-            sendRaw(
-                    ConnectionStates.MessageType.ERROR,
-                    "Client missing build id. Update required.",
-                    false
-            );
-            closeUpdateRequired();
-            return false;
-        }
-
-        if (!SvgCore.BUILD_ID.equals(clientBuild)) {
-            sendRaw(
-                    ConnectionStates.MessageType.ERROR,
-                    "Outdated client. Please refresh.",
-                    false
-            );
-
-            closeUpdateRequired();
-            return false;
-        }
-
-        return true;
-    }
-
-    private void closeUpdateRequired() {
-        if (session == null || !session.isOpen()) return;
-
-        try {
-            session.close(ConnectionStates.DisconnectCodes.OUTDATED_CLIENT.getCode(), "update_required");
-        } catch (Exception ignored) {}
-    }
-
-    private void capabilities(JSONObject json) {
-        JSONObject audio = json.optJSONObject("audio");
-        if (audio == null) {
-            sendRaw(ConnectionStates.MessageType.ERROR, "Invalid capabilities payload.", false);
-            return;
-        }
-
-        JSONArray protocols = audio.optJSONArray("protocols");
-        boolean supportsLegacy = true;
-        boolean supportsSvgV2 = false;
-        if (protocols != null) {
-            supportsLegacy = false;
-            for (int i = 0; i < protocols.length(); i++) {
-                String protocol = String.valueOf(protocols.opt(i)).trim().toLowerCase(Locale.ROOT);
-                if ("legacy".equals(protocol)) {
-                    supportsLegacy = true;
-                } else if ("svg-v2".equals(protocol) || "svg_v2".equals(protocol) || "v2".equals(protocol)) {
-                    supportsSvgV2 = true;
-                }
-            }
-        }
-
-        JSONObject decoder = audio.optJSONObject("decoder");
-        boolean wasm = decoder != null && decoder.optBoolean("opusWasm", false);
-        boolean webCodecs = decoder != null && decoder.optBoolean("webCodecs", false);
-        boolean supportsOpusDecoder = wasm || webCodecs || audio.optBoolean("supportsOpusDecoder", false);
-        boolean secureContext = audio.optBoolean("secureContext", false);
-
-        if (audioNegotiation == null) {
-            AudioTransportMode preference = AudioTransportMode.fromConfig(
-                    SvgCore.getConfig()
-            );
-            boolean allowLegacyFallback = Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_ALLOW_LEGACY_FALLBACK.get());
-            audioNegotiation = new AudioSessionNegotiation(
-                    preference,
-                    allowLegacyFallback,
-                    Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_MIC_ALLOW_LEGACY.get())
-            );
-        }
-
-        audioNegotiation.updateClientCapabilities(
-                supportsLegacy,
-                supportsSvgV2,
-                supportsOpusDecoder,
-                secureContext
-        );
-
-        AudioTransportMode selected = audioNegotiation.getSelectedMode();
-        JSONObject ack = new JSONObject();
-        ack.put("type", "capabilities_ack");
-        ack.put("selectedMode", selected == AudioTransportMode.SVG_V2 ? "svg-v2" : "legacy");
-        ack.put("fallbackCount", audioNegotiation.getFallbackCount());
-
-        try {
-            session.getRemote().sendString(ack.toString());
-        } catch (IOException e) {
-            SvgCore.getLogger().debug("WebSocket: Failed to send capabilities ack", e);
-        }
-
-        SvgCore.getLogger().debug(
-                "WebSocket: Capabilities #" + capabilityMessageCount
-                        + " uuid=" + (connection == null ? "pending" : connection.getUuid())
-                        + " legacy=" + supportsLegacy
-                        + " svgV2=" + supportsSvgV2
-                        + " opusDecoder=" + supportsOpusDecoder
-                        + " secure=" + secureContext
-                        + " selected=" + selected.name().toLowerCase(Locale.ROOT)
-        );
     }
 
     //Senders

@@ -1,29 +1,25 @@
 package io.github.theodoremeyer.simplevoicegeyser.velocity.proxy;
 
 import io.github.theodoremeyer.simplevoicegeyser.velocity.VelocityPlugin;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.SslConnectionFactory;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 
-import java.time.Duration;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.KeyFactory;
 
 /**
  * Embedded Jetty server that hosts the proxy's web frontend: static web client
@@ -72,21 +68,24 @@ public final class ProxyJettyServer {
 
     private static KeyStore createKeyStore(File certificate, File key, char[] password) throws Exception {
         CertificateFactory factory = CertificateFactory.getInstance("X.509");
-        X509Certificate cert;
+        X509Certificate[] chain;
         try (var input = java.nio.file.Files.newInputStream(certificate.toPath())) {
-            cert = (X509Certificate) factory.generateCertificate(input);
+            chain = factory.generateCertificates(input).stream()
+                    .map(value -> (X509Certificate) value)
+                    .toArray(X509Certificate[]::new);
         }
+        if (chain.length == 0) throw new IllegalArgumentException("Certificate file contains no X.509 certificates");
         String pem = java.nio.file.Files.readString(key.toPath(), StandardCharsets.US_ASCII);
         Matcher matcher = Pattern.compile("-----BEGIN PRIVATE KEY-----(.*?)-----END PRIVATE KEY-----", Pattern.DOTALL).matcher(pem);
         if (!matcher.find()) {
             throw new IllegalArgumentException("Private key must be an unencrypted PKCS#8 PEM key");
         }
         byte[] encoded = Base64.getMimeDecoder().decode(matcher.group(1));
-        PrivateKey privateKey = KeyFactory.getInstance(cert.getPublicKey().getAlgorithm())
+        PrivateKey privateKey = KeyFactory.getInstance(chain[0].getPublicKey().getAlgorithm())
                 .generatePrivate(new PKCS8EncodedKeySpec(encoded));
         KeyStore store = KeyStore.getInstance(KeyStore.getDefaultType());
         store.load(null, password);
-        store.setKeyEntry("proxy", privateKey, password, new X509Certificate[]{cert});
+        store.setKeyEntry("proxy", privateKey, password, chain);
         return store;
     }
 

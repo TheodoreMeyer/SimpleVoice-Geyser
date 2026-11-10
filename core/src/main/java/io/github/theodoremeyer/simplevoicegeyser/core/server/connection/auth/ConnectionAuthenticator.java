@@ -194,6 +194,11 @@ public final class ConnectionAuthenticator {
             return AuthResponse.failure("Timeout: You didn’t join the server in time.");
         }
 
+        AuthResponse bedrockResult = validateBedrock(claims.uuid(), username.toLowerCase(Locale.ROOT));
+        if (!bedrockResult.success()) {
+            return bedrockResult;
+        }
+
         AuthResponse permissionResult = validatePermissions(player);
         if (!permissionResult.success()) {
             return permissionResult;

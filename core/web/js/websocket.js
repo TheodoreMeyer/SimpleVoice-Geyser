@@ -44,6 +44,7 @@ export class SvgWebSocket {
         this.micEncoder = null;
         this.micEncoderGeneration = 0;
         this.micPendingCaptureTimes = [];
+        this.micEncoderRecoveryPending = false;
         this.#resetState();
     }
 
@@ -177,13 +178,6 @@ export class SvgWebSocket {
                             changingServer: true,
                             username: this.lastCredentials?.username
                         });
-                    }
-
-                    if (packetType === "status" && isBackendTransferStatus(msg)) {
-                        this.micFormatAcknowledged = false;
-                        this.micPcmRenegotiationPending = false;
-                        this.audioController.setMicTransmissionEnabled(false);
-                        this.#destroyMicEncoder();
                     }
 
                     if (packetType === "status" && isBackendTransferStatus(msg)) {
@@ -470,8 +464,14 @@ export class SvgWebSocket {
 
         if (this.selectedMicFormat === "opus") {
             if (!this.micEncoder || this.micEncoder.encodeQueueSize >= 2
-                || this.micPendingCaptureTimes.length >= 2
                 || this.ws.bufferedAmount > SvgWebSocket.MAX_OPUS_BUFFERED_BYTES) return;
+            // Let flush establish whether the encoder has finished the queued
+            // inputs before falling back. This preserves delayed output order
+            // while ensuring a silent dropped output cannot throttle forever.
+            if (this.micPendingCaptureTimes.length >= 2) {
+                void this.#recoverStalledMicEncoder(this.micEncoder);
+                return;
+            }
             const data = new AudioData({
                 format: "f32-planar",
                 sampleRate: 48000,
@@ -524,6 +524,25 @@ export class SvgWebSocket {
         socket.send(JSON.stringify(payload));
     }
 
+    async #recoverStalledMicEncoder(encoder) {
+        if (this.micEncoderRecoveryPending || encoder !== this.micEncoder) return;
+        // AudioEncoder.flush() completes after outputs have been delivered.
+        // Browsers implementing WebCodecs provide it; older test doubles and
+        // unsupported implementations remain bounded by the normal queue gate.
+        if (typeof encoder.flush !== "function") return;
+        this.micEncoderRecoveryPending = true;
+        try {
+            await encoder.flush();
+            if (encoder === this.micEncoder && this.micPendingCaptureTimes.length > 0) {
+                await this.#renegotiatePcmMic(new Error("Opus encoder did not produce an output frame"));
+            }
+        } catch (error) {
+            if (encoder === this.micEncoder) await this.#renegotiatePcmMic(error);
+        } finally {
+            this.micEncoderRecoveryPending = false;
+        }
+    }
+
     async #applyMicFormatAck(format, socket) {
         this.audioController.setMicTransmissionEnabled(false);
         this.micFormatAcknowledged = false;
@@ -544,6 +563,7 @@ export class SvgWebSocket {
 
     #destroyMicEncoder() {
         this.micEncoderGeneration++;
+        this.micEncoderRecoveryPending = false;
         this.micPendingCaptureTimes.length = 0;
         if (this.micEncoder && this.micEncoder.state !== "closed") {
             try {

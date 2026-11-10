@@ -105,7 +105,7 @@ proxy:
   control-url: ""
 
   # Must match Velocity's proxy.shared_secret.
-  shared-secret: simplevoice-geyser-proxy-secret
+  shared-secret: ""
 
   # default: true
   # Verify TLS certificates when control-url uses https.

@@ -19,10 +19,17 @@ public final class PlayerStateServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String rateLimitKey = "control:" + request.getRemoteAddr();
+        if (!plugin.getAuthRateLimiter().allow(rateLimitKey)) {
+            response.sendError(429);
+            return;
+        }
         if (!plugin.isValidControlSecret(request.getHeader("X-SVG-Proxy-Secret"))) {
+            plugin.getAuthRateLimiter().recordFailure(rateLimitKey);
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
+        plugin.getAuthRateLimiter().reset(rateLimitKey);
 
         try {
             JSONObject payload = new JSONObject(request.getReader().lines().reduce("", (a, b) -> a + b));

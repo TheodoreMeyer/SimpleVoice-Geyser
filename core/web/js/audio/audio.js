@@ -139,7 +139,24 @@ export class SvgAudio {
         }
     }
 
-    async #startMicCapture(deviceId, generation) {
+    /**
+     * Replace capture only after the replacement stream and worklet are ready.
+     * An explicitly selected device remains explicit; an empty id requests the
+     * browser's default device.
+     */
+    async switchMic(deviceId) {
+        if (!this.micNode) return this.startMic(deviceId);
+        if (this.micStartPromise) return this.micStartPromise;
+        const startup = this.#startMicCapture(deviceId, this.micGeneration, true);
+        this.micStartPromise = startup;
+        try {
+            await startup;
+        } finally {
+            if (this.micStartPromise === startup) this.micStartPromise = null;
+        }
+    }
+
+    async #startMicCapture(deviceId, generation, replaceExisting = false) {
         let stream, source, node;
         try {
             await this.audioContext.resume();
@@ -172,6 +189,9 @@ export class SvgAudio {
                 if (generation === this.micGeneration) this.#handleMicMessage(event);
             };
 
+            // Do not tear down a working microphone until its replacement has
+            // fully acquired and initialized.
+            if (replaceExisting) this.#releaseMicResources();
             this.microphoneStream = stream;
             this.micSource = source;
             this.micNode = node;
@@ -215,6 +235,14 @@ export class SvgAudio {
     stopMic() {
         this.micGeneration++;
         this.micStartPromise = null;
+        this.#releaseMicResources();
+
+        if (this.micIndicator) {
+            this.micIndicator.classList.remove("active");
+        }
+    }
+
+    #releaseMicResources() {
         if (this.micNode) {
             this.micNode.port.onmessage = null;
             this.micNode.disconnect();
@@ -229,10 +257,6 @@ export class SvgAudio {
         if (this.microphoneStream) {
             this.microphoneStream.getTracks().forEach(t => t.stop());
             this.microphoneStream = null;
-        }
-
-        if (this.micIndicator) {
-            this.micIndicator.classList.remove("active");
         }
     }
 
