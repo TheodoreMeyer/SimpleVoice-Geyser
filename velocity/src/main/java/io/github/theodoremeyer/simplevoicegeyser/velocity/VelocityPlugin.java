@@ -42,7 +42,7 @@ import java.util.UUID;
         name = "SVG",
         description = "Proxy frontend for Simple Voice Geyser.",
         authors = {"TheodoreMeyer", "Pbarrera813"},
-        version = "@@PROJECT_VERSION@@",
+        version = "0.1.5",
         url = "https://modrinth.com/plugin/simplevoice-geyser",
         dependencies = {
                 @Dependency(id = "geyser", optional = true)
