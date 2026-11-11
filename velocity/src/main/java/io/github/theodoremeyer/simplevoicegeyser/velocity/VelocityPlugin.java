@@ -6,6 +6,7 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
@@ -40,7 +41,12 @@ import java.util.UUID;
         id = "svg",
         name = "SVG",
         description = "Proxy frontend for Simple Voice Geyser.",
-        authors = {"TheodoreMeyer"}
+        authors = {"TheodoreMeyer", "Pbarrera813"},
+        version = "@@PROJECT_VERSION@@",
+        url = "https://modrinth.com/plugin/simplevoice-geyser",
+        dependencies = {
+                @Dependency(id = "geyser", optional = true)
+        }
 )
 public final class VelocityPlugin {
 

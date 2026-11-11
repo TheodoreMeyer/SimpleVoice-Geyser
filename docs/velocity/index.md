@@ -32,9 +32,9 @@ Browser ──wss──> Velocity web frontend ──ws──> Backend SVG (Simp
 
 ## Requirements
 
-* Velocity proxy (3.x)
+* Velocity proxy (4.x)
 * Simple Voice Geyser installed on **each backend server** (Paper/Purpur/Spigot or Fabric) with Simple Voice Chat
-* Java 21+
+* Java 25+
 
 > The Velocity plugin does not replace the backend plugin/mod — backends still run SVG and Simple Voice Chat as normal.
 
@@ -42,8 +42,7 @@ Browser ──wss──> Velocity web frontend ──ws──> Backend SVG (Simp
 
 ## Installation
 
-1. Download the Velocity jar from the
-   https://github.com/TheodoreMeyer/SimpleVoice-Geyser/releases
+1. Download the Velocity jar from [Modrinth](https://modrinth.com/plugin/simplevoice-geyser)
 2. Place it in your Velocity proxy's `plugins/` directory
 3. Restart the proxy. A default config is generated at
    `plugins/simplevoice-geyser/config.json`
@@ -94,11 +93,11 @@ The proxy is configured via `plugins/simplevoice-geyser/config.json`:
 
 Each entry under `clients` maps a **Velocity server name** (as defined in `velocity.toml`) to the SVG websocket of the backend running there.
 
-| Key                     | Default                  | Description                                                                 |
-|-------------------------|--------------------------|-----------------------------------------------------------------------------|
-| `enabled`               | `true`                   | Whether this backend can be connected to                                    |
-| `url`                   | `ws://127.0.0.1:8001/ws` | Backend SVG websocket URL (must include the `/ws` path)                      |
-| `verify_ssl`            | `false`                  | Reserved for TLS-protected backend URLs; not enforced by current builds      |
+| Key          | Default                  | Description                                                             |
+|--------------|--------------------------|-------------------------------------------------------------------------|
+| `enabled`    | `true`                   | Whether this backend can be connected to                                |
+| `url`        | `ws://127.0.0.1:8001/ws` | Backend SVG websocket URL (must include the `/ws` path)                 |
+| `verify_ssl` | `false`                  | Reserved for TLS-protected backend URLs; not enforced by current builds |
 
 A special `default` entry is used when a player's current server has no matching entry. Unknown or blank server names fall back to `default`.
 
@@ -106,13 +105,13 @@ All backend entries use the global `proxy.shared_secret`. Per-backend auth secre
 
 ### `proxy`
 
-| Key                        | Default      | Description                                                            |
-|----------------------------|--------------|------------------------------------------------------------------------|
-| `bind_address`             | `0.0.0.0`    | Address the web frontend binds to. Use `127.0.0.1` behind a local reverse proxy |
-| `port`                     | `8080`       | Port the web frontend listens on                                       |
-| `transfer-timeout-seconds` | `60`         | How long a session may stay in transfer before being dropped           |
-| `shared_secret`            | *(random)*   | Secret shared with backends. Auto-generated on first start             |
-| `token-ttl-seconds`        | `120`        | Lifetime of signed browser auth tokens                                 |
+| Key                        | Default    | Description                                                                     |
+|----------------------------|------------|---------------------------------------------------------------------------------|
+| `bind_address`             | `0.0.0.0`  | Address the web frontend binds to. Use `127.0.0.1` behind a local reverse proxy |
+| `port`                     | `8080`     | Port the web frontend listens on                                                |
+| `transfer-timeout-seconds` | `60`       | How long a session may stay in transfer before being dropped                    |
+| `shared_secret`            | *(random)* | Secret shared with backends. Auto-generated on first start                      |
+| `token-ttl-seconds`        | `120`      | Lifetime of signed browser auth tokens                                          |
 
 > Keep `shared_secret` private. Anyone holding it can forge valid browser identities against your backends.
 

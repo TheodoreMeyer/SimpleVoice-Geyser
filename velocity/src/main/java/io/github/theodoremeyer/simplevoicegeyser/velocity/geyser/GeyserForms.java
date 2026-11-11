@@ -23,9 +23,10 @@ public final class GeyserForms {
     public GeyserForms(VelocityPlugin plugin) {
         ProxyServer server = plugin.getServer();
 
-        server.getPluginManager().getPlugin("Geyser-Spigot").ifPresent(geyserPlugin -> {
+        server.getPluginManager().getPlugin("geyser").ifPresent(geyserPlugin -> {
             enabled = true;
             this.formHandler = new PasswordForm(plugin.getPasswordStore());
+            plugin.getLogger().info("Hooked with GeyserMc!");
         });
 
     }
