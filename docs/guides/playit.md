@@ -1,3 +1,6 @@
+---
+title: Playit
+---
 
 # Playit Guide
 - By [SButzbach07](https://github.com/SButzbach07)

@@ -33,7 +33,7 @@ public class SvgMod implements ModInitializer, Platform {
 
     private ConfigFile configFile;
 
-    private final FabricLogger logger = new FabricLogger();
+    private static final FabricLogger logger = new FabricLogger();
 
     private static boolean ready = false;
 
@@ -72,7 +72,7 @@ public class SvgMod implements ModInitializer, Platform {
                     return;
                 }
 
-                new FabricCommand();
+                new FabricCommand(logger);
                 new SvgListener();
             }
 
@@ -96,7 +96,7 @@ public class SvgMod implements ModInitializer, Platform {
             return;
         }
 
-        new FabricCommand();
+        new FabricCommand(logger);
         new SvgListener();
     }
 

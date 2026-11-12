@@ -73,21 +73,15 @@ public final class GroupManager {
 
         if (groupType == null) groupType = Type.NORMAL;
 
-        Group group;
-        if (password == null || password.isEmpty()) { //build the group
-            group = api.groupBuilder()
-                    .setName(groupName)
-                    .setType(groupType)
-                    .setPersistent(persistent)
-                    .build();
-        } else {
-            group = api.groupBuilder()
-                    .setName(groupName)
-                    .setPassword(password)
-                    .setType(groupType)
-                    .setPersistent(persistent)
-                    .build();
+        Group.Builder builder = api.groupBuilder()
+                .setName(groupName)
+                .setType(groupType)
+                .setPersistent(persistent);
+
+        if (password != null && !password.isEmpty()) {
+            builder.setPassword(password);
         }
+        Group group = builder.build();
 
         if (connection != null) {
             if (connection.getGroup() !=null) {

@@ -3,6 +3,7 @@ package io.github.theodoremeyer.simplevoicegeyser.core.server.servlets;
 import io.github.theodoremeyer.simplevoicegeyser.core.SvgCore;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioSessionNegotiation;
 import io.github.theodoremeyer.simplevoicegeyser.core.audio.AudioTransportMode;
+import io.github.theodoremeyer.simplevoicegeyser.core.audio.MicAudioFormat;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.ConnectionStates;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.SvgConnection;
 import io.github.theodoremeyer.simplevoicegeyser.core.server.connection.auth.ConnectionAuthenticator;
@@ -16,13 +17,17 @@ import java.time.Duration;
 import java.util.Arrays;
 
 /**
- * Class that handles talking to the Client
+ * Represents a WebSocket connection to a client, handling both control messages and binary audio frames.
+ * This class is responsible for managing the WebSocket lifecycle, including connection establishment,
+ * message handling, and connection closure. It also manages the negotiation of audio transport modes and
+ * microphone formats based on the client's capabilities and the server's configuration.
  */
 @WebSocket
 public final class JettyWebSocket {
 
     /**
-     * The authenticator instance used for validating join attempts. This is static and shared across all connections, but is designed to be thread-safe and handle concurrent requests appropriately.
+     * Authenticator for validating incoming WebSocket connections. This is used to ensure that only authorized clients can establish a connection.
+     * The authenticator checks the client's credentials and determines whether the connection should be accepted or rejected
      */
     public static final ConnectionAuthenticator AUTHENTICATOR =
             new ConnectionAuthenticator();
@@ -39,29 +44,35 @@ public final class JettyWebSocket {
     private AudioSessionNegotiation audioNegotiation;
 
     /**
-     * No arg Constructor
+     * Create a client connection instance.
      */
     public JettyWebSocket() {}
 
     /**
-     * Code that runs on the Connect
-     * @param session connected Session
+     * Handles connection establishment.
+     * @param session the WebSocket session
      */
     @OnWebSocketConnect
     public void onConnect(Session session) {
-        this.session = session;
-        session.setIdleTimeout(Duration.ofMinutes(SvgCore.getConfig().IDLE_TIMEOUT.get()));
-        AudioTransportMode preference = AudioTransportMode.fromConfig(SvgCore.getConfig());
-        boolean allowLegacyFallback = Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_ALLOW_LEGACY_FALLBACK.get());
+        try {
+            this.session = session;
+            session.setIdleTimeout(Duration.ofMinutes(SvgCore.getConfig().IDLE_TIMEOUT.get()));
+            AudioTransportMode preference = AudioTransportMode.fromConfig(SvgCore.getConfig());
+            boolean allowLegacyFallback = Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_ALLOW_LEGACY_FALLBACK.get());
 
-        this.audioNegotiation = new AudioSessionNegotiation(preference, allowLegacyFallback);
-        SvgCore.getLogger().info("[Websocket] WebSocket connected: " + session.getRemoteAddress());
-        SvgCore.getLogger().debug("WebSocket: Session opened remote=" + session.getRemoteAddress());
+            this.audioNegotiation = new AudioSessionNegotiation(preference, allowLegacyFallback,
+                    Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_MIC_ALLOW_LEGACY.get()));
+            SvgCore.getLogger().info("[Websocket] WebSocket connected: " + session.getRemoteAddress());
+            SvgCore.getLogger().debug("WebSocket: Session opened remote=" + session.getRemoteAddress());
+        } catch (RuntimeException e) {
+            SvgCore.getLogger().severe("[WebSocket] Failed to initialize connection: " + e.getMessage());
+            closeWithError("Server audio configuration is invalid.");
+        }
     }
 
     /**
-     * Code triggered on a received message from the Session
-     * @param message message received
+     * Handles incoming messages from the client. This method processes both control messages (JSON) and binary audio frames.
+     * @param message incoming message from the client
      */
     @OnWebSocketMessage
     public void onMessage(String message) {
@@ -86,22 +97,31 @@ public final class JettyWebSocket {
 
             packetHandler.handle(this, json);
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             SvgCore.getLogger().severe("[VCBridge] Exception: " + e.getMessage());
             SvgCore.getLogger().debug("VCBridge: error reading client data", e);
+            sendRaw(ConnectionStates.MessageType.ERROR, "Unable to process websocket message.", false);
         }
     }
 
     /**
-     * Code that runs on a byte message from session
-     * @param buffer bytebuffer
-     * @param offset byte offset
-     * @param length byte length
+     * Handles incoming binary messages from the client. This method processes audio frames sent by the client.
+     * @param buffer the byte array containing the binary data
+     * @param offset the starting offset in the buffer
+     * @param length the number of bytes to read from the buffer
      */
     @OnWebSocketMessage
     public void onMessage(byte[] buffer, int offset, int length) {
+        if (buffer == null || offset < 0 || length < 0 || offset > buffer.length - length) {
+            SvgCore.getLogger().debug("WebSocket: Dropping invalid binary frame");
+            return;
+        }
         if (connection == null || !connection.isAuthenticated()) {
             SvgCore.getLogger().debug("WebSocket: Dropping pre-auth binary frame bytes=" + length);
+            return;
+        }
+
+        if (!enforceMicFormatPolicy()) {
             return;
         }
 
@@ -115,17 +135,34 @@ public final class JettyWebSocket {
             );
         }
 
-        if (connection.getAudioSender() != null) {
-            connection.getAudioSender().sendOpus(Arrays.copyOfRange(buffer, offset, offset + length));
-        } else {
-            SvgCore.getLogger().debug("WebSocket: audioSender is null for uuid=" + connection.getUuid() + ", dropping binary frame");
+        try {
+            if (connection.getAudioSender() != null) {
+                MicAudioFormat format = audioNegotiation == null
+                        ? MicAudioFormat.PCM16LE
+                        : audioNegotiation.getSelectedMicFormat();
+                if (!format.acceptsPacketLength(length)) {
+                    SvgCore.getLogger().debug("WebSocket: Dropping malformed " + format.protocolName()
+                            + " microphone frame bytes=" + length);
+                    return;
+                }
+                byte[] packet = Arrays.copyOfRange(buffer, offset, offset + length);
+                if (format == MicAudioFormat.OPUS) {
+                    connection.getAudioSender().sendEncodedOpus(packet);
+                } else {
+                    connection.getAudioSender().sendPcm16le(packet);
+                }
+            } else {
+                SvgCore.getLogger().debug("WebSocket: audioSender is null for uuid=" + connection.getUuid() + ", dropping binary frame");
+            }
+        } catch (RuntimeException e) {
+            SvgCore.getLogger().debug("WebSocket: Failed to queue audio frame", e);
         }
     }
 
     /**
-     * Code that runs when client closes the session
-     * @param statusCode code
-     * @param reason close reason
+     * Handles the closure of the WebSocket connection. This method is called when the connection is closed, either by the client or the server.
+     * @param statusCode the status code indicating the reason for closure
+     * @param reason the reason for closure
      */
     @OnWebSocketClose
     public void onClose(int statusCode, String reason) {
@@ -156,8 +193,8 @@ public final class JettyWebSocket {
     }
 
     /**
-     * Code that runs when an error is received from the client
-     * @param error error received
+     * Handles errors that occur during the WebSocket connection. This method is called when an error is encountered.
+     * @param error the Throwable representing the error that occurred
      */
     @OnWebSocketError
     public void onError(Throwable error) {
@@ -179,6 +216,8 @@ public final class JettyWebSocket {
         SvgCore.getLogger().debug("WebSocket: websocket error", error);
         SvgCore.getLogger().info("[WebSocket] Error: " + type + ": " + message);
     }
+
+    //Senders
 
     /**
      * Send a Raw message to client
@@ -203,6 +242,16 @@ public final class JettyWebSocket {
         }
     }
 
+    private void closeWithError(String message) {
+        sendRaw(ConnectionStates.MessageType.ERROR, message, true);
+        if (session != null && session.isOpen()) {
+            try {
+                session.close(ConnectionStates.DisconnectCodes.FATAL_ERROR.getCode(), "server_initialization_failed");
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
     /**
      * Send a JSON message to the client
      * @param json message
@@ -222,19 +271,37 @@ public final class JettyWebSocket {
         }
     }
 
-    //Getters. ONLY used in packet handlers, not for external use.
-    // These should not be exposed to any outside classes.
+    /**
+     * Enforces the microphone format policy based on the server's configuration and the client's capabilities.
+     * If the selected microphone format is not allowed, an error message is sent to the client and the connection is closed.
+     * @return true if the microphone format is allowed, false otherwise
+     */
+    public boolean enforceMicFormatPolicy() {
+        boolean allowed = audioNegotiation == null
+                ? Boolean.TRUE.equals(SvgCore.getConfig().AUDIO_MIC_ALLOW_LEGACY.get())
+                : audioNegotiation.isMicFormatAllowed();
+        if (allowed) {
+            return true;
+        }
+        if (session != null && session.isOpen()) {
+            sendRaw(ConnectionStates.MessageType.ERROR,
+                    "This server requires Opus microphone audio. Use an Opus-capable client.", true);
+            session.close(ConnectionStates.DisconnectCodes.FATAL_ERROR.getCode(),
+                    "Opus microphone audio required");
+        }
+        return false;
+    }
 
     /**
-     * Get the associated SvgConnection for this WebSocket
-     * @return SvgConnection
+     * get API connection object for this websocket
+     * @return {@link SvgConnection} object
      */
     public SvgConnection getConnection() {
         return connection;
     }
 
     /**
-     * Get the Negotiation Session for audio type
+     * Get the audio negotiation state.
      * @return audio negotiation
      */
     public AudioSessionNegotiation getAudioNegotiation() {
@@ -242,7 +309,7 @@ public final class JettyWebSocket {
     }
 
     /**
-     * Get the underlying Session
+     * Get the underlying Session.
      * @return Session
      */
     public Session getSession() {
@@ -250,7 +317,7 @@ public final class JettyWebSocket {
     }
 
     /**
-     * Set the Connection associated with the session
+     * Set the associated SvgConnection.
      * @param connection connection
      */
     public void setConnection(SvgConnection connection) {
@@ -258,8 +325,8 @@ public final class JettyWebSocket {
     }
 
     /**
-     * Add a JoinAttempt
-     * @return the join attempts
+     * Increment the join attempt count and return the new value.
+     * @return the updated join attempt count
      */
     public long addJoinAttempt() {
         ++joinAttemptCount;
@@ -267,8 +334,8 @@ public final class JettyWebSocket {
     }
 
     /**
-     * Add the amount of Capability messages received from the client
-     * @return the count
+     * Increment the capability message count and return the new value.
+     * @return the updated capability message count
      */
     public long addCapabilityMessage() {
         ++capabilityMessageCount;
@@ -276,8 +343,8 @@ public final class JettyWebSocket {
     }
 
     /**
-     * Set the AudioNegotiation as received from the Client
-     * @param audioNegotiation the audio Negotiation
+     * Set the audio negotiation state for this WebSocket.
+     * @param audioNegotiation the AudioSessionNegotiation instance to set
      */
     public void setAudioNegotiation(AudioSessionNegotiation audioNegotiation) {
         this.audioNegotiation = audioNegotiation;

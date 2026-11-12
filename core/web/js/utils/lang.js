@@ -116,6 +116,38 @@ export class SvgLang {
             "pushToTalkFullscreenBtnText": "Tieni premuto per parlare",
             "exitFullscreenPttBtnText": "Esci da schermo intero",
             "devToolsLabel": "Strumenti per sviluppatori"
+        },
+        "es": {
+            "joinLabel": "Unirse Simple Voice Chat",
+            "usernameInput": "Nombre de Usuario",
+            "passwordInput": "Contraseña",
+            "micSelect": "Elegir Micrófono",
+            "speakSelect": "Elegir Altavoces",
+            "micLoad": "Cargando micrófonos...",
+            "speakLoad": "Cargando Altavoces...",
+            "joinBtnText": "Unirse",
+            "joinWait": "Esperando a unirse...",
+            "msgText": "Mensaje",
+            "sendBtnText": "Enviar",
+            "transmitModeLabel": "Modo de transmisión",
+            "micSLabel": "Micrófono",
+            "muteBtnText": "Silenciar",
+            "voiceActivityText": "Activación por voz",
+            "pushToTalkText": "Pulsar para hablar",
+            "pttBindingLabel": "Asignar tecla",
+            "bindPttBtnText": "Asignar pulsar para hablar",
+            "clearPttBtnText": "Limpiar asignación",
+            "pttBindingDescription": "No se ha asignado tecla. Mantén presionado el botón o añade una tecla.",
+            "allowBackgroundPttText": "Controlar pulsar para hablar en 2do plano",
+            "pttLabel": "Pulsar para hablar",
+            "pushToTalkBtnText": "Mantén pulsado para hablar",
+            "fullscreenPttBtnText": "Pulsar para hablar",
+            "debugAudioLabel": "Depurar Audio",
+            "testSoundBtnText": "Probar Audio",
+            "colorEditorLabel": "Personalizar Color",
+            "pushToTalkFullscreenBtnText": "Mantén pulsado para hablar",
+            "exitFullscreenPttBtnText": "Salir de pantalla completa",
+            "devToolsLabel": "Herramientas de desarrollo"
         }
     };
     static #jsTranslation = {
@@ -132,7 +164,32 @@ export class SvgLang {
             "statusConnectedAsPrefix": "Connected as",
             "statusDisconnectedLabel": "Disconnected",
             "muteBtnUnmuteLabel": "Unmute",
-            "muteBtnMuteLabel": "Mute"
+            "muteBtnMuteLabel": "Mute",
+            "pttBindingPrompt": "Press a key, mouse button, or controller button...",
+            "pttBindingWaiting": "Waiting for input... press Escape to cancel.",
+            "pttBoundTo": "Bound to {binding}",
+            "pttTalkingLabel": "Talking...",
+            "chatInputPlaceholder": "Type a message..."
+        },
+        "es": {
+            "audioFallbackDefaultReason": "Las APIs de dispositivos de audio no están disponibles.",
+            "microphoneUnavailableLabel": "El micrófono no está disponible",
+            "speakerUnavailableLabel": "Los altavoces no están disponibles",
+            "microphoneIndexPrefix": "Micrófono",
+            "speakerIndexPrefix": "Altavoces",
+            "noMicrophoneDetectedLabel": "No se ha detectado un micrófono",
+            "noSpeakerDetectedLabel": "No se ha detectado un altavoz",
+            "joinBtnUnconnectedLabel": "Unirse",
+            "joinBtnConnectedLabel": "Abandonar",
+            "statusConnectedAsPrefix": "Conectado como",
+            "statusDisconnectedLabel": "Desconectado",
+            "muteBtnUnmuteLabel": "Hablar",
+            "muteBtnMuteLabel": "Silenciar",
+            "pttBindingPrompt": "Presiona una tecla, botón de mouse o botón de control.",
+            "pttBindingWaiting": "Esperando una entrada... Presiona Esc para cancelar",
+            "pttBoundTo": "Asignado a \"{binding}\"",
+            "pttTalkingLabel": "Hablando...",
+            "chatInputPlaceholder": "Escribe un mensaje..."
         }
     };
     static availableLanguages = Object.keys(SvgLang.#htmlTranslation);
@@ -155,16 +212,11 @@ export class SvgLang {
     }
 
     static string(key) {
-        let text;
-        try {
-            text = SvgLang.#jsTranslation[SvgLang.#currentLanguage][key];
-            if (typeof text === "undefined") {
-                throw new Error(`Cannot find js translation for key: ${key}`);
-            }
-        } catch {
-            text = SvgLang.#jsTranslation["en"][key] || null;
-        }
-        return text;
+        return SvgLang.#jsTranslation[SvgLang.#currentLanguage]?.[key]
+            ?? SvgLang.#htmlTranslation[SvgLang.#currentLanguage]?.[key]
+            ?? SvgLang.#jsTranslation["en"][key]
+            ?? SvgLang.#htmlTranslation["en"][key]
+            ?? null;
     }
 
     static #setElementText(element, content) {
@@ -215,6 +267,10 @@ export class SvgLang {
             if (key in translation) {
                 element.textContent = translation[key];
             }
+        });
+
+        document.querySelectorAll("[svg-lang-placeholder]").forEach(element => {
+            element.setAttribute("placeholder", SvgLang.string(element.getAttribute("svg-lang-placeholder")));
         });
 
         for (const [element, content] of SvgLang.#jsElementMap) {

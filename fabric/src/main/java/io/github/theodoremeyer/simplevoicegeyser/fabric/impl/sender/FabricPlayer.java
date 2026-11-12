@@ -57,7 +57,18 @@ public class FabricPlayer extends SvgPlayer {
 
     @Override
     public void sendMessage(String message) {
-        player.sendSystemMessage(Component.literal(message));
+        if (player.level().getServer().isSameThread()) {
+            if (isOnline) {
+                player.sendSystemMessage(Component.literal(message));
+            }
+            return;
+        }
+
+        player.level().getServer().execute(() -> {
+            if (isOnline) {
+                player.sendSystemMessage(Component.literal(message));
+            }
+        });
     }
 
     @Override

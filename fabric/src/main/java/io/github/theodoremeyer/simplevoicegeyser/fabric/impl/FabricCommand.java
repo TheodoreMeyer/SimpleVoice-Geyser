@@ -19,7 +19,10 @@ import static net.minecraft.commands.Commands.literal;
 
 public class FabricCommand {
 
-    public FabricCommand() {
+    private final FabricLogger logger;
+
+    public FabricCommand(FabricLogger logger) {
+        this.logger = logger;
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 register(dispatcher)
         );
@@ -148,7 +151,7 @@ public class FabricCommand {
 
             args = new CommandArgs(sub, player);
         } else {
-            args = new CommandArgs(sub, new FabricConsole());
+            args = new CommandArgs(sub, new FabricConsole(logger));
         }
 
         // Apply arguments

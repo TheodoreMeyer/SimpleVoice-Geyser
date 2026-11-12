@@ -16,10 +16,12 @@ For Host-Specific setup, see [Hosting Guides]({% project_link guides %}).
 
 ### Bukkit-based Servers (Paper / Purpur / Spigot)
 
-* Minecraft 1.21.8+
-* Simple Voice Chat 2.6.x+
+* Minecraft **1.20.1 through 26.3** (full **26.x** line)
+* Simple Voice Chat 2.6.x+ (use **2.6.24+** on Minecraft 26.3)
 * GeyserMC 2.10.1-SNAPSHOT+
 * Floodgate (optional, but recommended)
+
+See [Compatibility]({% project_link install/compatibility %}) for the full version tables.
 
 ### Fabric
 
@@ -29,6 +31,15 @@ For Host-Specific setup, see [Hosting Guides]({% project_link guides %}).
 * GeyserMC 2.10.1-SNAPSHOT+
 * LuckPerms (optional)
 * Floodgate (optional)
+
+### Velocity Proxy Frontend (optional)
+
+For networks running behind a Velocity proxy, a separate proxy plugin hosts the web client and moves voice sessions between backend servers automatically.
+
+* Velocity 3.x
+* Simple Voice Geyser on each backend server
+
+See: [Velocity Proxy Setup]({% project_link velocity %})
 
 > Simple Voice Geyser depends on Simple Voice Chat and will not function without it.
 
@@ -205,6 +216,8 @@ Use a reverse proxy (e.g., Nginx, Caddy) to provide:
 
 * HTTPS (TLS)
 * Secure WebSocket (WSS)
+
+If your network runs behind a Velocity proxy, the SVG Velocity plugin can host the web frontend and terminate TLS itself. See: [Velocity Proxy Setup]({% project_link velocity %}).
 
 ---
 

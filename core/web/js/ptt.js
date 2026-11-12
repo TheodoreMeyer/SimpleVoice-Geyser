@@ -1,5 +1,6 @@
 import {getConnectedGamepad, getGamepadButtonName} from "./gamepad.js";
 import {Logger} from "./utils/logger.js";
+import {SvgLang} from "./utils/lang.js";
 
 /**
  * @import {PttElements} from "./utils/types.js"
@@ -280,12 +281,15 @@ export class PttController {
         const active = this.isPttActive();
         this.elements.pushToTalkBtn.classList.toggle("active", active);
         this.elements.pushToTalkFullscreenBtn.classList.toggle("active", active);
-        this.elements.pushToTalkBtn.textContent = active ? "Talking..." : "Hold to Talk";
-        this.elements.pushToTalkFullscreenBtn.textContent = active ? "Talking..." : "Hold to Talk";
+        SvgLang.setElement(this.elements.pushToTalkBtn, () => active
+            ? SvgLang.string("pttTalkingLabel") : SvgLang.string("pushToTalkBtnText"));
+        SvgLang.setElement(this.elements.pushToTalkFullscreenBtn, () => active
+            ? SvgLang.string("pttTalkingLabel") : SvgLang.string("pushToTalkFullscreenBtnText"));
     }
 
     #updatePttBindingLabel() {
-        this.elements.pttBindingLabel.textContent = this.#formatPttBinding(this.pttBinding);
+        SvgLang.setElement(this.elements.pttBindingLabel, () => this.bindingCaptureActive
+            ? SvgLang.string("pttBindingWaiting") : this.#formatPttBinding(this.pttBinding));
     }
 
     #updateTransmitModeUi() {
@@ -309,15 +313,12 @@ export class PttController {
 
     #setBindingCaptureState(active) {
         this.bindingCaptureActive = active;
-        this.elements.bindPttBtn.textContent = active ? "Press a key, mouse button, or controller button..." : "Bind Push-to-Talk";
+        SvgLang.setElement(this.elements.bindPttBtn, () => this.bindingCaptureActive
+            ? SvgLang.string("pttBindingPrompt") : SvgLang.string("bindPttBtnText"));
         this.elements.bindPttBtn.disabled = active;
         this.elements.clearPttBtn.disabled = active;
 
-        if (active) {
-            this.elements.pttBindingLabel.textContent = "Waiting for input... press Escape to cancel.";
-        } else {
-            this.#updatePttBindingLabel();
-        }
+        this.#updatePttBindingLabel();
     }
 
     // ==================================================
@@ -356,24 +357,24 @@ export class PttController {
 
     #formatPttBinding(binding) {
         if (!binding) {
-            return "No binding set. Use the hold button or add a binding.";
+            return SvgLang.string("pttBindingDescription");
         }
 
         if (binding.type === "keyboard") {
-            return `Bound to ${this.#formatKeyboardCode(binding.code)}`;
+            return SvgLang.string("pttBoundTo").replace("{binding}", this.#formatKeyboardCode(binding.code));
         }
 
         if (binding.type === "mouse") {
-            return `Bound to ${this.#formatMouseButton(binding.button)}`;
+            return SvgLang.string("pttBoundTo").replace("{binding}", this.#formatMouseButton(binding.button));
         }
 
         if (binding.type === "gamepad") {
             const connectedGamepad = getConnectedGamepad();
             const buttonName = getGamepadButtonName(binding.buttonIndex, connectedGamepad ? connectedGamepad.id : "");
-            return `Bound to Controller ${buttonName}`;
+            return SvgLang.string("pttBoundTo").replace("{binding}", `Controller ${buttonName}`);
         }
 
-        return "No binding set. Use the hold button or add a binding.";
+        return SvgLang.string("pttBindingDescription");
     }
 
     // ==================================================

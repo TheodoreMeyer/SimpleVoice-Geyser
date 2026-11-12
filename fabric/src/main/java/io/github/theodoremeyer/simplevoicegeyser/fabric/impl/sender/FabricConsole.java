@@ -1,20 +1,18 @@
 package io.github.theodoremeyer.simplevoicegeyser.fabric.impl.sender;
 
 import io.github.theodoremeyer.simplevoicegeyser.core.api.sender.SvgConsole;
-
-import java.util.logging.Logger;
+import io.github.theodoremeyer.simplevoicegeyser.fabric.impl.FabricLogger;
 
 public class FabricConsole extends SvgConsole {
 
-    private final Logger logger;
+    private final FabricLogger logger;
 
-    public FabricConsole() {
-        this.logger = Logger.getLogger("SVG");
+    public FabricConsole(FabricLogger logger) {
+        this.logger = logger;
     }
 
     @Override
     public void sendMessage(String message) {
-        // Preferred: server log output
-        logger.info("[SVG-CONSOLE] " + message);
+        logger.info(message);
     }
 }

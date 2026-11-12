@@ -1,7 +1,5 @@
 ---
-title: 0.1.3
-layout: projects
-project: simplevoicegeyser
+title: Releases
 ---
 # Releases
 - As we transition to a new release-based doc system, specific changes can be found here.

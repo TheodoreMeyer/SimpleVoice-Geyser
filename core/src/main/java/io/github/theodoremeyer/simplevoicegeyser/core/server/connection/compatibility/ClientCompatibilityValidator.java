@@ -109,7 +109,7 @@ public final class ClientCompatibilityValidator {
             );
         }
 
-        if (!expectedBrowserBuild.equals(clientBuild)) {
+        if (clientType == null && !expectedBrowserBuild.equals(clientBuild)) {
             return ClientCompatibilityResult.rejected(
                     "Outdated client. Please refresh.",
                     ConnectionStates.DisconnectCodes.OUTDATED_CLIENT.getCode(),
@@ -124,6 +124,17 @@ public final class ClientCompatibilityValidator {
                 return INVALID_CLIENT_INFO;
             }
             serverVersion = version.trim();
+        }
+
+        // The Velocity proxy and backend can be built separately. Require the
+        // protocol version to match, but do not reject a compatible web client
+        // merely because its embedded Git build hash differs from the backend.
+        if (!expectedServerVersion.equals(serverVersion)) {
+            return ClientCompatibilityResult.rejected(
+                    "This web client version is not compatible with this server. Update required.",
+                    ConnectionStates.DisconnectCodes.OUTDATED_CLIENT.getCode(),
+                    "update_required"
+            );
         }
 
         return ClientCompatibilityResult.accepted(ClientIdentity.web(serverVersion, clientBuild));

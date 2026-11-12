@@ -66,6 +66,7 @@
  * @property {boolean} mediaDevicesSupported
  * @property {boolean} canCaptureMic
  * @property {boolean} canSelectOutput
+ * @property {number} [sampleRate]
  * @property {string} degradedReason
  */
 
