@@ -25,7 +25,7 @@ public final class GeyserForms {
 
         server.getPluginManager().getPlugin("geyser").ifPresent(geyserPlugin -> {
             enabled = true;
-            this.formHandler = new PasswordForm(plugin.getPasswordStore());
+            this.formHandler = new PasswordForm(plugin.getPasswordStore(), plugin.getLogger());
             plugin.getLogger().info("Hooked with GeyserMc!");
         });
 
