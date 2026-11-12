@@ -10,6 +10,20 @@ This page outlines supported environments, tested versions, and known limitation
 
 ---
 
+## Current Release (0.1.5)
+
+- **Paper, Purpur, Spigot:** Minecraft 1.20.1 through 26.3
+- **Fabric:** Minecraft 26.1 and newer, with Fabric API
+- **Velocity proxy plugin:** Velocity 4.x and Java 25
+- **Simple Voice Chat:** 2.6.x or newer (2.6.24 or newer on Minecraft 26.3)
+- **Geyser:** 2.10.1-SNAPSHOT or newer, **Floodgate:** 2.2.5-SNAPSHOT or newer
+- **Browsers:** Chrome and Firefox
+- **Svg-App:** 1.1.0 (Android 7.0 or newer)
+
+The tables below list earlier versions too and can be scrolled sideways.
+
+---
+
 ## Browser Compatibility
 
 Simple Voice Geyser uses a web-based client that relies on WebRTC. Browser support may vary depending on implementation differences.
@@ -20,7 +34,7 @@ Simple Voice Geyser uses a web-based client that relies on WebRTC. Browser suppo
 | 0.0.2-DEV   | ✅      | 🛠️     | ❌    |
 | 0.0.3-DEV   | ✅      | 🚧      | ❌    |
 | 0.1.0-DEV   | ✅      | ✅       | 🚧   |
-| 0.1.1-0.1.4 | ✅      | ✅       | 🚧   |
+| 0.1.1-0.1.5 | ✅      | ✅       | 🚧   |
 
 ---
 
@@ -36,6 +50,7 @@ Simple Voice Geyser uses a web-based client that relies on WebRTC. Browser suppo
 | 0.1.2     | 1.20.1+    | 2.6.x      | 2.10.0-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ⚠️      |
 | 0.1.3     | 1.20.1–26.3 | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
 | 0.1.4     | 1.20.1–26.3 | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
+| 0.1.5     | 1.20.1–26.3 | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
 
 ### Requirements
 
@@ -55,6 +70,7 @@ Simple Voice Geyser uses a web-based client that relies on WebRTC. Browser suppo
 | 0.1.2-DEV | 26.1+      | 2.6.x      | 2.10.0-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.4 api | ⚠️      |
 | 0.1.3-DEV | 26.1+      | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.5 api | ✅      |
 | 0.1.4     | 26.1+      | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.5 api | ✅      |
+| 0.1.5     | 26.1+      | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.5 api | ✅      |
 
 ### Requirements
 
@@ -67,6 +83,26 @@ Simple Voice Geyser uses a web-based client that relies on WebRTC. Browser suppo
 * Floodgate (for Bedrock account linking)
 * LuckPerms (for permissions handling)
 * GeyserMC 2.10.1-SNAPSHOT+ (for Bedrock compatibility)
+
+---
+
+## Velocity Proxy
+
+| Version | Velocity | Java | Status |
+|---------|----------|------|--------|
+| 0.1.5   | 4.x      | 25+  | ✅      |
+
+The proxy plugin and every backend must run the same Simple Voice Geyser version. See [Velocity Proxy Setup]({% project_link velocity %}).
+
+---
+
+## Svg-App (Android)
+
+| App version | Android | Server versions |
+|-------------|---------|-----------------|
+| 1.1.0       | 7.0+    | 0.1.3, 0.1.4, 0.1.5 |
+
+See [Svg-App]({% project_link app %}).
 
 ---
 

@@ -29,6 +29,8 @@ server:
 | `svg-v2` | Server sends the original Opus payload plus compact spatial metadata. The web client decodes and applies spatial gain/pan locally.           |
 | `auto`   | Server chooses `svg-v2` only when the web client reports compatible support. Otherwise it falls back to `legacy` when fallback is allowed.   |
 
+`auto` and `svg-v2` currently behave the same. Both use `svg-v2` for capable clients and fall back to `legacy` when `allow-legacy-fallback` is `true`.
+
 ## Fallback Behavior
 
 `server.audio.allow-legacy-fallback` controls whether the server can use `legacy` when `svg-v2` is unavailable.
@@ -51,6 +53,12 @@ The server stores the selected transport mode for that websocket session:
 | Old client                             | `legacy` if fallback is enabled |
 
 The browser path currently uses the WASM decoder path for `svg-v2`. WebCodecs fields may appear in capability metadata for future app/non-browser clients, but they are not the active browser decode path.
+
+## Microphone Upload Format
+
+The audio the player sends to the server uses its own setting, separate from the transport above. The browser page and Svg-App 1.1.0 send the microphone as compressed Opus. Older clients, such as Svg-App 1.0.x, send raw PCM.
+
+`server.audio.mic.allowLegacy` is `true` by default, so both are accepted. Set it to `false` to require Opus. A client that can only send PCM is then refused with "This server requires Opus microphone audio."
 
 ## Microphone capture
 
@@ -82,6 +90,4 @@ Quiet mics may need the player to speak closer to the microphone or raise system
 | `payloadLen` |  4 bytes | Payload length                |
 | `payload`    | variable | Codec payload                 |
 
-See [Protocol reference](https://theodoremeyer.github.io/projects/simplevoicegeyser/protocol.md) for the full websocket message flow, join payload, capability packet, and audio packet formats.
-
-Client mic Opus encoding is intentionally split into a future PR. PR #45 does not require client mic Opus encoding for `svg-v2` receive-audio transport to work.
+See [Protocol reference]({% project_link api/protocol %}) for the full websocket message flow, join payload, capability packet, and audio packet formats.

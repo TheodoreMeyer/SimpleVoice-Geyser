@@ -2,8 +2,11 @@
 title: Releases
 ---
 # Releases
-- As we transition to a new release-based doc system, specific changes can be found here.
-- Releases pages will now contain their own compat information later on.
+
+Notes for specific releases.
+
+## 0.1.5 Release:
+- Find it at: [0.1.5]({% project_link releases/0-1-5 %}).
 
 ## 0.1.4:
 - No specific doc file.
