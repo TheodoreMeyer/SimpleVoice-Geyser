@@ -16,33 +16,29 @@
   </a>
 - <a href="https://fabricmc.net/">
     <img src="https://fabricmc.net/assets/logo.png" height="22"/>
-    <img src="https://img.shields.io/badge/Fabric-1.21.11–26.1.2-1f2937"/>
+    <img src="https://img.shields.io/badge/Fabric-26.1%2B-1f2937"/>
   </a>
 
 A Geyser Extension to allow Bedrock Clients to connect with Simple voice Chat.
 
 ## What can the Plugin/extension do?
-- Allow Bedrock Players to voice chat with Java Players through a web interface.
+- Allow Bedrock Players to voice chat with Java Players through a web page or the [Svg-App](https://github.com/TheodoreMeyer/Svg-App) for Android.
 - Configured to also allow Java Players without the SVC Mod to join the chat.
 - Configurable texting through a chatbox to allow the bedrock players to chat in-game.
+- Optional Velocity proxy plugin for networks with several servers, so players keep their voice connection when they change server.
 
 ## Using this Plugin
 - Set the '.jar' file into your server's plugin directory.
 - Configure it to connect with your server's SimpleVoice chat. See [Installation](https://theodoremeyer.github.io/projects/simplevoicegeyser/install)
+- Running Velocity? Also install the proxy plugin. See [Velocity proxy setup](https://theodoremeyer.github.io/projects/simplevoicegeyser/velocity)
 
 ### Updating
-- Replacing the old jar with the new one.
-     - I plan on making config options auto update.
+- Replace the old jar with the new one.
+     - Missing config options are added automatically, and a backup of your old config is kept.
 
 ## Documentation
 - Our [wiki](https://theodoremeyer.github.io/projects/simplevoicegeyser/) can help!
-- Release-focused docs for current development changes are available in [docs](docs/README.md).
-
 - old wiki: [wiki](https://github.com/TheodoreMeyer/SimpleVoice-Geyser/wiki).
-
-## Coming Soon
-- Dev Release (v 0.1.4-Dev)
-- Initial Release (v 1.0.0)
 
 ## Features to be worked on
 - External Webserver (you host the vc connection at your website)
@@ -59,8 +55,8 @@ Reach out through issues!
 
 ## Important Notes
 - Simple Voice Chat 2.6.0 or compatible is required to work, It must run on the server.
-- GeyserMC 2.10.0-SNAPSHOT
-- Java 25 or newer is required to build this project from source.
+- GeyserMC 2.10.1-SNAPSHOT or newer is needed for Bedrock players.
+- Java 25 or newer is required to build this project from source, and to run the Velocity plugin.
 
 - Microphone/Speaker options may or may not work, depending on your browser, as this was built for Google Chrome.
 

@@ -6,7 +6,7 @@ project: simplevoicegeyser
 
 # Protocol Reference
 
-This page documents the 0.1.2-3 websocket client/server packet flow. It covers the browser web UI and native Android app protocol used by Simple Voice Geyser, not the internal Simple Voice Chat protocol.
+This page documents the websocket client/server packet flow, from 0.1.3 on. It covers the browser web UI and the native Android app (Svg-App) protocol used by Simple Voice Geyser, not the internal Simple Voice Chat protocol.
 
 ## Connection
 

@@ -12,9 +12,11 @@ This plugin exposes a web-based voice interface. You are responsible for securin
 
 # Built-in protections:
 - Passwords are hashed (bcrypt)
-- No default credentials
-- If someone spams logins for a player (more than 5 per minute), that player is temporarily locked out for 5 minutes.
-     - To get back in, the player must wait 5 minutes or change their password in-game (which resets the lockout)
+- Every player sets their own password. There are no default passwords for logins.
+- Repeated wrong passwords lock the player out for a while. By default, 5 failed logins within 3 minutes lock the player out for 8 minutes. The numbers are `server.security.max-auth-failures`, `auth-fail-duration` and `auth-lock-duration`.
+     - To get back in, the player waits for the lockout to end. On a backend server, setting a new password with `/svg pswd` also clears it.
+     - On a Velocity network the lockout is held by the proxy and ends after its time.
+- Joining voice needs the permission `svg.vc.join`, which players have by default. Take it away to keep a player out of voice chat. See [Commands]({% project_link commands %}).
 
 ---
 
@@ -56,9 +58,21 @@ Set up a reverse proxy (e.g. Nginx, Caddy):
 
 ### Use Strong Passwords
 
-- Minimum 8-32 characters
+- 8 to 32 characters
 - Avoid defaults
 - Rotate periodically if exposed publicly
+
+---
+
+### Change the Default Group Password
+
+Players who join through the web page or the app are put in a group named `Svg` with the password `1a2b`. Anyone can read that password in these docs. Change `server.group.default.password`, or turn the default group off with `server.group.default.enabled`.
+
+---
+
+### Protect the Proxy Secret
+
+On a Velocity network the proxy and every backend share `proxy.shared_secret`. Anyone who has it can pretend to be any player. Keep it private, and change it everywhere if it leaks. See [Velocity Proxy Setup]({% project_link velocity %}).
 
 ---
 
