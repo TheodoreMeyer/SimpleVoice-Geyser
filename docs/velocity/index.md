@@ -46,12 +46,12 @@ This page walks through a full setup in the order that works: plan the ports, se
 
 A proxy network has four separate services, and each one needs its own port:
 
-| Service | Protocol | Set in |
-|---------|----------|--------|
-| Minecraft | TCP | `velocity.toml` |
-| Voice chat | UDP | Simple Voice Chat |
-| Proxy voice page | TCP | `proxy.port` |
-| Backend voice page | TCP | `server.port` |
+| Service            | Protocol | Set in            |
+|--------------------|----------|-------------------|
+| Minecraft          | TCP      | `velocity.toml`   |
+| Voice chat         | UDP      | Simple Voice Chat |
+| Proxy voice page   | TCP      | `proxy.port`      |
+| Backend voice page | TCP      | `server.port`     |
 
 Rules that save you trouble:
 
@@ -61,12 +61,12 @@ Rules that save you trouble:
 
 An example for one machine with two backends. Your numbers can differ.
 
-| Service | Port |
-|---------|------|
-| Proxy voice page | `8080` |
-| Lobby voice page | `8001` |
-| Survival voice page | `8002` |
-| Lobby voice chat (UDP) | `24454` |
+| Service                   | Port    |
+|---------------------------|---------|
+| Proxy voice page          | `8080`  |
+| Lobby voice page          | `8001`  |
+| Survival voice page       | `8002`  |
+| Lobby voice chat (UDP)    | `24454` |
 | Survival voice chat (UDP) | `24455` |
 
 Write your own list down before you continue. You will type each number twice, once where the service listens and once where something else connects to it.
@@ -173,11 +173,11 @@ More in [HTTPS and reverse proxies]({% project_link install/proxy %}).
 
 ## Step 5: Open the firewall
 
-| Port | Protocol | Open to |
-|------|----------|---------|
-| Proxy voice page | TCP | Players |
-| Backend voice pages | TCP | Proxy only |
-| Simple Voice Chat | UDP | Players |
+| Port                | Protocol | Open to    |
+|---------------------|----------|------------|
+| Proxy voice page    | TCP      | Players    |
+| Backend voice pages | TCP      | Proxy only |
+| Simple Voice Chat   | UDP      | Players    |
 
 The common mistake is opening only TCP. Simple Voice Chat sends voice over **UDP**. If you use Simple Voice Chat's proxy support, the voice traffic arrives on the proxy's Minecraft port, so allow UDP on that port too, for example `sudo ufw allow 25565/udp`. When UDP is blocked, Java players with the mod see the crossed-out speaker or "plug" icon even though everything else works.
 

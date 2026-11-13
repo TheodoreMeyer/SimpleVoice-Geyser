@@ -42,10 +42,10 @@ The password must be 8 to 32 characters. On Paper, Purpur and Spigot servers the
 
 How to type the address:
 
-| Your server's voice page | Type in the app |
-|--------------------------|-----------------|
-| `https://voice.example.com` | `voice.example.com` |
-| `https://example.com/svg` | `example.com/svg` |
+| Your server's voice page                  | Type in the app            |
+|-------------------------------------------|----------------------------|
+| `https://voice.example.com`               | `voice.example.com`        |
+| `https://example.com/svg`                 | `example.com/svg`          |
 | `http://192.168.1.50:8080` (home network) | `http://192.168.1.50:8080` |
 
 The app assumes `https` when you do not type anything in front. A home-network address without HTTPS therefore needs `http://` at the start. Always include the port when the address needs one, and use the voice page's port, not the Minecraft port. If you type the Minecraft port, the app warns you.
@@ -65,17 +65,17 @@ If the server uses a Velocity proxy, use the proxy's voice address. When you mov
 
 ## If something goes wrong
 
-| What the app says | What to do |
-|-------------------|------------|
-| "That looks like the minecraft server port" | Use the voice page's port instead of the Minecraft port |
-| "Could not connect to the server" | Check the address, and that the server is running |
-| "Could not establish a secure connection" | Use the server's `https` address, or type `http://` yourself if you are on your own network |
-| "The server rejected the login" | Check your name and password. You may need to set the password again with `/svg pswd` |
-| "This app version is not compatible with this server. Update the app." | Install the latest Svg-App, or ask the server owner which version they run |
-| "This server does not allow the Svg-App client" | The server owner has switched the app off |
-| "This server requires Opus microphone audio" | Your phone cannot encode Opus. Use a newer phone (Android 10 or newer), or ask the server owner to allow older microphone formats |
-| "Microphone permission was denied" | Allow the microphone for Svg-App in your phone's settings |
-| "No internet connection" | Check your Wi-Fi or mobile data |
+| What the app says                                                      | What to do                                                                                                                        |
+|------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| "That looks like the minecraft server port"                            | Use the voice page's port instead of the Minecraft port                                                                           |
+| "Could not connect to the server"                                      | Check the address, and that the server is running                                                                                 |
+| "Could not establish a secure connection"                              | Use the server's `https` address, or type `http://` yourself if you are on your own network                                       |
+| "The server rejected the login"                                        | Check your name and password. You may need to set the password again with `/svg pswd`                                             |
+| "This app version is not compatible with this server. Update the app." | Install the latest Svg-App, or ask the server owner which version they run                                                        |
+| "This server does not allow the Svg-App client"                        | The server owner has switched the app off                                                                                         |
+| "This server requires Opus microphone audio"                           | Your phone cannot encode Opus. Use a newer phone (Android 10 or newer), or ask the server owner to allow older microphone formats |
+| "Microphone permission was denied"                                     | Allow the microphone for Svg-App in your phone's settings                                                                         |
+| "No internet connection"                                               | Check your Wi-Fi or mobile data                                                                                                   |
 
 If the app loses the connection it tries to reconnect a few times on its own. The server also disconnects a quiet connection after 2 minutes by default, and admins can change that.
 

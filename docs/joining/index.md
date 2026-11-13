@@ -43,11 +43,11 @@ If nobody speaks for a while, the server can disconnect you. By default this hap
 
 Your admin tells you the address. If you are the admin and want to try it yourself:
 
-| Where you are | Address |
-|---------------|---------|
-| On the server's computer | `http://127.0.0.1:8080` |
-| On the same network | `http://<server ip>:8080` |
-| Somewhere else | Your public address |
+| Where you are            | Address                   |
+|--------------------------|---------------------------|
+| On the server's computer | `http://127.0.0.1:8080`   |
+| On the same network      | `http://<server ip>:8080` |
+| Somewhere else           | Your public address       |
 
 The number `8080` is the default page port and may be different on your server.
 

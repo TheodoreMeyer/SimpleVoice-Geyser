@@ -30,27 +30,27 @@ Simple Voice Geyser uses a web-based client that relies on WebRTC. Browser suppo
 
 | Version     | Chrome | Firefox | Edge |
 |-------------|--------|---------|------|
-| 0.0.1-DEV   | ✅      | ❌       | ❌    |
-| 0.0.2-DEV   | ✅      | 🛠️     | ❌    |
-| 0.0.3-DEV   | ✅      | 🚧      | ❌    |
-| 0.1.0-DEV   | ✅      | ✅       | 🚧   |
-| 0.1.1-0.1.5 | ✅      | ✅       | 🚧   |
+| 0.0.1-DEV   | ✅     | ❌      | ❌   |
+| 0.0.2-DEV   | ✅     | 🛠️      | ❌   |
+| 0.0.3-DEV   | ✅     | 🚧      | ❌   |
+| 0.1.0-DEV   | ✅     | ✅      | 🚧   |
+| 0.1.1-0.1.5 | ✅     | ✅      | 🚧   |
 
 ---
 
 ## Bukkit-based Servers (Paper / Purpur / Spigot)
 
-| Version   | MC Version | Voice Chat | Geyser           | Floodgate       | Status |
-|-----------|------------|------------|------------------|-----------------|--------|
-| 0.0.1-DEV | 1.21.8     | 2.5.27     | NONE             | NONE            | ❌      |
-| 0.0.2-DEV | 1.21.8+    | 2.6.x      | NONE             | NONE            | ❌      |
-| 0.0.3-DEV | 1.21.8+    | 2.6.x      | 2.9.0-SNAPSHOT   | 2.2.4-SNAPSHOT+ | ❌      |
-| 0.1.0-DEV | 1.20.1+    | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | ❌      |
-| 0.1.1     | 1.20.1+    | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | ❌     |
-| 0.1.2     | 1.20.1+    | 2.6.x      | 2.10.0-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ⚠️      |
-| 0.1.3     | 1.20.1–26.3 | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
-| 0.1.4     | 1.20.1–26.3 | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
-| 0.1.5     | 1.20.1–26.3 | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅      |
+| Version   | MC Version  | Voice Chat | Geyser           | Floodgate       | Status |
+|-----------|-------------|------------|------------------|-----------------|--------|
+| 0.0.1-DEV | 1.21.8      | 2.5.27     | NONE             | NONE            | ❌     |
+| 0.0.2-DEV | 1.21.8+     | 2.6.x      | NONE             | NONE            | ❌     |
+| 0.0.3-DEV | 1.21.8+     | 2.6.x      | 2.9.0-SNAPSHOT   | 2.2.4-SNAPSHOT+ | ❌     |
+| 0.1.0-DEV | 1.20.1+     | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | ❌     |
+| 0.1.1     | 1.20.1+     | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | ❌     |
+| 0.1.2     | 1.20.1+     | 2.6.x      | 2.10.0-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ❌     |
+| 0.1.3     | 1.20.1–26.3 | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ⚠️     |
+| 0.1.4     | 1.20.1–26.3 | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅     |
+| 0.1.5     | 1.20.1–26.3 | 2.6.x      | 2.11.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | ✅     |
 
 ### Requirements
 
@@ -65,12 +65,12 @@ Simple Voice Geyser uses a web-based client that relies on WebRTC. Browser suppo
 
 | Version   | MC Version | Voice Chat | Geyser           | Floodgate       | LuckPerms             | Status |
 |-----------|------------|------------|------------------|-----------------|-----------------------|--------|
-| 0.1.0-DEV | 1.21.11+   | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | compatible w/ 5.4 api | ❌      |
-| 0.1.1-DEV | 1.21.11+   | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | compatible w/ 5.4 api | ❌      |
-| 0.1.2-DEV | 26.1+      | 2.6.x      | 2.10.0-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.4 api | ⚠️      |
-| 0.1.3-DEV | 26.1+      | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.5 api | ✅      |
-| 0.1.4     | 26.1+      | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.5 api | ✅      |
-| 0.1.5     | 26.1+      | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.5 api | ✅      |
+| 0.1.0-DEV | 1.21.11+   | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | compatible w/ 5.4 api | ❌     |
+| 0.1.1-DEV | 1.21.11+   | 2.6.x      | 2.9.0-SNAPSHOT+  | 2.2.4-SNAPSHOT+ | compatible w/ 5.4 api | ❌     |
+| 0.1.2-DEV | 26.1+      | 2.6.x      | 2.10.0-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.4 api | ⚠️     |
+| 0.1.3-DEV | 26.1+      | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.5 api | ✅     |
+| 0.1.4     | 26.1+      | 2.6.x      | 2.10.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.5 api | ✅     |
+| 0.1.5     | 26.1+      | 2.6.x      | 2.11.1-SNAPSHOT+ | 2.2.5-SNAPSHOT+ | compatible w/ 5.5 api | ✅     |
 
 ### Requirements
 
@@ -90,7 +90,7 @@ Simple Voice Geyser uses a web-based client that relies on WebRTC. Browser suppo
 
 | Version | Velocity | Java | Status |
 |---------|----------|------|--------|
-| 0.1.5   | 4.x      | 25+  | ✅      |
+| 0.1.5   | 4.x      | 25+  | ✅     |
 
 The proxy plugin and every backend must run the same Simple Voice Geyser version. See [Velocity Proxy Setup]({% project_link velocity %}).
 
@@ -98,8 +98,8 @@ The proxy plugin and every backend must run the same Simple Voice Geyser version
 
 ## Svg-App (Android)
 
-| App version | Android | Server versions |
-|-------------|---------|-----------------|
+| App version | Android | Server versions     |
+|-------------|---------|---------------------|
 | 1.1.0       | 7.0+    | 0.1.3, 0.1.4, 0.1.5 |
 
 See [Svg-App]({% project_link app %}).

@@ -20,10 +20,10 @@ http://<ip>:8080
 
 ## Your options
 
-| Setup | Verdict |
-|-------|---------|
-| Plain HTTP | Not recommended |
-| Chrome flags | Temporary workaround |
+| Setup               | Verdict              |
+|---------------------|----------------------|
+| Plain HTTP          | Not recommended      |
+| Chrome flags        | Temporary workaround |
 | HTTPS reverse proxy | The correct solution |
 
 The Chrome flags workaround is described in [Chrome Flags]({% project_link joining/chrome-flags %}).
