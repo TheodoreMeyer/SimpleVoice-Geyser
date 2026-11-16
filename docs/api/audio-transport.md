@@ -6,20 +6,7 @@ project: simplevoicegeyser
 
 # Audio Transport
 
-Simple Voice Geyser can send audio to the web client using either the legacy transport or the newer `svg-v2` transport.
-
-## Admin Summary
-
-The default setting is:
-
-```yaml
-server:
-  audio:
-    transport-mode: auto
-    allow-legacy-fallback: true
-```
-
-`auto` is the recommended transition mode. It lets capable clients use `svg-v2` while keeping older or unsupported clients on the legacy path.
+Simple Voice Geyser can send audio to the web client using either the legacy transport or the newer `svg-v2` transport. This page is for developers who write a client. Server owners choose the settings in [Configuration]({% project_link install/config %}).
 
 ## Transport Modes
 
@@ -33,9 +20,7 @@ server:
 
 ## Fallback Behavior
 
-`server.audio.allow-legacy-fallback` controls whether the server can use `legacy` when `svg-v2` is unavailable.
-
-Keep this set to `true` during the migration period. It prevents older clients, unsupported browsers, or failed decoder initialization from losing audio entirely.
+`server.audio.allow-legacy-fallback` controls whether the server can use `legacy` when `svg-v2` is unavailable. It is `true` by default, which keeps older clients, unsupported browsers and failed decoder initialization from losing audio entirely.
 
 If fallback is disabled and the client cannot use `svg-v2`, the session may not have a compatible receive-audio path.
 
@@ -58,7 +43,7 @@ The browser path currently uses the WASM decoder path for `svg-v2`. WebCodecs fi
 
 The audio the player sends to the server uses its own setting, separate from the transport above. The browser page and Svg-App 1.1.0 send the microphone as compressed Opus. Older clients, such as Svg-App 1.0.x, send raw PCM.
 
-`server.audio.mic.allowLegacy` is `true` by default, so both are accepted. Set it to `false` to require Opus. A client that can only send PCM is then refused with "This server requires Opus microphone audio."
+`server.audio.mic.allowLegacy` is `true` by default, so both are accepted. When the owner sets it to `false`, a client that can only send PCM is refused with "This server requires Opus microphone audio."
 
 ## Microphone capture
 

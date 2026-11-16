@@ -18,7 +18,7 @@ Simple Voice Geyser fixes that. It is a plugin or mod for your server that lets 
 | Java player without the Simple Voice Chat mod | Same web page or app |
 | Java player with the Simple Voice Chat mod | Nothing to do, the mod already works. Simple Voice Geyser does not replace it |
 
-You decide which doors are open. You can allow the browser, the app, or both. See [Who can join]({% project_link joining/clients %}).
+You decide which doors are open. You can allow the browser, the app, or both. See [Configuration]({% project_link install/config %}).
 
 ## What you need
 

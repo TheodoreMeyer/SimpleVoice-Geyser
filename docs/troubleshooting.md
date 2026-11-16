@@ -27,7 +27,7 @@ Find the message or symptom you see, then read the cause. Please look through th
 - **"Access Denied. You may have been banned from vc."** The player does not have the permission `svg.vc.join`. See [Commands]({% project_link commands %}).
 - **"Access Denied: Please remove the Simple Voice Chat mod."** The player has the Simple Voice Chat mod installed. Players with the mod use it directly, not the voice page.
 - **"Access Denied: You must be a Bedrock player to join!"** The server has `client.requireBedrock` turned on.
-- **"Unsupported client type."** The server blocks that client. See [Who Can Join]({% project_link joining/clients %}).
+- **"Unsupported client type."** The server blocks that client. See [Configuration]({% project_link install/config %}).
 - **"Update required" or "Outdated client."** Refresh the page. On a Velocity network the proxy and every backend must run the same version.
 - **"This server requires Opus microphone audio."** The server has `server.audio.mic.allowLegacy` turned off and the client can only send the older PCM format. Update the client.
 - **"Voice chat server unavailable."** Simple Voice Chat is not running properly on that server. Check its log.
@@ -37,7 +37,7 @@ Find the message or symptom you see, then read the cause. Please look through th
 - **Nobody can hear anyone, or the Java client shows the crossed-out speaker.** The Simple Voice Chat UDP port is closed. Open it for **UDP**. See [Installation]({% project_link install %}).
 - **Players get disconnected after a while.** A connection with no voice traffic is closed after `client.idletimeout` minutes (2 by default, up to 10). On a Velocity network the proxy's limit is a fixed 2 minutes.
 - **Leaving the Minecraft server ends the voice connection.** Join the server again, then sign in again.
-- **Voice sounds buggy.** Make sure you have a good connection. If voice sounds **robotic or distorted** over a remote or WAN connection, see [Audio Transport]({% project_link install/audio-transport %}).
+- **Voice sounds buggy.** Make sure you have a good connection. If voice sounds **robotic or distorted** over a remote or WAN connection, see the audio settings in [Configuration]({% project_link install/config %}).
 - **The Svg-App shows its own message.** See the table in [Svg-App]({% project_link app %}).
 
 ## Several servers (Velocity)

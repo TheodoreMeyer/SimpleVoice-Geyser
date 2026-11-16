@@ -13,7 +13,7 @@ This plugin exposes a web-based voice interface. You are responsible for securin
 # Built-in protections:
 - Passwords are hashed (bcrypt)
 - Every player sets their own password. There are no default passwords for logins.
-- Repeated wrong passwords lock the player out for a while. By default, 5 failed logins within 3 minutes lock the player out for 8 minutes. The numbers are `server.security.max-auth-failures`, `auth-fail-duration` and `auth-lock-duration`.
+- Repeated wrong passwords lock the player out for a while. You can change the limits in [Configuration]({% project_link install/config %}).
      - To get back in, the player waits for the lockout to end. On a backend server, setting a new password with `/svg pswd` also clears it.
      - On a Velocity network the lockout is held by the proxy and ends after its time.
 - Joining voice needs the permission `svg.vc.join`, which players have by default. Take it away to keep a player out of voice chat. See [Commands]({% project_link commands %}).
@@ -66,7 +66,7 @@ Set up a reverse proxy (e.g. Nginx, Caddy):
 
 ### Change the Default Group Password
 
-Players who join through the web page or the app are put in a group named `Svg` with the password `1a2b`. Anyone can read that password in these docs. Change `server.group.default.password`, or turn the default group off with `server.group.default.enabled`.
+Players who join through the web page or the app are put in a group named `Svg` with the password `1a2b`. Anyone can read that password in these docs. Change it or turn the group off: [steps]({% project_link install/config %}).
 
 ---
 

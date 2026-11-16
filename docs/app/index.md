@@ -11,7 +11,7 @@ Svg-App is the companion app for Simple Voice Geyser on Android. It lets you joi
 ## What you need
 
 - An Android phone with Android 7.0 or newer.
-- A server that uses Simple Voice Geyser 0.1.3, 0.1.4 or 0.1.5, and that allows the app. Ask the server owner, or read [Who can join]({% project_link joining/clients %}).
+- A server that uses Simple Voice Geyser 0.1.3, 0.1.4 or 0.1.5, and that allows the app. Ask the server owner.
 - The address of the server's voice page. This is **not** the address you type into Minecraft. Your server owner will give it to you.
 - A password for the voice chat, set in the game (see below).
 

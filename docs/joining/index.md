@@ -15,7 +15,7 @@ To join the voice chat you need three things: to be in the game, a voice passwor
    - On Paper, Purpur and Spigot servers end the command with `confirm`: `/svg pswd <password> confirm`.
    - On Fabric servers and on Velocity networks, do not add `confirm`.
    - Bedrock players can run `/svg` and use the form, which keeps the password out of the chat.
-3. **Get the address of the voice page from your server admin.** It is not the address you use in Minecraft. Admins can find how to set it up in [Proxy and Sub-path Deployment]({% project_link install/proxy-and-subpath %}).
+3. **Get the address of the voice page from your server admin.** It is not the address you use in Minecraft. Admins can set it up with [HTTPS and Reverse Proxies]({% project_link install/proxy %}).
 
 Every player is allowed to join the voice chat by default. If an admin has taken that permission away, you will see "You may have been banned from vc."
 
@@ -56,4 +56,4 @@ For players outside your network, open the page port for **TCP** and the Simple 
 ## Other guides
 
 - [Chrome Flags]({% project_link joining/chrome-flags %}): a temporary workaround for browsers that block the microphone on HTTP.
-- [Who Can Join]({% project_link joining/clients %}): for admins who want to allow only the page or only the app.
+- [Configuration]({% project_link install/config %}): for admins who want to allow only the page or only the app.

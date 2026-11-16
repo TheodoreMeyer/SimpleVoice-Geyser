@@ -86,6 +86,10 @@ proxy:
   shared-secret: "PASTE THE PROXY'S SECRET HERE"
 ```
 
+Do this on every backend, with its own port. You will paste the secret in after Step 3, then restart the backends.
+
+{% dropdownStart What each backend setting means %}
+
 - `server.port` is the backend's own voice page port from your plan. It must be different on every backend that shares a machine, and different from the proxy's.
 - `server.bind-address` decides who can reach the backend's voice page. Use `127.0.0.1` when the proxy is on the same machine. When the proxy is on another machine, leave it at `0.0.0.0` and use the firewall to allow only the proxy's address.
 - `proxy.enabled: true` tells the backend it sits behind the proxy.
@@ -93,8 +97,9 @@ proxy:
 - `proxy.shared-secret` must be exactly the proxy's `proxy.shared_secret` (Step 3). Use the same value on every backend.
 - Leave `server.context-path` at `/`. If you change it, the proxy needs to know. See Step 3.
 - If the plugin serves HTTPS with a self-signed certificate, add `verify-ssl: false` under `proxy`.
+- A backend's config also lists `proxy.token-ttl-seconds`. The backend does not use it. The pass lifetime is set on the proxy.
 
-You will restart the backends after Step 3, once you have the secret.
+{% dropdownEnd %}
 
 ## Step 3: Set up the proxy
 
@@ -121,7 +126,14 @@ Put `Svg-Velocity-<version>.jar` in the proxy's `plugins` folder and start the p
 }
 ```
 
-### The `clients` section
+Do this:
+
+1. Make one `clients` entry per server, named exactly as in your `velocity.toml`, with the backend's `url` from Step 2.
+2. Set `proxy.port` to the proxy's voice page port from your plan.
+3. Copy `proxy.shared_secret` into every backend's `proxy.shared-secret`.
+4. Start the proxy, then restart the backends.
+
+{% dropdownStart What the clients section means %}
 
 This is the map from "which server is the player on" to "which backend voice page do I connect to".
 
@@ -131,45 +143,25 @@ This is the map from "which server is the player on" to "which backend voice pag
 - `enabled: false` turns voice off for that server. A player standing on it sees "Proxy backend is not configured for this server."
 - `default` is used for any server that has no entry. Set it to `enabled: false` if servers you did not list should have no voice.
 
-### The `proxy` section
+{% dropdownEnd %}
+
+{% dropdownStart What the proxy section means %}
 
 - `port` is the address players use. It must not clash with anything else on the machine.
 - `bind_address`: `0.0.0.0` lets anyone reach it. Use `127.0.0.1` when Nginx or Caddy runs on the same machine and forwards to it.
-- `shared_secret` is created for you. Copy it to every backend's `proxy.shared-secret`. Treat it like a password: anyone who has it can pretend to be any player. If it leaks, change it on the proxy and on every backend, then restart all of them.
+- `shared_secret` is created for you. Treat it like a password: anyone who has it can pretend to be any player. If it leaks, change it on the proxy and on every backend, then restart all of them.
 - `transfer-timeout-seconds` is how long the proxy waits for a player to arrive on the next server before it drops their voice connection.
 - `token-ttl-seconds` is how long the pass the proxy gives a backend stays valid.
 
-Now start the proxy, then restart the backends.
+{% dropdownEnd %}
 
 ## Step 4: HTTPS
 
 Browsers only allow the microphone on HTTPS pages, so a public setup needs it. There are two ways.
 
-**A reverse proxy in front (recommended).** Nginx or Caddy takes the public HTTPS address and forwards to the proxy plugin. Set `proxy.bind_address` to `127.0.0.1`. It must forward web socket upgrades as well as normal requests.
-
-A complete Caddy site block. Caddy gets the certificate by itself:
-
-```
-voice.example.com {
-    reverse_proxy 127.0.0.1:8080
-}
-```
-
-The same for Nginx, inside your HTTPS `server` block:
-
-```
-location / {
-    proxy_pass http://127.0.0.1:8080;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_set_header Host $host;
-}
-```
+**A reverse proxy in front (recommended).** Set `proxy.bind_address` to `127.0.0.1`, then follow [HTTPS and Reverse Proxies]({% project_link install/proxy %}) and point it at the proxy plugin's `proxy.port`.
 
 **HTTPS inside the plugin.** In `config.json` set `ssl.type` to `file`, then point `ssl.file.cert` and `ssl.file.key` at your files. They are read from the plugin's folder. The certificate is a PEM file. The key must be an unencrypted PKCS#8 PEM key. If you have a certificate chain or want automatic renewal, use the reverse proxy instead.
-
-More in [HTTPS and reverse proxies]({% project_link install/proxy %}).
 
 ## Step 5: Open the firewall
 
@@ -216,4 +208,4 @@ If two backends run on the same machine, give each one a different `port` in Sim
 
 ## Who may join: web page, app, or both
 
-That choice is made on each backend, not on the proxy. See [Who can join]({% project_link joining/clients %}).
+That choice is made on each backend, not on the proxy. See [Configuration]({% project_link install/config %}).

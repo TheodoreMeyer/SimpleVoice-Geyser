@@ -18,6 +18,7 @@ This is due to the fact I built this as a websocket-based plugin, where anyone w
 ### Protocol
 - Svg follows a protocol for server ↔ client communication.
 - This can be found at [Protocol]({% project_link api/protocol %}).
+- How audio is sent to clients is in [Audio Transport]({% project_link api/audio-transport %}).
 - Svg-App client awareness is documented in the [0.1.3 release notes]({% project_link releases/0-1-3 %}).
 
 ### To Be added
