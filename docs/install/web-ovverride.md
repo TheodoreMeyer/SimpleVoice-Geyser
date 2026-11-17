@@ -14,10 +14,12 @@ Simple Voice Geyser includes web assets inside the plugin JAR, such as:
 These files are extracted to:
 
 ```text
-plugins/SimpleVoiceGeyser/web/
+plugins/SimpleVoice-Geyser/web/
 ```
 
-The files in this directory are modifiable to customize the web interface.
+On Fabric the folder is `config/SimpleVoice-Geyser/web/`. The files in this directory are modifiable to customize the web interface.
+
+> If your network uses the Velocity proxy, players load the voice page from the proxy, which serves only the files bundled in its own jar. Changes to a backend's `web` folder do not apply to them.
 
 ## Automatic Updates
 
@@ -27,7 +29,7 @@ Example:
 
 ```text
 plugins/
-└── SimpleVoiceGeyser/
+└── SimpleVoice-Geyser/
     └── web/
         ├── index.html
         ├── css/
@@ -128,7 +130,7 @@ To restore the current version of a web file bundled with Simple Voice Geyser:
 For example:
 
 ```text
-plugins/SimpleVoiceGeyser/web/index.html
+plugins/SimpleVoice-Geyser/web/index.html
 ```
 
 After the file is deleted, Simple Voice Geyser extracts the current version from the plugin JAR during startup.
