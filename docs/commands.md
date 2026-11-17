@@ -31,12 +31,13 @@ Sets your personal voice chat password.
 
 * Must be executed by a player
 * Password length must be between 8 and 32 characters
-* Used for authentication on the web client
+* Used to sign in to the voice web page and the Svg-App
 
 ### NOTE
-- On Spigot, the 'confirm' arg is required after the password to set it.
-- If the password is not confirmed, the command will fail and the player will be notified.
-- If the password is not set in the args, SVG will try to open Geyser Forms Password for the player (if they are bedrock)
+- On Paper, Purpur and Spigot servers the command must end with `confirm`: `/svg pswd <new-password> confirm`. Without it the command is refused and the player is told to add it.
+- On Fabric servers, and on networks that use the Velocity proxy, do not add `confirm`. On a Velocity network it would become part of the password.
+- Passwords typed in a command can show up in the console and logs. Bedrock players can run `/svg pswd` or `/svg` without a password to use a form instead.
+- On a Velocity network the password is stored on the proxy and works for every backend.
 
 ---
 
@@ -158,6 +159,17 @@ Displays the command help menu.
 ```
 /svg help
 ```
+
+---
+
+## Permissions
+
+- `svg.vc.join`: needed to join the voice chat from the web page or the app. **Every player has it by default.** Take it away from a player, for example with LuckPerms, to keep them out of voice chat. They see "You may have been banned from vc."
+- `svg.admin`: admin commands (`/svg reload`, `/svg checkUpdate`) and the admin menu. Ops by default.
+- `svg.vc.group.create`: create a group. Every player has it by default.
+- `svg.vc.group.join`: join a group. If players cannot join groups, grant this permission with your permissions plugin.
+- `svg.vc.group.type.isolated`: create isolated groups. Ops by default.
+- `svg.vc.group.setpersistent`: create persistent groups.
 
 ---
 
